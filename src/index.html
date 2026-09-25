@@ -208,10 +208,6 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
 .ssel-grp{padding:8px 12px 4px;font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:800;letter-spacing:.4px}
 .ssel-vazio{padding:10px 12px;color:var(--muted);font-size:12px}
 .ssel-add{display:block;width:100%;text-align:left;padding:10px 12px;background:rgba(var(--green-rgb),.08);color:var(--green);font-weight:700;font-size:13px;border-top:1px solid var(--border)}
-/* Filtros das tabelas de Configurações */
-tr.cfg-filtro th{padding:6px 6px;background:transparent}
-tr.cfg-filtro input,tr.cfg-filtro .ssel-btn{padding:6px 8px;font-size:12px;font-weight:400;text-transform:none}
-tr.cfg-sem-resultado td{text-align:center;color:var(--muted);padding:14px}
 /* Lista suspensa pesquisável com múltipla escolha */
 .msel{position:relative}
 .msel-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
@@ -243,7 +239,7 @@ tr.cfg-sem-resultado td{text-align:center;color:var(--muted);padding:14px}
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <span class="vselo" id="h-versao">v4.3.0</span>
+  <span class="vselo" id="h-versao">v4.4.0</span>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -279,7 +275,7 @@ tr.cfg-sem-resultado td{text-align:center;color:var(--muted);padding:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.3.0';
+const VERSAO='v4.4.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -657,7 +653,7 @@ async function finalizarVenda(){
 
 /* ================= BAÚ ================= */
 /* Categorias vêm da tabela categorias_itens (Configurações → Cadastro Central de Itens) */
-function catInfo(c){return (db&&db.categorias||[]).find(x=>x.codigo===c)||{codigo:c,nome:c,controla_estoque:true,compravel:false,aparece_receitas:true,sistema:false}}
+function catInfo(c){return (db&&db.categorias||[]).find(x=>x.codigo===c)||{codigo:c,nome:c,controla_estoque:true,compravel:false,aparece_receitas:true}}
 function catNome(c){return catInfo(c).nome}
 function controlaEstoque(c){return !!catInfo(c).controla_estoque}
 function catCompravel(c){return !!catInfo(c).compravel&&!!catInfo(c).controla_estoque}
@@ -846,7 +842,87 @@ function atualizarPreviaProducao(rid){
   el.innerHTML=`<div class="card" style="padding:12px;margin-top:10px"><b>Resumo da produção</b>
     <div style="margin-top:8px;color:var(--warning-light)"><b>⬇️ Insumos consumidos</b>${cons.map(x=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span>−${x.ri.quantidade*q} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div>—</div>'}</div>
     <div style="margin-top:8px;color:var(--green)"><b>⬆️ Itens produzidos</b>${prd.map(x=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span>+${x.ri.quantidade*q} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div>Produto final — não entra no Baú</div>'}</div>
-    ${falt.length?`<div style="color:var(--danger);margin-top:10px">Saldo insuficiente. Quantidade máxima possível: <b>${Math.max(0,max)}</b>.</div>`:''}</div>`;
+    ${falt.length?`<div style="color:var(--danger);margin-top:10px">Saldo insuficiente. Quantidade máxima possível: <b>${Math.max(0,max)}</b>.</div>${blocoCascata(rid,q)}`:''}</div>`;
+}
+
+/* ================= PRODUÇÃO EM CASCATA =================
+   Quando faltam insumos, procura receitas ativas que os produzam e monta um plano que começa pela
+   primeira receita da cadeia (a mais "de baixo") até chegar à receita pedida. Tudo é simulado sobre
+   o saldo atual do Baú; nada é gravado antes da confirmação. */
+function receitaProdutora(itemId,pilha){
+  return [...db.receitas].filter(r=>r.status==='ativo'&&!pilha.includes(r.id)&&(r.insumos||[]).some(x=>x.papel==='produzido'&&x.item_id===itemId&&x.quantidade>0))
+    .sort((a,b)=>(a.ordem||99)-(b.ordem||99))[0]||null;
+}
+function planejarCascata(rid,q){
+  const saldo={};db.itens.forEach(i=>{saldo[i.id]=saldoItem(i.id)});
+  const inicial={...saldo},passos=[];
+  const produzir=(r,qtd,pilha)=>{
+    const cons=(r.insumos||[]).filter(x=>x.papel==='consumo');
+    for(let tentativa=0;tentativa<10;tentativa++){
+      let produziuAlgo=false;
+      for(const x of cons){
+        const it=db.itens.find(i=>i.id===x.item_id);if(!it||!controlaEstoque(it.categoria))continue;
+        const falta=x.quantidade*qtd-saldo[it.id];if(falta<=0)continue;
+        const r2=receitaProdutora(it.id,[...pilha,r.id]);if(!r2)continue;
+        const porLote=(r2.insumos||[]).find(y=>y.papel==='produzido'&&y.item_id===it.id).quantidade;
+        produzir(r2,Math.ceil(falta/porLote),[...pilha,r.id]);produziuAlgo=true;
+      }
+      if(!produziuAlgo)break;
+    }
+    const mov=[];
+    cons.forEach(x=>{const it=db.itens.find(i=>i.id===x.item_id);if(it&&controlaEstoque(it.categoria)){saldo[it.id]-=x.quantidade*qtd;mov.push({it,q:-x.quantidade*qtd})}});
+    (r.insumos||[]).filter(x=>x.papel==='produzido').forEach(x=>{const it=db.itens.find(i=>i.id===x.item_id);if(it&&controlaEstoque(it.categoria)){saldo[it.id]+=x.quantidade*qtd;mov.push({it,q:x.quantidade*qtd})}});
+    passos.push({r,qtd,mov});
+  };
+  produzir(db.receitas.find(x=>x.id===rid),q,[]);
+  const faltas=db.itens.filter(i=>saldo[i.id]<-1e-9).map(i=>({it:i,falta:-saldo[i.id]}));
+  const efeito=db.itens.filter(i=>Math.abs(saldo[i.id]-inicial[i.id])>1e-9).map(i=>({it:i,antes:inicial[i.id],depois:saldo[i.id]}));
+  return{passos,faltas,efeito,possivel:!faltas.length,temCascata:passos.length>1};
+}
+function blocoCascata(rid,q){
+  const pl=planejarCascata(rid,q);
+  if(!pl.temCascata)return '';
+  if(!pl.possivel)return `<div style="margin-top:10px;font-size:12px;color:var(--muted)">Nem com produção em cascata é possível: falta${pl.faltas.length>1?'m':''} ${pl.faltas.map(f=>`<b style="color:var(--danger)">${fmtQtd(f.falta)} ${esc(f.it.unidade_medida)} de ${esc(f.it.nome)}</b>`).join(', ')} (compre antes de produzir).</div>`;
+  return `<div style="margin-top:12px;padding:10px;border:1px dashed var(--purple);border-radius:8px">
+    <div style="font-size:13px">É possível produzir em <b>cascata</b>: ${pl.passos.length-1} produção(ões) anterior(es) geram os insumos que faltam.</div>
+    <button class="btn btn-purple btn-sm" style="margin-top:8px" onclick="revisarCascata('${rid}')">🔗 Ver produção em cascata</button></div>`;
+}
+function fmtQtd(n){return Number(n.toFixed(4)).toLocaleString('pt-BR')}
+function revisarCascata(rid){
+  const q=Math.max(1,parseInt(document.getElementById('prod-qtd')?.value)||1);
+  const pl=planejarCascata(rid,q);
+  if(!pl.possivel||!pl.temCascata)return toast('⚠️ A produção em cascata não é possível com o saldo atual.');
+  openModal2(`<h3>🔗 Produção em cascata</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:10px">As produções serão feitas nesta ordem, numa única operação. Confira antes de confirmar.</p>
+    <div class="resumo">${pl.passos.map((p,i)=>`
+      <div class="rs-sec">${i+1}. ${esc(p.r.nome)} × ${p.qtd}${i===pl.passos.length-1?' <span style="color:var(--green)">(pedida)</span>':''}</div>
+      ${p.mov.map(m=>`<div class="rs-l"><span>${esc(m.it.nome)}</span><b style="color:${m.q<0?'var(--warning-light)':'var(--green)'}">${m.q<0?'−':'+'}${fmtQtd(Math.abs(m.q))} ${esc(m.it.unidade_medida)}</b></div>`).join('')||'<div class="rs-l"><span class="muted">Produto final — não movimenta o Baú</span></div>'}`).join('')}
+      <div class="rs-sec" style="margin-top:14px">Saldo no Baú (antes → depois)</div>
+      ${pl.efeito.map(e=>`<div class="rs-l"><span>${esc(e.it.nome)}</span><span>${fmtQtd(e.antes)} → <b>${fmtQtd(e.depois)}</b> ${esc(e.it.unidade_medida)}</span></div>`).join('')}
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal2()">Voltar</button>
+    <button class="btn btn-primary" id="btn-conf-cascata" onclick="confirmarCascata('${rid}',${q})">Confirmar produção em cascata</button></div>`);
+}
+async function confirmarCascata(rid,q){
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem produzir.');
+  const pl=planejarCascata(rid,q);
+  if(!pl.possivel)return toast('⚠️ O saldo mudou e a cascata não é mais possível. Revise a produção.');
+  const btn=document.getElementById('btn-conf-cascata');if(btn){btn.disabled=true;btn.textContent='Produzindo…'}
+  let opId;try{opId=await nextOpId()}catch(e){if(btn){btn.disabled=false;btn.textContent='Confirmar produção em cascata'}return toast('⚠️ Erro ao gerar ID: '+(e.message||e))}
+  const alvo=pl.passos[pl.passos.length-1].r.nome,saldo={},movimentos=[];
+  pl.passos.forEach(p=>p.mov.forEach(m=>{
+    if(saldo[m.it.id]===undefined)saldo[m.it.id]=saldoItem(m.it.id);
+    saldo[m.it.id]+=m.q;
+    const tipo=m.q>0?'entrada_producao':(m.it.categoria==='produto_nao_acabado'?'saida_deducao':'saida_producao');
+    movimentos.push({operacao_id:opId,item_id:m.it.id,tipo_movimento:tipo,quantidade:Math.abs(m.q),usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,
+      origem:'produção em cascata: '+p.r.nome+(p.r.nome!==alvo?' (para '+alvo+')':''),saldo_resultante:saldo[m.it.id]});
+  }));
+  // um único insert: ou grava a cascata inteira, ou nada
+  const{data,error}=await sb.from('estoque_bau').insert(movimentos).select();
+  if(error){if(btn){btn.disabled=false;btn.textContent='Confirmar produção em cascata'}return toast('⚠️ Erro ao gravar a produção: '+error.message)}
+  data.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
+  reg('Produção em cascata',`${alvo} × ${q} — ID ${opId} — ${pl.passos.map(p=>p.r.nome+' ×'+p.qtd).join(' → ')}`);
+  closeModal2();closeModal();toast('✅ Produção em cascata executada. ID: '+opId);render();
 }
 async function confirmarProducao(rid){
   const r=db.receitas.find(x=>x.id===rid);if(!r)return;
@@ -855,7 +931,7 @@ async function confirmarProducao(rid){
   if(!Number.isInteger(q)||q<1){err.textContent='Informe uma quantidade inteira mínima de 1.';err.style.display='block';return}
   const cons=(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>({ri:x,it:db.itens.find(i=>i.id===x.item_id)}));
   const falt=cons.filter(x=>x.it&&saldoItem(x.it.id)<x.ri.quantidade*q);
-  if(falt.length){err.textContent='Estoque insuficiente. Reduza a quantidade conforme a sugestão do resumo.';err.style.display='block';return}
+  if(falt.length){err.textContent='Estoque insuficiente. Reduza a quantidade'+(planejarCascata(rid,q).possivel&&planejarCascata(rid,q).temCascata?' ou use a produção em cascata indicada no resumo.':' conforme a sugestão do resumo.');err.style.display='block';return}
   const producaoId=await nextOpId();
   const prd=(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>({ri:x,it:db.itens.find(i=>i.id===x.item_id)}));
   const movimentos=[];
@@ -1416,19 +1492,19 @@ function renderConfig(c){
   else if(cfgTabAtual==='descontos')cfgDescontos(b);
   else if(cfgTabAtual==='deslocamento')cfgDeslocamento(b);
   else if(cfgTabAtual==='logo')cfgLogo(b);
-  aplicarFiltrosCfg(b);
 }
 /* ---- Usuários ---- */
 /* Perfil com mais acesso primeiro (Sócio > Diretor > Gerente > Vendedor), depois nome A→Z */
 function usuariosOrdenados(){return [...db.usuarios].sort((a,b)=>(PERFIL_NIVEL[b.perfil]||0)-(PERFIL_NIVEL[a.perfil]||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}))}
 function cfgUsuarios(b){
+  const T='cfg_usuarios',F=tabelaFiltravel(T,usuariosOrdenados,{nome:u=>u.nome,usuario:u=>u.usuario||'—',perfil:u=>PERFIL_LABEL[u.perfil]||u.perfil,status:u=>u.status,data:u=>u.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">👥 Usuários</div>
     <button class="btn btn-purple btn-sm" onclick="modalUsuario()">+ Novo usuário</button></div>
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Sócio gerencia todos os perfis, incluindo outros Sócios. <b>Diretor</b> tem as mesmas permissões do Sócio, exceto que não pode alterar, ativar/inativar, excluir ou promover ninguém ao perfil <b>Sócio</b>. Gerentes podem cadastrar vendedores. Ninguém altera o próprio perfil. Deve existir sempre ao menos um sócio ativo.</p>
-  <div class="table-wrap"><table>
-  <tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Criado em</th><th>Ações</th></tr>
-  ${usuariosOrdenados().map(u=>{
+  ${F.barra}<div class="table-wrap"><table>
+  <tr>${thCol(T,'nome','Nome')}${thCol(T,'usuario','Usuário')}${thCol(T,'perfil','Perfil')}${thCol(T,'status','Status')}${thCol(T,'data','Criado em')}<th>Ações</th></tr>
+  ${F.rows.map(u=>{
     const sociosAtivos=db.usuarios.filter(x=>x.perfil==='socio'&&x.status==='ativo').length;
     const ehUltimoSocio=u.perfil==='socio'&&u.status==='ativo'&&sociosAtivos<=1;
     return`<tr>
@@ -1441,7 +1517,7 @@ function cfgUsuarios(b){
       ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)?`<button class="iconbtn" title="${u.status==='ativo'?'Inativar':'Ativar'}" onclick="toggleStatusUsuario('${u.id}')">${u.status==='ativo'?'⏸️':'▶️'}</button>`:''}
       ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)&&isSocioOuDiretor()&&u.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirUsuario('${u.id}')">🗑️</button>`:''}
       ${ehUltimoSocio?'<span class="tag y" title="Deve existir ao menos um sócio ativo">🔒 último sócio</span>':''}</td>
-  </tr>`}).join('')}</table></div>`;
+  </tr>`}).join('')||linhaSemResultado(6,T)}</table></div>`;
 }
 function podeGerenciarUsuario(alvo){
   // Sócio gerencia todos, inclusive outros Sócios.
@@ -1559,6 +1635,7 @@ function excluirUsuario(id){
 }
 /* ---- Catálogo PDV (com alíquota global, imagem e exclusão) ---- */
 function cfgProdutos(b){
+  const T='cfg_produtos',F=tabelaFiltravel(T,()=>[...db.produtos].sort((a,b)=>a.ordem-b.ordem),{nome:p=>p.nome,preco:p=>fmt(p.preco),rateio:p=>p.rateio,status:p=>p.status,data:p=>p.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🏷️ Catálogo de Venda (PDV)</div>
     <button class="btn btn-purple btn-sm" onclick="modalProduto()">+ Novo produto</button></div>
@@ -1569,18 +1646,19 @@ function cfgProdutos(b){
       <button class="btn btn-primary btn-sm" onclick="salvarAliquotaGlobal()">Salvar</button>
     </div>
   </div>
-  <div class="table-wrap"><table>
-  <tr><th>Imagem</th><th>Ordem</th><th>Produto</th><th>Preço</th><th>Rateio</th><th>Status</th><th>Ações</th></tr>
-  ${[...db.produtos].sort((a,b)=>a.ordem-b.ordem).map(p=>`<tr>
+  ${F.barra}<div class="table-wrap"><table>
+  <tr><th>Imagem</th><th>Ordem</th>${thCol(T,'nome','Produto')}${thCol(T,'preco','Preço')}${thCol(T,'rateio','Rateio')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  ${F.rows.map(p=>`<tr>
     <td>${p.imagem?`<img class="thumb" src="${imgSrc(p.imagem)}">`:'🌿'}</td>
     <td>${p.ordem}</td><td><b>${esc(p.nome)}</b></td>
     <td class="money">${fmt(p.preco)}</td><td><span class="tag">${esc(p.rateio)}</span></td>
     <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
+    <td style="color:var(--muted)">${dataHoraBR(p.criado_em)}</td>
     <td><button class="iconbtn" onclick="moverProduto('${p.id}',-1)">↑</button><button class="iconbtn" onclick="moverProduto('${p.id}',1)">↓</button>
       <button class="iconbtn" onclick="modalProduto('${p.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleProduto('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir linha" onclick="excluirProduto('${p.id}')">🗑️</button>`:''}</td>
-  </tr>`).join('')}</table></div>`;
+  </tr>`).join('')||linhaSemResultado(8,T)}</table></div>`;
 }
 async function salvarAliquotaGlobal(){
   const g=parseFloat(document.getElementById('al-global').value);
@@ -1677,12 +1755,15 @@ async function moverProduto(id,dir){
 }
 /* ---- Cadastro Central de Itens (preço unitário, qtd mínima, inativar/excluir) ---- */
 function cfgItens(b){
+  const sn=v=>v?'Sim':'Não';
+  const T='cfg_itens',F=tabelaFiltravel(T,()=>db.itens,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,preco:i=>fmt(i.preco_unitario),qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
+  const TC='cfg_categorias',FC=tabelaFiltravel(TC,()=>db.categorias,{nome:c=>c.nome,estoque:c=>sn(c.controla_estoque),compravel:c=>sn(c.compravel&&c.controla_estoque),receitas:c=>sn(c.aparece_receitas),itens:c=>String(db.itens.filter(i=>i.categoria===c.codigo).length),data:c=>c.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">📦 Cadastro Central de Itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalItem()">+ Novo item</button></div>
-  <div class="table-wrap"><table>
-  <tr><th>Item</th><th>Categoria</th><th>Un.</th><th>Preço unitário</th><th>Qtd mínima</th><th>Saldo Baú</th><th>Status</th><th>Ações</th></tr>
-  ${db.itens.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr>
+  ${F.barra}<div class="table-wrap"><table>
+  <tr>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'preco','Preço unitário')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  ${F.rows.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr>
     <td><b>${esc(i.nome)}</b>${alerta?' <span class="tag r">⚠️ no mínimo</span>':''}</td>
     <td><span class="tag">${catNome(i.categoria)}</span></td>
     <td style="color:var(--muted)">${esc(i.unidade_medida)}</td>
@@ -1690,32 +1771,31 @@ function cfgItens(b){
     <td>${i.qtd_minima||0}</td>
     <td>${!controlaEstoque(i.categoria)?'<span style="color:var(--muted)">n/a</span>':s}</td>
     <td><span class="badge ${i.status==='ativo'?'ativo':'inativo'}">${i.status}</span></td>
+    <td style="color:var(--muted)">${dataHoraBR(i.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalItem('${i.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleItem('${i.id}')">${i.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')}</table></div>
+  </tr>`}).join('')||linhaSemResultado(9,T)}</table></div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
     <div class="section-title" style="margin:0">🏷️ Categorias de itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalCategoria()">+ Nova categoria</button></div>
-  <p style="color:var(--muted);font-size:12px;margin-bottom:12px"><b>Controle de estoque</b>: itens entram no Baú. <b>Pode ser comprada</b>: itens aparecem em "Insumos" na compra e podem ser vinculados a fornecedores (exige controle de estoque). <b>Aparece nas Receitas</b>: itens aparecem na lista das Receitas. As 4 categorias de sistema têm nome e controle de estoque fixos.</p>
-  <div class="table-wrap"><table>
-  <tr><th>Categoria</th><th>Controle de estoque</th><th>Pode ser comprada</th><th>Aparece nas Receitas</th><th>Itens</th><th>Tipo</th><th>Ações</th></tr>
-  ${db.categorias.map(c=>{const n=db.itens.filter(i=>i.categoria===c.codigo).length;return`<tr>
+  <p style="color:var(--muted);font-size:12px;margin-bottom:12px"><b>Controle de estoque</b>: itens entram no Baú. <b>Pode ser comprada</b>: itens aparecem em "Insumos" na compra e podem ser vinculados a fornecedores (exige controle de estoque). <b>Aparece nas Receitas</b>: itens aparecem na lista das Receitas.</p>
+  ${FC.barra}<div class="table-wrap"><table>
+  <tr>${thCol(TC,'nome','Categoria')}${thCol(TC,'estoque','Controle de estoque')}${thCol(TC,'compravel','Pode ser comprada')}${thCol(TC,'receitas','Aparece nas Receitas')}${thCol(TC,'itens','Itens')}${thCol(TC,'data','Cadastrado em')}<th>Ações</th></tr>
+  ${FC.rows.map(c=>{const n=db.itens.filter(i=>i.categoria===c.codigo).length;return`<tr>
     <td><b>${esc(c.nome)}</b></td><td>${simNao(c.controla_estoque)}</td><td>${simNao(c.compravel&&c.controla_estoque)}</td><td>${simNao(c.aparece_receitas)}</td>
-    <td>${n}</td><td><span class="tag">${c.sistema?'Sistema':'Personalizada'}</span></td>
-    <td><button class="iconbtn" onclick="modalCategoria('${esc(c.codigo)}')">✏️</button>${!c.sistema&&isSocioOuDiretor()?`<button class="iconbtn" title="Excluir categoria" onclick="excluirCategoria('${esc(c.codigo)}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')}</table></div>`;
+    <td>${n}</td><td style="color:var(--muted)">${dataHoraBR(c.criado_em)}</td>
+    <td><button class="iconbtn" onclick="modalCategoria('${esc(c.codigo)}')">✏️</button>${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir categoria" onclick="excluirCategoria('${esc(c.codigo)}')">🗑️</button>`:''}</td>
+  </tr>`}).join('')||linhaSemResultado(7,TC)}</table></div>`;
 }
 function simNao(v){return `<span class="tag ${v?'g':''}">${v?'Sim':'Não'}</span>`}
 function slugCategoria(nome){return nome.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'categoria'}
 function modalCategoria(codigo){
   const c=codigo?db.categorias.find(x=>x.codigo===codigo):null;
-  const sis=c&&c.sistema;
   const chk=(id,label,v,dis,extra='')=>`<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;font-weight:400;color:var(--text);margin:0 0 10px"><input type="checkbox" id="${id}" style="width:auto" ${v?'checked':''} ${dis?'disabled':''} ${extra}> ${label}</label>`;
   openModal(`<h3>${c?'Editar categoria':'Nova categoria'}</h3>
-  <div class="field"><label>Nome da categoria</label><input id="cat-nome" value="${c?esc(c.nome):''}" ${sis?'disabled':''}></div>
-  ${sis?'<p class="muted" style="font-size:12px;margin-bottom:10px">Categoria de sistema: nome e controle de estoque não podem ser alterados.</p>':''}
-  ${chk('cat-estoque','Controle de estoque (itens entram no Baú)',c?c.controla_estoque:true,sis,`onchange="const k=document.getElementById('cat-compravel');k.disabled=!this.checked;if(!this.checked)k.checked=false"`)}
+  <div class="field"><label>Nome da categoria</label><input id="cat-nome" value="${c?esc(c.nome):''}"></div>
+  ${chk('cat-estoque','Controle de estoque (itens entram no Baú)',c?c.controla_estoque:true,false,`onchange="const k=document.getElementById('cat-compravel');k.disabled=!this.checked;if(!this.checked)k.checked=false"`)}
   ${chk('cat-compravel','Pode ser comprada (aparece em "Insumos" na compra e no vínculo com fornecedores)',c?(c.compravel&&c.controla_estoque):true,c&&!c.controla_estoque)}
   ${chk('cat-receitas','Aparece na lista suspensa das Receitas',c?c.aparece_receitas:true,false)}
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
@@ -1727,14 +1807,12 @@ async function salvarCategoria(codigo){
   const nome=document.getElementById('cat-nome').value.trim();
   const estoque=document.getElementById('cat-estoque').checked;
   const campos={compravel:estoque&&document.getElementById('cat-compravel').checked,aparece_receitas:document.getElementById('cat-receitas').checked};
-  if(!c||!c.sistema){
-    if(!nome)return toast('⚠️ Informe o nome da categoria.');
-    if(db.categorias.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.codigo!==codigo))return toast('⚠️ Já existe uma categoria com esse nome.');
-    Object.assign(campos,{nome,controla_estoque:estoque});
-    if(c&&c.controla_estoque&&!estoque){
-      const ids=db.itens.filter(i=>i.categoria===c.codigo).map(i=>i.id);
-      if(db.estoque_bau.some(m=>ids.includes(m.item_id)))return toast('⚠️ Não é possível desligar o controle de estoque: há itens desta categoria com movimentações no Baú.');
-    }
+  if(!nome)return toast('⚠️ Informe o nome da categoria.');
+  if(db.categorias.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.codigo!==codigo))return toast('⚠️ Já existe uma categoria com esse nome.');
+  Object.assign(campos,{nome,controla_estoque:estoque});
+  if(c&&c.controla_estoque&&!estoque){
+    const ids=db.itens.filter(i=>i.categoria===c.codigo).map(i=>i.id);
+    if(db.estoque_bau.some(m=>ids.includes(m.item_id)))return toast('⚠️ Não é possível desligar o controle de estoque: há itens desta categoria com movimentações no Baú.');
   }
   if(c){
     const{error}=await sb.from('categorias_itens').update(campos).eq('codigo',c.codigo);
@@ -1751,7 +1829,7 @@ async function salvarCategoria(codigo){
 }
 function excluirCategoria(codigo){
   if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir categorias.');
-  const c=db.categorias.find(x=>x.codigo===codigo);if(!c||c.sistema)return;
+  const c=db.categorias.find(x=>x.codigo===codigo);if(!c)return;
   const n=db.itens.filter(i=>i.categoria===codigo).length;
   if(n)return toast('⚠️ Não é possível excluir "'+c.nome+'": há '+n+' item(ns) nesta categoria. Mude a categoria deles antes.');
   confirmar('Excluir categoria','A categoria "'+c.nome+'" será removida. Confirmar?',async()=>{
@@ -1834,13 +1912,18 @@ function excluirItem(id){
 }
 /* ---- Receitas (gerenciamento + ordenação) ---- */
 function cfgReceitas(b){
+  const nmIt=id=>{const it=db.itens.find(i=>i.id===id);return it?it.nome:'?'};
+  const T='cfg_receitas',F=tabelaFiltravel(T,()=>[...db.receitas].sort((a,b2)=>(a.ordem||99)-(b2.ordem||99)),{
+    nome:r=>r.nome,status:r=>r.status,data:r=>r.criado_em,
+    consome:r=>(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'—',
+    produz:r=>(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🏭 Receitas de Produção</div>
     <button class="btn btn-purple btn-sm" onclick="modalReceita()">+ Nova receita</button></div>
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px">A ordem definida aqui é a ordem em que as receitas aparecem na tela de produção do Baú.</p>
-  <div class="table-wrap"><table>
-  <tr><th>Ordem</th><th>Receita</th><th>Consome</th><th>Produz</th><th>Status</th><th>Ações</th></tr>
-  ${[...db.receitas].sort((a,b2)=>(a.ordem||99)-(b2.ordem||99)).map(r=>{
+  ${F.barra}<div class="table-wrap"><table>
+  <tr><th>Ordem</th>${thCol(T,'nome','Receita')}${thCol(T,'consome','Consome')}${thCol(T,'produz','Produz')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  ${F.rows.map(r=>{
     const cons=(r.insumos||[]).filter(x=>x.papel==='consumo');
     const prd=(r.insumos||[]).filter(x=>x.papel==='produzido');
     const nm=id=>{const it=db.itens.find(i=>i.id===id);return it?it.nome:'?'};
@@ -1849,11 +1932,12 @@ function cfgReceitas(b){
     <td style="color:var(--muted);font-size:12px">${cons.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'—'}</td>
     <td style="color:var(--muted);font-size:12px">${prd.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'}</td>
     <td><span class="badge ${r.status==='ativo'?'ativo':'inativo'}">${r.status}</span></td>
+    <td style="color:var(--muted)">${dataHoraBR(r.criado_em)}</td>
     <td><button class="iconbtn" onclick="moverReceita('${r.id}',-1)">↑</button><button class="iconbtn" onclick="moverReceita('${r.id}',1)">↓</button>
       <button class="iconbtn" onclick="modalReceita('${r.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleReceita('${r.id}')">${r.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirReceita('${r.id}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')||'<tr><td colspan="6" class="empty">Nenhuma receita cadastrada.</td></tr>'}</table></div>`;
+  </tr>`}).join('')||linhaSemResultado(7,T)}</table></div>`;
 }
 async function moverReceita(id,dir){
   const rs=[...db.receitas].sort((a,b)=>(a.ordem||99)-(b.ordem||99));
@@ -1881,19 +1965,21 @@ function fornecedoresDoItem(itemId){
   return db.fornecedores.filter(f=>f.status==='ativo'&&ids.includes(f.id));
 }
 function cfgFornecedores(b){
+  const T='cfg_fornecedores',F=tabelaFiltravel(T,()=>db.fornecedores,{nome:f=>f.nome,itens:f=>itensDoFornecedor(f.id).map(i=>i.nome).join(', ')||'—',status:f=>f.status,data:f=>f.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🚚 Fornecedores</div>
     <button class="btn btn-purple btn-sm" onclick="modalFornecedor()">+ Novo fornecedor</button></div>
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Vincule cada fornecedor às Matérias-Primas e aos Insumos Auxiliares que ele fornece. Na compra, o campo fornecedor de cada linha sugere os fornecedores vinculados àquele item.</p>
-  <div class="table-wrap"><table>
-  <tr><th>Nome</th><th>Itens fornecidos</th><th>Status</th><th>Ações</th></tr>
-  ${db.fornecedores.map(f=>{const its=itensDoFornecedor(f.id);return`<tr>
+  ${F.barra}<div class="table-wrap"><table>
+  <tr>${thCol(T,'nome','Nome')}${thCol(T,'itens','Itens fornecidos')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  ${F.rows.map(f=>{const its=itensDoFornecedor(f.id);return`<tr>
     <td><b>${esc(f.nome)}</b></td>
     <td style="color:var(--muted);font-size:12px">${its.length?its.map(i=>esc(i.nome)).join(', '):'—'}</td>
     <td><span class="badge ${f.status==='ativo'?'ativo':'inativo'}">${f.status}</span></td>
+    <td style="color:var(--muted)">${dataHoraBR(f.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalFornecedor('${f.id}')">✏️</button>
     <button class="iconbtn" onclick="toggleFornecedor('${f.id}')">${f.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirFornecedor('${f.id}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')||'<tr><td colspan="4" class="empty">Nenhum fornecedor cadastrado.</td></tr>'}</table></div>`;
+  </tr>`}).join('')||linhaSemResultado(5,T)}</table></div>`;
 }
 /* Atalho da compra: abre o cadastro por cima do formulário (2ª camada) e devolve o fornecedor criado */
 let _fornAtalho=null;
@@ -1972,19 +2058,22 @@ async function toggleFornecedor(id){
   f.status=novo;render();
 }
 /* ---- Descontos ---- */
+function descontoResumo(p){return p.tipo==='fixa'?p.desconto_fixo+'%':(p.faixas||[]).map(fx=>`${fx.quantidade_min}–${fx.quantidade_max===null?'∞':fx.quantidade_max}: ${fx.percentual_desconto}%`).join(' · ')||'—'}
 function cfgDescontos(b){
+  const T='cfg_descontos',F=tabelaFiltravel(T,()=>[...db.parcerias].sort((a,b)=>a.ordem-b.ordem),{nome:p=>p.nome,tipo:p=>p.tipo==='fixa'?'Fixa':'Escalonada',desconto:p=>descontoResumo(p),status:p=>p.status});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🤝 Descontos Comerciais</div>
     <button class="btn btn-purple btn-sm" onclick="modalDescontos()">+ Novo desconto</button></div>
-  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
-  ${[...db.parcerias].sort((a,b)=>a.ordem-b.ordem).map(p=>`<div class="card">
-    <div style="display:flex;justify-content:space-between"><b>${esc(p.nome)}</b>
-      <span><button class="iconbtn" onclick="modalDescontos('${p.id}')">✏️</button>
-      <button class="iconbtn" onclick="toggleDescontos('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirDesconto('${p.id}')">🗑️</button>`:''}</span></div>
-    <div style="margin-top:6px"><span class="tag ${p.status==='ativo'?'g':'r'}">${p.status}</span> <span class="tag">${p.tipo==='fixa'?'Desconto fixo '+p.desconto_fixo+'%':'Escalonada'}</span></div>
-    ${p.tipo==='escalonada'?(p.faixas||[]).map(fx=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px dashed var(--border);margin-top:4px">
-      <span style="color:var(--muted)">${fx.quantidade_min} a ${fx.quantidade_max===null?'+∞':fx.quantidade_max} itens</span><b style="color:var(--green)">${fx.percentual_desconto}%</b></div>`).join(''):''}
-  </div>`).join('')}</div>`;
+  ${F.barra}<div class="table-wrap"><table>
+  <tr>${thCol(T,'nome','Nome')}${thCol(T,'tipo','Tipo')}${thCol(T,'desconto','Desconto')}${thCol(T,'status','Status')}<th>Ações</th></tr>
+  ${F.rows.map(p=>`<tr>
+    <td><b>${esc(p.nome)}</b></td>
+    <td><span class="tag">${p.tipo==='fixa'?'Fixa':'Escalonada'}</span></td>
+    <td style="font-size:12px">${esc(descontoResumo(p))}</td>
+    <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
+    <td><button class="iconbtn" onclick="modalDescontos('${p.id}')">✏️</button>
+      <button class="iconbtn" onclick="toggleDescontos('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirDesconto('${p.id}')">🗑️</button>`:''}</td>
+  </tr>`).join('')||linhaSemResultado(5,T)}</table></div>`;
 }
 function modalDescontos(id){
   const p=id?db.parcerias.find(x=>x.id===id):null;
@@ -2062,6 +2151,7 @@ async function toggleDescontos(id){
 }
 /* ---- Deslocamento (ex-Taxas + alíquota da taxa) ---- */
 function cfgDeslocamento(b){
+  const T='cfg_deslocamento',F=tabelaFiltravel(T,()=>[...db.taxas_deslocamento].sort((a,b)=>a.ordem-b.ordem),{nome:t=>t.nome,valor:t=>fmt(t.valor),status:t=>t.status});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🚗 Deslocamento</div>
     <button class="btn btn-purple btn-sm" onclick="modalTaxa()">+ Nova taxa</button></div>
@@ -2072,14 +2162,14 @@ function cfgDeslocamento(b){
       <button class="btn btn-primary btn-sm" onclick="salvarAliquotaTaxa()">Salvar</button>
     </div>
   </div>
-  <div class="table-wrap"><table>
-  <tr><th>Ordem</th><th>Localidade</th><th>Valor</th><th>Status</th><th>Ações</th></tr>
-  ${[...db.taxas_deslocamento].sort((a,b)=>a.ordem-b.ordem).map(t=>`<tr>
+  ${F.barra}<div class="table-wrap"><table>
+  <tr><th>Ordem</th>${thCol(T,'nome','Localidade')}${thCol(T,'valor','Valor')}${thCol(T,'status','Status')}<th>Ações</th></tr>
+  ${F.rows.map(t=>`<tr>
     <td>${t.ordem}</td><td><b>${esc(t.nome)}</b></td><td class="money">${fmt(t.valor)}</td>
     <td><span class="badge ${t.status==='ativo'?'ativo':'inativo'}">${t.status}</span></td>
     <td><button class="iconbtn" onclick="modalTaxa('${t.id}')">✏️</button>
     <button class="iconbtn" onclick="toggleTaxa('${t.id}')">${t.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirTaxa('${t.id}')">🗑️</button>`:''}</td>
-  </tr>`).join('')}</table></div>`;
+  </tr>`).join('')||linhaSemResultado(5,T)}</table></div>`;
 }
 async function salvarAliquotaTaxa(){
   const t=parseFloat(document.getElementById('al-taxa').value);
@@ -2360,9 +2450,20 @@ const GETTERS={
  bau:{operacao_id:r=>r.operacao_id,data:r=>r.data,usuario_nome:r=>r.usuario_nome,item_nome:r=>r.item_nome,tipo_movimento:r=>r.tipo_movimento,quantidade:r=>r.quantidade,saldo_resultante:r=>r.saldo_resultante,origem:r=>r.origem},
  financeiro:{data:r=>r.data,usuario_nome:r=>r.usuario_nome,tipo_label:r=>r.tipo_label,itens:r=>r.itens,desconto:r=>r.desconto,deslocamento:r=>r.deslocamento,descricao:r=>r.descricao,entrada:r=>r.entrada,repasse:r=>r.repasse,valor:r=>r.valor,status:r=>r.status}
 };
+/* Tabelas de Configurações usam o MESMO filtro do Baú/Financeiro: cada tabela registra sua fonte de linhas e os
+   "getters" (texto exibido em cada coluna). A coluna de chave "data" usa o filtro De/Até. */
+const FONTES_FILTRO={};
+function tabelaFiltravel(tipo,fonte,getters){
+  FONTES_FILTRO[tipo]=fonte;GETTERS[tipo]=getters;
+  if(!regConsulta[tipo])regConsulta[tipo]={page:1,size:10,filtros:{}};
+  const todas=fonte(),rows=aplicarFiltros(todas,tipo);
+  return{todas,rows,barra:filtroAtivo(tipo)?`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">${contadorFiltro(tipo,rows.length,todas.length)}</div>`:''};
+}
+function linhaSemResultado(n,tipo){return `<tr><td colspan="${n}" class="empty">${filtroAtivo(tipo)?'Nenhum registro corresponde aos filtros.':'Nenhum registro cadastrado.'}</td></tr>`}
 function valoresColuna(tipo,key){
  let a=[];
- if(tipo==='bau')a=db.estoque_bau.map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));
+ if(FONTES_FILTRO[tipo])a=FONTES_FILTRO[tipo]();
+ else if(tipo==='bau')a=db.estoque_bau.map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));
  else if(tipo==='financeiro')a=linhasFinanceiro();
  const get=GETTERS[tipo][key];
  return [...new Set(a.map(r=>String(get?get(r):(r[key]??''))).filter(v=>v!==''))].sort((x,y)=>x.localeCompare(y,'pt-BR',{numeric:true}));
@@ -2567,44 +2668,6 @@ window.addEventListener('resize',sselFechar);
 document.addEventListener('scroll',e=>{if(_sselPop&&!_sselPop.contains(e.target))sselFechar()},true);
 new MutationObserver(ms=>{ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.tagName==='SELECT')sselAplicar(n);else n.querySelectorAll&&n.querySelectorAll('select').forEach(sselAplicar)}));if(_sselAberto&&!_sselAberto.isConnected)sselFechar()}).observe(document.documentElement,{childList:true,subtree:true});
 document.querySelectorAll('select').forEach(sselAplicar);
-
-/* ================= FILTROS DAS TABELAS DE CONFIGURAÇÕES =================
-   Cada tabela de Configurações ganha uma linha de filtro por coluna: lista (para colunas com poucos
-   valores repetidos, ex.: Status, Perfil, Categoria) ou campo de texto. Os filtros sobrevivem ao re-render. */
-const filtrosCfg={};
-function aplicarFiltrosCfg(root){
-  root.querySelectorAll('table').forEach((tb,ti)=>{
-    const rows=[...tb.rows];if(rows.length<2||!rows[0].querySelector('th'))return;
-    const head=rows[0],dados=rows.slice(1).filter(r=>!r.querySelector('td[colspan]'));
-    if(!dados.length)return;
-    const key=cfgTabAtual+'|'+ti,st=filtrosCfg[key]=filtrosCfg[key]||{};
-    const tr=document.createElement('tr');tr.className='cfg-filtro';
-    [...head.cells].forEach((th,ci)=>{
-      const cel=document.createElement('th');tr.appendChild(cel);
-      const rot=th.textContent.trim();
-      if(!rot||/^(ações|ordem)$/i.test(rot)){
-        if(ci===head.cells.length-1)cel.innerHTML=`<button class="btn btn-ghost btn-sm cfg-limpar" style="display:none;white-space:nowrap" title="Limpar filtros">✕ Limpar</button>`;
-        return;
-      }
-      const vals=[...new Set(dados.map(r=>(r.cells[ci]?r.cells[ci].innerText:'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
-      const lista=vals.length>1&&vals.length<=6&&dados.length>vals.length;
-      cel.innerHTML=lista
-        ?`<select data-ci="${ci}"><option value="">Todos</option>${vals.map(v=>`<option ${st[ci]===v?'selected':''}>${esc(v)}</option>`).join('')}</select>`
-        :`<input type="search" data-ci="${ci}" placeholder="Filtrar ${esc(rot.toLowerCase())}…" value="${esc(st[ci]||'')}">`;
-    });
-    head.after(tr);
-    const vazio=document.createElement('tr');vazio.className='cfg-sem-resultado';vazio.innerHTML=`<td colspan="${head.cells.length}">Nenhum registro corresponde aos filtros.</td>`;tb.appendChild(vazio);
-    const filtrar=()=>{
-      let n=0;
-      dados.forEach(r=>{const ok=Object.entries(st).every(([ci,v])=>{if(!v)return true;const t=(r.cells[ci]?r.cells[ci].innerText:'').trim();const campo=tr.querySelector(`[data-ci="${ci}"]`);return campo&&campo.tagName==='SELECT'?t===v:sselNorm(t).includes(sselNorm(v))});r.style.display=ok?'':'none';if(ok)n++});
-      vazio.style.display=n?'none':'';
-      const lp=tr.querySelector('.cfg-limpar');if(lp)lp.style.display=Object.values(st).some(Boolean)?'':'none';
-    };
-    tr.querySelectorAll('[data-ci]').forEach(el=>el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>{st[el.dataset.ci]=el.value;filtrar()}));
-    const lp=tr.querySelector('.cfg-limpar');if(lp)lp.onclick=()=>{Object.keys(st).forEach(k=>delete st[k]);render()};
-    filtrar();
-  });
-}
 
 /* ================= INIT ================= */
 (async()=>{
