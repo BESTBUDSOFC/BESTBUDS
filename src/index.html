@@ -186,7 +186,7 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <span class="vselo" id="h-versao">v4.0.0</span>
+  <span class="vselo" id="h-versao">v4.1.0</span>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -217,7 +217,7 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.0.0';
+const VERSAO='v4.1.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -235,7 +235,7 @@ function toast(msg){
   let t=document.getElementById('toast');
   if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--green);color:var(--text);padding:12px 20px;border-radius:10px;font-weight:600;z-index:200;box-shadow:0 8px 30px rgba(0,0,0,.5);white-space:pre-line;text-align:center;max-width:90vw';document.body.appendChild(t)}
   t.textContent=msg;t.style.display='block';
-  clearTimeout(t._h);t._h=setTimeout(()=>{t.style.display='none'},3500);
+  clearTimeout(t._h);t._h=setTimeout(()=>{t.style.display='none'},Math.max(3500,String(msg).length*60));
 }
 /* ================= IMAGENS (SUPABASE STORAGE) ================= */
 function imgSrc(url){return url||null}
@@ -263,7 +263,7 @@ let db=null, session=null;
    que as telas já esperam (db.produtos, db.itens, db.vendas com itens embutidos, etc.) */
 async function carregarTudo(){
   const[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,
-    taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa]=await Promise.all([
+    taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens]=await Promise.all([
     sb.from('profiles').select('*').order('criado_em'),
     sb.from('produtos').select('*').order('ordem'),
     sb.from('itens').select('*').order('nome'),
@@ -279,9 +279,10 @@ async function carregarTudo(){
     sb.from('compra_itens').select('*'),
     sb.from('estoque_bau').select('*').order('data',{ascending:false}),
     sb.from('configuracoes').select('*').eq('id',1).single(),
-    sb.from('ajustes_caixa').select('*').order('data',{ascending:false})
+    sb.from('ajustes_caixa').select('*').order('data',{ascending:false}),
+    sb.from('fornecedor_itens').select('*')
   ]);
-  for(const r of[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa])
+  for(const r of[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens])
     if(r.error)throw r.error;
 
   const porReceita={};
@@ -298,7 +299,7 @@ async function carregarTudo(){
   });
   const porCompra={};
   (compraItens.data||[]).forEach(ci=>{
-    (porCompra[ci.compra_id]=porCompra[ci.compra_id]||[]).push({item_id:ci.item_id,nome:ci.nome,quantidade:Number(ci.quantidade),preco_unitario:Number(ci.preco_unitario),_id:ci.id});
+    (porCompra[ci.compra_id]=porCompra[ci.compra_id]||[]).push({item_id:ci.item_id,nome:ci.nome,quantidade:Number(ci.quantidade),preco_unitario:Number(ci.preco_unitario),fornecedor_id:ci.fornecedor_id,fornecedor_nome:ci.fornecedor_nome,_id:ci.id});
   });
 
   const parceriasArr=(parcerias.data||[]).map(p=>({...p,faixas:porParceria[p.id]||[]}));
@@ -309,6 +310,7 @@ async function carregarTudo(){
     itens:(itens.data||[]).map(i=>({...i,preco_unitario:Number(i.preco_unitario),qtd_minima:Number(i.qtd_minima)})),
     receitas:(receitas.data||[]).map(r=>({...r,insumos:porReceita[r.id]||[]})),
     fornecedores:(fornecedores.data||[]),
+    fornecedor_itens:(fornItens.data||[]),
     parcerias:parceriasArr,
     descontos:parceriasArr,
     taxas_deslocamento:(taxas.data||[]).map(t=>({...t,valor:Number(t.valor)})),
@@ -800,14 +802,46 @@ async function confirmarProducao(rid){
 }
 
 /* ================= COMPRAS (ABA PRÓPRIA) ================= */
+/* Select de fornecedor por linha: Matéria-Prima escolhe entre os fornecedores vinculados; Insumo Auxiliar usa o fornecedor geral */
+function selectFornLinha(cls,itemId,selId){
+  const it=db.itens.find(i=>i.id===itemId);
+  if(!it||it.categoria!=='materia_prima')return`<select class="${cls}" disabled title="Usa o fornecedor geral da compra"><option value="">— fornecedor geral —</option></select>`;
+  const fs=fornecedoresDoItem(itemId);
+  if(!fs.length)return`<select class="${cls}" disabled title="Vincule fornecedores a esta Matéria-Prima em Configurações → Fornecedores"><option value="">Sem fornecedor vinculado</option></select>`;
+  const sel=selId&&fs.some(f=>f.id===selId)?selId:(fs.length===1?fs[0].id:'');
+  return`<select class="${cls}">${fs.length>1?`<option value="" ${sel?'':'selected'}>Selecione o fornecedor…</option>`:''}${fs.map(f=>`<option value="${f.id}" ${f.id===sel?'selected':''}>${esc(f.nome)}</option>`).join('')}</select>`;
+}
+function trocarFornLinha(linha,cls,itemSel){const atual=linha.querySelector('.'+cls);const d=document.createElement('div');d.innerHTML=selectFornLinha(cls,itemSel.value,atual?atual.value:'');atual.replaceWith(d.firstElementChild)}
 function linhaCompraItem(ci){
-  const opts=db.itens.filter(i=>i.status==='ativo'&&(i.categoria==='materia_prima'||i.categoria==='insumo_auxiliar'))
-    .map(i=>`<option value="${i.id}" data-preco="${i.preco_unitario||0}" ${ci&&ci.item_id===i.id?'selected':''}>${esc(i.nome)} (${esc(i.unidade_medida)})</option>`).join('');
-  return`<div class="row3" style="margin-bottom:8px;grid-template-columns:2fr 1fr auto auto;align-items:center;gap:6px" data-citem>
-    <select class="ci-item" onchange="atualizarPrecoLinha(this)">${opts}</select>
+  const disp=db.itens.filter(i=>i.status==='ativo'&&(i.categoria==='materia_prima'||i.categoria==='insumo_auxiliar'));
+  const opts=disp.map(i=>`<option value="${i.id}" data-preco="${i.preco_unitario||0}" ${ci&&ci.item_id===i.id?'selected':''}>${esc(i.nome)} (${esc(i.unidade_medida)})</option>`).join('');
+  const itemId=ci&&ci.item_id?ci.item_id:(disp[0]?disp[0].id:'');
+  return`<div class="row3" style="margin-bottom:8px;grid-template-columns:2fr 1.5fr 1fr auto auto;align-items:center;gap:6px" data-citem>
+    <select class="ci-item" onchange="trocarFornLinha(this.closest('[data-citem]'),'ci-forn',this);atualizarPrecoLinha(this)">${opts}</select>
+    ${selectFornLinha('ci-forn',itemId,ci&&ci.fornecedor_id)}
     <input class="ci-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci?ci.quantidade:''}" oninput="recalcTotalCompra()">
     <span class="ci-preco-display money" style="white-space:nowrap;display:flex;align-items:center;justify-content:flex-end;min-width:90px">—</span>
     <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('[data-citem]').remove();recalcTotalCompra()">✕</button></div>`;
+}
+/* Resolve fornecedor do cabeçalho e de cada linha. Linha sem fornecedor próprio herda o geral.
+   Sem fornecedor geral: 1 fornecedor nas linhas → ele; vários → nomes unidos por " + ". */
+function resolverFornecedoresCompra(fornNome,itens){
+  const fGeral=fornNome?db.fornecedores.find(x=>x.nome.toLowerCase()===fornNome.toLowerCase()):null;
+  const nomeGeral=fGeral?fGeral.nome:fornNome;
+  const linhas=itens.map(ci=>{
+    const f=ci.fornecedor_id?db.fornecedores.find(x=>x.id===ci.fornecedor_id):null;
+    return{...ci,fornecedor_id:f?f.id:(fGeral?fGeral.id:null),fornecedor_nome:f?f.nome:(nomeGeral||null)};
+  });
+  if(nomeGeral)return{fornecedor_id:fGeral?fGeral.id:null,fornecedor_nome:nomeGeral,linhas};
+  const distintos=[...new Map(linhas.filter(l=>l.fornecedor_nome).map(l=>[l.fornecedor_id||l.fornecedor_nome,l])).values()];
+  if(distintos.length===1)return{fornecedor_id:distintos[0].fornecedor_id,fornecedor_nome:distintos[0].fornecedor_nome,linhas};
+  if(distintos.length>1)return{fornecedor_id:null,fornecedor_nome:distintos.map(l=>l.fornecedor_nome).join(' + '),linhas};
+  return{fornecedor_id:null,fornecedor_nome:'Fornecedor avulso',linhas};
+}
+/* Matéria-Prima com vários fornecedores vinculados exige escolha na linha */
+function linhaSemFornecedor(itens){
+  const ci=itens.find(ci=>!ci.fornecedor_id&&fornecedoresDoItem(ci.item_id).length>1);
+  return ci?db.itens.find(i=>i.id===ci.item_id):null;
 }
 function precoItemSelecionado(sel){const opt=sel.options[sel.selectedIndex];return opt?parseFloat(opt.getAttribute('data-preco')||'0'):0}
 function atualizarPrecoLinha(sel){const linha=sel.closest('[data-citem]');if(linha)linha.querySelector('.ci-preco-display').textContent=fmt(precoItemSelecionado(sel));recalcTotalCompra()}
@@ -820,8 +854,8 @@ function addCompraItem(){
 }
 function itensCompraForm(){
   return [...document.querySelectorAll('#c-itens [data-citem]')].map(d=>{
-    const sel=d.querySelector('.ci-item');
-    return{item_id:sel.value,quantidade:parseFloat(d.querySelector('.ci-qtd').value),preco_unitario:precoItemSelecionado(sel)}
+    const sel=d.querySelector('.ci-item'),fs=d.querySelector('.ci-forn');
+    return{item_id:sel.value,fornecedor_id:fs&&fs.value||null,quantidade:parseFloat(d.querySelector('.ci-qtd').value),preco_unitario:precoItemSelecionado(sel)}
   }).filter(x=>x.item_id&&x.quantidade>0&&x.preco_unitario>0);
 }
 function recalcTotalCompra(){
@@ -844,15 +878,17 @@ async function salvarCompra(){
   const itens=itensCompraForm();
   const itemInvalido=itens.map(ci=>db.itens.find(i=>i.id===ci.item_id)).find(it=>it&&!['materia_prima','insumo_auxiliar'].includes(it.categoria));
   if(itemInvalido)return fail(`"${itemInvalido.nome}" não pode ser usado como insumo de compra (só Matéria-Prima ou Insumo Auxiliar).`);
+  const semForn=linhaSemFornecedor(itens);
+  if(semForn)return fail(`Selecione o fornecedor da linha "${semForn.nome}".`);
   let valor=parseFloat(document.getElementById('c-valor').value);
   if(itens.length)valor=itens.reduce((s,x)=>s+x.quantidade*x.preco_unitario,0);
   if(!(valor>0))return fail('O valor total deve ser estritamente maior que zero.');
-  const f=db.fornecedores.find(x=>x.nome.toLowerCase()===fornNome.toLowerCase());
-  const fornecedorNome=fornNome||(f?f.nome:'Fornecedor avulso');
+  const rf=resolverFornecedoresCompra(fornNome,itens);
+  const fornecedorNome=rf.fornecedor_nome;
   if(db.compras.some(x=>x.status==='ativa'&&x.fornecedor_nome===fornecedorNome&&(x.data_local||x.data.slice(0,10))===data&&x.valor_total===valor))
     return fail('Compra duplicada (mesmo fornecedor, data e valor) — verifique antes de registrar.');
   const operacaoId=await nextOpId();
-  const cabecalho={operacao_id:operacaoId,fornecedor_id:f?f.id:null,fornecedor_nome:fornecedorNome,
+  const cabecalho={operacao_id:operacaoId,fornecedor_id:rf.fornecedor_id,fornecedor_nome:fornecedorNome,
     data:new Date(data+'T'+new Date().toTimeString().slice(0,8)).toISOString(),data_local:data,
     valor_total:valor,descricao:document.getElementById('c-desc').value.trim(),
     usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,status:'ativa'};
@@ -860,20 +896,20 @@ async function salvarCompra(){
   if(e1)return fail('Erro ao registrar compra: '+e1.message);
   let itensInseridos=[];
   if(itens.length){
-    const itensRows=itens.map(ci=>{
+    const itensRows=rf.linhas.map(ci=>{
       const it=db.itens.find(i=>i.id===ci.item_id);
       if(it&&Math.abs((it.preco_unitario||0)-ci.preco_unitario)>0.0001)toast('ℹ️ Preço divergente do cadastro para '+it.nome+'. Compra mantida para auditoria.');
-      return{compra_id:kRow.id,item_id:ci.item_id,nome:it?it.nome:'?',quantidade:ci.quantidade,preco_unitario:ci.preco_unitario};
+      return{compra_id:kRow.id,item_id:ci.item_id,nome:it?it.nome:'?',quantidade:ci.quantidade,preco_unitario:ci.preco_unitario,fornecedor_id:ci.fornecedor_id,fornecedor_nome:ci.fornecedor_nome};
     });
     const{data:itd,error:e2}=await sb.from('compra_itens').insert(itensRows).select();
     if(e2){await sb.from('compras').delete().eq('id',kRow.id);return fail('Erro ao registrar itens: '+e2.message)}
     itensInseridos=itd;
     const saldosLocais={};
-    const movimentos=itens.map(ci=>{
+    const movimentos=rf.linhas.map(ci=>{
       const it=db.itens.find(i=>i.id===ci.item_id);if(!it)return null;
       const saldoAnt=(saldosLocais[it.id]??saldoItem(it.id));
       saldosLocais[it.id]=saldoAnt+ci.quantidade;
-      return{item_id:it.id,tipo_movimento:'entrada_compra',operacao_id:operacaoId,quantidade:ci.quantidade,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,origem:'compra: '+fornecedorNome,saldo_resultante:saldoAnt+ci.quantidade};
+      return{item_id:it.id,tipo_movimento:'entrada_compra',operacao_id:operacaoId,quantidade:ci.quantidade,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,origem:'compra: '+(ci.fornecedor_nome||fornecedorNome),saldo_resultante:saldoAnt+ci.quantidade};
     }).filter(Boolean);
     if(movimentos.length){
       const{data:bd,error:e3}=await sb.from('estoque_bau').insert(movimentos).select();
@@ -881,7 +917,7 @@ async function salvarCompra(){
       else bd.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
     }
   }
-  const k={...kRow,itens:itensInseridos.map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario)})),valor_total:Number(kRow.valor_total)};
+  const k={...kRow,itens:itensInseridos.map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario),fornecedor_id:i.fornecedor_id,fornecedor_nome:i.fornecedor_nome})),valor_total:Number(kRow.valor_total)};
   db.compras.unshift(k);
   reg('Compra registrada',`${k.fornecedor_nome} — ${fmt(valor)}${itens.length?` (${itens.length} insumo(s) entraram no Baú)`:''}`);
   bauTela=null;
@@ -905,8 +941,8 @@ function telaCompraHTML(c){
   <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">← Voltar ao Baú</button>
   <div class="card" style="max-width:760px">
     <div class="row2">
-      <div class="field"><label>Fornecedor (texto livre ou cadastrado)</label>
-        <input id="c-forn" list="forn-list" placeholder="Digite o nome do fornecedor">
+      <div class="field"><label>Fornecedor geral (opcional)</label>
+        <input id="c-forn" list="forn-list" placeholder="Usado nas linhas sem fornecedor próprio">
         <datalist id="forn-list">${db.fornecedores.filter(f=>f.status==='ativo').map(f=>`<option value="${esc(f.nome)}">`).join('')}</datalist></div>
       <div class="field"><label>Data</label><input id="c-data" type="date" value="${todayISO()}"></div>
     </div>
@@ -917,7 +953,7 @@ function telaCompraHTML(c){
     <div class="section-title" style="margin-top:10px">Itens de insumo (opcional — dá entrada no Baú)</div>
     <div id="c-itens"></div>
     <button class="btn btn-ghost btn-sm" onclick="addCompraItem()">+ Adicionar item</button>
-    <p style="color:var(--muted);font-size:12px;margin-top:6px">Com insumos informados, o valor total é calculado automaticamente pela soma dos itens (preço fixo do cadastro).</p>
+    <p style="color:var(--muted);font-size:12px;margin-top:6px">Com insumos informados, o valor total é calculado automaticamente pela soma dos itens (preço fixo do cadastro). Cada Matéria-Prima usa um dos fornecedores vinculados a ela — uma mesma compra pode reunir fornecedores diferentes. Insumos Auxiliares usam o fornecedor geral.</p>
     <p id="c-err" style="color:var(--danger);font-size:13px;display:none;margin-top:10px"></p>
     <div style="margin-top:16px;display:flex;gap:8px">
       <button class="btn btn-primary" onclick="salvarCompra()">Registrar compra</button>
@@ -992,7 +1028,7 @@ function modalColunasFin(){
 function linhasFinanceiro(){
  const rows=[];
  db.vendas.filter(v=>v.status!=='excluida').forEach(v=>rows.push({id:'venda:'+v.id,tipo:'venda',data:v.data,usuario_nome:v.usuario_nome||'',tipo_label:'Venda',itens:(v.itens||[]).map(i=>i.qtd+'× '+i.nome).join(', '),desconto:v.parceria_nome||'—',deslocamento:(v.taxa_nome&&v.taxa_valor>0)?v.taxa_nome+' ('+fmt(v.taxa_valor)+')':'—',descricao:'—',entrada:v.receita_loja||0,repasse:v.cota_funcionario||0,valor:v.total||0,status:v.status,v}));
- db.compras.filter(k=>k.status!=='excluida').forEach(k=>rows.push({id:'compra:'+k.id,tipo:'compra',data:k.data,usuario_nome:k.usuario_nome||'',tipo_label:'Compra',itens:(k.itens||[]).map(i=>{const it=db.itens.find(x=>x.id===i.item_id);const nome=i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?');const q=i.qtd??i.quantidade;return (q??'?')+'× '+nome}).join(', ')||'—',desconto:'—',deslocamento:'—',descricao:k.descricao||'—',entrada:0,repasse:0,valor:-(k.valor_total||0),status:k.status,k}));
+ db.compras.filter(k=>k.status!=='excluida').forEach(k=>rows.push({id:'compra:'+k.id,tipo:'compra',data:k.data,usuario_nome:k.usuario_nome||'',tipo_label:'Compra',itens:(k.itens||[]).map(i=>{const it=db.itens.find(x=>x.id===i.item_id);const nome=i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?');const q=i.qtd??i.quantidade;return (q??'?')+'× '+nome+(i.fornecedor_nome&&i.fornecedor_nome!==k.fornecedor_nome?' ('+i.fornecedor_nome+')':'')}).join(', ')||'—',desconto:'—',deslocamento:'—',descricao:k.descricao||'—',entrada:0,repasse:0,valor:-(k.valor_total||0),status:k.status,k}));
  (db.ajustes_caixa||[]).forEach(a=>rows.push({id:'ajuste:'+a.id,tipo:'ajuste',data:a.data,usuario_nome:a.usuario_nome||'',tipo_label:'Ajuste de Caixa ('+(a.tipo==='entrada'?'+':'−')+')',itens:'—',desconto:'—',deslocamento:'—',descricao:a.motivo||'—',entrada:0,repasse:0,valor:a.tipo==='entrada'?a.valor:-a.valor,status:'ativa',a}));
  return rows;
 }
@@ -1185,7 +1221,7 @@ function editCompraFin(id){
  const itensDisp=db.itens.filter(i=>i.status==='ativo'&&(i.categoria==='materia_prima'||i.categoria==='insumo_auxiliar'));
  const linhas=(k.itens||[]).map(i=>linhaItemCompraEdit(i,itensDisp)).join('');
  openModal(`<h3>Editar compra</h3>
- <div class="field"><label>Fornecedor</label><input id="ec-forn" list="ec-forn-list" value="${esc(k.fornecedor_nome||'')}"><datalist id="ec-forn-list">${db.fornecedores.filter(f=>f.status==='ativo').map(f=>`<option value="${esc(f.nome)}">`).join('')}</datalist></div>
+ <div class="field"><label>Fornecedor geral (opcional)</label><input id="ec-forn" list="ec-forn-list" value="${esc(k.fornecedor_nome||'')}"><datalist id="ec-forn-list">${db.fornecedores.filter(f=>f.status==='ativo').map(f=>`<option value="${esc(f.nome)}">`).join('')}</datalist></div>
  <div class="section-title" style="color:var(--warning-light)">Insumos comprados</div>
  <div id="ec-itens">${linhas||'<p class="muted" style="font-size:12px">Nenhum insumo registrado nesta compra.</p>'}</div>
  <button class="btn btn-ghost btn-sm" onclick="addItemCompraEdit()">+ Adicionar insumo</button>
@@ -1196,8 +1232,10 @@ function editCompraFin(id){
 }
 function linhaItemCompraEdit(i,itensDisp){
  const opts=itensDisp.map(it=>`<option value="${it.id}" ${it.id===i.item_id?'selected':''}>${esc(it.nome)} (${esc(it.unidade_medida)})</option>`).join('');
- return`<div class="row3" style="margin-bottom:8px;grid-template-columns:2fr 1fr auto" data-ecitem>
-  <select class="eci-item">${opts}</select>
+ const itemId=i.item_id||(itensDisp[0]?itensDisp[0].id:'');
+ return`<div class="row3" style="margin-bottom:8px;grid-template-columns:2fr 1.5fr 1fr auto" data-ecitem>
+  <select class="eci-item" onchange="trocarFornLinha(this.closest('[data-ecitem]'),'eci-forn',this)">${opts}</select>
+  ${selectFornLinha('eci-forn',itemId,i.fornecedor_id)}
   <input class="eci-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${i.quantidade??i.qtd}">
   <button class="iconbtn btn-del-linha" onclick="this.closest('[data-ecitem]').remove()">✕</button></div>`;
 }
@@ -1212,28 +1250,30 @@ async function salvarEdicaoCompraFin(id){
  const e=document.getElementById('ec-err');
  const forn=document.getElementById('ec-forn').value.trim();
  const itens=[...document.querySelectorAll('#ec-itens [data-ecitem]')].map(d=>{
-  const sel=d.querySelector('.eci-item');const it=db.itens.find(x=>x.id===sel.value);
-  return{item_id:sel.value,nome:it?it.nome:'?',quantidade:parseFloat(d.querySelector('.eci-qtd').value)||0,preco_unitario:it?it.preco_unitario:0};
+  const sel=d.querySelector('.eci-item'),fs=d.querySelector('.eci-forn');const it=db.itens.find(x=>x.id===sel.value);
+  return{item_id:sel.value,fornecedor_id:fs&&fs.value||null,nome:it?it.nome:'?',quantidade:parseFloat(d.querySelector('.eci-qtd').value)||0,preco_unitario:it?it.preco_unitario:0};
  }).filter(x=>x.item_id&&x.quantidade>0);
  const desc=document.getElementById('ec-desc').value.trim();
  const itemInvalido=itens.map(ci=>db.itens.find(i=>i.id===ci.item_id)).find(it=>it&&!['materia_prima','insumo_auxiliar'].includes(it.categoria));
  if(itemInvalido){e.textContent=`"${itemInvalido.nome}" não pode ser usado como insumo de compra (só Matéria-Prima ou Insumo Auxiliar).`;e.style.display='block';return}
  if(!itens.length&&!(k.valor_total>0)){e.textContent='Adicione ao menos um insumo ou mantenha o valor total.';e.style.display='block';return}
- const f=db.fornecedores.find(x=>x.nome.toLowerCase()===forn.toLowerCase());
- const patch={fornecedor_id:f?f.id:null,fornecedor_nome:forn||'Fornecedor avulso',descricao:desc};
+ const semForn=linhaSemFornecedor(itens);
+ if(semForn){e.textContent=`Selecione o fornecedor da linha "${semForn.nome}".`;e.style.display='block';return}
+ const rf=resolverFornecedoresCompra(forn,itens);
+ const patch={fornecedor_id:rf.fornecedor_id,fornecedor_nome:rf.fornecedor_nome,descricao:desc};
  if(itens.length)patch.valor_total=itens.reduce((s,x)=>s+x.quantidade*x.preco_unitario,0);
  const{error:e1}=await sb.from('compras').update(patch).eq('id',id);
  if(e1){e.textContent='Erro ao salvar: '+e1.message;e.style.display='block';return}
  await sb.from('compra_itens').delete().eq('compra_id',id);
  let itd=[];
  if(itens.length){
-  const{data,error:e2}=await sb.from('compra_itens').insert(itens.map(i=>({...i,compra_id:id}))).select();
+  const{data,error:e2}=await sb.from('compra_itens').insert(rf.linhas.map(i=>({...i,compra_id:id}))).select();
   if(e2){e.textContent='Erro ao salvar itens: '+e2.message;e.style.display='block';return}
   itd=data;
  }
  Object.assign(k,patch);
- k.itens=itd.map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario)}));
- reg('Compra editada',forn+' — '+fmt(k.valor_total));
+ k.itens=itd.map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario),fornecedor_id:i.fornecedor_id,fornecedor_nome:i.fornecedor_nome}));
+ reg('Compra editada',rf.fornecedor_nome+' — '+fmt(k.valor_total));
  closeModal();render();toast('✅ Compra atualizada.');
 }
 
@@ -1254,6 +1294,8 @@ function renderConfig(c){
   else if(cfgTabAtual==='logo')cfgLogo(b);
 }
 /* ---- Usuários ---- */
+/* Perfil com mais acesso primeiro (Sócio > Diretor > Gerente > Vendedor), depois nome A→Z */
+function usuariosOrdenados(){return [...db.usuarios].sort((a,b)=>(PERFIL_NIVEL[b.perfil]||0)-(PERFIL_NIVEL[a.perfil]||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}))}
 function cfgUsuarios(b){
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">👥 Usuários</div>
@@ -1261,7 +1303,7 @@ function cfgUsuarios(b){
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Sócio gerencia todos os perfis, incluindo outros Sócios. <b>Diretor</b> tem as mesmas permissões do Sócio, exceto que não pode alterar, ativar/inativar, excluir ou promover ninguém ao perfil <b>Sócio</b>. Gerentes podem cadastrar vendedores. Ninguém altera o próprio perfil. Deve existir sempre ao menos um sócio ativo.</p>
   <div class="table-wrap"><table>
   <tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Criado em</th><th>Ações</th></tr>
-  ${db.usuarios.map(u=>{
+  ${usuariosOrdenados().map(u=>{
     const sociosAtivos=db.usuarios.filter(x=>x.perfil==='socio'&&x.status==='ativo').length;
     const ehUltimoSocio=u.perfil==='socio'&&u.status==='ativo'&&sociosAtivos<=1;
     return`<tr>
@@ -1571,13 +1613,33 @@ async function toggleItem(id){
   if(error)return toast('⚠️ Erro: '+error.message);
   it.status=novo;reg('Item '+(novo==='ativo'?'ativado':'inativado'),it.nome);render();
 }
+/* Consulta no banco (não no cache local) tudo que ainda referencia o item e impede a exclusão */
+async function vinculosDoItem(id){
+  const[ri,ci,mb]=await Promise.all([
+    sb.from('receita_insumos').select('receita_id, receitas(nome)').eq('item_id',id),
+    sb.from('compra_itens').select('id',{count:'exact',head:true}).eq('item_id',id),
+    sb.from('estoque_bau').select('id',{count:'exact',head:true}).eq('item_id',id)
+  ]);
+  const err=ri.error||ci.error||mb.error;if(err)throw err;
+  const receitas=[...new Set((ri.data||[]).map(x=>x.receitas?.nome||'?'))];
+  const motivos=[];
+  if(receitas.length)motivos.push('usado na(s) receita(s): '+receitas.join(', ')+' — remova-o dessas receitas antes');
+  if(ci.count)motivos.push('presente em '+ci.count+' linha(s) de compra do Histórico Financeiro');
+  if(mb.count)motivos.push('possui '+mb.count+' movimentação(ões) no Baú');
+  return motivos;
+}
 function excluirItem(id){
   if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir linhas de cadastro.');
   const it=db.itens.find(x=>x.id===id);if(!it)return;
-  confirmar('Excluir item',`"${it.nome}" será removido do cadastro. Só é possível excluir se não houver movimentações vinculadas no Baú. Confirmar?`,async()=>{
-    const{error}=await sb.from('itens').delete().eq('id',id);
-    if(error)return toast('⚠️ Não é possível excluir: há movimentações do Baú vinculadas a este item.');
+  confirmar('Excluir item',`"${it.nome}" será removido do cadastro. Só é possível excluir se o item não estiver em receitas, compras ou movimentações do Baú. Confirmar?`,async()=>{
+    let motivos;
+    try{motivos=await vinculosDoItem(id)}catch(e){return toast('⚠️ Erro ao verificar vínculos: '+(e.message||e))}
+    if(motivos.length)return toast('⚠️ Não é possível excluir "'+it.nome+'": '+motivos.join('; ')+'.');
+    const{data,error}=await sb.from('itens').delete().eq('id',id).select('id');
+    if(error)return toast('⚠️ Erro ao excluir: '+error.message);
+    if(!data||!data.length)return toast('⚠️ O item não foi excluído (sem permissão ou já removido). Recarregue a página.');
     db.itens=db.itens.filter(x=>x.id!==id);
+    db.fornecedor_itens=db.fornecedor_itens.filter(x=>x.item_id!==id);
     reg('Item excluído',it.nome);
     render();
   });
@@ -1623,37 +1685,46 @@ async function toggleReceita(id){
   r.status=novo;reg('Receita '+(novo==='ativo'?'ativada':'inativada'),r.nome);render();
 }
 /* ---- Fornecedores ---- */
+/* ---- Vínculo Fornecedor ↔ Matéria-Prima (tabela fornecedor_itens) ---- */
+function itensDoFornecedor(fid){const ids=db.fornecedor_itens.filter(x=>x.fornecedor_id===fid).map(x=>x.item_id);return db.itens.filter(i=>ids.includes(i.id)&&i.categoria==='materia_prima')}
+function fornecedoresDoItem(itemId){
+  const it=db.itens.find(i=>i.id===itemId);if(!it||it.categoria!=='materia_prima')return [];
+  const ids=db.fornecedor_itens.filter(x=>x.item_id===itemId).map(x=>x.fornecedor_id);
+  return db.fornecedores.filter(f=>f.status==='ativo'&&ids.includes(f.id));
+}
 function cfgFornecedores(b){
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🚚 Fornecedores</div>
     <button class="btn btn-purple btn-sm" onclick="modalFornecedor()">+ Novo fornecedor</button></div>
-  <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Os fornecedores cadastrados aqui aparecem como sugestão (autocomplete) no campo livre da aba Compras.</p>
+  <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Vincule cada fornecedor às Matérias-Primas que ele fornece. Na compra, cada linha de Matéria-Prima escolhe entre os fornecedores vinculados — assim uma única compra pode ter fornecedores diferentes.</p>
   <div class="table-wrap"><table>
-  <tr><th>Nome</th><th>Documento</th><th>Contato</th><th>Status</th><th>Ações</th></tr>
-  ${db.fornecedores.map(f=>`<tr>
-    <td><b>${esc(f.nome)}</b></td><td style="color:var(--muted)">${esc(f.documento||'—')}</td>
-    <td style="color:var(--muted)">${esc(f.contato||'—')}</td>
+  <tr><th>Nome</th><th>Matérias-Primas</th><th>Status</th><th>Ações</th></tr>
+  ${db.fornecedores.map(f=>{const its=itensDoFornecedor(f.id);return`<tr>
+    <td><b>${esc(f.nome)}</b></td>
+    <td style="color:var(--muted);font-size:12px">${its.length?its.map(i=>esc(i.nome)).join(', '):'—'}</td>
     <td><span class="badge ${f.status==='ativo'?'ativo':'inativo'}">${f.status}</span></td>
     <td><button class="iconbtn" onclick="modalFornecedor('${f.id}')">✏️</button>
     <button class="iconbtn" onclick="toggleFornecedor('${f.id}')">${f.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirFornecedor('${f.id}')">🗑️</button>`:''}</td>
-  </tr>`).join('')||'<tr><td colspan="5" class="empty">Nenhum fornecedor cadastrado.</td></tr>'}</table></div>`;
+  </tr>`}).join('')||'<tr><td colspan="4" class="empty">Nenhum fornecedor cadastrado.</td></tr>'}</table></div>`;
 }
 function modalFornecedor(id){
   const f=id?db.fornecedores.find(x=>x.id===id):null;
+  const vinculados=new Set(f?itensDoFornecedor(f.id).map(i=>i.id):[]);
+  const mps=db.itens.filter(i=>i.categoria==='materia_prima'&&(i.status==='ativo'||vinculados.has(i.id)));
   openModal(`<h3>${f?'Editar fornecedor':'Novo fornecedor'}</h3>
   <div class="field"><label>Razão social / Nome fantasia</label><input id="f-nome" value="${f?esc(f.nome):''}"></div>
-  <div class="row2">
-    <div class="field"><label>Documento (opcional)</label><input id="f-doc" value="${f?esc(f.documento||''):''}"></div>
-    <div class="field"><label>Contato (opcional)</label><input id="f-cont" value="${f?esc(f.contato||''):''}"></div>
-  </div>
+  <div class="field"><label>Matérias-Primas fornecidas</label>
+    <div id="f-itens" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">${mps.map(i=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;text-transform:none;font-weight:400;color:var(--text);margin:0"><input type="checkbox" style="width:auto" value="${i.id}" ${vinculados.has(i.id)?'checked':''}> ${esc(i.nome)}</label>`).join('')||'<p class="muted" style="font-size:12px">Nenhuma Matéria-Prima cadastrada.</p>'}</div></div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarFornecedor('${id||''}')">Salvar</button></div>`);
 }
 async function salvarFornecedor(id){
   const nome=document.getElementById('f-nome').value.trim();
   if(!nome)return toast('⚠️ Informe o nome do fornecedor.');
-  const doc=document.getElementById('f-doc').value.trim(),cont=document.getElementById('f-cont').value.trim();
-  const campos={nome,documento:doc,contato:cont};
+  if(db.fornecedores.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.id!==id))return toast('⚠️ Já existe um fornecedor com esse nome.');
+  const marcados=[...document.querySelectorAll('#f-itens input:checked')].map(c=>c.value);
+  const campos={nome};
+  let fid=id;
   if(id){
     const{error}=await sb.from('fornecedores').update(campos).eq('id',id);
     if(error)return toast('⚠️ Erro: '+error.message);
@@ -1661,7 +1732,21 @@ async function salvarFornecedor(id){
   }else{
     const{data,error}=await sb.from('fornecedores').insert(campos).select().single();
     if(error)return toast('⚠️ Erro: '+error.message);
-    db.fornecedores.push(data);reg('Fornecedor criado',nome);
+    db.fornecedores.push(data);db.fornecedores.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));fid=data.id;reg('Fornecedor criado',nome);
+  }
+  // sincroniza vínculos com Matérias-Primas
+  const atuais=db.fornecedor_itens.filter(x=>x.fornecedor_id===fid);
+  const remover=atuais.filter(x=>!marcados.includes(x.item_id)).map(x=>x.id);
+  const adicionar=marcados.filter(itemId=>!atuais.some(x=>x.item_id===itemId)).map(item_id=>({fornecedor_id:fid,item_id}));
+  if(remover.length){
+    const{error}=await sb.from('fornecedor_itens').delete().in('id',remover);
+    if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao remover vínculos: '+error.message);
+    db.fornecedor_itens=db.fornecedor_itens.filter(x=>!remover.includes(x.id));
+  }
+  if(adicionar.length){
+    const{data,error}=await sb.from('fornecedor_itens').insert(adicionar).select();
+    if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao vincular Matérias-Primas: '+error.message);
+    db.fornecedor_itens.push(...data);
   }
   closeModal();render();
 }
@@ -2051,7 +2136,7 @@ async function excluirMovimentoBau(id){
     reg('Movimento do Baú excluído',m.operacao_id||m.id);render();
   });
 }
-function excluirFornecedor(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const f=db.fornecedores.find(x=>x.id===id);if(!f)return;if(db.compras.some(k=>k.fornecedor_id===id))return toast('⚠️ Não é possível excluir: há compras vinculadas.');confirmar('Excluir fornecedor','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('fornecedores').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.fornecedores=db.fornecedores.filter(x=>x.id!==id);reg('Fornecedor excluído',f.nome);render()})}
+function excluirFornecedor(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const f=db.fornecedores.find(x=>x.id===id);if(!f)return;if(db.compras.some(k=>k.fornecedor_id===id||(k.itens||[]).some(i=>i.fornecedor_id===id)))return toast('⚠️ Não é possível excluir: há compras vinculadas.');confirmar('Excluir fornecedor','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('fornecedores').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.fornecedores=db.fornecedores.filter(x=>x.id!==id);db.fornecedor_itens=db.fornecedor_itens.filter(x=>x.fornecedor_id!==id);reg('Fornecedor excluído',f.nome);render()})}
 function excluirDesconto(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const d=db.parcerias.find(x=>x.id===id);if(!d)return;if(db.vendas.some(v=>v.parceria_id===id))return toast('⚠️ Não é possível excluir: há vendas vinculadas.');confirmar('Excluir desconto','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('parcerias').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.parcerias=db.parcerias.filter(x=>x.id!==id);db.descontos=db.parcerias;reg('Desconto excluído',d.nome);render()})}
 function excluirTaxa(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const t=db.taxas_deslocamento.find(x=>x.id===id);if(!t)return;if(db.vendas.some(v=>v.taxa_id===id))return toast('⚠️ Não é possível excluir: há vendas vinculadas.');confirmar('Excluir deslocamento','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('taxas_deslocamento').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.taxas_deslocamento=db.taxas_deslocamento.filter(x=>x.id!==id);reg('Deslocamento excluído',t.nome);render()})}
 
@@ -2112,17 +2197,32 @@ const selExclusao={bau:new Set(),financeiro:new Set()};
 function podeExcluirLinhas(){return isSocioOuDiretor()}
 function toggleSelLinha(tipo,id,marcado){const s=selExclusao[tipo];if(marcado)s.add(id);else s.delete(id);atualizarBotaoExcluirSel(tipo);const th=document.getElementById('sel-todos-'+tipo);if(th)th.checked=[...document.querySelectorAll('[data-sel-'+tipo+']')].every(c=>c.checked)}
 function toggleSelTodos(tipo,marcado){const s=selExclusao[tipo];if(marcado)[...document.querySelectorAll('[data-sel-'+tipo+']')].forEach(c=>{c.checked=true;s.add(c.value)});else{s.clear();[...document.querySelectorAll('[data-sel-'+tipo+']')].forEach(c=>c.checked=false)}atualizarBotaoExcluirSel(tipo)}
+/* Status de uma linha selecionada do Financeiro ('venda:<id>' | 'compra:<id>' | 'ajuste:<id>') */
+function statusSelFin(selId){
+  if(selId.startsWith('venda:')){const v=db.vendas.find(x=>x.id===selId.slice(6));return v?v.status:null}
+  if(selId.startsWith('compra:')){const k=db.compras.find(x=>x.id===selId.slice(7));return k?k.status:null}
+  return 'ativa'; // ajuste de caixa: sempre ativo, não é reversível
+}
+/* Excluir: só quando TODAS as selecionadas estão revertidas. Reverter: só quando TODAS estão ativas (e são vendas/compras). */
+function estadoSelecao(tipo){
+  const ids=[...selExclusao[tipo]],n=ids.length;
+  if(tipo!=='financeiro')return{n,excluir:n>0,reverter:false};
+  return{n,
+    excluir:n>0&&ids.every(id=>statusSelFin(id)==='revertida'),
+    reverter:n>0&&ids.every(id=>!id.startsWith('ajuste:')&&statusSelFin(id)==='ativa')};
+}
 function botaoExcluirSel(tipo){
   if(!podeExcluirLinhas())return '';
-  const n=selExclusao[tipo].size;
-  const reverter=tipo==='financeiro'?`<button class="btn btn-ghost btn-sm" id="btn-reverter-sel" style="${n?'':'display:none'}" onclick="reverterSelecionadas()">↩️ Reverter selecionadas</button>`:'';
-  return `${reverter}<button class="btn btn-danger btn-sm" id="btn-excluir-sel" style="${n?'':'display:none'}" onclick="excluirSelecionadas('${tipo}')">🗑️ Excluir selecionadas (${n})</button>`;
+  const e=estadoSelecao(tipo);
+  const reverter=tipo==='financeiro'?`<button class="btn btn-ghost btn-sm" id="btn-reverter-sel" style="${e.reverter?'':'display:none'}" onclick="reverterSelecionadas()">↩️ Reverter selecionadas (${e.n})</button>`:'';
+  return `${reverter}<button class="btn btn-danger btn-sm" id="btn-excluir-sel" style="${e.excluir?'':'display:none'}" onclick="excluirSelecionadas('${tipo}')">🗑️ Excluir selecionadas (${e.n})</button>`;
 }
 function atualizarBotaoExcluirSel(tipo){
   const btn=document.getElementById('btn-excluir-sel');if(!btn)return;
-  const n=selExclusao[tipo].size;
-  btn.textContent='🗑️ Excluir selecionadas ('+n+')';btn.style.display=n?'':'none';
-  const btnRev=document.getElementById('btn-reverter-sel');if(btnRev)btnRev.style.display=n?'':'none';
+  const e=estadoSelecao(tipo);
+  btn.textContent='🗑️ Excluir selecionadas ('+e.n+')';btn.style.display=e.excluir?'':'none';
+  const btnRev=document.getElementById('btn-reverter-sel');
+  if(btnRev){btnRev.textContent='↩️ Reverter selecionadas ('+e.n+')';btnRev.style.display=e.reverter?'':'none'}
 }
 /* Reverte de uma vez todas as vendas/compras selecionadas que ainda estejam ativas — a seleção continua marcada depois, pronta pra excluir em seguida */
 async function reverterSelecionadas(){
