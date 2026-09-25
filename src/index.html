@@ -36,6 +36,29 @@ label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-wei
 .btn-export:hover{background:rgba(var(--purple-rgb),.3);color:var(--white)}
 
 .col-filter-head{position:relative;min-width:110px}.filter-funnel{background:transparent;color:var(--muted);font-size:11px;padding:1px 3px;border-radius:4px}.filter-funnel:hover,.filter-funnel.active{background:var(--purple);color:var(--white)}.excel-filter-dropdown{position:fixed;z-index:300;width:320px;max-height:380px;background:var(--surface);border:1px solid var(--purple);border-radius:10px;box-shadow:0 12px 35px rgba(0,0,0,.6);padding:12px}.efd-title{font-weight:800;margin-bottom:8px}.efd-search{height:34px;padding:7px 9px;margin-bottom:8px}.efd-actions{display:flex;gap:6px;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px}.efd-actions button{background:transparent;color:var(--purple);font-size:11px;font-weight:700;padding:0}.efd-options{max-height:190px;overflow:auto}.efd-option{display:flex;align-items:center;gap:8px;padding:6px 4px;margin:0;color:var(--text);font-size:12px;text-transform:none;letter-spacing:0;font-weight:400}.efd-option input{width:auto}.efd-datas{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}.efd-datas label{font-size:11px;margin-bottom:4px}.efd-datas input{padding:9px 10px;width:100%}
+.efd-faixa{padding:16px 16px 12px;max-height:none}
+.efd-faixa .fx-topo{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.efd-faixa .fx-titulo{font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.efd-faixa .fx-limpar{background:transparent;border:1px solid var(--border);color:var(--text);font-size:12px;padding:5px 10px;border-radius:8px}
+.efd-faixa .fx-limpar:hover{border-color:var(--muted)}
+.fx-campos{display:flex;align-items:center;gap:6px;margin:4px 0 14px}
+.fx-campo{display:flex!important;align-items:center;gap:2px;margin:0!important;flex:1;min-width:0;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:0 8px;font-size:20px!important;font-weight:800!important;color:var(--text)!important;text-transform:none!important}
+.fx-campo:focus-within{border-color:var(--purple)}
+.fx-campo input{border:none;background:transparent;padding:6px 0;font-size:20px;font-weight:800;color:var(--text);width:100%;min-width:0;-moz-appearance:textfield}
+.fx-campo input::-webkit-inner-spin-button,.fx-campo input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.fx-sep{color:var(--muted);font-weight:700}
+.fx-barra{position:relative;height:26px;margin:0 10px}
+.fx-trilho,.fx-preenchido{position:absolute;top:50%;height:8px;margin-top:-4px;border-radius:8px}
+.fx-trilho{left:0;right:0;background:var(--border)}
+.fx-preenchido{background:var(--text)}
+.fx-barra input[type=range]{position:absolute;left:-10px;width:calc(100% + 20px);top:0;height:26px;margin:0;padding:0;background:none;border:none;-webkit-appearance:none;appearance:none;pointer-events:none;z-index:3}
+.fx-barra input[type=range]:focus{outline:none}
+.fx-barra input[type=range]::-webkit-slider-runnable-track{background:none;border:none;height:26px}
+.fx-barra input[type=range]::-moz-range-track{background:none;border:none}
+.fx-barra input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:20px;height:20px;margin-top:3px;border-radius:50%;background:var(--bg);border:3px solid var(--text);cursor:grab;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.fx-barra input[type=range]::-moz-range-thumb{pointer-events:auto;width:14px;height:14px;border-radius:50%;background:var(--bg);border:3px solid var(--text);cursor:grab}
+.fx-barra input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(var(--purple-rgb),.35)}
+.fx-marcas{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
 .efd-footer{display:flex;justify-content:flex-end;gap:6px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
 .record-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.record-tools .btn{white-space:nowrap}
 .badge.ativo{background:rgba(var(--green-rgb),.1);color:var(--green)}
@@ -287,7 +310,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <span class="vselo" id="h-versao">v4.5.3</span>
+  <span class="vselo" id="h-versao">v4.6.0</span>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -323,7 +346,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.5.3';
+const VERSAO='v4.6.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -2607,24 +2630,42 @@ function tabelaFiltravel(tipo,fonte,getters){
   return{todas,rows,barra:filtroAtivo(tipo)?`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">${contadorFiltro(tipo,rows.length,todas.length)}</div>`:''};
 }
 function linhaSemResultado(n,tipo){return `<tr><td colspan="${n}" class="empty">${filtroAtivo(tipo)?'Nenhum registro corresponde aos filtros.':'Nenhum registro cadastrado.'}</td></tr>`}
+function linhasFonte(tipo){
+ if(FONTES_FILTRO[tipo])return FONTES_FILTRO[tipo]();
+ if(tipo==='bau')return db.estoque_bau.map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));
+ if(tipo==='financeiro')return linhasFinanceiro();
+ return [];
+}
+/* Colunas numéricas: o filtro vira uma faixa (barra com dois marcadores + campos digitáveis), do menor ao maior valor.
+   get devolve o número bruto (null = sem valor na linha); moeda formata como dinheiro. */
+const NUMERICOS={
+ bau:{quantidade:{get:r=>r.quantidade},saldo_resultante:{get:r=>r.saldo_resultante}},
+ financeiro:{entrada:{get:r=>r.tipo==='venda'?r.entrada:null,moeda:1},repasse:{get:r=>r.tipo==='venda'?r.repasse:null,moeda:1},valor:{get:r=>r.valor,moeda:1}},
+ cfg_produtos:{preco:{get:p=>p.preco,moeda:1}},
+ cfg_itens:{preco:{get:i=>i.preco_unitario,moeda:1},qtd_minima:{get:i=>i.qtd_minima||0},saldo:{get:i=>controlaEstoque(i.categoria)?saldoItem(i.id):null}},
+ cfg_categorias:{itens:{get:c=>db.itens.filter(i=>i.categoria===c.codigo).length}},
+ cfg_deslocamento:{valor:{get:t=>t.valor,moeda:1}}
+};
+function colunaNumerica(tipo,key){return NUMERICOS[tipo]&&NUMERICOS[tipo][key]}
+function ehFaixa(v){return v&&!Array.isArray(v)&&typeof v==='object'&&('min' in v||'max' in v)}
 function valoresColuna(tipo,key){
- let a=[];
- if(FONTES_FILTRO[tipo])a=FONTES_FILTRO[tipo]();
- else if(tipo==='bau')a=db.estoque_bau.map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));
- else if(tipo==='financeiro')a=linhasFinanceiro();
+ const a=linhasFonte(tipo);
  const get=GETTERS[tipo][key];
  return [...new Set(a.map(r=>String(get?get(r):(r[key]??''))).filter(v=>v!==''))].sort((x,y)=>x.localeCompare(y,'pt-BR',{numeric:true}));
 }
-function valoresSelecionados(tipo,key){return regConsulta[tipo].filtros?.[key]||[]}
-function filtroAtivo(tipo){const f=regConsulta[tipo].filtros||{};return Object.keys(f).some(k=>k==='__de'||k==='__ate'||(Array.isArray(f[k])&&f[k].length))}
+function valoresSelecionados(tipo,key){const v=regConsulta[tipo].filtros?.[key];return Array.isArray(v)?v:[]}
+function colunaFiltrada(tipo,key){const v=regConsulta[tipo].filtros?.[key];return key==='data'?!!(regConsulta[tipo].filtros?.__de||regConsulta[tipo].filtros?.__ate):(ehFaixa(v)||(Array.isArray(v)&&v.length>0))}
+function filtroAtivo(tipo){const f=regConsulta[tipo].filtros||{};return Object.keys(f).some(k=>k==='__de'||k==='__ate'||ehFaixa(f[k])||(Array.isArray(f[k])&&f[k].length))}
 function aplicarFiltros(arr,tipo){
  const f=regConsulta[tipo].filtros||{};const g=GETTERS[tipo]||{};
  return arr.filter(r=>{const d=String(g.data?g.data(r):(r.data??'')).slice(0,10);
   if(f.__de&&d<f.__de)return false;if(f.__ate&&d>f.__ate)return false;
-  return Object.keys(f).every(k=>{if(k==='__de'||k==='__ate')return true;const vals=Array.isArray(f[k])?f[k]:[];if(!vals.length)return true;const val=String(g[k]?g[k](r):(r[k]??''));return vals.includes(val)})});
+  return Object.keys(f).every(k=>{if(k==='__de'||k==='__ate')return true;
+   if(ehFaixa(f[k])){const n=colunaNumerica(tipo,k);if(!n)return true;const v=n.get(r);if(v==null||isNaN(v))return false;return v>=f[k].min-1e-9&&v<=f[k].max+1e-9}
+   const vals=Array.isArray(f[k])?f[k]:[];if(!vals.length)return true;const val=String(g[k]?g[k](r):(r[k]??''));return vals.includes(val)})});
 }
 function thCol(tipo,key,label){
- const ativo=valoresSelecionados(tipo,key).length;
+ const ativo=colunaFiltrada(tipo,key);
  return `<th class="col-filter-head">${label} <button class="filter-funnel ${ativo?'active':''}" title="Filtrar ${label}" onclick="event.stopPropagation();abrirDropdownFiltro('${tipo}','${key}','${label}',this)">⏷</button></th>`;
 }
 let filtroAberto=null;
@@ -2633,15 +2674,67 @@ function fecharDropdownFora(e){if(filtroAberto&&!filtroAberto.contains(e.target)
 function abrirDropdownFiltro(tipo,key,label,anchor){
  fecharDropdownFiltro();const q=regConsulta[tipo];q.filtros=q.filtros||{};
  const ehData=key==='data';
+ if(!ehData&&colunaNumerica(tipo,key))return abrirFiltroFaixa(tipo,key,label,anchor);
  const de=q.filtros.__de||'',ate=q.filtros.__ate||'';
  const vals=ehData?[]:valoresColuna(tipo,key),selecionados=new Set(ehData?[]:valoresSelecionados(tipo,key));
  const corpo=ehData
   ?`<div class="efd-datas"><div><label>De</label><input type="date" id="efd-de" value="${de}"></div><div><label>Até</label><input type="date" id="efd-ate" value="${ate}"></div></div>`
   :`<input class="efd-search" placeholder="Pesquisar valor..." oninput="filtrarOpcoesDropdown(this)"><div class="efd-actions"><button type="button" onclick="marcarTodosDropdown(this,true)">Selecionar tudo</button><button type="button" onclick="marcarTodosDropdown(this,false)">Limpar seleção</button></div><div class="efd-options">${vals.map(v=>`<label class="efd-option"><input type="checkbox" value="${esc(v)}" ${selecionados.has(v)?'checked':''}><span>${esc(v)}</span></label>`).join('')||'<span class="muted">Nenhum valor encontrado.</span>'}</div>`;
- const box=document.createElement('div');box.className='excel-filter-dropdown';box.innerHTML=`<div class="efd-title">Filtrar ${esc(label)}</div>${corpo}<div class="efd-footer"><button class="btn btn-ghost btn-sm" onclick="limparFiltroData('${tipo}')">Limpar</button><button class="btn btn-ghost btn-sm" onclick="fecharDropdownFiltro()">Cancelar</button><button class="btn btn-primary btn-sm" onclick="aplicarDropdownFiltro('${tipo}','${key}')">Aplicar</button></div>`;
+ const box=document.createElement('div');box.className='excel-filter-dropdown';box.innerHTML=`<div class="efd-title">Filtrar ${esc(label)}</div>${corpo}<div class="efd-footer"><button class="btn btn-ghost btn-sm" onclick="limparFiltroColuna('${tipo}','${key}')">Limpar</button><button class="btn btn-ghost btn-sm" onclick="fecharDropdownFiltro()">Cancelar</button><button class="btn btn-primary btn-sm" onclick="aplicarDropdownFiltro('${tipo}','${key}')">Aplicar</button></div>`;
  document.body.appendChild(box);filtroAberto=box;
  const r=anchor.getBoundingClientRect();const largura=320;box.style.width=largura+'px';box.style.left=Math.max(8,Math.min(r.left-40,window.innerWidth-largura-8))+'px';box.style.top=Math.min(r.bottom+4,Math.max(8,window.innerHeight-420))+'px';
  setTimeout(()=>document.addEventListener('click',fecharDropdownFora),0);
+}
+function limparFiltroColuna(tipo,key){if(key==='data')return limparFiltroData(tipo);const q=regConsulta[tipo];delete q.filtros[key];q.page=1;fecharDropdownFiltro();render()}
+/* ---- Filtro por faixa de valores ---- */
+function fmtFaixa(n,moeda){return moeda?fmt(n):Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2})}
+function abrirFiltroFaixa(tipo,key,label,anchor){
+ const q=regConsulta[tipo],num=colunaNumerica(tipo,key);
+ const vals=linhasFonte(tipo).map(num.get).filter(v=>v!=null&&!isNaN(v)).map(Number);
+ const lo=vals.length?Math.min(...vals):0,hi=vals.length?Math.max(...vals):0;
+ const inteiros=vals.every(v=>Number.isInteger(v));
+ const passo=inteiros&&!num.moeda?1:0.01;
+ const atual=ehFaixa(q.filtros[key])?q.filtros[key]:{min:lo,max:hi};
+ const a=Math.max(lo,Math.min(hi,atual.min)),b=Math.max(lo,Math.min(hi,atual.max));
+ const marcas=hi>lo?[0,.25,.5,.75,1].map(t=>lo+(hi-lo)*t):[lo];
+ const box=document.createElement('div');box.className='excel-filter-dropdown efd-faixa';
+ box.dataset.lo=lo;box.dataset.hi=hi;box.dataset.moeda=num.moeda?1:'';
+ box.innerHTML=`<div class="fx-topo"><div class="fx-titulo">${esc(label)}</div><button type="button" class="fx-limpar" onclick="limparFiltroColuna('${tipo}','${key}')">✕ Limpar</button></div>
+  ${!vals.length?'<p class="muted" style="font-size:12px">Nenhum valor para filtrar.</p>':`
+  <div class="fx-campos">
+    <label class="fx-campo">${num.moeda?'<span>$</span>':''}<input type="number" id="fx-min" step="${passo}" min="${lo}" max="${hi}" value="${+a.toFixed(2)}" aria-label="Valor mínimo"></label>
+    <span class="fx-sep">–</span>
+    <label class="fx-campo">${num.moeda?'<span>$</span>':''}<input type="number" id="fx-max" step="${passo}" min="${lo}" max="${hi}" value="${+b.toFixed(2)}" aria-label="Valor máximo"></label>
+  </div>
+  <div class="fx-barra"><div class="fx-trilho"></div><div class="fx-preenchido" id="fx-fill"></div>
+    <input type="range" id="fx-r1" min="${lo}" max="${hi}" step="${passo}" value="${a}" aria-label="Arrastar mínimo">
+    <input type="range" id="fx-r2" min="${lo}" max="${hi}" step="${passo}" value="${b}" aria-label="Arrastar máximo"></div>
+  <div class="fx-marcas">${marcas.map(m=>`<span>${esc(fmtFaixa(m,num.moeda))}</span>`).join('')}</div>`}
+  <div class="efd-footer"><button class="btn btn-ghost btn-sm" onclick="fecharDropdownFiltro()">Cancelar</button><button class="btn btn-primary btn-sm" ${vals.length?'':'disabled'} onclick="aplicarFiltroFaixa('${tipo}','${key}')">Aplicar</button></div>`;
+ document.body.appendChild(box);filtroAberto=box;
+ const r=anchor.getBoundingClientRect(),largura=340;box.style.width=largura+'px';box.style.left=Math.max(8,Math.min(r.left-40,window.innerWidth-largura-8))+'px';box.style.top=Math.min(r.bottom+4,Math.max(8,window.innerHeight-300))+'px';
+ if(vals.length){
+  const r1=box.querySelector('#fx-r1'),r2=box.querySelector('#fx-r2'),i1=box.querySelector('#fx-min'),i2=box.querySelector('#fx-max');
+  const pint=()=>{const x=+r1.value,y=+r2.value,t=hi-lo||1,f=box.querySelector('#fx-fill');f.style.left=((x-lo)/t*100)+'%';f.style.width=((y-x)/t*100)+'%';r1.style.zIndex=x>=hi-(hi-lo)*.02?5:3};
+  r1.addEventListener('input',()=>{if(+r1.value>+r2.value)r1.value=r2.value;i1.value=+(+r1.value).toFixed(2);pint()});
+  r2.addEventListener('input',()=>{if(+r2.value<+r1.value)r2.value=r1.value;i2.value=+(+r2.value).toFixed(2);pint()});
+  const digitado=(inp,rg,outro,ehMin)=>{let v=parseFloat(String(inp.value).replace(',','.'));if(isNaN(v))return;v=Math.max(lo,Math.min(hi,v));if(ehMin&&v>+outro.value)v=+outro.value;if(!ehMin&&v<+outro.value)v=+outro.value;rg.value=v;pint()};
+  i1.addEventListener('input',()=>digitado(i1,r1,r2,true));i2.addEventListener('input',()=>digitado(i2,r2,r1,false));
+  const fixar=(inp,rg)=>{inp.value=+(+rg.value).toFixed(2)};
+  i1.addEventListener('change',()=>fixar(i1,r1));i2.addEventListener('change',()=>fixar(i2,r2));
+  box.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();aplicarFiltroFaixa(tipo,key)}});
+  pint();
+ }
+ setTimeout(()=>document.addEventListener('click',fecharDropdownFora),0);
+}
+function aplicarFiltroFaixa(tipo,key){
+ const box=filtroAberto;if(!box)return;const q=regConsulta[tipo];q.filtros=q.filtros||{};
+ const lo=+box.dataset.lo,hi=+box.dataset.hi;
+ let a=parseFloat(String(box.querySelector('#fx-min').value).replace(',','.')),b=parseFloat(String(box.querySelector('#fx-max').value).replace(',','.'));
+ if(isNaN(a))a=lo;if(isNaN(b))b=hi;if(a>b)[a,b]=[b,a];
+ a=Math.max(lo,a);b=Math.min(hi,b);
+ if(a<=lo+1e-9&&b>=hi-1e-9)delete q.filtros[key];else q.filtros[key]={min:a,max:b};
+ q.page=1;fecharDropdownFiltro();render();
 }
 function limparFiltroData(tipo){const q=regConsulta[tipo];delete q.filtros.__de;delete q.filtros.__ate;q.page=1;fecharDropdownFiltro();render()}
 function filtrarOpcoesDropdown(input){const q=input.value.toLowerCase();input.parentElement.querySelectorAll('.efd-option').forEach(x=>x.style.display=x.innerText.toLowerCase().includes(q)?'flex':'none')}
