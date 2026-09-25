@@ -209,6 +209,8 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .cart-line .iconbtn{color:var(--danger);border:1px solid var(--danger);background:rgba(var(--danger-rgb),.08);font-weight:800}
 .cart-line .iconbtn:hover{background:rgba(var(--danger-rgb),.25)}
 .iconbtn:hover{background:var(--border)}
+.iconbtn.btn-ordem{background:#282836;color:var(--text);width:28px;height:28px;padding:0;margin-right:4px;font-size:15px;font-weight:700;line-height:28px;text-align:center}
+.iconbtn.btn-ordem:hover{background:#34344A}
 .drop-zone{border:2px dashed var(--border);border-radius:var(--r);padding:32px;text-align:center;color:var(--muted);cursor:pointer;transition:.15s}
 .drop-zone:hover,.drop-zone.drag{border-color:var(--purple);color:var(--purple)}
 .lf-previa{position:relative;height:180px;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px;background-color:var(--bg);background-size:cover;background-position:center;display:grid;grid-template-columns:1fr 1.1fr;gap:8px;padding:8px}
@@ -320,7 +322,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <span class="vselo" id="h-versao">v4.6.3</span>
+  <span class="vselo" id="h-versao">v4.6.5</span>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -356,7 +358,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.6.3';
+const VERSAO='v4.6.5';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -406,10 +408,10 @@ async function carregarTudo(){
     taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha,cfgPrivada]=await Promise.all([
     sb.from('profiles').select('*').order('criado_em'),
     sb.from('produtos').select('*').order('ordem'),
-    sb.from('itens').select('*').order('nome'),
+    sb.from('itens').select('*').order('ordem',{nullsFirst:false}).order('nome'),
     sb.from('receitas').select('*').order('ordem'),
     sb.from('receita_insumos').select('*'),
-    sb.from('fornecedores').select('*').order('nome'),
+    sb.from('fornecedores').select('*').order('ordem',{nullsFirst:false}).order('nome'),
     sb.from('parcerias').select('*').order('ordem'),
     sb.from('parceria_faixas').select('*'),
     sb.from('taxas_deslocamento').select('*').order('ordem'),
@@ -775,6 +777,33 @@ function catNome(c){return catInfo(c).nome}
 function controlaEstoque(c){return !!catInfo(c).controla_estoque}
 function catCompravel(c){return !!catInfo(c).compravel&&!!catInfo(c).controla_estoque}
 function catReceitas(c){return !!catInfo(c).aparece_receitas}
+/* ---- Ordem manual (setas ↑ ↓ na coluna Ordem de todas as tabelas de Configurações) ---- */
+function ordenarPorOrdem(arr){return arr.sort((a,b)=>(a.ordem??1e9)-(b.ordem??1e9)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'))}
+function proximaOrdem(arr){return Math.max(0,...arr.map(x=>x.ordem||0))+1}
+function setasOrdem(fn,id){return `<td style="white-space:nowrap"><button class="iconbtn btn-ordem" title="Subir" onclick="${fn}('${esc(id)}',-1)">↑</button><button class="iconbtn btn-ordem" title="Descer" onclick="${fn}('${esc(id)}',1)">↓</button></td>`}
+async function moverNaOrdem(tabela,arr,chave,id,dir){
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem reordenar.');
+  const lista=ordenarPorOrdem([...arr]),i=lista.findIndex(x=>x[chave]===id),j=i+dir;
+  if(i<0||j<0||j>=lista.length)return;
+  // garante ordens únicas e sequenciais antes de trocar (registros sem ordem ou repetidos)
+  if(lista.some((x,k)=>x.ordem!==k+1)){
+    const res=await Promise.all(lista.map((x,k)=>x.ordem===k+1?null:sb.from(tabela).update({ordem:k+1}).eq(chave,x[chave])).filter(Boolean));
+    if(res.some(r=>r.error))return toast('⚠️ Erro ao reordenar.');
+    lista.forEach((x,k)=>x.ordem=k+1);
+  }
+  const x=lista[i],y=lista[j],ox=x.ordem,oy=y.ordem;
+  const[r1,r2]=await Promise.all([sb.from(tabela).update({ordem:oy}).eq(chave,x[chave]),sb.from(tabela).update({ordem:ox}).eq(chave,y[chave])]);
+  if(r1.error||r2.error)return toast('⚠️ Erro ao reordenar.');
+  x.ordem=oy;y.ordem=ox;ordenarPorOrdem(arr);render();
+}
+function itensOrdenados(){return ordenarPorOrdem([...db.itens])}
+function moverItem(id,dir){return moverNaOrdem('itens',db.itens,'id',id,dir)}
+function moverProduto(id,dir){return moverNaOrdem('produtos',db.produtos,'id',id,dir)}
+function moverReceita(id,dir){return moverNaOrdem('receitas',db.receitas,'id',id,dir)}
+function moverCategoria(cod,dir){return moverNaOrdem('categorias_itens',db.categorias,'codigo',cod,dir)}
+function moverFornecedor(id,dir){return moverNaOrdem('fornecedores',db.fornecedores,'id',id,dir)}
+function moverDesconto(id,dir){return moverNaOrdem('parcerias',db.parcerias,'id',id,dir)}
+function moverTaxa(id,dir){return moverNaOrdem('taxas_deslocamento',db.taxas_deslocamento,'id',id,dir)}
 function itensCompraveis(){return db.itens.filter(i=>i.status==='ativo'&&catCompravel(i.categoria)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'))}
 const MOV_LABEL={entrada_compra:'Entrada (Compra)',entrada_producao:'Entrada (Produção)',saida_producao:'Saída (Produção)',saida_deducao:'Saída (Dedução)',ajuste_entrada:'Ajuste (+)',ajuste_saida:'Ajuste (−)'};
 
@@ -787,7 +816,7 @@ function itensComAlerta(){
 function renderBau(c){
   if(bauTela==='compra')return telaCompraHTML(c);
   if(bauTela==='producao')return telaProducaoHTML(c);
-  const itens=db.itens.filter(i=>controlaEstoque(i.categoria)&&i.status==='ativo');
+  const itens=itensOrdenados().filter(i=>controlaEstoque(i.categoria)&&i.status==='ativo');
   const movs=[...db.estoque_bau].map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));const movsF=aplicarFiltros(movs,'bau');ordenarLista(movsF,'data','desc');const paginaBau=pagina(movsF,'bau');
   const alertas=itensComAlerta();
   c.innerHTML=`
@@ -904,22 +933,22 @@ async function salvarReceita(id){
   if(!prod.length&&!document.getElementById('r-prodfinal').checked)
     return fail('Bloco 2 vazio = receita de Produto Final. Marque a caixa de confirmação para salvar.');
   const todos=[...cons,...prod];
-  let receitaId=id;
+  let receitaId=id,novaOrdem=null;
   if(id){
     const{error}=await sb.from('receitas').update({nome}).eq('id',id);
     if(error)return fail('Erro ao salvar: '+error.message);
     await sb.from('receita_insumos').delete().eq('receita_id',id);
   }else{
-    const{data,error}=await sb.from('receitas').insert({nome,ordem:db.receitas.length+1,criado_por:sessionUser().id}).select().single();
+    const{data,error}=await sb.from('receitas').insert({nome,ordem:proximaOrdem(db.receitas),criado_por:sessionUser().id}).select().single();
     if(error)return fail('Erro ao salvar: '+error.message);
-    receitaId=data.id;
+    receitaId=data.id;novaOrdem=data.ordem;
   }
   const linhas=todos.map(x=>({receita_id:receitaId,item_id:x.item_id,quantidade:x.quantidade,tipo:x.papel==='produzido'?'producao':'consumo'}));
   const{data:insInseridos,error:e2}=await sb.from('receita_insumos').insert(linhas).select();
   if(e2)return fail('Erro ao salvar insumos: '+e2.message);
   const insumosLocal=insInseridos.map(ri=>({item_id:ri.item_id,quantidade:Number(ri.quantidade),papel:ri.tipo==='producao'?'produzido':'consumo',_id:ri.id}));
   if(id){const i=db.receitas.findIndex(x=>x.id===id);db.receitas[i]={...db.receitas[i],nome,insumos:insumosLocal}}
-  else db.receitas.push({id:receitaId,nome,ordem:db.receitas.length+1,status:'ativo',criado_em:nowISO(),criado_por:sessionUser().id,insumos:insumosLocal});
+  else db.receitas.push({id:receitaId,nome,ordem:novaOrdem,status:'ativo',criado_em:nowISO(),criado_por:sessionUser().id,insumos:insumosLocal});
   reg(id?'Receita editada':'Receita criada',nome);
   closeModal();toast('✅ Receita salva.');render();
 }
@@ -1804,7 +1833,7 @@ function excluirUsuario(id){
 }
 /* ---- Catálogo PDV (com alíquota global, imagem e exclusão) ---- */
 function cfgProdutos(b){
-  const T='cfg_produtos',F=tabelaFiltravel(T,()=>[...db.produtos].sort((a,b)=>a.ordem-b.ordem),{nome:p=>p.nome,preco:p=>fmt(p.preco),rateio:p=>p.rateio,status:p=>p.status,data:p=>p.criado_em});
+  const T='cfg_produtos',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.produtos]),{nome:p=>p.nome,preco:p=>fmt(p.preco),rateio:p=>p.rateio,status:p=>p.status,data:p=>p.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🏷️ Catálogo de Venda (PDV)</div>
     <button class="btn btn-purple btn-sm" onclick="modalProduto()">+ Novo produto</button></div>
@@ -1819,12 +1848,11 @@ function cfgProdutos(b){
   <tr><th>Imagem</th><th>Ordem</th>${thCol(T,'nome','Produto')}${thCol(T,'preco','Preço')}${thCol(T,'rateio','Rateio')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
   ${F.rows.map(p=>`<tr>
     <td>${p.imagem?`<img class="thumb" src="${imgSrc(p.imagem)}">`:'🌿'}</td>
-    <td>${p.ordem}</td><td><b>${esc(p.nome)}</b></td>
+    ${setasOrdem('moverProduto',p.id)}<td><b>${esc(p.nome)}</b></td>
     <td class="money">${fmt(p.preco)}</td><td><span class="tag">${esc(p.rateio)}</span></td>
     <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(p.criado_em)}</td>
-    <td><button class="iconbtn" onclick="moverProduto('${p.id}',-1)">↑</button><button class="iconbtn" onclick="moverProduto('${p.id}',1)">↓</button>
-      <button class="iconbtn" onclick="modalProduto('${p.id}')">✏️</button>
+    <td><button class="iconbtn" onclick="modalProduto('${p.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleProduto('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir linha" onclick="excluirProduto('${p.id}')">🗑️</button>`:''}</td>
   </tr>`).join('')||linhaSemResultado(8,T)}</table></div>`;
@@ -1888,7 +1916,7 @@ async function salvarProduto(id){
     Object.assign(db.produtos.find(x=>x.id===id),{nome,preco,rateio,imagem:imagemUrl});
     reg('Produto editado',nome);
   }else{
-    const{data,error}=await sb.from('produtos').insert({...campos,ordem:db.produtos.length+1,criado_por:sessionUser().id}).select().single();
+    const{data,error}=await sb.from('produtos').insert({...campos,ordem:proximaOrdem(db.produtos),criado_por:sessionUser().id}).select().single();
     if(error){e.textContent='Erro ao salvar: '+error.message;e.style.display='block';return}
     db.produtos.push({...data,preco:Number(data.preco),imagem:data.imagem_url});
     reg('Produto criado',nome);
@@ -1913,26 +1941,18 @@ function excluirProduto(id){
     render();
   });
 }
-async function moverProduto(id,dir){
-  const ps=[...db.produtos].sort((a,b)=>a.ordem-b.ordem);
-  const i=ps.findIndex(p=>p.id===id),j=i+dir;
-  if(j<0||j>=ps.length)return;
-  const a=ps[i],b=ps[j],oa=a.ordem,ob=b.ordem;
-  const[r1,r2]=await Promise.all([sb.from('produtos').update({ordem:ob}).eq('id',a.id),sb.from('produtos').update({ordem:oa}).eq('id',b.id)]);
-  if(r1.error||r2.error)return toast('⚠️ Erro ao reordenar.');
-  a.ordem=ob;b.ordem=oa;render();
-}
 /* ---- Cadastro Central de Itens (preço unitário, qtd mínima, inativar/excluir) ---- */
 function cfgItens(b){
   const sn=v=>v?'Sim':'Não';
-  const T='cfg_itens',F=tabelaFiltravel(T,()=>db.itens,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,preco:i=>fmt(i.preco_unitario),qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
-  const TC='cfg_categorias',FC=tabelaFiltravel(TC,()=>db.categorias,{nome:c=>c.nome,estoque:c=>sn(c.controla_estoque),compravel:c=>sn(c.compravel&&c.controla_estoque),receitas:c=>sn(c.aparece_receitas),itens:c=>String(db.itens.filter(i=>i.categoria===c.codigo).length),data:c=>c.criado_em});
+  const T='cfg_itens',F=tabelaFiltravel(T,itensOrdenados,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,preco:i=>fmt(i.preco_unitario),qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
+  const TC='cfg_categorias',FC=tabelaFiltravel(TC,()=>ordenarPorOrdem([...db.categorias]),{nome:c=>c.nome,estoque:c=>sn(c.controla_estoque),compravel:c=>sn(c.compravel&&c.controla_estoque),receitas:c=>sn(c.aparece_receitas),itens:c=>String(db.itens.filter(i=>i.categoria===c.codigo).length),data:c=>c.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">📦 Cadastro Central de Itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalItem()">+ Novo item</button></div>
   ${F.barra}<div class="table-wrap"><table>
-  <tr>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'preco','Preço unitário')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  <tr><th>Ordem</th>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'preco','Preço unitário')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
   ${F.rows.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr>
+    ${setasOrdem('moverItem',i.id)}
     <td><b>${esc(i.nome)}</b>${alerta?' <span class="tag r">⚠️ no mínimo</span>':''}</td>
     <td><span class="tag">${catNome(i.categoria)}</span></td>
     <td style="color:var(--muted)">${esc(i.unidade_medida)}</td>
@@ -1944,18 +1964,18 @@ function cfgItens(b){
     <td><button class="iconbtn" onclick="modalItem('${i.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleItem('${i.id}')">${i.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')||linhaSemResultado(9,T)}</table></div>
+  </tr>`}).join('')||linhaSemResultado(10,T)}</table></div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
     <div class="section-title" style="margin:0">🏷️ Categorias de itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalCategoria()">+ Nova categoria</button></div>
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px"><b>Controle de estoque</b>: itens entram no Baú. <b>Pode ser comprada</b>: itens aparecem em "Insumos" na compra e podem ser vinculados a fornecedores (exige controle de estoque). <b>Aparece nas Receitas</b>: itens aparecem na lista das Receitas.</p>
   ${FC.barra}<div class="table-wrap"><table>
-  <tr>${thCol(TC,'nome','Categoria')}${thCol(TC,'estoque','Controle de estoque')}${thCol(TC,'compravel','Pode ser comprada')}${thCol(TC,'receitas','Aparece nas Receitas')}${thCol(TC,'itens','Itens')}${thCol(TC,'data','Cadastrado em')}<th>Ações</th></tr>
+  <tr><th>Ordem</th>${thCol(TC,'nome','Categoria')}${thCol(TC,'estoque','Controle de estoque')}${thCol(TC,'compravel','Pode ser comprada')}${thCol(TC,'receitas','Aparece nas Receitas')}${thCol(TC,'itens','Itens')}${thCol(TC,'data','Cadastrado em')}<th>Ações</th></tr>
   ${FC.rows.map(c=>{const n=db.itens.filter(i=>i.categoria===c.codigo).length;return`<tr>
-    <td><b>${esc(c.nome)}</b></td><td>${simNao(c.controla_estoque)}</td><td>${simNao(c.compravel&&c.controla_estoque)}</td><td>${simNao(c.aparece_receitas)}</td>
+    ${setasOrdem('moverCategoria',c.codigo)}<td><b>${esc(c.nome)}</b></td><td>${simNao(c.controla_estoque)}</td><td>${simNao(c.compravel&&c.controla_estoque)}</td><td>${simNao(c.aparece_receitas)}</td>
     <td>${n}</td><td style="color:var(--muted)">${dataHoraBR(c.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalCategoria('${esc(c.codigo)}')">✏️</button>${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir categoria" onclick="excluirCategoria('${esc(c.codigo)}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')||linhaSemResultado(7,TC)}</table></div>`;
+  </tr>`}).join('')||linhaSemResultado(8,TC)}</table></div>`;
 }
 function simNao(v){return `<span class="tag ${v?'g':''}">${v?'Sim':'Não'}</span>`}
 function slugCategoria(nome){return nome.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'categoria'}
@@ -2035,6 +2055,7 @@ async function salvarItem(id){
     if(error)return toast('⚠️ Erro ao salvar: '+error.message);
     Object.assign(db.itens.find(x=>x.id===id),campos);reg('Item editado',nome);
   }else{
+    campos.ordem=Math.max(0,...db.itens.map(x=>x.ordem||0))+1;
     const{data,error}=await sb.from('itens').insert(campos).select().single();
     if(error)return toast('⚠️ Erro ao salvar: '+error.message);
     db.itens.push({...data,preco_unitario:Number(data.preco_unitario),qtd_minima:Number(data.qtd_minima)});reg('Item criado',nome);
@@ -2082,7 +2103,7 @@ function excluirItem(id){
 /* ---- Receitas (gerenciamento + ordenação) ---- */
 function cfgReceitas(b){
   const nmIt=id=>{const it=db.itens.find(i=>i.id===id);return it?it.nome:'?'};
-  const T='cfg_receitas',F=tabelaFiltravel(T,()=>[...db.receitas].sort((a,b2)=>(a.ordem||99)-(b2.ordem||99)),{
+  const T='cfg_receitas',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.receitas]),{
     nome:r=>r.nome,status:r=>r.status,data:r=>r.criado_em,
     consome:r=>(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'—',
     produz:r=>(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'});
@@ -2097,26 +2118,15 @@ function cfgReceitas(b){
     const prd=(r.insumos||[]).filter(x=>x.papel==='produzido');
     const nm=id=>{const it=db.itens.find(i=>i.id===id);return it?it.nome:'?'};
     return`<tr>
-    <td>${r.ordem||'—'}</td><td><b>${esc(r.nome)}</b></td>
+    ${setasOrdem('moverReceita',r.id)}<td><b>${esc(r.nome)}</b></td>
     <td style="color:var(--muted);font-size:12px">${cons.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'—'}</td>
     <td style="color:var(--muted);font-size:12px">${prd.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'}</td>
     <td><span class="badge ${r.status==='ativo'?'ativo':'inativo'}">${r.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(r.criado_em)}</td>
-    <td><button class="iconbtn" onclick="moverReceita('${r.id}',-1)">↑</button><button class="iconbtn" onclick="moverReceita('${r.id}',1)">↓</button>
-      <button class="iconbtn" onclick="modalReceita('${r.id}')">✏️</button>
+    <td><button class="iconbtn" onclick="modalReceita('${r.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleReceita('${r.id}')">${r.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirReceita('${r.id}')">🗑️</button>`:''}</td>
   </tr>`}).join('')||linhaSemResultado(7,T)}</table></div>`;
-}
-async function moverReceita(id,dir){
-  const rs=[...db.receitas].sort((a,b)=>(a.ordem||99)-(b.ordem||99));
-  const i=rs.findIndex(r=>r.id===id),j=i+dir;
-  if(j<0||j>=rs.length)return;
-  const alvo=rs[j];
-  const oa=rs[i].ordem??(j+1),ob=alvo.ordem??(i+1);
-  const[r1,r2]=await Promise.all([sb.from('receitas').update({ordem:ob}).eq('id',rs[i].id),sb.from('receitas').update({ordem:oa}).eq('id',alvo.id)]);
-  if(r1.error||r2.error)return toast('⚠️ Erro ao reordenar.');
-  rs[i].ordem=ob;alvo.ordem=oa;render();
 }
 async function toggleReceita(id){
   const r=db.receitas.find(x=>x.id===id);
@@ -2134,21 +2144,21 @@ function fornecedoresDoItem(itemId){
   return db.fornecedores.filter(f=>f.status==='ativo'&&ids.includes(f.id));
 }
 function cfgFornecedores(b){
-  const T='cfg_fornecedores',F=tabelaFiltravel(T,()=>db.fornecedores,{nome:f=>f.nome,itens:f=>itensDoFornecedor(f.id).map(i=>i.nome).join(', ')||'—',status:f=>f.status,data:f=>f.criado_em});
+  const T='cfg_fornecedores',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.fornecedores]),{nome:f=>f.nome,itens:f=>itensDoFornecedor(f.id).map(i=>i.nome).join(', ')||'—',status:f=>f.status,data:f=>f.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🚚 Fornecedores</div>
     <button class="btn btn-purple btn-sm" onclick="modalFornecedor()">+ Novo fornecedor</button></div>
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Vincule cada fornecedor às Matérias-Primas e aos Insumos Auxiliares que ele fornece. Na compra, o campo fornecedor de cada linha sugere os fornecedores vinculados àquele item.</p>
   ${F.barra}<div class="table-wrap"><table>
-  <tr>${thCol(T,'nome','Nome')}${thCol(T,'itens','Itens fornecidos')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  <tr><th>Ordem</th>${thCol(T,'nome','Nome')}${thCol(T,'itens','Itens fornecidos')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
   ${F.rows.map(f=>{const its=itensDoFornecedor(f.id);return`<tr>
-    <td><b>${esc(f.nome)}</b></td>
+    ${setasOrdem('moverFornecedor',f.id)}<td><b>${esc(f.nome)}</b></td>
     <td style="color:var(--muted);font-size:12px">${its.length?its.map(i=>esc(i.nome)).join(', '):'—'}</td>
     <td><span class="badge ${f.status==='ativo'?'ativo':'inativo'}">${f.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(f.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalFornecedor('${f.id}')">✏️</button>
     <button class="iconbtn" onclick="toggleFornecedor('${f.id}')">${f.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirFornecedor('${f.id}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')||linhaSemResultado(5,T)}</table></div>`;
+  </tr>`}).join('')||linhaSemResultado(6,T)}</table></div>`;
 }
 /* Atalho da compra: abre o cadastro por cima do formulário (2ª camada) e devolve o fornecedor criado */
 let _fornAtalho=null;
@@ -2198,9 +2208,9 @@ async function salvarFornecedor(id){
     if(error)return toast('⚠️ Erro: '+error.message);
     Object.assign(db.fornecedores.find(x=>x.id===id),campos);reg('Fornecedor editado',nome);
   }else{
-    const{data,error}=await sb.from('fornecedores').insert(campos).select().single();
+    const{data,error}=await sb.from('fornecedores').insert({...campos,ordem:proximaOrdem(db.fornecedores)}).select().single();
     if(error)return toast('⚠️ Erro: '+error.message);
-    db.fornecedores.push(data);db.fornecedores.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));fid=data.id;reg('Fornecedor criado',nome);
+    db.fornecedores.push(data);fid=data.id;reg('Fornecedor criado',nome);
   }
   // sincroniza vínculos com Matérias-Primas
   const atuais=db.fornecedor_itens.filter(x=>x.fornecedor_id===fid);
@@ -2229,20 +2239,20 @@ async function toggleFornecedor(id){
 /* ---- Descontos ---- */
 function descontoResumo(p){return p.tipo==='fixa'?p.desconto_fixo+'%':(p.faixas||[]).map(fx=>`${fx.quantidade_min}–${fx.quantidade_max===null?'∞':fx.quantidade_max}: ${fx.percentual_desconto}%`).join(' · ')||'—'}
 function cfgDescontos(b){
-  const T='cfg_descontos',F=tabelaFiltravel(T,()=>[...db.parcerias].sort((a,b)=>a.ordem-b.ordem),{nome:p=>p.nome,tipo:p=>p.tipo==='fixa'?'Fixa':'Escalonada',desconto:p=>descontoResumo(p),status:p=>p.status});
+  const T='cfg_descontos',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.parcerias]),{nome:p=>p.nome,tipo:p=>p.tipo==='fixa'?'Fixa':'Escalonada',desconto:p=>descontoResumo(p),status:p=>p.status});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🤝 Descontos Comerciais</div>
     <button class="btn btn-purple btn-sm" onclick="modalDescontos()">+ Novo desconto</button></div>
   ${F.barra}<div class="table-wrap"><table>
-  <tr>${thCol(T,'nome','Nome')}${thCol(T,'tipo','Tipo')}${thCol(T,'desconto','Desconto')}${thCol(T,'status','Status')}<th>Ações</th></tr>
+  <tr><th>Ordem</th>${thCol(T,'nome','Nome')}${thCol(T,'tipo','Tipo')}${thCol(T,'desconto','Desconto')}${thCol(T,'status','Status')}<th>Ações</th></tr>
   ${F.rows.map(p=>`<tr>
-    <td><b>${esc(p.nome)}</b></td>
+    ${setasOrdem('moverDesconto',p.id)}<td><b>${esc(p.nome)}</b></td>
     <td><span class="tag">${p.tipo==='fixa'?'Fixa':'Escalonada'}</span></td>
     <td style="font-size:12px">${esc(descontoResumo(p))}</td>
     <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
     <td><button class="iconbtn" onclick="modalDescontos('${p.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleDescontos('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirDesconto('${p.id}')">🗑️</button>`:''}</td>
-  </tr>`).join('')||linhaSemResultado(5,T)}</table></div>`;
+  </tr>`).join('')||linhaSemResultado(6,T)}</table></div>`;
 }
 function modalDescontos(id){
   const p=id?db.parcerias.find(x=>x.id===id):null;
@@ -2290,15 +2300,15 @@ async function salvarDescontos(id){
     if(!faixasForm.length)return fail('Adicione ao menos uma faixa válida.');
   }
   const campos={nome,tipo,desconto_fixo:fixo};
-  let parceriaId=id;
+  let parceriaId=id,novaOrdem=null;
   if(id){
     const{error}=await sb.from('parcerias').update(campos).eq('id',id);
     if(error)return fail('Erro ao salvar: '+error.message);
     await sb.from('parceria_faixas').delete().eq('parceria_id',id);
   }else{
-    const{data,error}=await sb.from('parcerias').insert({...campos,ordem:db.parcerias.length+1}).select().single();
+    const{data,error}=await sb.from('parcerias').insert({...campos,ordem:proximaOrdem(db.parcerias)}).select().single();
     if(error)return fail('Erro ao salvar: '+error.message);
-    parceriaId=data.id;
+    parceriaId=data.id;novaOrdem=data.ordem;
   }
   let faixas=[];
   if(faixasForm.length){
@@ -2307,7 +2317,7 @@ async function salvarDescontos(id){
     faixas=fd.map(f=>({id:f.id,quantidade_min:Number(f.quantidade_min),quantidade_max:f.quantidade_max==null?null:Number(f.quantidade_max),percentual_desconto:Number(f.percentual_desconto)}));
   }
   if(id){Object.assign(db.parcerias.find(x=>x.id===id),{nome,tipo,desconto_fixo:fixo,faixas})}
-  else db.parcerias.push({id:parceriaId,nome,tipo,desconto_fixo:fixo,faixas,ordem:db.parcerias.length+1,status:'ativo'});
+  else db.parcerias.push({id:parceriaId,nome,tipo,desconto_fixo:fixo,faixas,ordem:novaOrdem,status:'ativo'});
   reg('Desconto salvo',nome);
   closeModal();render();
 }
@@ -2320,7 +2330,7 @@ async function toggleDescontos(id){
 }
 /* ---- Deslocamento (ex-Taxas + alíquota da taxa) ---- */
 function cfgDeslocamento(b){
-  const T='cfg_deslocamento',F=tabelaFiltravel(T,()=>[...db.taxas_deslocamento].sort((a,b)=>a.ordem-b.ordem),{nome:t=>t.nome,valor:t=>fmt(t.valor),status:t=>t.status});
+  const T='cfg_deslocamento',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.taxas_deslocamento]),{nome:t=>t.nome,valor:t=>fmt(t.valor),status:t=>t.status});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🚗 Deslocamento</div>
     <button class="btn btn-purple btn-sm" onclick="modalTaxa()">+ Nova taxa</button></div>
@@ -2334,7 +2344,7 @@ function cfgDeslocamento(b){
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Localidade')}${thCol(T,'valor','Valor')}${thCol(T,'status','Status')}<th>Ações</th></tr>
   ${F.rows.map(t=>`<tr>
-    <td>${t.ordem}</td><td><b>${esc(t.nome)}</b></td><td class="money">${fmt(t.valor)}</td>
+    ${setasOrdem('moverTaxa',t.id)}<td><b>${esc(t.nome)}</b></td><td class="money">${fmt(t.valor)}</td>
     <td><span class="badge ${t.status==='ativo'?'ativo':'inativo'}">${t.status}</span></td>
     <td><button class="iconbtn" onclick="modalTaxa('${t.id}')">✏️</button>
     <button class="iconbtn" onclick="toggleTaxa('${t.id}')">${t.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirTaxa('${t.id}')">🗑️</button>`:''}</td>
@@ -2368,7 +2378,7 @@ async function salvarTaxa(id){
     if(error)return toast('⚠️ Erro: '+error.message);
     Object.assign(db.taxas_deslocamento.find(x=>x.id===id),{nome,valor});
   }else{
-    const{data,error}=await sb.from('taxas_deslocamento').insert({nome,valor,ordem:db.taxas_deslocamento.length+1}).select().single();
+    const{data,error}=await sb.from('taxas_deslocamento').insert({nome,valor,ordem:proximaOrdem(db.taxas_deslocamento)}).select().single();
     if(error)return toast('⚠️ Erro: '+error.message);
     db.taxas_deslocamento.push({...data,valor:Number(data.valor)});
   }
