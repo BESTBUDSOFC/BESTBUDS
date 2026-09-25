@@ -71,13 +71,53 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .muted{color:var(--muted)}
 /* ===== LOGIN ===== */
-#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at 50% -20%,rgba(var(--purple-rgb),.18),transparent 55%),radial-gradient(ellipse at 50% 110%,rgba(var(--green-rgb),.08),transparent 55%),var(--bg)}
-.login-box{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px 32px}
-.login-logo{text-align:center;margin-bottom:24px}
-.login-logo .emb{font-size:44px}
-.login-logo h1{font-size:20px;font-weight:800;letter-spacing:1px;margin-top:8px}
-.login-logo h1 span{color:var(--green)}
-.login-logo p{color:var(--muted);font-size:12px;margin-top:4px}
+#login-screen{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;padding:16px;background:#0D0D11}
+.login-form-col{display:flex;align-items:center;justify-content:center;padding:32px 24px}
+.login-box{width:100%;max-width:440px}
+.login-mobile-logo{display:none;margin-bottom:22px}
+.login-mobile-logo .emb{font-size:40px}
+.login-mobile-logo .logo-img{height:48px;max-width:160px;object-fit:contain}
+.login-titulo{font-size:48px;font-weight:600;letter-spacing:-1.5px;line-height:1.1;color:var(--white)}
+.login-sub{color:var(--muted);font-size:16px;margin:14px 0 30px}
+.login-box .field{margin-bottom:18px}
+.login-box label{font-size:13px;color:#C9CBD2;font-weight:500;text-transform:none;letter-spacing:0;margin-bottom:8px}
+.login-box input[type=text],.login-box input[type=password]{height:54px;border-radius:14px;background:#141419;border:1px solid #26262E;padding:0 16px;font-size:15px;color:var(--white)}
+.login-box input[type=text]:focus,.login-box input[type=password]:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(var(--purple-rgb),.18)}
+.login-senha-wrap{position:relative}
+.login-senha-wrap input{padding-right:52px!important}
+.login-olho{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:10px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.login-olho:hover{color:var(--white);background:rgba(255,255,255,.06)}
+.login-acoes{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 26px;font-size:14px}
+.login-manter{display:flex!important;align-items:center;gap:10px;margin:0!important;color:var(--text)!important;font-size:14px!important;cursor:pointer}
+.login-manter input{width:18px;height:18px;accent-color:var(--purple);margin:0}
+.login-link{background:none;color:var(--purple-hover);font-size:14px;padding:0}
+.login-link:hover{color:var(--purple-light);text-decoration:underline}
+.login-entrar{width:100%;height:56px;border-radius:14px;background:#E5E5E7;color:#111114;font-size:16px;font-weight:600;transition:background .15s}
+.login-entrar:hover{background:#FFFFFF}
+.login-entrar:disabled{opacity:.6;cursor:wait}
+.login-painel{position:relative;border-radius:28px;overflow:hidden;min-height:calc(100vh - 32px);display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 60% 45% at 20% 15%,rgba(255,255,255,.55),transparent 60%),radial-gradient(ellipse 55% 40% at 85% 85%,rgba(225,29,72,.75),transparent 65%),
+  linear-gradient(125deg,#1E1B6E 0%,#3730A3 18%,#8B7CF6 32%,#DCE2FF 42%,#6D5BD0 52%,#BE185D 64%,#3B2F9E 78%,#A5B4FC 90%,#E11D48 100%)}
+.login-painel::before{content:'';position:absolute;inset:-20%;background:repeating-linear-gradient(118deg,transparent 0 70px,rgba(255,255,255,.38) 95px,rgba(190,24,93,.35) 120px,transparent 150px,rgba(67,56,202,.45) 190px,transparent 230px);filter:blur(14px);animation:login-seda 18s ease-in-out infinite alternate}
+.login-painel::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 40%,rgba(13,13,17,.35) 100%)}
+@keyframes login-seda{from{transform:translate3d(-3%,-2%,0) rotate(0deg)}to{transform:translate3d(3%,2%,0) rotate(2deg)}}
+@media(prefers-reduced-motion:reduce){.login-painel::before{animation:none}}
+.login-marca{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:62%;height:46%}
+.login-marca img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 12px 40px rgba(0,0,0,.35))}
+.login-marca-nome{font-size:clamp(40px,6vw,84px);font-weight:900;letter-spacing:-2px;line-height:.95;color:#fff;text-align:center;text-shadow:0 10px 40px rgba(0,0,0,.35)}
+.login-marca-nome span{display:block;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.9)}
+.login-vidro{position:absolute;z-index:2;left:50%;bottom:36px;transform:translateX(-50%);width:min(340px,80%);padding:18px 22px;border-radius:22px;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);box-shadow:0 10px 40px rgba(0,0,0,.25);color:#fff}
+.login-vidro b{display:block;font-size:15px}
+.login-vidro small{display:block;color:rgba(255,255,255,.75);font-size:12px;margin-top:2px}
+.login-vidro p{font-size:13px;line-height:1.45;margin-top:8px;color:rgba(255,255,255,.9)}
+body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!important}
+@media(max-width:900px){
+  #login-screen{grid-template-columns:1fr;padding:0}
+  .login-painel{display:none}
+  .login-mobile-logo{display:block}
+  .login-titulo{font-size:38px}
+}
 .login-err{background:rgba(var(--danger-rgb),.1);border:1px solid var(--danger);color:var(--danger-light);padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none}
 /* ===== APP LAYOUT ===== */
 #app-header{position:fixed;top:0;left:0;right:0;height:60px;background:rgba(var(--surface-rgb),.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:none;align-items:center;padding:0 16px;gap:12px;z-index:50}
@@ -225,12 +265,26 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
 
 <!-- ============ LOGIN ============ -->
 <div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo"><div class="emb" id="login-logo-emb">🌿</div><h1 id="login-nome-loja">BEST <span>BUDS</span></h1><p>Sistema de Gestão</p></div>
-    <div id="login-err" class="login-err"></div>
-    <div class="field"><label>Nome de usuário</label><input type="text" id="login-email" autocomplete="off" placeholder="seu.usuario"></div>
-    <div class="field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••"></div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">Entrar</button>
+  <div class="login-form-col">
+    <form class="login-box" onsubmit="event.preventDefault();doLogin()" autocomplete="on">
+      <div class="login-mobile-logo"><div class="emb" id="login-logo-emb">🌿</div></div>
+      <h1 class="login-titulo">Bem-vindo</h1>
+      <p class="login-sub">Acesse sua conta para continuar</p>
+      <div id="login-err" class="login-err" role="alert"></div>
+      <div class="field"><label for="login-email">Usuário</label><input type="text" id="login-email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Digite seu usuário"></div>
+      <div class="field"><label for="login-senha">Senha</label>
+        <div class="login-senha-wrap"><input type="password" id="login-senha" autocomplete="current-password" placeholder="Digite sua senha">
+          <button type="button" class="login-olho" id="login-olho" title="Mostrar senha" aria-label="Mostrar senha" onclick="alternarSenhaLogin()"></button></div></div>
+      <div class="login-acoes">
+        <label class="login-manter"><input type="checkbox" id="login-manter"> Manter conectado</label>
+        <button type="button" class="login-link" onclick="modalRedefinirSenha()">Redefinir senha</button>
+      </div>
+      <button type="submit" class="login-entrar" id="login-btn">Entrar</button>
+    </form>
+  </div>
+  <div class="login-painel" aria-hidden="true">
+    <div class="login-marca" id="login-marca"></div>
+    <div class="login-vidro"><b id="login-vidro-nome">BEST BUDS</b><small>Sistema de Gestão</small><p>Vendas, estoque do Baú, compras e produção em um só lugar.</p></div>
   </div>
 </div>
 
@@ -239,7 +293,7 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <span class="vselo" id="h-versao">v4.4.0</span>
+  <span class="vselo" id="h-versao">v4.5.0</span>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -275,11 +329,20 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.4.0';
+const VERSAO='v4.5.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+/* "Manter conectado": marcado → sessão no localStorage (sobrevive ao fechar o navegador);
+   desmarcado → sessionStorage (encerra ao fechar a aba). */
+const PREF_MANTER='bb_manter_conectado';
+function manterConectado(){try{return localStorage.getItem(PREF_MANTER)!=='0'}catch(e){return true}}
+const armazenamentoSessao={
+  getItem:k=>{try{return localStorage.getItem(k)??sessionStorage.getItem(k)}catch(e){return null}},
+  setItem:(k,v)=>{try{const m=manterConectado();(m?localStorage:sessionStorage).setItem(k,v);(m?sessionStorage:localStorage).removeItem(k)}catch(e){}},
+  removeItem:k=>{try{localStorage.removeItem(k);sessionStorage.removeItem(k)}catch(e){}}
+};
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{storage:armazenamentoSessao,persistSession:true,autoRefreshToken:true}});
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,10)}
 function nowISO(){return new Date().toISOString()}
@@ -321,7 +384,7 @@ let db=null, session=null;
    que as telas já esperam (db.produtos, db.itens, db.vendas com itens embutidos, etc.) */
 async function carregarTudo(){
   const[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,
-    taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias]=await Promise.all([
+    taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha,cfgPrivada]=await Promise.all([
     sb.from('profiles').select('*').order('criado_em'),
     sb.from('produtos').select('*').order('ordem'),
     sb.from('itens').select('*').order('nome'),
@@ -339,9 +402,11 @@ async function carregarTudo(){
     sb.from('configuracoes').select('*').eq('id',1).single(),
     sb.from('ajustes_caixa').select('*').order('data',{ascending:false}),
     sb.from('fornecedor_itens').select('*'),
-    sb.from('categorias_itens').select('*').order('ordem').order('nome')
+    sb.from('categorias_itens').select('*').order('ordem').order('nome'),
+    sb.from('solicitacoes_senha').select('*').eq('status','pendente').order('criado_em'),
+    sb.from('config_privada').select('*').eq('id',1).maybeSingle()
   ]);
-  for(const r of[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias])
+  for(const r of[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha,cfgPrivada])
     if(r.error)throw r.error;
 
   const porReceita={};
@@ -371,6 +436,8 @@ async function carregarTudo(){
     fornecedores:(fornecedores.data||[]),
     fornecedor_itens:(fornItens.data||[]),
     categorias:(categorias.data||[]),
+    pedidos_senha:(pedidosSenha.data||[]),
+    senha_padrao_reset:(cfgPrivada.data&&cfgPrivada.data.senha_padrao_reset)||'',
     parcerias:parceriasArr,
     descontos:parceriasArr,
     taxas_deslocamento:(taxas.data||[]).map(t=>({...t,valor:Number(t.valor)})),
@@ -388,10 +455,13 @@ async function carregarTudo(){
 async function doLogin(){
   const usuario=(document.getElementById('login-email').value||'').trim().toLowerCase();
   const senha=document.getElementById('login-senha').value||'';
-  const err=document.getElementById('login-err');
+  const err=document.getElementById('login-err'),btn=document.getElementById('login-btn');
   err.style.display='none';
-  if(!usuario||!senha){err.textContent='Informe usuário e senha.';err.style.display='block';return}
+  if(!usuario||!senha){err.textContent=!usuario?'Informe seu usuário.':'Informe sua senha.';err.style.display='block';return}
+  try{localStorage.setItem(PREF_MANTER,document.getElementById('login-manter').checked?'1':'0')}catch(e){}
+  btn.disabled=true;btn.textContent='Entrando…';
   const{data,error}=await sb.auth.signInWithPassword({email:usuario+'@'+EMAIL_DOMAIN,password:senha});
+  btn.disabled=false;btn.textContent='Entrar';
   if(error||!data.user){
     const credenciaisErradas=error&&/invalid.*credentials/i.test(error.message||'');
     err.textContent=credenciaisErradas?'Nome de usuário ou senha inválidos.':('Erro ao entrar: '+(error?error.message:'resposta inesperada do servidor.'));
@@ -410,6 +480,34 @@ async function finishLogin(perfil){
   startApp();
 }
 async function logout(){await sb.auth.signOut();location.reload()}
+const OLHO_ABERTO='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const OLHO_FECHADO='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.9 8.4 2 12 2 12s3.6 7 10 7a10.6 10.6 0 0 0 5.4-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+function alternarSenhaLogin(){
+  const i=document.getElementById('login-senha'),b=document.getElementById('login-olho'),mostrar=i.type==='password';
+  i.type=mostrar?'text':'password';b.innerHTML=mostrar?OLHO_FECHADO:OLHO_ABERTO;
+  b.title=b.ariaLabel=mostrar?'Ocultar senha':'Mostrar senha';
+}
+/* Redefinir senha: gera um pedido que Gerente ou acima aprova em Configurações → Usuários */
+function modalRedefinirSenha(){
+  const u=(document.getElementById('login-email').value||'').trim();
+  openModal(`<h3>Redefinir senha</h3>
+  <p class="muted" style="margin-bottom:14px">Informe seu usuário. Um Gerente, Diretor ou Sócio vai aprovar o pedido; depois disso sua senha volta para a senha padrão e você cria uma nova no primeiro acesso.</p>
+  <div class="field"><label>Usuário</label><input id="rs-usuario" autocapitalize="none" value="${esc(u)}" placeholder="Digite seu usuário"></div>
+  <p id="rs-msg" style="font-size:13px;display:none"></p>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
+  <button class="btn btn-purple" id="rs-btn" onclick="enviarPedidoSenha()">Solicitar redefinição</button></div>`);
+  setTimeout(()=>document.getElementById('rs-usuario').focus(),50);
+}
+async function enviarPedidoSenha(){
+  const u=document.getElementById('rs-usuario').value.trim().toLowerCase(),msg=document.getElementById('rs-msg'),btn=document.getElementById('rs-btn');
+  if(!u){msg.style.color='var(--danger)';msg.textContent='Informe seu usuário.';msg.style.display='block';return}
+  btn.disabled=true;
+  const{error}=await sb.rpc('solicitar_redefinicao_senha',{p_usuario:u});
+  btn.disabled=false;
+  if(error){msg.style.color='var(--danger)';msg.textContent='Não foi possível enviar o pedido: '+error.message;msg.style.display='block';return}
+  msg.style.color='var(--green)';msg.textContent='Pedido enviado. Assim que for aprovado, entre com a senha padrão (peça-a a quem aprovou).';msg.style.display='block';
+  btn.style.display='none';
+}
 
 function openTrocaSenha(u){
   const bg=document.getElementById('modal-bg'),box=document.getElementById('modal-box');
@@ -467,6 +565,7 @@ function go(mod){
   window.scrollTo(0,0);
 }
 function startApp(){
+  document.body.classList.add('logado');
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-header').style.display='flex';
   document.getElementById('main-content').style.display='block';
@@ -1479,7 +1578,8 @@ async function salvarEdicaoCompraFin(id){
 
 /* ================= CONFIGURAÇÕES ================= */
 function renderConfig(c){
-  const tabs=[['usuarios','Usuários'],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['logo','Identidade Visual']];
+  const nPed=(db.pedidos_senha||[]).length;
+  const tabs=[['usuarios','Usuários'+(nPed?' 🔑'+nPed:'')],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['logo','Identidade Visual']];
   c.innerHTML=`<h2 class="page-title">Configurações</h2><p class="page-sub">Centro de parametrização — exclusivo do perfil Gerente.</p>
   <div class="cfg-tabs">${tabs.map(t=>`<button class="cfg-tab ${cfgTabAtual===t[0]?'active':''}" onclick="cfgTabAtual='${t[0]}';render()">${t[1]}</button>`).join('')}</div>
   <div id="cfg-body"></div>`;
@@ -1498,7 +1598,7 @@ function renderConfig(c){
 function usuariosOrdenados(){return [...db.usuarios].sort((a,b)=>(PERFIL_NIVEL[b.perfil]||0)-(PERFIL_NIVEL[a.perfil]||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}))}
 function cfgUsuarios(b){
   const T='cfg_usuarios',F=tabelaFiltravel(T,usuariosOrdenados,{nome:u=>u.nome,usuario:u=>u.usuario||'—',perfil:u=>PERFIL_LABEL[u.perfil]||u.perfil,status:u=>u.status,data:u=>u.criado_em});
-  b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  b.innerHTML=`${painelPedidosSenha()}<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">👥 Usuários</div>
     <button class="btn btn-purple btn-sm" onclick="modalUsuario()">+ Novo usuário</button></div>
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Sócio gerencia todos os perfis, incluindo outros Sócios. <b>Diretor</b> tem as mesmas permissões do Sócio, exceto que não pode alterar, ativar/inativar, excluir ou promover ninguém ao perfil <b>Sócio</b>. Gerentes podem cadastrar vendedores. Ninguém altera o próprio perfil. Deve existir sempre ao menos um sócio ativo.</p>
@@ -1518,6 +1618,57 @@ function cfgUsuarios(b){
       ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)&&isSocioOuDiretor()&&u.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirUsuario('${u.id}')">🗑️</button>`:''}
       ${ehUltimoSocio?'<span class="tag y" title="Deve existir ao menos um sócio ativo">🔒 último sócio</span>':''}</td>
   </tr>`}).join('')||linhaSemResultado(6,T)}</table></div>`;
+}
+/* ---- Pedidos de redefinição de senha (feitos na tela de login) ---- */
+function painelPedidosSenha(){
+  const ps=db.pedidos_senha||[],temSenha=!!db.senha_padrao_reset,edita=isSocioOuDiretor();
+  return `<div class="card" style="margin-bottom:18px;${ps.length?'border-color:var(--warning-border)':''}">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="section-title" style="margin:0">🔑 Pedidos de redefinição de senha ${ps.length?`<span class="tag y">${ps.length} pendente(s)</span>`:''}</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)">Senha padrão: <b style="color:${temSenha?'var(--green)':'var(--danger)'}">${temSenha?'definida':'não definida'}</b>
+        ${edita?`<button class="btn btn-ghost btn-sm" onclick="modalSenhaPadrao()">${temSenha?'Alterar':'Definir'}</button>`:''}</div>
+    </div>
+    ${ps.length?`<div class="table-wrap" style="margin-top:12px"><table><tr><th>Usuário</th><th>Nome</th><th>Perfil</th><th>Pedido em</th><th>Ações</th></tr>
+      ${ps.map(x=>{const u=db.usuarios.find(y=>y.id===x.usuario_id);const pode=u&&podeGerenciarUsuario(u)&&u.id!==session.usuario_id;return`<tr>
+        <td><b>${esc(x.usuario)}</b></td><td>${esc(u?u.nome:'—')}</td><td>${u?`<span class="badge ${u.perfil}">${PERFIL_LABEL[u.perfil]}</span>`:'—'}</td>
+        <td style="color:var(--muted)">${dataHoraBR(x.criado_em)}</td>
+        <td>${pode?`<button class="btn btn-primary btn-sm" onclick="aprovarPedidoSenha('${x.id}')">Aprovar</button> <button class="btn btn-ghost btn-sm" onclick="recusarPedidoSenha('${x.id}')">Recusar</button>`:'<span class="muted" style="font-size:12px">sem permissão para este perfil</span>'}</td></tr>`}).join('')}</table></div>`
+    :'<p class="muted" style="font-size:12px;margin-top:8px">Nenhum pedido pendente. Pedidos feitos em "Redefinir senha", na tela de login, aparecem aqui.</p>'}
+  </div>`;
+}
+function modalSenhaPadrao(){
+  if(!isSocioOuDiretor())return;
+  openModal(`<h3>Senha padrão de redefinição</h3>
+  <p class="muted" style="margin-bottom:14px">Ao aprovar um pedido, a senha do usuário volta para esta senha e ele é obrigado a criar uma nova no primeiro acesso. Ela fica guardada no banco (visível só para Gerente ou acima), nunca no código do site.</p>
+  <div class="field"><label>Senha padrão (mínimo 6 caracteres)</label><input id="sp-senha" type="text" autocomplete="off" value="${esc(db.senha_padrao_reset)}"></div>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-purple" onclick="salvarSenhaPadrao()">Salvar</button></div>`);
+}
+async function salvarSenhaPadrao(){
+  const v=document.getElementById('sp-senha').value;
+  if(v.length<6)return toast('⚠️ A senha padrão deve ter no mínimo 6 caracteres.');
+  const{data,error}=await sb.from('config_privada').update({senha_padrao_reset:v,atualizado_em:nowISO()}).eq('id',1).select();
+  if(error||!data||!data.length)return toast('⚠️ Não foi possível salvar: '+(error?error.message:'sem permissão.'));
+  db.senha_padrao_reset=v;reg('Senha padrão de redefinição alterada','');closeModal();render();toast('✅ Senha padrão salva.');
+}
+function aprovarPedidoSenha(pid){
+  const x=db.pedidos_senha.find(p=>p.id===pid);if(!x)return;
+  if(!db.senha_padrao_reset)return toast(isSocioOuDiretor()?'⚠️ Defina a senha padrão antes de aprovar.':'⚠️ A senha padrão ainda não foi definida. Peça a um Sócio ou Diretor.');
+  confirmar('Aprovar redefinição','A senha de "'+x.usuario+'" voltará para a senha padrão e ele deverá criar uma nova no primeiro acesso. Confirmar?',async()=>{
+    try{await chamarAdminUsers({action:'reset_password',targetUserId:x.usuario_id,senha:db.senha_padrao_reset})}catch(e){return toast('⚠️ Não foi possível redefinir: '+e.message)}
+    await resolverPedidoSenha(x,'aprovada');
+    reg('Redefinição de senha aprovada',x.usuario);toast('✅ Senha de "'+x.usuario+'" redefinida para a senha padrão.');
+  });
+}
+function recusarPedidoSenha(pid){
+  const x=db.pedidos_senha.find(p=>p.id===pid);if(!x)return;
+  confirmar('Recusar pedido','O pedido de "'+x.usuario+'" será recusado e a senha continua a mesma. Confirmar?',async()=>{
+    await resolverPedidoSenha(x,'recusada');reg('Redefinição de senha recusada',x.usuario);
+  });
+}
+async function resolverPedidoSenha(x,status){
+  const{error}=await sb.from('solicitacoes_senha').update({status,resolvido_em:nowISO(),resolvido_por:session.usuario_id,resolvido_por_nome:sessionUser().nome}).eq('id',x.id);
+  if(error)toast('⚠️ Erro ao atualizar o pedido: '+error.message);
+  db.pedidos_senha=db.pedidos_senha.filter(p=>p.id!==x.id);render();
 }
 function podeGerenciarUsuario(alvo){
   // Sócio gerencia todos, inclusive outros Sócios.
@@ -2265,10 +2416,20 @@ async function removerLogo(){
 function aplicarLogo(){
   const h=document.getElementById('h-logo'), emb=document.getElementById('login-logo-emb');
   const url=db&&db.identidade_visual&&db.identidade_visual.logotipo;
+  aplicarMarcaLogin();
   if(!url){if(h)h.textContent='🌿';if(emb)emb.textContent='🌿';return}
   if(h)h.innerHTML=`<img class="logo-img" src="${url}" alt="logo">`;
-  if(emb)emb.innerHTML=`<img class="logo-img" src="${url}" alt="logo" style="height:56px;max-width:180px;object-fit:contain">`;
+  if(emb)emb.innerHTML=`<img class="logo-img" src="${url}" alt="logo">`;
 }
+/* Painel da tela de login: logo cadastrada em Configurações → Identidade Visual; sem logo, o nome da loja estilizado */
+function aplicarMarcaLogin(){
+  const box=document.getElementById('login-marca');if(!box)return;
+  const url=db&&db.identidade_visual&&db.identidade_visual.logotipo,nome=nomeLojaAtual();
+  const v=document.getElementById('login-vidro-nome');if(v)v.textContent=nome;
+  if(url){box.innerHTML=`<img src="${url}" alt="${esc(nome)}">`;const img=box.querySelector('img');img.onerror=()=>{box.innerHTML=marcaTexto(nome)};return}
+  box.innerHTML=marcaTexto(nome);
+}
+function marcaTexto(nome){const p=nome.trim().split(/\s+/),ult=p.pop();return `<div class="login-marca-nome">${p.length?esc(p.join(' ')):''}<span>${esc(ult||'')}</span></div>`}
 
 /* ---- Nome da loja ---- */
 function nomeLojaAtual(){return (db&&db.identidade_visual&&db.identidade_visual.nome_loja)||'BEST BUDS'}
@@ -2281,6 +2442,7 @@ function aplicarNomeLoja(){
   if(h1)h1.innerHTML=(partes.length?esc(partes.join(' '))+' ':'')+'<span>'+esc(ultima||'')+'</span>';
   const hd=document.getElementById('h-nome-loja');
   if(hd){hd.textContent=nome;hd.title=nome}
+  aplicarMarcaLogin();
 }
 
 /* ---- Paleta de cores (todos os hex usados no site) ---- */
@@ -2670,6 +2832,9 @@ new MutationObserver(ms=>{ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!=
 document.querySelectorAll('select').forEach(sselAplicar);
 
 /* ================= INIT ================= */
+document.getElementById('login-manter').checked=manterConectado();
+document.getElementById('login-olho').innerHTML=OLHO_ABERTO;
+aplicarMarcaLogin();
 (async()=>{
   const{data:{session:sessAuth}}=await sb.auth.getSession();
   if(sessAuth?.user){
