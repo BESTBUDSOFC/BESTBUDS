@@ -71,46 +71,37 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .muted{color:var(--muted)}
 /* ===== LOGIN ===== */
-#login-screen{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;padding:16px;background:#0D0D11}
+#login-screen{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;padding:16px;background:var(--bg)}
 .login-form-col{display:flex;align-items:center;justify-content:center;padding:32px 24px}
 .login-box{width:100%;max-width:440px}
 .login-mobile-logo{display:none;margin-bottom:22px}
 .login-mobile-logo .emb{font-size:40px}
 .login-mobile-logo .logo-img{height:48px;max-width:160px;object-fit:contain}
-.login-titulo{font-size:48px;font-weight:600;letter-spacing:-1.5px;line-height:1.1;color:var(--white)}
+.login-titulo{font-size:48px;font-weight:600;letter-spacing:-1.5px;line-height:1.1;color:var(--text)}
 .login-sub{color:var(--muted);font-size:16px;margin:14px 0 30px}
 .login-box .field{margin-bottom:18px}
-.login-box label{font-size:13px;color:#C9CBD2;font-weight:500;text-transform:none;letter-spacing:0;margin-bottom:8px}
-.login-box input[type=text],.login-box input[type=password]{height:54px;border-radius:14px;background:#141419;border:1px solid #26262E;padding:0 16px;font-size:15px;color:var(--white)}
+.login-box label{font-size:13px;color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0;margin-bottom:8px}
+.login-box input[type=text],.login-box input[type=password]{height:54px;border-radius:14px;background:var(--input-bg);border:1px solid var(--border);padding:0 16px;font-size:15px;color:var(--text)}
 .login-box input[type=text]:focus,.login-box input[type=password]:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(var(--purple-rgb),.18)}
 .login-senha-wrap{position:relative}
 .login-senha-wrap input{padding-right:52px!important}
 .login-olho{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:10px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center}
 .login-olho:hover{color:var(--white);background:rgba(255,255,255,.06)}
-.login-acoes{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 26px;font-size:14px}
-.login-manter{display:flex!important;align-items:center;gap:10px;margin:0!important;color:var(--text)!important;font-size:14px!important;cursor:pointer}
-.login-manter input{width:18px;height:18px;accent-color:var(--purple);margin:0}
-.login-link{background:none;color:var(--purple-hover);font-size:14px;padding:0}
-.login-link:hover{color:var(--purple-light);text-decoration:underline}
+.login-acoes{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin:4px 0 26px;font-size:14px}
+.login-link{background:none;color:var(--info);font-size:14px;padding:0}
+.login-link:hover{text-decoration:underline;filter:brightness(1.15)}
 .login-entrar{width:100%;height:56px;border-radius:14px;background:#E5E5E7;color:#111114;font-size:16px;font-weight:600;transition:background .15s}
 .login-entrar:hover{background:#FFFFFF}
 .login-entrar:disabled{opacity:.6;cursor:wait}
-.login-painel{position:relative;border-radius:28px;overflow:hidden;min-height:calc(100vh - 32px);display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(ellipse 60% 45% at 20% 15%,rgba(255,255,255,.55),transparent 60%),radial-gradient(ellipse 55% 40% at 85% 85%,rgba(225,29,72,.75),transparent 65%),
-  linear-gradient(125deg,#1E1B6E 0%,#3730A3 18%,#8B7CF6 32%,#DCE2FF 42%,#6D5BD0 52%,#BE185D 64%,#3B2F9E 78%,#A5B4FC 90%,#E11D48 100%)}
-.login-painel::before{content:'';position:absolute;inset:-20%;background:repeating-linear-gradient(118deg,transparent 0 70px,rgba(255,255,255,.38) 95px,rgba(190,24,93,.35) 120px,transparent 150px,rgba(67,56,202,.45) 190px,transparent 230px);filter:blur(14px);animation:login-seda 18s ease-in-out infinite alternate}
-.login-painel::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 40%,rgba(13,13,17,.35) 100%)}
-@keyframes login-seda{from{transform:translate3d(-3%,-2%,0) rotate(0deg)}to{transform:translate3d(3%,2%,0) rotate(2deg)}}
-@media(prefers-reduced-motion:reduce){.login-painel::before{animation:none}}
+.login-painel{position:relative;border-radius:28px;overflow:hidden;min-height:calc(100vh - 32px);display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border)}
 .login-marca{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:62%;height:46%}
-.login-marca img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 12px 40px rgba(0,0,0,.35))}
-.login-marca-nome{font-size:clamp(40px,6vw,84px);font-weight:900;letter-spacing:-2px;line-height:.95;color:#fff;text-align:center;text-shadow:0 10px 40px rgba(0,0,0,.35)}
-.login-marca-nome span{display:block;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.9)}
-.login-vidro{position:absolute;z-index:2;left:50%;bottom:36px;transform:translateX(-50%);width:min(340px,80%);padding:18px 22px;border-radius:22px;
-  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);box-shadow:0 10px 40px rgba(0,0,0,.25);color:#fff}
+.login-marca img{max-width:100%;max-height:100%;object-fit:contain}
+.login-marca-nome{font-size:clamp(40px,6vw,84px);font-weight:900;letter-spacing:-2px;line-height:.95;color:var(--text);text-align:center}
+.login-marca-nome span{display:block;color:transparent;-webkit-text-stroke:2px var(--text)}
+.login-vidro{position:absolute;z-index:2;left:50%;bottom:36px;transform:translateX(-50%);width:min(340px,80%);padding:18px 22px;border-radius:22px;background:var(--input-bg);border:1px solid var(--border);color:var(--text)}
 .login-vidro b{display:block;font-size:15px}
-.login-vidro small{display:block;color:rgba(255,255,255,.75);font-size:12px;margin-top:2px}
-.login-vidro p{font-size:13px;line-height:1.45;margin-top:8px;color:rgba(255,255,255,.9)}
+.login-vidro small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.login-vidro p{font-size:13px;line-height:1.45;margin-top:8px;color:var(--muted)}
 body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!important}
 @media(max-width:900px){
   #login-screen{grid-template-columns:1fr;padding:0}
@@ -276,7 +267,6 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
         <div class="login-senha-wrap"><input type="password" id="login-senha" autocomplete="current-password" placeholder="Digite sua senha">
           <button type="button" class="login-olho" id="login-olho" title="Mostrar senha" aria-label="Mostrar senha" onclick="alternarSenhaLogin()"></button></div></div>
       <div class="login-acoes">
-        <label class="login-manter"><input type="checkbox" id="login-manter"> Manter conectado</label>
         <button type="button" class="login-link" onclick="modalRedefinirSenha()">Redefinir senha</button>
       </div>
       <button type="submit" class="login-entrar" id="login-btn">Entrar</button>
@@ -293,7 +283,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <span class="vselo" id="h-versao">v4.5.0</span>
+  <span class="vselo" id="h-versao">v4.5.1</span>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -329,20 +319,12 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.5.0';
+const VERSAO='v4.5.1';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
-/* "Manter conectado": marcado → sessão no localStorage (sobrevive ao fechar o navegador);
-   desmarcado → sessionStorage (encerra ao fechar a aba). */
-const PREF_MANTER='bb_manter_conectado';
-function manterConectado(){try{return localStorage.getItem(PREF_MANTER)!=='0'}catch(e){return true}}
-const armazenamentoSessao={
-  getItem:k=>{try{return localStorage.getItem(k)??sessionStorage.getItem(k)}catch(e){return null}},
-  setItem:(k,v)=>{try{const m=manterConectado();(m?localStorage:sessionStorage).setItem(k,v);(m?sessionStorage:localStorage).removeItem(k)}catch(e){}},
-  removeItem:k=>{try{localStorage.removeItem(k);sessionStorage.removeItem(k)}catch(e){}}
-};
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{storage:armazenamentoSessao,persistSession:true,autoRefreshToken:true}});
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+try{localStorage.removeItem('bb_manter_conectado')}catch(e){} // preferência da v4.5.0 (removida)
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,10)}
 function nowISO(){return new Date().toISOString()}
@@ -458,7 +440,6 @@ async function doLogin(){
   const err=document.getElementById('login-err'),btn=document.getElementById('login-btn');
   err.style.display='none';
   if(!usuario||!senha){err.textContent=!usuario?'Informe seu usuário.':'Informe sua senha.';err.style.display='block';return}
-  try{localStorage.setItem(PREF_MANTER,document.getElementById('login-manter').checked?'1':'0')}catch(e){}
   btn.disabled=true;btn.textContent='Entrando…';
   const{data,error}=await sb.auth.signInWithPassword({email:usuario+'@'+EMAIL_DOMAIN,password:senha});
   btn.disabled=false;btn.textContent='Entrar';
@@ -2832,7 +2813,6 @@ new MutationObserver(ms=>{ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!=
 document.querySelectorAll('select').forEach(sselAplicar);
 
 /* ================= INIT ================= */
-document.getElementById('login-manter').checked=manterConectado();
 document.getElementById('login-olho').innerHTML=OLHO_ABERTO;
 aplicarMarcaLogin();
 (async()=>{
