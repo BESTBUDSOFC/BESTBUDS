@@ -166,6 +166,52 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
   #sidebar-nav{display:flex}
   #bottom-nav{display:none!important}
 }
+/* Formulário de compra (duas seções) */
+.cmp-row{display:grid;grid-template-columns:2fr 1.6fr .7fr .9fr .9fr 34px;gap:6px;align-items:center;margin-bottom:8px;padding:3px;border-radius:10px;border:1px solid transparent}
+.cmp-head{margin-bottom:4px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.cmp-head span:nth-child(4),.cmp-head span:nth-child(5){text-align:right}
+#cfg-body td:last-child{white-space:nowrap}
+.cmp-val{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.cmp-sub{color:var(--text);font-weight:700}
+.cmp-hint{font-size:11px;color:var(--muted);font-weight:400;margin-left:6px}
+.cmp-row.linha-erro{border-color:var(--danger);background:rgba(var(--danger-rgb),.08)}
+.cmp-total{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-top:16px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);font-size:13px;color:var(--muted)}
+.cmp-total b{color:var(--text)}
+.cmp-total .op{color:var(--muted);font-weight:700}
+.cmp-total .tot b{color:var(--green);font-size:16px}
+.modal.modal-larga{max-width:980px}
+@media(max-width:700px){
+  .cmp-row{grid-template-columns:1fr 1fr;padding:8px;border-color:var(--border)}
+  .cmp-row>.nc-nome,.cmp-row>.nc-forn,.cmp-row>.ssel-btn{grid-column:span 2}
+  .cmp-row>.btn-del-linha{justify-self:end}
+  .cmp-head{display:none}
+}
+.resumo{border:1px solid var(--border);border-radius:10px;padding:6px 14px;margin-bottom:6px;font-size:13px}
+.resumo .rs-sec{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.3px;margin:10px 0 4px}
+.resumo .rs-l{display:flex;justify-content:space-between;gap:12px;padding:4px 0}
+.resumo .rs-tot{display:flex;justify-content:space-between;border-top:1px solid var(--border);margin-top:8px;padding:10px 0 6px;font-size:15px}
+.resumo .rs-tot b{color:var(--green)}
+.resumo .rs-meta{color:var(--muted);font-size:12px;padding-bottom:6px}
+/* Lista suspensa pesquisável (substitui visualmente todos os <select>) */
+.ssel-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:14px;text-align:left;min-width:0}
+.ssel-btn:focus,.ssel-btn.aberto{border-color:var(--purple);outline:none}
+.ssel-btn:disabled{opacity:.5;cursor:not-allowed}
+.ssel-btn .ssel-lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ssel-btn .ssel-lbl.ph{color:var(--muted)}
+.ssel-btn .ssel-car{color:var(--muted);font-size:10px;flex-shrink:0}
+.ssel-pop{position:fixed;z-index:400;background:var(--surface);border:1px solid var(--purple);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden}
+.ssel-pop .ssel-q{border:none;border-bottom:1px solid var(--border);border-radius:0;background:var(--input-bg)}
+.ssel-ops{overflow:auto;max-height:260px}
+.ssel-op{padding:9px 12px;cursor:pointer;font-size:13px}
+.ssel-op.hl{background:rgba(var(--purple-rgb),.18)}
+.ssel-op.sel{color:var(--green);font-weight:700}
+.ssel-grp{padding:8px 12px 4px;font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:800;letter-spacing:.4px}
+.ssel-vazio{padding:10px 12px;color:var(--muted);font-size:12px}
+.ssel-add{display:block;width:100%;text-align:left;padding:10px 12px;background:rgba(var(--green-rgb),.08);color:var(--green);font-weight:700;font-size:13px;border-top:1px solid var(--border)}
+/* Filtros das tabelas de Configurações */
+tr.cfg-filtro th{padding:6px 6px;background:transparent}
+tr.cfg-filtro input,tr.cfg-filtro .ssel-btn{padding:6px 8px;font-size:12px;font-weight:400;text-transform:none}
+tr.cfg-sem-resultado td{text-align:center;color:var(--muted);padding:14px}
 /* Lista suspensa pesquisável com múltipla escolha */
 .msel{position:relative}
 .msel-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
@@ -197,7 +243,7 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <span class="vselo" id="h-versao">v4.2.0</span>
+  <span class="vselo" id="h-versao">v4.3.0</span>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -214,6 +260,11 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
   <div class="modal" id="modal-box"></div>
 </div>
 
+<!-- ============ MODAL 2ª CAMADA (por cima de formulários) ============ -->
+<div class="modal-bg" id="modal2-bg" style="z-index:150">
+  <div class="modal" id="modal2-box"></div>
+</div>
+
 <!-- ============ CONFIRM CUSTOM ============ -->
 <div class="modal-bg" id="confirm-bg">
   <div class="modal" style="max-width:400px">
@@ -228,7 +279,7 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.2.0';
+const VERSAO='v4.3.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -274,7 +325,7 @@ let db=null, session=null;
    que as telas já esperam (db.produtos, db.itens, db.vendas com itens embutidos, etc.) */
 async function carregarTudo(){
   const[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,
-    taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens]=await Promise.all([
+    taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias]=await Promise.all([
     sb.from('profiles').select('*').order('criado_em'),
     sb.from('produtos').select('*').order('ordem'),
     sb.from('itens').select('*').order('nome'),
@@ -291,9 +342,10 @@ async function carregarTudo(){
     sb.from('estoque_bau').select('*').order('data',{ascending:false}),
     sb.from('configuracoes').select('*').eq('id',1).single(),
     sb.from('ajustes_caixa').select('*').order('data',{ascending:false}),
-    sb.from('fornecedor_itens').select('*')
+    sb.from('fornecedor_itens').select('*'),
+    sb.from('categorias_itens').select('*').order('ordem').order('nome')
   ]);
-  for(const r of[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens])
+  for(const r of[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias])
     if(r.error)throw r.error;
 
   const porReceita={};
@@ -322,6 +374,7 @@ async function carregarTudo(){
     receitas:(receitas.data||[]).map(r=>({...r,insumos:porReceita[r.id]||[]})),
     fornecedores:(fornecedores.data||[]),
     fornecedor_itens:(fornItens.data||[]),
+    categorias:(categorias.data||[]),
     parcerias:parceriasArr,
     descontos:parceriasArr,
     taxas_deslocamento:(taxas.data||[]).map(t=>({...t,valor:Number(t.valor)})),
@@ -445,8 +498,10 @@ function render(){
 }
 
 /* ================= MODAIS / CONFIRM ================= */
-function openModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal-bg').classList.add('open')}
+function openModal(html){const mb=document.getElementById('modal-box');mb.classList.remove('modal-larga');mb.innerHTML=html;document.getElementById('modal-bg').classList.add('open')}
 function closeModal(){document.getElementById('modal-bg').classList.remove('open')}
+function openModal2(html){document.getElementById('modal2-box').innerHTML=html;document.getElementById('modal2-bg').classList.add('open')}
+function closeModal2(){document.getElementById('modal2-bg').classList.remove('open')}
 function closeConfirm(){document.getElementById('confirm-bg').classList.remove('open')}
 function confirmar(titulo,msg,cb){
   document.getElementById('confirm-title').textContent=titulo;
@@ -601,19 +656,25 @@ async function finalizarVenda(){
 }
 
 /* ================= BAÚ ================= */
-const CAT_LABEL={materia_prima:'Matéria-Prima',insumo_auxiliar:'Insumo Auxiliar',produto_nao_acabado:'Produto Não Acabado',produto_final:'Produto Final'};
+/* Categorias vêm da tabela categorias_itens (Configurações → Cadastro Central de Itens) */
+function catInfo(c){return (db&&db.categorias||[]).find(x=>x.codigo===c)||{codigo:c,nome:c,controla_estoque:true,compravel:false,aparece_receitas:true,sistema:false}}
+function catNome(c){return catInfo(c).nome}
+function controlaEstoque(c){return !!catInfo(c).controla_estoque}
+function catCompravel(c){return !!catInfo(c).compravel&&!!catInfo(c).controla_estoque}
+function catReceitas(c){return !!catInfo(c).aparece_receitas}
+function itensCompraveis(){return db.itens.filter(i=>i.status==='ativo'&&catCompravel(i.categoria)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'))}
 const MOV_LABEL={entrada_compra:'Entrada (Compra)',entrada_producao:'Entrada (Produção)',saida_producao:'Saída (Produção)',saida_deducao:'Saída (Dedução)',ajuste_entrada:'Ajuste (+)',ajuste_saida:'Ajuste (−)'};
 
 function saldoItem(itemId){
   return db.estoque_bau.filter(m=>m.item_id===itemId).reduce((s,m)=>s+(m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada'?m.quantidade:-m.quantidade),0);
 }
 function itensComAlerta(){
-  return db.itens.filter(i=>i.status==='ativo'&&i.categoria!=='produto_final'&&i.qtd_minima>0&&saldoItem(i.id)<=i.qtd_minima);
+  return db.itens.filter(i=>i.status==='ativo'&&controlaEstoque(i.categoria)&&i.qtd_minima>0&&saldoItem(i.id)<=i.qtd_minima);
 }
 function renderBau(c){
   if(bauTela==='compra')return telaCompraHTML(c);
   if(bauTela==='producao')return telaProducaoHTML(c);
-  const itens=db.itens.filter(i=>i.categoria!=='produto_final'&&i.status==='ativo');
+  const itens=db.itens.filter(i=>controlaEstoque(i.categoria)&&i.status==='ativo');
   const movs=[...db.estoque_bau].map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));const movsF=aplicarFiltros(movs,'bau');ordenarLista(movsF,'data','desc');const paginaBau=pagina(movsF,'bau');
   const alertas=itensComAlerta();
   c.innerHTML=`
@@ -629,7 +690,7 @@ function renderBau(c){
     const alerta=i.qtd_minima>0&&s<=i.qtd_minima;
     return`<div class="sum-card ${alerta?'limite':''}"><div class="sl">${esc(i.nome)}</div>
       <div class="sv" style="color:${s>0?'var(--green)':'var(--muted)'}">${s} ${esc(i.unidade_medida)}</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">${CAT_LABEL[i.categoria]}${i.qtd_minima>0?` · mín: ${i.qtd_minima}`:''}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${catNome(i.categoria)}${i.qtd_minima>0?` · mín: ${i.qtd_minima}`:''}</div>
       ${isGerente()?`<div style="margin-top:10px;display:flex;gap:6px">
         <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="modalAjusteBau('${i.id}','entrada')">+ Entrada</button>
         <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="modalAjusteBau('${i.id}','saida')">− Saída</button>
@@ -679,7 +740,8 @@ function modalReceita(id){
   if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem criar ou editar receitas.');
   const r=id?db.receitas.find(x=>x.id===id):null;
   const ins=r?(r.insumos||[]):[];
-  const itensSel=db.itens.filter(i=>i.status==='ativo');
+  const usados=new Set(ins.map(x=>x.item_id));
+  const itensSel=db.itens.filter(i=>(i.status==='ativo'&&catReceitas(i.categoria))||usados.has(i.id));
   const cons=ins.filter(x=>x.papel==='consumo'),prod=ins.filter(x=>x.papel==='produzido');
   openModal(`<h3>${r?'Editar receita':'Nova receita'}</h3>
   <div class="field"><label>Nome da receita</label><input id="r-nome" value="${r?esc(r.nome):''}"></div>
@@ -699,7 +761,7 @@ function modalReceita(id){
   <button class="btn btn-purple" onclick="salvarReceita('${id||''}')">Salvar</button></div>`);
 }
 function linhaReceita(ri,itensSel,tipo){
-  const opts=itensSel.map(i=>`<option value="${i.id}" ${ri.item_id===i.id?'selected':''}>${esc(i.nome)} (${CAT_LABEL[i.categoria]})</option>`).join('');
+  const opts=itensSel.map(i=>`<option value="${i.id}" ${ri.item_id===i.id?'selected':''}>${esc(i.nome)} (${catNome(i.categoria)})</option>`).join('');
   return`<div class="row2" style="margin-bottom:8px" data-${tipo}>
     <select class="ri-item">${opts}</select>
     <div style="display:flex;gap:6px">
@@ -708,7 +770,7 @@ function linhaReceita(ri,itensSel,tipo){
     </div></div>`;
 }
 function addLinhaReceita(tipo){
-  const itensSel=db.itens.filter(i=>i.status==='ativo');
+  const itensSel=db.itens.filter(i=>i.status==='ativo'&&catReceitas(i.categoria));
   const d=document.createElement('div');
   d.innerHTML=linhaReceita({item_id:'',quantidade:''},itensSel,tipo);
   document.getElementById(tipo==='cons'?'r-cons':'r-prod').appendChild(d.firstElementChild);
@@ -798,12 +860,12 @@ async function confirmarProducao(rid){
   const prd=(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>({ri:x,it:db.itens.find(i=>i.id===x.item_id)}));
   const movimentos=[];
   cons.forEach(x=>{
-    if(!x.it||x.it.categoria==='produto_final')return;
+    if(!x.it||!controlaEstoque(x.it.categoria))return;
     const tipo=x.it.categoria==='produto_nao_acabado'?'saida_deducao':'saida_producao';
     movimentos.push({operacao_id:producaoId,item_id:x.it.id,tipo_movimento:tipo,quantidade:x.ri.quantidade*q,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,origem:'produção: '+r.nome,saldo_resultante:saldoItem(x.it.id)-x.ri.quantidade*q});
   });
   prd.forEach(x=>{
-    if(!x.it||x.it.categoria==='produto_final')return;
+    if(!x.it||!controlaEstoque(x.it.categoria))return;
     movimentos.push({operacao_id:producaoId,item_id:x.it.id,tipo_movimento:'entrada_producao',quantidade:x.ri.quantidade*q,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,origem:'produção: '+r.nome,saldo_resultante:saldoItem(x.it.id)+x.ri.quantidade*q});
   });
   const{data,error}=await sb.from('estoque_bau').insert(movimentos).select();
@@ -813,128 +875,206 @@ async function confirmarProducao(rid){
 }
 
 /* ================= COMPRAS (ABA PRÓPRIA) ================= */
-/* Fornecedor por linha: sugere os fornecedores vinculados ao item, mas aceita nome sem cadastro */
-let _fornLinhaSeq=0;
-function opcoesFornItem(itemId){return fornecedoresDoItem(itemId).map(f=>`<option value="${esc(f.nome)}">`).join('')}
-function campoFornLinha(cls,itemId,valor){
-  const fs=fornecedoresDoItem(itemId),dl='forn-dl-'+(++_fornLinhaSeq);
-  const v=valor||(fs.length===1?fs[0].nome:'');
-  return`<span style="display:contents"><input class="${cls}" list="${dl}" autocomplete="off" placeholder="Fornecedor" value="${esc(v)}"><datalist id="${dl}">${opcoesFornItem(itemId)}</datalist></span>`;
+/* Formulário de compra com duas seções independentes (ambas opcionais, ao menos uma linha no total):
+   • Insumos — item e fornecedor escolhidos só entre cadastrados; preço vem do cadastro; dá entrada no Baú.
+   • Itens não controlados — tudo digitado; só registro financeiro.
+   O mesmo formulário serve a Nova compra (prefixo "c") e à edição no Histórico Financeiro (prefixo "ec"). */
+function fornOptionsHTML(itemId,selId){
+  const ativos=db.fornecedores.filter(f=>f.status==='ativo'||f.id===selId).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  const vinc=itemId?fornecedoresDoItem(itemId).map(f=>f.id):[];
+  const op=f=>`<option value="${f.id}" ${f.id===selId?'selected':''}>${esc(f.nome)}</option>`;
+  const a=ativos.filter(f=>vinc.includes(f.id)),b=ativos.filter(f=>!vinc.includes(f.id));
+  return `<option value="" disabled hidden ${selId?'':'selected'}>Selecione o fornecedor...</option>`+
+    (a.length?`<optgroup label="Vinculados a este item">${a.map(op).join('')}</optgroup>`+(b.length?`<optgroup label="Outros fornecedores">${b.map(op).join('')}</optgroup>`:''):b.map(op).join(''));
 }
-/* Troca de item: atualiza as sugestões; se o campo estava vazio (ou com o único sugerido do item anterior) e o novo item tem 1 só fornecedor, preenche */
-function trocarFornLinha(linha,cls,itemSel){
-  const inp=linha.querySelector('.'+cls),dl=document.getElementById(inp.getAttribute('list'));
-  const antes=[...dl.options].map(o=>o.value);
-  dl.innerHTML=opcoesFornItem(itemSel.value);
-  const fs=fornecedoresDoItem(itemSel.value);
-  if(!inp.value.trim()||(antes.length===1&&inp.value===antes[0]))inp.value=fs.length===1?fs[0].nome:'';
+function linhaInsumo(p,ci){
+  ci=ci||{};
+  const disp=itensCompraveis();
+  if(ci.item_id&&!disp.some(i=>i.id===ci.item_id)){const it=db.itens.find(i=>i.id===ci.item_id);if(it)disp.unshift(it)}
+  const preco=ci.preco_unitario!=null?ci.preco_unitario:'';
+  return`<div class="cmp-row" data-ins data-preco="${preco}" oninput="this.classList.remove('linha-erro')" onchange="this.classList.remove('linha-erro')">
+    <select class="ins-item" onchange="aoTrocarInsumo(this,'${p}')"><option value="" disabled hidden ${ci.item_id?'':'selected'}>Selecione um insumo...</option>${disp.map(i=>`<option value="${i.id}" data-preco="${i.preco_unitario||0}" ${ci.item_id===i.id?'selected':''}>${esc(i.nome)} (${esc(i.unidade_medida)})</option>`).join('')}</select>
+    <select class="ins-forn" data-ssel-extra="fornSselExtra" onchange="recalcCompra('${p}')">${fornOptionsHTML(ci.item_id,ci.fornecedor_id)}</select>
+    <input class="ins-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="recalcCompra('${p}')">
+    <span class="cmp-val ins-preco" title="Valor unitário do cadastro">${preco!==''?fmt(preco):'—'}</span>
+    <span class="cmp-val cmp-sub">—</span>
+    <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('.cmp-row').remove();recalcCompra('${p}')">✕</button></div>`;
 }
-function linhaCompraItem(ci){
-  const disp=db.itens.filter(i=>i.status==='ativo'&&(i.categoria==='materia_prima'||i.categoria==='insumo_auxiliar'));
-  const opts=disp.map(i=>`<option value="${i.id}" data-preco="${i.preco_unitario||0}" ${ci&&ci.item_id===i.id?'selected':''}>${esc(i.nome)} (${esc(i.unidade_medida)})</option>`).join('');
-  const itemId=ci&&ci.item_id?ci.item_id:(disp[0]?disp[0].id:'');
-  return`<div class="row3" style="margin-bottom:8px;grid-template-columns:2fr 1.5fr 1fr auto auto;align-items:center;gap:6px" data-citem>
-    <select class="ci-item" onchange="trocarFornLinha(this.closest('[data-citem]'),'ci-forn',this);atualizarPrecoLinha(this)">${opts}</select>
-    ${campoFornLinha('ci-forn',itemId,ci&&ci.fornecedor_nome)}
-    <input class="ci-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci?ci.quantidade:''}" oninput="recalcTotalCompra()">
-    <span class="ci-preco-display money" style="white-space:nowrap;display:flex;align-items:center;justify-content:flex-end;min-width:90px">—</span>
-    <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('[data-citem]').remove();recalcTotalCompra()">✕</button></div>`;
+function linhaNC(p,ci){
+  ci=ci||{};
+  return`<div class="cmp-row" data-nc oninput="this.classList.remove('linha-erro')">
+    <input class="nc-nome" placeholder="Item" value="${esc(ci.nome||'')}">
+    <input class="nc-forn" list="${p}-forn-dl" autocomplete="off" placeholder="Fornecedor" value="${esc(ci.fornecedor_nome||'')}">
+    <input class="nc-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="recalcCompra('${p}')">
+    <input class="nc-preco" type="number" min="0.01" step="0.01" placeholder="Valor unit." value="${ci.preco_unitario??''}" oninput="recalcCompra('${p}')">
+    <span class="cmp-val cmp-sub">—</span>
+    <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('.cmp-row').remove();recalcCompra('${p}')">✕</button></div>`;
 }
-/* Cada linha tem o próprio fornecedor (cadastrado → vincula o id; senão, só o nome).
-   Cabeçalho da compra: 1 fornecedor → ele; vários → nomes unidos por " + "; sem itens → "Fornecedor avulso". */
-function resolverFornecedoresCompra(itens){
-  const linhas=itens.map(ci=>{
-    const nome=(ci.fornecedor_nome||'').trim();
-    const f=nome?db.fornecedores.find(x=>x.nome.toLowerCase()===nome.toLowerCase()):null;
-    return{...ci,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:nome};
+function formCompraHTML(p,k){
+  const its=(k&&k.itens)||[];
+  const ins=its.filter(i=>i.item_id),nc=its.filter(i=>!i.item_id);
+  const cab=`<div class="cmp-row cmp-head"><span>${'%s'}</span><span>Fornecedor</span><span>Qtd</span><span>Valor unit.</span><span>Subtotal</span><span></span></div>`;
+  return`
+    <div class="section-title" style="margin-top:6px">📦 Insumos <span class="cmp-hint">opcional — dá entrada no Baú</span></div>
+    ${cab.replace('%s','Insumo')}
+    <div id="${p}-ins">${ins.map(i=>linhaInsumo(p,i)).join('')}</div>
+    <button class="btn btn-ghost btn-sm" onclick="addLinhaCompra('${p}','ins')">+ Adicionar insumo</button>
+    <div class="section-title" style="margin-top:18px">🧾 Itens não controlados <span class="cmp-hint">opcional — não dá entrada no Baú</span></div>
+    ${cab.replace('%s','Item')}
+    <div id="${p}-nc">${nc.map(i=>linhaNC(p,i)).join('')}</div>
+    <button class="btn btn-ghost btn-sm" onclick="addLinhaCompra('${p}','nc')">+ Adicionar item não controlado</button>
+    <datalist id="${p}-forn-dl">${db.fornecedores.filter(f=>f.status==='ativo').map(f=>`<option value="${esc(f.nome)}">`).join('')}</datalist>
+    <div class="cmp-total" id="${p}-total"></div>
+    <p id="${p}-err" style="color:var(--danger);font-size:13px;display:none;margin-top:10px"></p>`;
+}
+function addLinhaCompra(p,sec){
+  const d=document.createElement('div');d.innerHTML=sec==='ins'?linhaInsumo(p):linhaNC(p);
+  document.getElementById(p+'-'+sec).appendChild(d.firstElementChild);recalcCompra(p);
+}
+/* Troca de insumo: preço do cadastro + fornecedores vinculados no topo; 1 vinculado → já selecionado */
+function aoTrocarInsumo(sel,p){
+  const linha=sel.closest('.cmp-row'),opt=sel.options[sel.selectedIndex];
+  const preco=opt?parseFloat(opt.getAttribute('data-preco')||'0'):0;
+  linha.dataset.preco=preco;linha.querySelector('.ins-preco').textContent=fmt(preco);
+  const fs=linha.querySelector('.ins-forn'),vinc=fornecedoresDoItem(sel.value);
+  const atual=fs.value;
+  fs.innerHTML=fornOptionsHTML(sel.value,atual||(vinc.length===1?vinc[0].id:''));
+  fs.value=atual||(vinc.length===1?vinc[0].id:'');
+  recalcCompra(p);
+}
+/* Lê as duas seções. Linha incompleta é destacada e bloqueia o registro. */
+function lerFormCompra(p){
+  const erros=[],ins=[],nc=[];
+  document.querySelectorAll(`#${p}-ins [data-ins]`).forEach(r=>{
+    const item_id=r.querySelector('.ins-item').value,fornecedor_id=r.querySelector('.ins-forn').value;
+    const quantidade=parseFloat(r.querySelector('.ins-qtd').value),preco_unitario=parseFloat(r.dataset.preco);
+    const it=db.itens.find(i=>i.id===item_id),f=db.fornecedores.find(x=>x.id===fornecedor_id);
+    const falta=[!it&&'insumo',!f&&'fornecedor cadastrado',!(quantidade>0)&&'quantidade'].filter(Boolean);
+    r.classList.toggle('linha-erro',falta.length>0);
+    if(falta.length)erros.push(`Insumos — ${it?'"'+it.nome+'"':'linha '+(ins.length+1)}: falta ${falta.join(', ')}.`);
+    ins.push({item_id,nome:it?it.nome:'?',quantidade,preco_unitario:preco_unitario||0,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:'',_it:it});
   });
-  const distintos=[...new Map(linhas.map(l=>[l.fornecedor_nome.toLowerCase(),l])).values()];
-  if(distintos.length===1)return{fornecedor_id:distintos[0].fornecedor_id,fornecedor_nome:distintos[0].fornecedor_nome,linhas};
-  if(distintos.length>1)return{fornecedor_id:null,fornecedor_nome:distintos.map(l=>l.fornecedor_nome).join(' + '),linhas};
-  return{fornecedor_id:null,fornecedor_nome:'Fornecedor avulso',linhas};
+  document.querySelectorAll(`#${p}-nc [data-nc]`).forEach(r=>{
+    const nome=r.querySelector('.nc-nome').value.trim(),fn=r.querySelector('.nc-forn').value.trim();
+    const quantidade=parseFloat(r.querySelector('.nc-qtd').value),preco_unitario=parseFloat(r.querySelector('.nc-preco').value);
+    const falta=[!nome&&'item',!fn&&'fornecedor',!(quantidade>0)&&'quantidade',!(preco_unitario>0)&&'valor unitário'].filter(Boolean);
+    r.classList.toggle('linha-erro',falta.length>0);
+    if(falta.length)erros.push(`Itens não controlados — ${nome?'"'+nome+'"':'linha '+(nc.length+1)}: falta ${falta.join(', ')}.`);
+    const f=db.fornecedores.find(x=>x.nome.toLowerCase()===fn.toLowerCase());
+    nc.push({item_id:null,nome,quantidade,preco_unitario,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:fn});
+  });
+  const sub=l=>(l.quantidade>0&&l.preco_unitario>0)?l.quantidade*l.preco_unitario:0;
+  const totIns=ins.reduce((s,l)=>s+sub(l),0),totNc=nc.reduce((s,l)=>s+sub(l),0);
+  return{ins,nc,erros,totIns,totNc,total:totIns+totNc};
 }
-function linhaSemFornecedor(itens){
-  const ci=itens.find(ci=>!(ci.fornecedor_nome||'').trim());
-  return ci?(db.itens.find(i=>i.id===ci.item_id)||{nome:'?'}):null;
+function recalcCompra(p){
+  const box=document.getElementById(p+'-total');if(!box)return;
+  document.querySelectorAll(`#${p}-ins .cmp-row, #${p}-nc .cmp-row`).forEach(r=>{
+    const q=parseFloat((r.querySelector('.ins-qtd,.nc-qtd')||{}).value);
+    const pu=r.hasAttribute('data-ins')?parseFloat(r.dataset.preco):parseFloat(r.querySelector('.nc-preco').value);
+    r.querySelector('.cmp-sub').textContent=(q>0&&pu>0)?fmt(q*pu):'—';
+  });
+  const f=lerFormCompraSilencioso(p);
+  box.innerHTML=`<span>Insumos <b>${fmt(f.totIns)}</b></span><span class="op">+</span><span>Itens não controlados <b>${fmt(f.totNc)}</b></span><span class="op">=</span><span class="tot">Total <b>${fmt(f.total)}</b></span>`;
 }
-function precoItemSelecionado(sel){const opt=sel.options[sel.selectedIndex];return opt?parseFloat(opt.getAttribute('data-preco')||'0'):0}
-function atualizarPrecoLinha(sel){const linha=sel.closest('[data-citem]');if(linha)linha.querySelector('.ci-preco-display').textContent=fmt(precoItemSelecionado(sel));recalcTotalCompra()}
-function addCompraItem(){
-  const d=document.createElement('div');
-  d.innerHTML=linhaCompraItem(null);
-  const linha=d.firstElementChild;
-  document.getElementById('c-itens').appendChild(linha);
-  atualizarPrecoLinha(linha.querySelector('.ci-item'));
+/* Mesmo cálculo sem marcar erros (usado enquanto o usuário digita) */
+function lerFormCompraSilencioso(p){
+  const marcadas=[...document.querySelectorAll(`#${p}-ins .cmp-row, #${p}-nc .cmp-row`)].map(r=>[r,r.classList.contains('linha-erro')]);
+  const f=lerFormCompra(p);marcadas.forEach(([r,m])=>r.classList.toggle('linha-erro',m));return f;
 }
-function itensCompraForm(){
-  return [...document.querySelectorAll('#c-itens [data-citem]')].map(d=>{
-    const sel=d.querySelector('.ci-item'),fs=d.querySelector('.ci-forn');
-    return{item_id:sel.value,fornecedor_nome:fs?fs.value.trim():'',quantidade:parseFloat(d.querySelector('.ci-qtd').value),preco_unitario:precoItemSelecionado(sel)}
-  }).filter(x=>x.item_id&&x.quantidade>0&&x.preco_unitario>0);
+/* Cabeçalho da compra: 1 fornecedor → ele; vários → nomes unidos por " + " */
+function fornecedorCabecalho(linhas){
+  const d=[...new Map(linhas.filter(l=>l.fornecedor_nome).map(l=>[l.fornecedor_nome.toLowerCase(),l])).values()];
+  if(d.length===1)return{fornecedor_id:d[0].fornecedor_id,fornecedor_nome:d[0].fornecedor_nome};
+  if(d.length>1)return{fornecedor_id:null,fornecedor_nome:d.map(l=>l.fornecedor_nome).join(' + ')};
+  return{fornecedor_id:null,fornecedor_nome:'Fornecedor avulso'};
 }
-function recalcTotalCompra(){
-  const itens=itensCompraForm();
-  const inp=document.getElementById('c-valor');
-  if(!inp)return;
-  if(itens.length){
-    inp.value=itens.reduce((s,x)=>s+x.quantidade*x.preco_unitario,0).toFixed(2);
-    inp.disabled=true;
-  }else{
-    inp.disabled=false;
+function validarFormCompra(p){
+  const f=lerFormCompra(p),e=document.getElementById(p+'-err');
+  e.style.display='none';
+  if(!f.ins.length&&!f.nc.length){e.textContent='Adicione pelo menos uma linha em Insumos ou em Itens não controlados.';e.style.display='block';return null}
+  if(f.erros.length){
+    e.innerHTML=f.erros.map(esc).join('<br>')+(f.ins.some(l=>!l.fornecedor_id)?`<br><span style="color:var(--muted)">${isGerente()?'Fornecedor ainda não cadastrado? Pesquise o nome na lista do fornecedor e use "+ Cadastrar fornecedor".':'Insumos só aceitam fornecedores cadastrados — peça a um Gerente para cadastrar o fornecedor.'}</span>`:'');
+    e.style.display='block';
+    const r=document.querySelector(`#${p}-ins .linha-erro, #${p}-nc .linha-erro`);if(r)r.scrollIntoView({block:'center',behavior:'smooth'});
+    return null;
   }
+  return f;
 }
-async function salvarCompra(){
+/* Atalho "+ Cadastrar fornecedor" dentro da lista do fornecedor (só para quem pode cadastrar) */
+function fornSselExtra(sel,q){
+  if(!isGerente())return q?`<div class="ssel-vazio">Fornecedor não cadastrado. Insumos só aceitam fornecedores cadastrados — peça a um Gerente para cadastrá-lo.</div>`:'';
+  return`<button type="button" class="ssel-add" onclick="cadastrarFornecedorAtalho(${esc(JSON.stringify(q))})">+ Cadastrar fornecedor${q?' “'+esc(q)+'”':''}</button>`;
+}
+function cadastrarFornecedorAtalho(nome){
+  const sel=_sselAberto;sselFechar();if(!sel)return;
+  const linha=sel.closest('.cmp-row'),itemId=linha.querySelector('.ins-item').value;
+  const p=linha.parentElement.id.replace(/-ins$/,'');
+  modalFornecedor(null,{nome,itemId,onSaved:f=>{
+    if(!f)return;
+    document.querySelectorAll(`#${p}-ins [data-ins]`).forEach(r=>{
+      const fs=r.querySelector('.ins-forn'),v=r===linha?f.id:fs.value;
+      fs.innerHTML=fornOptionsHTML(r.querySelector('.ins-item').value,v);fs.value=v;
+    });
+    const dl=document.getElementById(p+'-forn-dl');if(dl)dl.innerHTML=db.fornecedores.filter(x=>x.status==='ativo').map(x=>`<option value="${esc(x.nome)}">`).join('');
+    linha.classList.remove('linha-erro');recalcCompra(p);toast('✅ Fornecedor "'+f.nome+'" cadastrado e selecionado.');
+  }});
+}
+/* Resumo minimalista antes de registrar */
+function resumoCompraHTML(f,extra){
+  const l=x=>`<div class="rs-l"><span>${x.quantidade}× ${esc(x.nome)} <span class="muted">· ${esc(x.fornecedor_nome)}</span></span><b>${fmt(x.quantidade*x.preco_unitario)}</b></div>`;
+  return`<div class="resumo">
+    ${f.ins.length?`<div class="rs-sec">Insumos (entram no Baú)</div>${f.ins.map(l).join('')}`:''}
+    ${f.nc.length?`<div class="rs-sec">Itens não controlados</div>${f.nc.map(l).join('')}`:''}
+    <div class="rs-tot"><span>Total</span><b>${fmt(f.total)}</b></div>
+    ${extra||''}</div>`;
+}
+let _compraPendente=null;
+function salvarCompra(){
   const data=document.getElementById('c-data').value;
   const e=document.getElementById('c-err');
-  const fail=m=>{e.textContent=m;e.style.display='block'};
-  if(!data)return fail('Informe a data da compra.');
-  const itens=itensCompraForm();
-  const itemInvalido=itens.map(ci=>db.itens.find(i=>i.id===ci.item_id)).find(it=>it&&!['materia_prima','insumo_auxiliar'].includes(it.categoria));
-  if(itemInvalido)return fail(`"${itemInvalido.nome}" não pode ser usado como insumo de compra (só Matéria-Prima ou Insumo Auxiliar).`);
-  const semForn=linhaSemFornecedor(itens);
-  if(semForn)return fail(`Informe o fornecedor da linha "${semForn.nome}".`);
-  let valor=parseFloat(document.getElementById('c-valor').value);
-  if(itens.length)valor=itens.reduce((s,x)=>s+x.quantidade*x.preco_unitario,0);
-  if(!(valor>0))return fail('O valor total deve ser estritamente maior que zero.');
-  const rf=resolverFornecedoresCompra(itens);
-  const fornecedorNome=rf.fornecedor_nome;
-  if(db.compras.some(x=>x.status==='ativa'&&x.fornecedor_nome===fornecedorNome&&(x.data_local||x.data.slice(0,10))===data&&x.valor_total===valor))
-    return fail('Compra duplicada (mesmo fornecedor, data e valor) — verifique antes de registrar.');
-  const operacaoId=await nextOpId();
-  const cabecalho={operacao_id:operacaoId,fornecedor_id:rf.fornecedor_id,fornecedor_nome:fornecedorNome,
+  if(!data){e.textContent='Informe a data da compra.';e.style.display='block';return}
+  const f=validarFormCompra('c');if(!f)return;
+  const cab=fornecedorCabecalho([...f.ins,...f.nc]);
+  if(db.compras.some(x=>x.status==='ativa'&&x.fornecedor_nome===cab.fornecedor_nome&&(x.data_local||x.data.slice(0,10))===data&&Math.abs(x.valor_total-f.total)<0.005)){
+    e.textContent='Compra duplicada (mesmo fornecedor, data e valor) — verifique antes de registrar.';e.style.display='block';return;
+  }
+  const desc=document.getElementById('c-desc').value.trim();
+  _compraPendente={f,cab,data,desc};
+  openModal2(`<h3>Confirmar compra</h3>
+    ${resumoCompraHTML(f,`<div class="rs-meta">${dataBR(data)}${desc?' · '+esc(desc):''}</div>`)}
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal2()">Voltar</button>
+    <button class="btn btn-primary" id="btn-conf-compra" onclick="efetivarCompra()">Confirmar compra</button></div>`);
+}
+async function efetivarCompra(){
+  const pend=_compraPendente;if(!pend)return;
+  const btn=document.getElementById('btn-conf-compra');if(btn){btn.disabled=true;btn.textContent='Registrando…'}
+  const{f,cab,data,desc}=pend;
+  const fail=m=>{closeModal2();const e=document.getElementById('c-err');e.textContent=m;e.style.display='block'};
+  let operacaoId;try{operacaoId=await nextOpId()}catch(err){return fail('Erro ao gerar ID da operação: '+(err.message||err))}
+  const cabecalho={operacao_id:operacaoId,fornecedor_id:cab.fornecedor_id,fornecedor_nome:cab.fornecedor_nome,
     data:new Date(data+'T'+new Date().toTimeString().slice(0,8)).toISOString(),data_local:data,
-    valor_total:valor,descricao:document.getElementById('c-desc').value.trim(),
-    usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,status:'ativa'};
+    valor_total:f.total,descricao:desc,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,status:'ativa'};
   const{data:kRow,error:e1}=await sb.from('compras').insert(cabecalho).select().single();
   if(e1)return fail('Erro ao registrar compra: '+e1.message);
-  let itensInseridos=[];
-  if(itens.length){
-    const itensRows=rf.linhas.map(ci=>{
-      const it=db.itens.find(i=>i.id===ci.item_id);
-      if(it&&Math.abs((it.preco_unitario||0)-ci.preco_unitario)>0.0001)toast('ℹ️ Preço divergente do cadastro para '+it.nome+'. Compra mantida para auditoria.');
-      return{compra_id:kRow.id,item_id:ci.item_id,nome:it?it.nome:'?',quantidade:ci.quantidade,preco_unitario:ci.preco_unitario,fornecedor_id:ci.fornecedor_id,fornecedor_nome:ci.fornecedor_nome};
-    });
-    const{data:itd,error:e2}=await sb.from('compra_itens').insert(itensRows).select();
-    if(e2){await sb.from('compras').delete().eq('id',kRow.id);return fail('Erro ao registrar itens: '+e2.message)}
-    itensInseridos=itd;
-    const saldosLocais={};
-    const movimentos=rf.linhas.map(ci=>{
-      const it=db.itens.find(i=>i.id===ci.item_id);if(!it)return null;
-      const saldoAnt=(saldosLocais[it.id]??saldoItem(it.id));
-      saldosLocais[it.id]=saldoAnt+ci.quantidade;
-      return{item_id:it.id,tipo_movimento:'entrada_compra',operacao_id:operacaoId,quantidade:ci.quantidade,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,origem:'compra: '+(ci.fornecedor_nome||fornecedorNome),saldo_resultante:saldoAnt+ci.quantidade};
-    }).filter(Boolean);
-    if(movimentos.length){
-      const{data:bd,error:e3}=await sb.from('estoque_bau').insert(movimentos).select();
-      if(e3)toast('⚠️ Compra salva, mas houve erro ao lançar no Baú: '+e3.message);
-      else bd.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
-    }
+  const linhas=[...f.ins,...f.nc].map(({_it,...l})=>({...l,compra_id:kRow.id}));
+  const{data:itd,error:e2}=await sb.from('compra_itens').insert(linhas).select();
+  if(e2){await sb.from('compras').delete().eq('id',kRow.id);return fail('Erro ao registrar itens: '+e2.message)}
+  const saldos={};
+  const movimentos=f.ins.filter(l=>l._it&&controlaEstoque(l._it.categoria)).map(l=>{
+    const ant=saldos[l.item_id]??saldoItem(l.item_id);saldos[l.item_id]=ant+l.quantidade;
+    return{item_id:l.item_id,tipo_movimento:'entrada_compra',operacao_id:operacaoId,quantidade:l.quantidade,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,origem:'compra: '+l.fornecedor_nome,saldo_resultante:ant+l.quantidade};
+  });
+  if(movimentos.length){
+    const{data:bd,error:e3}=await sb.from('estoque_bau').insert(movimentos).select();
+    if(e3)toast('⚠️ Compra salva, mas houve erro ao lançar no Baú: '+e3.message);
+    else bd.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
   }
-  const k={...kRow,itens:itensInseridos.map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario),fornecedor_id:i.fornecedor_id,fornecedor_nome:i.fornecedor_nome})),valor_total:Number(kRow.valor_total)};
+  const k={...kRow,itens:(itd||[]).map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario),fornecedor_id:i.fornecedor_id,fornecedor_nome:i.fornecedor_nome})),valor_total:Number(kRow.valor_total)};
   db.compras.unshift(k);
-  reg('Compra registrada',`${k.fornecedor_nome} — ${fmt(valor)}${itens.length?` (${itens.length} insumo(s) entraram no Baú)`:''}`);
-  bauTela=null;
-  toast('✅ Compra registrada!'+(itens.length?' Entrada de insumos no Baú.':''));
+  reg('Compra registrada',`${k.fornecedor_nome} — ${fmt(f.total)}${movimentos.length?` (${movimentos.length} insumo(s) entraram no Baú)`:''}`);
+  _compraPendente=null;closeModal2();bauTela=null;
+  toast('✅ Compra registrada!'+(movimentos.length?' Entrada de insumos no Baú.':''));
   render();
 }
 /* ================= TELAS DE COMPRA E PRODUÇÃO (dentro do Baú) ================= */
@@ -947,27 +1087,21 @@ function telaProducao(){
 }
 function fecharTelaBau(){bauTela=null;render()}
 function telaCompraHTML(c){
- const itensDisp=db.itens.filter(i=>i.status==='ativo'&&(i.categoria==='materia_prima'||i.categoria==='insumo_auxiliar'));
  c.innerHTML=`
   <h2 class="page-title">🚚 Nova compra</h2>
   <p class="page-sub">Registro de despesa e entrada de insumos no Baú.</p>
   <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">← Voltar ao Baú</button>
-  <div class="card" style="max-width:760px">
-    <div class="row3">
+  <div class="card" style="max-width:980px">
+    <div class="row2">
       <div class="field"><label>Data</label><input id="c-data" type="date" value="${todayISO()}"></div>
-      <div class="field"><label>Valor total da despesa ($)</label><input id="c-valor" type="number" min="0.01" step="0.01" placeholder="0,00"></div>
       <div class="field"><label>Observação (opcional)</label><input id="c-desc"></div>
     </div>
-    <div class="section-title" style="margin-top:10px">Itens de insumo (opcional — dá entrada no Baú)</div>
-    <div id="c-itens"></div>
-    <button class="btn btn-ghost btn-sm" onclick="addCompraItem()">+ Adicionar item</button>
-    <p style="color:var(--muted);font-size:12px;margin-top:6px">Com insumos informados, o valor total é calculado automaticamente pela soma dos itens (preço fixo do cadastro). Cada linha tem o próprio fornecedor: escolha um dos vinculados ao item ou digite um nome sem cadastro — uma mesma compra pode reunir fornecedores diferentes.</p>
-    <p id="c-err" style="color:var(--danger);font-size:13px;display:none;margin-top:10px"></p>
+    ${formCompraHTML('c')}
     <div style="margin-top:16px;display:flex;gap:8px">
       <button class="btn btn-primary" onclick="salvarCompra()">Registrar compra</button>
     </div>
   </div>`;
- window._compraItens=[];
+ recalcCompra('c');
 }
 function telaProducaoHTML(c){
  const ger=isGerente();
@@ -1222,64 +1356,47 @@ async function salvarEdicaoVendaFin(id){
  reg('Venda editada',itens.length+' item(ns) — entrada '+fmt(entrada)+', repasse '+fmt(repasse));
  closeModal();render();toast('✅ Venda atualizada.');
 }
-/* Editar compra: fornecedor, itens/quantidades e descrição */
+/* Editar compra: mesmas duas seções da Nova compra. Não refaz as entradas no Baú. */
 function editCompraFin(id){
  if(!isGerente())return;
  const k=db.compras.find(x=>x.id===id);if(!k)return;
- const itensDisp=db.itens.filter(i=>i.status==='ativo'&&(i.categoria==='materia_prima'||i.categoria==='insumo_auxiliar'));
- // linhas antigas sem fornecedor próprio herdam o fornecedor do cabeçalho da compra
- const linhas=(k.itens||[]).map(i=>linhaItemCompraEdit({...i,fornecedor_nome:i.fornecedor_nome||(k.fornecedor_nome!=='Fornecedor avulso'?k.fornecedor_nome:'')},itensDisp)).join('');
+ // linhas antigas sem fornecedor próprio herdam o do cabeçalho
+ const cabF=db.fornecedores.find(f=>f.id===k.fornecedor_id)||db.fornecedores.find(f=>f.nome.toLowerCase()===(k.fornecedor_nome||'').toLowerCase());
+ const itens=(k.itens||[]).map(i=>{
+   const f=db.fornecedores.find(x=>x.id===i.fornecedor_id)||(i.fornecedor_nome?db.fornecedores.find(x=>x.nome.toLowerCase()===i.fornecedor_nome.toLowerCase()):null)||(i.fornecedor_nome?null:cabF);
+   return{...i,fornecedor_id:f?f.id:null,fornecedor_nome:i.fornecedor_nome||(f?f.nome:(k.fornecedor_nome!=='Fornecedor avulso'?k.fornecedor_nome:''))};
+ });
  openModal(`<h3>Editar compra</h3>
- <div class="section-title" style="color:var(--warning-light)">Insumos comprados</div>
- <div id="ec-itens">${linhas||'<p class="muted" style="font-size:12px">Nenhum insumo registrado nesta compra.</p>'}</div>
- <button class="btn btn-ghost btn-sm" onclick="addItemCompraEdit()">+ Adicionar insumo</button>
- <div class="field" style="margin-top:14px"><label>Descrição / Observação</label><input id="ec-desc" value="${esc(k.descricao||'')}"></div>
- <p id="ec-err" style="color:var(--danger);font-size:13px;display:none"></p>
+ ${formCompraHTML('ec',{...k,itens})}
+ <div class="field" style="margin-top:14px"><label>Observação</label><input id="ec-desc" value="${esc(k.descricao||'')}"></div>
+ <p class="muted" style="font-size:12px">A edição não refaz as entradas no Baú — ajuste o estoque pelo Baú (+ Entrada / − Saída) se mudar insumos ou quantidades.</p>
  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
  <button class="btn btn-purple" onclick="salvarEdicaoCompraFin('${id}')">Salvar</button></div>`);
-}
-function linhaItemCompraEdit(i,itensDisp){
- const opts=itensDisp.map(it=>`<option value="${it.id}" ${it.id===i.item_id?'selected':''}>${esc(it.nome)} (${esc(it.unidade_medida)})</option>`).join('');
- const itemId=i.item_id||(itensDisp[0]?itensDisp[0].id:'');
- return`<div class="row3" style="margin-bottom:8px;grid-template-columns:2fr 1.5fr 1fr auto" data-ecitem>
-  <select class="eci-item" onchange="trocarFornLinha(this.closest('[data-ecitem]'),'eci-forn',this)">${opts}</select>
-  ${campoFornLinha('eci-forn',itemId,i.fornecedor_nome)}
-  <input class="eci-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${i.quantidade??i.qtd}">
-  <button class="iconbtn btn-del-linha" onclick="this.closest('[data-ecitem]').remove()">✕</button></div>`;
-}
-function addItemCompraEdit(){
- const itensDisp=db.itens.filter(i=>i.status==='ativo'&&(i.categoria==='materia_prima'||i.categoria==='insumo_auxiliar'));
- const d=document.createElement('div');
- d.innerHTML=linhaItemCompraEdit({item_id:'',quantidade:''},itensDisp);
- document.getElementById('ec-itens').appendChild(d.firstElementChild);
+ document.getElementById('modal-box').classList.add('modal-larga');
+ recalcCompra('ec');
 }
 async function salvarEdicaoCompraFin(id){
  const k=db.compras.find(x=>x.id===id);if(!k)return;
- const e=document.getElementById('ec-err');
- const itens=[...document.querySelectorAll('#ec-itens [data-ecitem]')].map(d=>{
-  const sel=d.querySelector('.eci-item'),fs=d.querySelector('.eci-forn');const it=db.itens.find(x=>x.id===sel.value);
-  return{item_id:sel.value,fornecedor_nome:fs?fs.value.trim():'',nome:it?it.nome:'?',quantidade:parseFloat(d.querySelector('.eci-qtd').value)||0,preco_unitario:it?it.preco_unitario:0};
- }).filter(x=>x.item_id&&x.quantidade>0);
  const desc=document.getElementById('ec-desc').value.trim();
- const itemInvalido=itens.map(ci=>db.itens.find(i=>i.id===ci.item_id)).find(it=>it&&!['materia_prima','insumo_auxiliar'].includes(it.categoria));
- if(itemInvalido){e.textContent=`"${itemInvalido.nome}" não pode ser usado como insumo de compra (só Matéria-Prima ou Insumo Auxiliar).`;e.style.display='block';return}
- if(!itens.length&&!(k.valor_total>0)){e.textContent='Adicione ao menos um insumo ou mantenha o valor total.';e.style.display='block';return}
- const semForn=linhaSemFornecedor(itens);
- if(semForn){e.textContent=`Informe o fornecedor da linha "${semForn.nome}".`;e.style.display='block';return}
- const rf=resolverFornecedoresCompra(itens);
- const patch=itens.length?{fornecedor_id:rf.fornecedor_id,fornecedor_nome:rf.fornecedor_nome,descricao:desc}:{descricao:desc};
- if(itens.length)patch.valor_total=itens.reduce((s,x)=>s+x.quantidade*x.preco_unitario,0);
+ const semLinhas=!document.querySelector('#ec-ins .cmp-row, #ec-nc .cmp-row');
+ let patch,linhas=null;
+ if(semLinhas&&!(k.itens||[]).length){patch={descricao:desc}} // compra antiga só com valor total
+ else{
+   const f=validarFormCompra('ec');if(!f)return;
+   patch={...fornecedorCabecalho([...f.ins,...f.nc]),descricao:desc,valor_total:f.total};
+   linhas=[...f.ins,...f.nc].map(({_it,...l})=>({...l,compra_id:id}));
+ }
+ const e=document.getElementById('ec-err');
  const{error:e1}=await sb.from('compras').update(patch).eq('id',id);
  if(e1){e.textContent='Erro ao salvar: '+e1.message;e.style.display='block';return}
- await sb.from('compra_itens').delete().eq('compra_id',id);
- let itd=[];
- if(itens.length){
-  const{data,error:e2}=await sb.from('compra_itens').insert(rf.linhas.map(i=>({...i,compra_id:id}))).select();
+ if(linhas){
+  const{error:ed}=await sb.from('compra_itens').delete().eq('compra_id',id);
+  if(ed){e.textContent='Erro ao salvar itens: '+ed.message;e.style.display='block';return}
+  const{data,error:e2}=await sb.from('compra_itens').insert(linhas).select();
   if(e2){e.textContent='Erro ao salvar itens: '+e2.message;e.style.display='block';return}
-  itd=data;
+  k.itens=data.map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario),fornecedor_id:i.fornecedor_id,fornecedor_nome:i.fornecedor_nome}));
  }
  Object.assign(k,patch);
- k.itens=itd.map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario),fornecedor_id:i.fornecedor_id,fornecedor_nome:i.fornecedor_nome}));
  reg('Compra editada',k.fornecedor_nome+' — '+fmt(k.valor_total));
  closeModal();render();toast('✅ Compra atualizada.');
 }
@@ -1299,6 +1416,7 @@ function renderConfig(c){
   else if(cfgTabAtual==='descontos')cfgDescontos(b);
   else if(cfgTabAtual==='deslocamento')cfgDeslocamento(b);
   else if(cfgTabAtual==='logo')cfgLogo(b);
+  aplicarFiltrosCfg(b);
 }
 /* ---- Usuários ---- */
 /* Perfil com mais acesso primeiro (Sócio > Diretor > Gerente > Vendedor), depois nome A→Z */
@@ -1564,18 +1682,83 @@ function cfgItens(b){
     <button class="btn btn-purple btn-sm" onclick="modalItem()">+ Novo item</button></div>
   <div class="table-wrap"><table>
   <tr><th>Item</th><th>Categoria</th><th>Un.</th><th>Preço unitário</th><th>Qtd mínima</th><th>Saldo Baú</th><th>Status</th><th>Ações</th></tr>
-  ${db.itens.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&i.categoria!=='produto_final'&&s<=i.qtd_minima;return`<tr>
+  ${db.itens.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr>
     <td><b>${esc(i.nome)}</b>${alerta?' <span class="tag r">⚠️ no mínimo</span>':''}</td>
-    <td><span class="tag">${CAT_LABEL[i.categoria]}</span></td>
+    <td><span class="tag">${catNome(i.categoria)}</span></td>
     <td style="color:var(--muted)">${esc(i.unidade_medida)}</td>
     <td class="money">${fmt(i.preco_unitario)}</td>
     <td>${i.qtd_minima||0}</td>
-    <td>${i.categoria==='produto_final'?'<span style="color:var(--muted)">n/a</span>':s}</td>
+    <td>${!controlaEstoque(i.categoria)?'<span style="color:var(--muted)">n/a</span>':s}</td>
     <td><span class="badge ${i.status==='ativo'?'ativo':'inativo'}">${i.status}</span></td>
     <td><button class="iconbtn" onclick="modalItem('${i.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleItem('${i.id}')">${i.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
+  </tr>`}).join('')}</table></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
+    <div class="section-title" style="margin:0">🏷️ Categorias de itens</div>
+    <button class="btn btn-purple btn-sm" onclick="modalCategoria()">+ Nova categoria</button></div>
+  <p style="color:var(--muted);font-size:12px;margin-bottom:12px"><b>Controle de estoque</b>: itens entram no Baú. <b>Pode ser comprada</b>: itens aparecem em "Insumos" na compra e podem ser vinculados a fornecedores (exige controle de estoque). <b>Aparece nas Receitas</b>: itens aparecem na lista das Receitas. As 4 categorias de sistema têm nome e controle de estoque fixos.</p>
+  <div class="table-wrap"><table>
+  <tr><th>Categoria</th><th>Controle de estoque</th><th>Pode ser comprada</th><th>Aparece nas Receitas</th><th>Itens</th><th>Tipo</th><th>Ações</th></tr>
+  ${db.categorias.map(c=>{const n=db.itens.filter(i=>i.categoria===c.codigo).length;return`<tr>
+    <td><b>${esc(c.nome)}</b></td><td>${simNao(c.controla_estoque)}</td><td>${simNao(c.compravel&&c.controla_estoque)}</td><td>${simNao(c.aparece_receitas)}</td>
+    <td>${n}</td><td><span class="tag">${c.sistema?'Sistema':'Personalizada'}</span></td>
+    <td><button class="iconbtn" onclick="modalCategoria('${esc(c.codigo)}')">✏️</button>${!c.sistema&&isSocioOuDiretor()?`<button class="iconbtn" title="Excluir categoria" onclick="excluirCategoria('${esc(c.codigo)}')">🗑️</button>`:''}</td>
   </tr>`}).join('')}</table></div>`;
+}
+function simNao(v){return `<span class="tag ${v?'g':''}">${v?'Sim':'Não'}</span>`}
+function slugCategoria(nome){return nome.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'categoria'}
+function modalCategoria(codigo){
+  const c=codigo?db.categorias.find(x=>x.codigo===codigo):null;
+  const sis=c&&c.sistema;
+  const chk=(id,label,v,dis,extra='')=>`<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;font-weight:400;color:var(--text);margin:0 0 10px"><input type="checkbox" id="${id}" style="width:auto" ${v?'checked':''} ${dis?'disabled':''} ${extra}> ${label}</label>`;
+  openModal(`<h3>${c?'Editar categoria':'Nova categoria'}</h3>
+  <div class="field"><label>Nome da categoria</label><input id="cat-nome" value="${c?esc(c.nome):''}" ${sis?'disabled':''}></div>
+  ${sis?'<p class="muted" style="font-size:12px;margin-bottom:10px">Categoria de sistema: nome e controle de estoque não podem ser alterados.</p>':''}
+  ${chk('cat-estoque','Controle de estoque (itens entram no Baú)',c?c.controla_estoque:true,sis,`onchange="const k=document.getElementById('cat-compravel');k.disabled=!this.checked;if(!this.checked)k.checked=false"`)}
+  ${chk('cat-compravel','Pode ser comprada (aparece em "Insumos" na compra e no vínculo com fornecedores)',c?(c.compravel&&c.controla_estoque):true,c&&!c.controla_estoque)}
+  ${chk('cat-receitas','Aparece na lista suspensa das Receitas',c?c.aparece_receitas:true,false)}
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+  <button class="btn btn-purple" onclick="salvarCategoria('${c?esc(c.codigo):''}')">Salvar</button></div>`);
+}
+async function salvarCategoria(codigo){
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem cadastrar categorias.');
+  const c=codigo?db.categorias.find(x=>x.codigo===codigo):null;
+  const nome=document.getElementById('cat-nome').value.trim();
+  const estoque=document.getElementById('cat-estoque').checked;
+  const campos={compravel:estoque&&document.getElementById('cat-compravel').checked,aparece_receitas:document.getElementById('cat-receitas').checked};
+  if(!c||!c.sistema){
+    if(!nome)return toast('⚠️ Informe o nome da categoria.');
+    if(db.categorias.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.codigo!==codigo))return toast('⚠️ Já existe uma categoria com esse nome.');
+    Object.assign(campos,{nome,controla_estoque:estoque});
+    if(c&&c.controla_estoque&&!estoque){
+      const ids=db.itens.filter(i=>i.categoria===c.codigo).map(i=>i.id);
+      if(db.estoque_bau.some(m=>ids.includes(m.item_id)))return toast('⚠️ Não é possível desligar o controle de estoque: há itens desta categoria com movimentações no Baú.');
+    }
+  }
+  if(c){
+    const{error}=await sb.from('categorias_itens').update(campos).eq('codigo',c.codigo);
+    if(error)return toast('⚠️ Erro ao salvar: '+error.message);
+    Object.assign(c,campos);reg('Categoria editada',c.nome);
+  }else{
+    let cod=slugCategoria(nome),n=2;while(db.categorias.some(x=>x.codigo===cod))cod=slugCategoria(nome)+'_'+(n++);
+    const ordem=Math.max(0,...db.categorias.map(x=>x.ordem||0))+1;
+    const{data,error}=await sb.from('categorias_itens').insert({codigo:cod,ordem,...campos}).select().single();
+    if(error)return toast('⚠️ Erro ao salvar: '+error.message);
+    db.categorias.push(data);reg('Categoria criada',nome);
+  }
+  closeModal();render();
+}
+function excluirCategoria(codigo){
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir categorias.');
+  const c=db.categorias.find(x=>x.codigo===codigo);if(!c||c.sistema)return;
+  const n=db.itens.filter(i=>i.categoria===codigo).length;
+  if(n)return toast('⚠️ Não é possível excluir "'+c.nome+'": há '+n+' item(ns) nesta categoria. Mude a categoria deles antes.');
+  confirmar('Excluir categoria','A categoria "'+c.nome+'" será removida. Confirmar?',async()=>{
+    const{error}=await sb.from('categorias_itens').delete().eq('codigo',codigo);
+    if(error)return toast('⚠️ Erro ao excluir: '+error.message);
+    db.categorias=db.categorias.filter(x=>x.codigo!==codigo);reg('Categoria excluída',c.nome);render();
+  });
 }
 function modalItem(id){
   const it=id?db.itens.find(x=>x.id===id):null;
@@ -1583,10 +1766,7 @@ function modalItem(id){
   <div class="field"><label>Nome</label><input id="i-nome" value="${it?esc(it.nome):''}"></div>
   <div class="row3">
     <div class="field"><label>Categoria</label><select id="i-cat">
-      <option value="materia_prima" ${it&&it.categoria==='materia_prima'?'selected':''}>Matéria-Prima</option>
-      <option value="insumo_auxiliar" ${it&&it.categoria==='insumo_auxiliar'?'selected':''}>Insumo Auxiliar</option>
-      <option value="produto_nao_acabado" ${it&&it.categoria==='produto_nao_acabado'?'selected':''}>Produto Não Acabado</option>
-      <option value="produto_final" ${it&&it.categoria==='produto_final'?'selected':''}>Produto Final</option></select></div>
+      ${it?'':'<option value="" disabled hidden selected>Selecione a categoria...</option>'}${db.categorias.map(c=>`<option value="${esc(c.codigo)}" ${it&&it.categoria===c.codigo?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></div>
     <div class="field"><label>Unidade</label><input id="i-un" value="${it?esc(it.unidade_medida):'un'}"></div>
     <div class="field"><label>Preço unitário ($)</label><input id="i-custo" type="number" min="0" step="0.01" value="${it?it.preco_unitario:0}"></div>
   </div>
@@ -1601,6 +1781,7 @@ async function salvarItem(id){
   const custo=parseFloat(document.getElementById('i-custo').value)||0;
   const min=parseFloat(document.getElementById('i-min').value)||0;
   if(!nome)return toast('⚠️ Informe o nome do item.');
+  if(!cat)return toast('⚠️ Selecione a categoria do item.');
   const campos={nome,categoria:cat,unidade_medida:un,preco_unitario:custo,qtd_minima:min};
   if(id){
     const{error}=await sb.from('itens').update(campos).eq('id',id);
@@ -1693,10 +1874,9 @@ async function toggleReceita(id){
 }
 /* ---- Fornecedores ---- */
 /* ---- Vínculo Fornecedor ↔ Item de compra (tabela fornecedor_itens) ---- */
-const CATS_FORNECIDAS=['materia_prima','insumo_auxiliar'];
-function itensDoFornecedor(fid){const ids=db.fornecedor_itens.filter(x=>x.fornecedor_id===fid).map(x=>x.item_id);return db.itens.filter(i=>ids.includes(i.id)&&CATS_FORNECIDAS.includes(i.categoria))}
+function itensDoFornecedor(fid){const ids=db.fornecedor_itens.filter(x=>x.fornecedor_id===fid).map(x=>x.item_id);return db.itens.filter(i=>ids.includes(i.id)&&catCompravel(i.categoria))}
 function fornecedoresDoItem(itemId){
-  const it=db.itens.find(i=>i.id===itemId);if(!it||!CATS_FORNECIDAS.includes(it.categoria))return [];
+  const it=db.itens.find(i=>i.id===itemId);if(!it||!catCompravel(it.categoria))return [];
   const ids=db.fornecedor_itens.filter(x=>x.item_id===itemId).map(x=>x.fornecedor_id);
   return db.fornecedores.filter(f=>f.status==='ativo'&&ids.includes(f.id));
 }
@@ -1715,24 +1895,29 @@ function cfgFornecedores(b){
     <button class="iconbtn" onclick="toggleFornecedor('${f.id}')">${f.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirFornecedor('${f.id}')">🗑️</button>`:''}</td>
   </tr>`}).join('')||'<tr><td colspan="4" class="empty">Nenhum fornecedor cadastrado.</td></tr>'}</table></div>`;
 }
-function modalFornecedor(id){
+/* Atalho da compra: abre o cadastro por cima do formulário (2ª camada) e devolve o fornecedor criado */
+let _fornAtalho=null;
+function modalFornecedor(id,opts){
+  opts=opts||{};
   const f=id?db.fornecedores.find(x=>x.id===id):null;
   const vinculados=new Set(f?itensDoFornecedor(f.id).map(i=>i.id):[]);
-  const itens=db.itens.filter(i=>CATS_FORNECIDAS.includes(i.categoria)&&(i.status==='ativo'||vinculados.has(i.id)))
+  if(opts.itemId)vinculados.add(opts.itemId);
+  const itens=db.itens.filter(i=>catCompravel(i.categoria)&&(i.status==='ativo'||vinculados.has(i.id)))
     .sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
-  const catLabel={materia_prima:'Matéria-Prima',insumo_auxiliar:'Insumo Auxiliar'};
-  openModal(`<h3>${f?'Editar fornecedor':'Novo fornecedor'}</h3>
-  <div class="field"><label>Razão social / Nome fantasia</label><input id="f-nome" value="${f?esc(f.nome):''}"></div>
-  <div class="field"><label>Itens fornecidos (Matéria-Prima e Insumo Auxiliar)</label>
+  _fornAtalho=opts.onSaved||null;
+  (opts.onSaved?openModal2:openModal)(`<h3>${f?'Editar fornecedor':'Novo fornecedor'}</h3>
+  <div class="field"><label>Razão social / Nome fantasia</label><input id="f-nome" value="${f?esc(f.nome):esc(opts.nome||'')}"></div>
+  <div class="field"><label>Itens fornecidos (categorias que podem ser compradas)</label>
     <div class="msel" id="f-msel">
       <div class="msel-chips" id="f-chips"></div>
       <input id="f-busca" autocomplete="off" placeholder="🔍 Pesquisar itens…" onfocus="mselAbrir(true)" oninput="mselFiltrar(this.value)">
-      <div class="msel-list" id="f-itens" style="display:none">${itens.map(i=>`<label class="msel-opt" data-nome="${esc(i.nome.toLowerCase())}"><input type="checkbox" value="${i.id}" data-label="${esc(i.nome)}" ${vinculados.has(i.id)?'checked':''} onchange="mselChips()"> ${esc(i.nome)}<span class="tag">${catLabel[i.categoria]}</span></label>`).join('')}<div class="msel-vazio" id="f-vazio" style="display:${itens.length?'none':'block'}">${itens.length?'Nenhum item encontrado.':'Nenhuma Matéria-Prima ou Insumo Auxiliar cadastrado.'}</div></div>
+      <div class="msel-list" id="f-itens" style="display:none">${itens.map(i=>`<label class="msel-opt" data-nome="${esc(i.nome.toLowerCase())}"><input type="checkbox" value="${i.id}" data-label="${esc(i.nome)}" ${vinculados.has(i.id)?'checked':''} onchange="mselChips()"> ${esc(i.nome)}<span class="tag">${esc(catNome(i.categoria))}</span></label>`).join('')}<div class="msel-vazio" id="f-vazio" style="display:${itens.length?'none':'block'}">${itens.length?'Nenhum item encontrado.':'Nenhum item de categoria comprável cadastrado.'}</div></div>
     </div></div>
-  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModalFornecedor()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarFornecedor('${id||''}')">Salvar</button></div>`);
   mselChips();
 }
+function fecharModalFornecedor(){if(_fornAtalho){_fornAtalho=null;closeModal2()}else closeModal()}
 function mselAbrir(abrir){const l=document.getElementById('f-itens');if(l)l.style.display=abrir?'block':'none'}
 function mselFiltrar(q){
   q=q.trim().toLowerCase();let vis=0;
@@ -1776,6 +1961,7 @@ async function salvarFornecedor(id){
     if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao vincular itens: '+error.message);
     db.fornecedor_itens.push(...data);
   }
+  if(_fornAtalho){const cb=_fornAtalho;_fornAtalho=null;closeModal2();cb(db.fornecedores.find(x=>x.id===fid));return}
   closeModal();render();
 }
 async function toggleFornecedor(id){
@@ -2309,6 +2495,115 @@ function excluirSelecionadas(tipo){
   ids.forEach(id=>selExclusao[tipo].delete(id));
   render();toast('✅ '+ids.length+' linha(s) excluída(s).'+(bloqueadas?' '+bloqueadas+' continuam selecionadas, ainda ativas.':''));
  });
+}
+
+/* ================= LISTA SUSPENSA PESQUISÁVEL (todos os <select>) =================
+   Cada <select> ganha um botão com lista + busca. O <select> original continua no DOM (oculto) e segue
+   sendo a fonte do valor, então todo onchange/value existente funciona igual.
+   Adaptação por campo: busca aparece com mais de 6 opções; optgroup vira título de grupo;
+   opção vazia "hidden" vira placeholder; data-ssel-extra="fn" acrescenta um rodapé (ex.: cadastrar fornecedor);
+   data-nosearch desliga o recurso num select específico. */
+const SSEL_MIN_BUSCA=6;
+let _sselAberto=null,_sselPop=null;
+function sselNorm(t){return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
+(function(){const P=HTMLSelectElement.prototype;['value','selectedIndex'].forEach(k=>{const d=Object.getOwnPropertyDescriptor(P,k);Object.defineProperty(P,k,{configurable:true,enumerable:d.enumerable,get(){return d.get.call(this)},set(v){d.set.call(this,v);if(this._ssel)this._ssel.sync()}})})})();
+function sselAplicar(sel){
+  if(sel._ssel||sel.multiple||sel.hasAttribute('data-nosearch'))return;
+  const btn=document.createElement('button');btn.type='button';btn.className='ssel-btn';
+  btn.style.cssText=sel.style.cssText;btn.style.display='';
+  sel.style.display='none';sel.after(btn);
+  const sync=()=>{
+    const o=sel.options[sel.selectedIndex];const vazio=!o||(o.value===''&&(o.hidden||o.disabled));
+    btn.innerHTML=`<span class="ssel-lbl ${vazio?'ph':''}">${esc(o?o.text:'Selecione...')}</span><span class="ssel-car">▼</span>`;
+    btn.disabled=sel.disabled;btn.title=o&&!vazio?o.text:'';
+  };
+  sel._ssel={btn,sync};
+  btn.addEventListener('click',()=>{_sselAberto===sel?sselFechar():sselAbrir(sel)});
+  btn.addEventListener('keydown',e=>{if(['ArrowDown','Enter',' '].includes(e.key)){e.preventDefault();sselAbrir(sel)}});
+  sel.addEventListener('change',sync);
+  new MutationObserver(sync).observe(sel,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled','selected']});
+  sync();
+}
+function sselAbrir(sel){
+  sselFechar();if(sel.disabled)return;
+  _sselAberto=sel;sel._ssel.btn.classList.add('aberto');
+  const pop=document.createElement('div');pop.className='ssel-pop';_sselPop=pop;
+  const itens=[];
+  [...sel.children].forEach(ch=>{
+    if(ch.tagName==='OPTGROUP'){itens.push({grp:ch.label});[...ch.children].forEach(o=>itens.push({o}))}
+    else itens.push({o:ch});
+  });
+  const visiveis=itens.filter(x=>x.grp||!(x.o.hidden||(x.o.disabled&&x.o.value==='')));
+  const nOps=visiveis.filter(x=>x.o).length;
+  const extraFn=sel.dataset.sselExtra&&window[sel.dataset.sselExtra];
+  const comBusca=nOps>SSEL_MIN_BUSCA||!!extraFn;
+  pop.innerHTML=`${comBusca?'<input class="ssel-q" placeholder="🔍 Pesquisar..." autocomplete="off">':''}<div class="ssel-ops"></div><div class="ssel-extra"></div>`;
+  const q=pop.querySelector('.ssel-q'),ops=pop.querySelector('.ssel-ops'),extra=pop.querySelector('.ssel-extra');
+  let hl=-1,lista=[];
+  const desenhar=()=>{
+    const t=q?sselNorm(q.value.trim()):'';
+    const res=[];let grp=null;
+    visiveis.forEach(x=>{if(x.grp){grp=x.grp;return}if(!t||sselNorm(x.o.text).includes(t)){if(grp!==null&&!res.some(r=>r.grp===grp))res.push({grp});res.push(x)}});
+    lista=res.filter(x=>x.o);hl=lista.findIndex(x=>x.o.selected&&x.o.value!=='');if(hl<0&&t&&lista.length)hl=0;
+    ops.innerHTML=res.map(x=>x.grp!==undefined?`<div class="ssel-grp">${esc(x.grp)}</div>`:`<div class="ssel-op ${x.o.selected&&x.o.value!==''?'sel':''} ${lista[hl]===x?'hl':''}" data-i="${lista.indexOf(x)}">${esc(x.o.text)}</div>`).join('')||`<div class="ssel-vazio">Nenhum resultado${t?' para “'+esc(q.value.trim())+'”':''}.</div>`;
+    extra.innerHTML=extraFn?extraFn(sel,q?q.value.trim():''):'';
+  };
+  const escolher=i=>{const x=lista[i];if(!x||x.o.disabled)return;sel.value=x.o.value;sel.dispatchEvent(new Event('change',{bubbles:true}));sselFechar();sel._ssel.btn.focus()};
+  ops.addEventListener('mousedown',e=>{const d=e.target.closest('.ssel-op');if(d){e.preventDefault();escolher(+d.dataset.i)}});
+  const mover=dlt=>{if(!lista.length)return;hl=(hl+dlt+lista.length)%lista.length;ops.querySelectorAll('.ssel-op').forEach(d=>d.classList.toggle('hl',+d.dataset.i===hl));const d=ops.querySelector('.ssel-op.hl');if(d)d.scrollIntoView({block:'nearest'})};
+  const teclas=e=>{if(e.key==='ArrowDown'){e.preventDefault();mover(1)}else if(e.key==='ArrowUp'){e.preventDefault();mover(-1)}else if(e.key==='Enter'){e.preventDefault();escolher(hl<0?0:hl)}else if(e.key==='Escape'){e.preventDefault();sselFechar();sel._ssel.btn.focus()}};
+  if(q){q.addEventListener('input',desenhar);q.addEventListener('keydown',teclas)}else pop.addEventListener('keydown',teclas);
+  pop.tabIndex=-1;
+  document.body.appendChild(pop);desenhar();
+  const r=sel._ssel.btn.getBoundingClientRect(),w=Math.max(r.width,240);
+  pop.style.width=w+'px';pop.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+'px';
+  if(window.innerHeight-r.bottom<320&&r.top>window.innerHeight-r.bottom){pop.style.bottom=(window.innerHeight-r.top+4)+'px'}else pop.style.top=(r.bottom+4)+'px';
+  (q||pop).focus();
+  const d=ops.querySelector('.ssel-op.sel');if(d)d.scrollIntoView({block:'nearest'});
+}
+function sselFechar(){if(_sselPop){_sselPop.remove();_sselPop=null}if(_sselAberto){_sselAberto._ssel.btn.classList.remove('aberto');_sselAberto=null}}
+document.addEventListener('mousedown',e=>{if(_sselPop&&!_sselPop.contains(e.target)&&!(_sselAberto&&_sselAberto._ssel.btn.contains(e.target)))sselFechar()});
+window.addEventListener('resize',sselFechar);
+document.addEventListener('scroll',e=>{if(_sselPop&&!_sselPop.contains(e.target))sselFechar()},true);
+new MutationObserver(ms=>{ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.tagName==='SELECT')sselAplicar(n);else n.querySelectorAll&&n.querySelectorAll('select').forEach(sselAplicar)}));if(_sselAberto&&!_sselAberto.isConnected)sselFechar()}).observe(document.documentElement,{childList:true,subtree:true});
+document.querySelectorAll('select').forEach(sselAplicar);
+
+/* ================= FILTROS DAS TABELAS DE CONFIGURAÇÕES =================
+   Cada tabela de Configurações ganha uma linha de filtro por coluna: lista (para colunas com poucos
+   valores repetidos, ex.: Status, Perfil, Categoria) ou campo de texto. Os filtros sobrevivem ao re-render. */
+const filtrosCfg={};
+function aplicarFiltrosCfg(root){
+  root.querySelectorAll('table').forEach((tb,ti)=>{
+    const rows=[...tb.rows];if(rows.length<2||!rows[0].querySelector('th'))return;
+    const head=rows[0],dados=rows.slice(1).filter(r=>!r.querySelector('td[colspan]'));
+    if(!dados.length)return;
+    const key=cfgTabAtual+'|'+ti,st=filtrosCfg[key]=filtrosCfg[key]||{};
+    const tr=document.createElement('tr');tr.className='cfg-filtro';
+    [...head.cells].forEach((th,ci)=>{
+      const cel=document.createElement('th');tr.appendChild(cel);
+      const rot=th.textContent.trim();
+      if(!rot||/^(ações|ordem)$/i.test(rot)){
+        if(ci===head.cells.length-1)cel.innerHTML=`<button class="btn btn-ghost btn-sm cfg-limpar" style="display:none;white-space:nowrap" title="Limpar filtros">✕ Limpar</button>`;
+        return;
+      }
+      const vals=[...new Set(dados.map(r=>(r.cells[ci]?r.cells[ci].innerText:'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+      const lista=vals.length>1&&vals.length<=6&&dados.length>vals.length;
+      cel.innerHTML=lista
+        ?`<select data-ci="${ci}"><option value="">Todos</option>${vals.map(v=>`<option ${st[ci]===v?'selected':''}>${esc(v)}</option>`).join('')}</select>`
+        :`<input type="search" data-ci="${ci}" placeholder="Filtrar ${esc(rot.toLowerCase())}…" value="${esc(st[ci]||'')}">`;
+    });
+    head.after(tr);
+    const vazio=document.createElement('tr');vazio.className='cfg-sem-resultado';vazio.innerHTML=`<td colspan="${head.cells.length}">Nenhum registro corresponde aos filtros.</td>`;tb.appendChild(vazio);
+    const filtrar=()=>{
+      let n=0;
+      dados.forEach(r=>{const ok=Object.entries(st).every(([ci,v])=>{if(!v)return true;const t=(r.cells[ci]?r.cells[ci].innerText:'').trim();const campo=tr.querySelector(`[data-ci="${ci}"]`);return campo&&campo.tagName==='SELECT'?t===v:sselNorm(t).includes(sselNorm(v))});r.style.display=ok?'':'none';if(ok)n++});
+      vazio.style.display=n?'none':'';
+      const lp=tr.querySelector('.cfg-limpar');if(lp)lp.style.display=Object.values(st).some(Boolean)?'':'none';
+    };
+    tr.querySelectorAll('[data-ci]').forEach(el=>el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>{st[el.dataset.ci]=el.value;filtrar()}));
+    const lp=tr.querySelector('.cfg-limpar');if(lp)lp.onclick=()=>{Object.keys(st).forEach(k=>delete st[k]);render()};
+    filtrar();
+  });
 }
 
 /* ================= INIT ================= */
