@@ -90,8 +90,8 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
 .login-acoes{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin:4px 0 26px;font-size:14px}
 .login-link{background:none;color:var(--info);font-size:14px;padding:0}
 .login-link:hover{text-decoration:underline;filter:brightness(1.15)}
-.login-entrar{width:100%;height:56px;border-radius:14px;background:#E5E5E7;color:#111114;font-size:16px;font-weight:600;transition:background .15s}
-.login-entrar:hover{background:#FFFFFF}
+.login-entrar{width:100%;height:56px;border-radius:14px;background:var(--green);color:var(--green-text);font-size:16px;font-weight:700;transition:background .15s}
+.login-entrar:hover{background:var(--green-hover)}
 .login-entrar:disabled{opacity:.6;cursor:wait}
 .login-painel{position:relative;border-radius:28px;overflow:hidden;min-height:calc(100vh - 32px);display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border)}
 .login-marca{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:62%;height:46%}
@@ -283,7 +283,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <span class="vselo" id="h-versao">v4.5.1</span>
+  <span class="vselo" id="h-versao">v4.5.2</span>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -319,7 +319,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.5.1';
+const VERSAO='v4.5.2';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
