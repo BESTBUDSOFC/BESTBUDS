@@ -209,6 +209,8 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .cart-line .iconbtn{color:var(--danger);border:1px solid var(--danger);background:rgba(var(--danger-rgb),.08);font-weight:800}
 .cart-line .iconbtn:hover{background:rgba(var(--danger-rgb),.25)}
 .iconbtn:hover{background:var(--border)}
+.iconbtn.btn-ordem{background:#282836;color:var(--text);width:28px;height:28px;padding:0;margin-right:4px;font-size:15px;font-weight:700;line-height:28px;text-align:center}
+.iconbtn.btn-ordem:hover{background:#34344A}
 .drop-zone{border:2px dashed var(--border);border-radius:var(--r);padding:32px;text-align:center;color:var(--muted);cursor:pointer;transition:.15s}
 .drop-zone:hover,.drop-zone.drag{border-color:var(--purple);color:var(--purple)}
 .lf-previa{position:relative;height:180px;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px;background-color:var(--bg);background-size:cover;background-position:center;display:grid;grid-template-columns:1fr 1.1fr;gap:8px;padding:8px}
@@ -320,7 +322,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <span class="vselo" id="h-versao">v4.6.3</span>
+  <span class="vselo" id="h-versao">v4.6.4</span>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -356,7 +358,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.6.3';
+const VERSAO='v4.6.4';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -406,7 +408,7 @@ async function carregarTudo(){
     taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha,cfgPrivada]=await Promise.all([
     sb.from('profiles').select('*').order('criado_em'),
     sb.from('produtos').select('*').order('ordem'),
-    sb.from('itens').select('*').order('nome'),
+    sb.from('itens').select('*').order('ordem',{nullsFirst:false}).order('nome'),
     sb.from('receitas').select('*').order('ordem'),
     sb.from('receita_insumos').select('*'),
     sb.from('fornecedores').select('*').order('nome'),
@@ -775,6 +777,24 @@ function catNome(c){return catInfo(c).nome}
 function controlaEstoque(c){return !!catInfo(c).controla_estoque}
 function catCompravel(c){return !!catInfo(c).compravel&&!!catInfo(c).controla_estoque}
 function catReceitas(c){return !!catInfo(c).aparece_receitas}
+/* Ordem manual definida no Cadastro Central de Itens (↑ ↓); vale também para os cartões do Baú */
+function itensOrdenados(){return [...db.itens].sort((a,b)=>(a.ordem??1e9)-(b.ordem??1e9)||a.nome.localeCompare(b.nome,'pt-BR'))}
+async function moverItem(id,dir){
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem reordenar itens.');
+  const lista=itensOrdenados(),i=lista.findIndex(x=>x.id===id),j=i+dir;
+  if(i<0||j<0||j>=lista.length)return;
+  // garante ordens únicas e sequenciais antes de trocar (itens antigos/novos sem ordem)
+  const precisaNormalizar=lista.some((x,k)=>x.ordem!==k+1);
+  if(precisaNormalizar){
+    const res=await Promise.all(lista.map((x,k)=>x.ordem===k+1?null:sb.from('itens').update({ordem:k+1}).eq('id',x.id)).filter(Boolean));
+    if(res.some(r=>r.error))return toast('⚠️ Erro ao reordenar.');
+    lista.forEach((x,k)=>x.ordem=k+1);
+  }
+  const a=lista[i],b=lista[j],oa=a.ordem,ob=b.ordem;
+  const[r1,r2]=await Promise.all([sb.from('itens').update({ordem:ob}).eq('id',a.id),sb.from('itens').update({ordem:oa}).eq('id',b.id)]);
+  if(r1.error||r2.error)return toast('⚠️ Erro ao reordenar.');
+  a.ordem=ob;b.ordem=oa;render();
+}
 function itensCompraveis(){return db.itens.filter(i=>i.status==='ativo'&&catCompravel(i.categoria)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'))}
 const MOV_LABEL={entrada_compra:'Entrada (Compra)',entrada_producao:'Entrada (Produção)',saida_producao:'Saída (Produção)',saida_deducao:'Saída (Dedução)',ajuste_entrada:'Ajuste (+)',ajuste_saida:'Ajuste (−)'};
 
@@ -787,7 +807,7 @@ function itensComAlerta(){
 function renderBau(c){
   if(bauTela==='compra')return telaCompraHTML(c);
   if(bauTela==='producao')return telaProducaoHTML(c);
-  const itens=db.itens.filter(i=>controlaEstoque(i.categoria)&&i.status==='ativo');
+  const itens=itensOrdenados().filter(i=>controlaEstoque(i.categoria)&&i.status==='ativo');
   const movs=[...db.estoque_bau].map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));const movsF=aplicarFiltros(movs,'bau');ordenarLista(movsF,'data','desc');const paginaBau=pagina(movsF,'bau');
   const alertas=itensComAlerta();
   c.innerHTML=`
@@ -1823,7 +1843,7 @@ function cfgProdutos(b){
     <td class="money">${fmt(p.preco)}</td><td><span class="tag">${esc(p.rateio)}</span></td>
     <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(p.criado_em)}</td>
-    <td><button class="iconbtn" onclick="moverProduto('${p.id}',-1)">↑</button><button class="iconbtn" onclick="moverProduto('${p.id}',1)">↓</button>
+    <td><button class="iconbtn btn-ordem" title="Subir" onclick="moverProduto('${p.id}',-1)">↑</button><button class="iconbtn btn-ordem" title="Descer" onclick="moverProduto('${p.id}',1)">↓</button>
       <button class="iconbtn" onclick="modalProduto('${p.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleProduto('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir linha" onclick="excluirProduto('${p.id}')">🗑️</button>`:''}</td>
@@ -1925,14 +1945,15 @@ async function moverProduto(id,dir){
 /* ---- Cadastro Central de Itens (preço unitário, qtd mínima, inativar/excluir) ---- */
 function cfgItens(b){
   const sn=v=>v?'Sim':'Não';
-  const T='cfg_itens',F=tabelaFiltravel(T,()=>db.itens,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,preco:i=>fmt(i.preco_unitario),qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
+  const T='cfg_itens',F=tabelaFiltravel(T,itensOrdenados,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,preco:i=>fmt(i.preco_unitario),qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
   const TC='cfg_categorias',FC=tabelaFiltravel(TC,()=>db.categorias,{nome:c=>c.nome,estoque:c=>sn(c.controla_estoque),compravel:c=>sn(c.compravel&&c.controla_estoque),receitas:c=>sn(c.aparece_receitas),itens:c=>String(db.itens.filter(i=>i.categoria===c.codigo).length),data:c=>c.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">📦 Cadastro Central de Itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalItem()">+ Novo item</button></div>
   ${F.barra}<div class="table-wrap"><table>
-  <tr>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'preco','Preço unitário')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  <tr><th>Ordem</th>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'preco','Preço unitário')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
   ${F.rows.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr>
+    <td style="white-space:nowrap"><button class="iconbtn btn-ordem" title="Subir" onclick="moverItem('${i.id}',-1)">↑</button><button class="iconbtn btn-ordem" title="Descer" onclick="moverItem('${i.id}',1)">↓</button></td>
     <td><b>${esc(i.nome)}</b>${alerta?' <span class="tag r">⚠️ no mínimo</span>':''}</td>
     <td><span class="tag">${catNome(i.categoria)}</span></td>
     <td style="color:var(--muted)">${esc(i.unidade_medida)}</td>
@@ -1944,7 +1965,7 @@ function cfgItens(b){
     <td><button class="iconbtn" onclick="modalItem('${i.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleItem('${i.id}')">${i.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')||linhaSemResultado(9,T)}</table></div>
+  </tr>`}).join('')||linhaSemResultado(10,T)}</table></div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
     <div class="section-title" style="margin:0">🏷️ Categorias de itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalCategoria()">+ Nova categoria</button></div>
@@ -2035,6 +2056,7 @@ async function salvarItem(id){
     if(error)return toast('⚠️ Erro ao salvar: '+error.message);
     Object.assign(db.itens.find(x=>x.id===id),campos);reg('Item editado',nome);
   }else{
+    campos.ordem=Math.max(0,...db.itens.map(x=>x.ordem||0))+1;
     const{data,error}=await sb.from('itens').insert(campos).select().single();
     if(error)return toast('⚠️ Erro ao salvar: '+error.message);
     db.itens.push({...data,preco_unitario:Number(data.preco_unitario),qtd_minima:Number(data.qtd_minima)});reg('Item criado',nome);
@@ -2102,7 +2124,7 @@ function cfgReceitas(b){
     <td style="color:var(--muted);font-size:12px">${prd.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'}</td>
     <td><span class="badge ${r.status==='ativo'?'ativo':'inativo'}">${r.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(r.criado_em)}</td>
-    <td><button class="iconbtn" onclick="moverReceita('${r.id}',-1)">↑</button><button class="iconbtn" onclick="moverReceita('${r.id}',1)">↓</button>
+    <td><button class="iconbtn btn-ordem" title="Subir" onclick="moverReceita('${r.id}',-1)">↑</button><button class="iconbtn btn-ordem" title="Descer" onclick="moverReceita('${r.id}',1)">↓</button>
       <button class="iconbtn" onclick="modalReceita('${r.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleReceita('${r.id}')">${r.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirReceita('${r.id}')">🗑️</button>`:''}</td>
