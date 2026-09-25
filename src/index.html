@@ -71,13 +71,48 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .muted{color:var(--muted)}
 /* ===== LOGIN ===== */
-#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at 50% -20%,rgba(var(--purple-rgb),.18),transparent 55%),radial-gradient(ellipse at 50% 110%,rgba(var(--green-rgb),.08),transparent 55%),var(--bg)}
-.login-box{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px 32px}
-.login-logo{text-align:center;margin-bottom:24px}
-.login-logo .emb{font-size:44px}
-.login-logo h1{font-size:20px;font-weight:800;letter-spacing:1px;margin-top:8px}
-.login-logo h1 span{color:var(--green)}
-.login-logo p{color:var(--muted);font-size:12px;margin-top:4px}
+#login-screen{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;padding:16px;background:var(--bg)}
+.login-form-col{display:flex;align-items:center;justify-content:center;padding:32px 24px}
+.login-box{width:100%;max-width:440px}
+.login-mobile-logo{display:none;margin-bottom:22px}
+.login-mobile-logo .emb{font-size:40px}
+.login-mobile-logo .logo-img{height:48px;max-width:160px;object-fit:contain}
+.login-titulo{font-size:48px;font-weight:600;letter-spacing:-1.5px;line-height:1.1;color:var(--text)}
+.login-sub{color:var(--muted);font-size:16px;margin:14px 0 30px}
+.login-box .field{margin-bottom:18px}
+.login-box label{font-size:13px;color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0;margin-bottom:8px}
+.login-box input[type=text],.login-box input[type=password]{height:54px;border-radius:14px;background:var(--input-bg);border:1px solid var(--border);padding:0 16px;font-size:15px;color:var(--text)}
+.login-box input[type=text]:focus,.login-box input[type=password]:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(var(--purple-rgb),.18)}
+.login-box input:-webkit-autofill,.login-box input:-webkit-autofill:hover,.login-box input:-webkit-autofill:focus,.login-box input:autofill{
+  -webkit-box-shadow:0 0 0 1000px var(--input-bg) inset!important;box-shadow:0 0 0 1000px var(--input-bg) inset!important;
+  -webkit-text-fill-color:var(--text)!important;caret-color:var(--text);transition:background-color 99999s ease-out 0s}
+.login-box input:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 3px rgba(var(--purple-rgb),.18),0 0 0 1000px var(--input-bg) inset!important;box-shadow:0 0 0 3px rgba(var(--purple-rgb),.18),0 0 0 1000px var(--input-bg) inset!important}
+.login-senha-wrap{position:relative}
+.login-senha-wrap input{padding-right:52px!important}
+.login-olho{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:10px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.login-olho:hover{color:var(--white);background:rgba(255,255,255,.06)}
+.login-acoes{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin:4px 0 26px;font-size:14px}
+.login-link{background:none;color:var(--info);font-size:14px;padding:0}
+.login-link:hover{text-decoration:underline;filter:brightness(1.15)}
+.login-entrar{width:100%;height:56px;border-radius:14px;background:var(--green);color:var(--green-text);font-size:16px;font-weight:700;transition:background .15s}
+.login-entrar:hover{background:var(--green-hover)}
+.login-entrar:disabled{opacity:.6;cursor:wait}
+.login-painel{position:relative;border-radius:28px;overflow:hidden;min-height:calc(100vh - 32px);display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border)}
+.login-marca{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:62%;height:46%}
+.login-marca img{max-width:100%;max-height:100%;object-fit:contain}
+.login-marca-nome{font-size:clamp(40px,6vw,84px);font-weight:900;letter-spacing:-2px;line-height:.95;color:var(--text);text-align:center}
+.login-marca-nome span{display:block;color:transparent;-webkit-text-stroke:2px var(--text)}
+.login-vidro{position:absolute;z-index:2;left:50%;bottom:36px;transform:translateX(-50%);width:min(340px,80%);padding:18px 22px;border-radius:22px;background:var(--input-bg);border:1px solid var(--border);color:var(--text)}
+.login-vidro b{display:block;font-size:15px}
+.login-vidro small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.login-vidro p{font-size:13px;line-height:1.45;margin-top:8px;color:var(--muted)}
+body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!important}
+@media(max-width:900px){
+  #login-screen{grid-template-columns:1fr;padding:0}
+  .login-painel{display:none}
+  .login-mobile-logo{display:block}
+  .login-titulo{font-size:38px}
+}
 .login-err{background:rgba(var(--danger-rgb),.1);border:1px solid var(--danger);color:var(--danger-light);padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none}
 /* ===== APP LAYOUT ===== */
 #app-header{position:fixed;top:0;left:0;right:0;height:60px;background:rgba(var(--surface-rgb),.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:none;align-items:center;padding:0 16px;gap:12px;z-index:50}
@@ -166,18 +201,84 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
   #sidebar-nav{display:flex}
   #bottom-nav{display:none!important}
 }
+/* Formulário de compra (duas seções) */
+.cmp-row{display:grid;grid-template-columns:2fr 1.6fr .7fr .9fr .9fr 34px;gap:6px;align-items:center;margin-bottom:8px;padding:3px;border-radius:10px;border:1px solid transparent}
+.cmp-head{margin-bottom:4px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.cmp-head span:nth-child(4),.cmp-head span:nth-child(5){text-align:right}
+#cfg-body td:last-child{white-space:nowrap}
+.cmp-val{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.cmp-sub{color:var(--text);font-weight:700}
+.cmp-hint{font-size:11px;color:var(--muted);font-weight:400;margin-left:6px}
+.cmp-row.linha-erro{border-color:var(--danger);background:rgba(var(--danger-rgb),.08)}
+.cmp-total{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-top:16px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);font-size:13px;color:var(--muted)}
+.cmp-total b{color:var(--text)}
+.cmp-total .op{color:var(--muted);font-weight:700}
+.cmp-total .tot b{color:var(--green);font-size:16px}
+.modal.modal-larga{max-width:980px}
+@media(max-width:700px){
+  .cmp-row{grid-template-columns:1fr 1fr;padding:8px;border-color:var(--border)}
+  .cmp-row>.nc-nome,.cmp-row>.nc-forn,.cmp-row>.ssel-btn{grid-column:span 2}
+  .cmp-row>.btn-del-linha{justify-self:end}
+  .cmp-head{display:none}
+}
+.resumo{border:1px solid var(--border);border-radius:10px;padding:6px 14px;margin-bottom:6px;font-size:13px}
+.resumo .rs-sec{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.3px;margin:10px 0 4px}
+.resumo .rs-l{display:flex;justify-content:space-between;gap:12px;padding:4px 0}
+.resumo .rs-tot{display:flex;justify-content:space-between;border-top:1px solid var(--border);margin-top:8px;padding:10px 0 6px;font-size:15px}
+.resumo .rs-tot b{color:var(--green)}
+.resumo .rs-meta{color:var(--muted);font-size:12px;padding-bottom:6px}
+/* Lista suspensa pesquisável (substitui visualmente todos os <select>) */
+.ssel-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:14px;text-align:left;min-width:0}
+.ssel-btn:focus,.ssel-btn.aberto{border-color:var(--purple);outline:none}
+.ssel-btn:disabled{opacity:.5;cursor:not-allowed}
+.ssel-btn .ssel-lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ssel-btn .ssel-lbl.ph{color:var(--muted)}
+.ssel-btn .ssel-car{color:var(--muted);font-size:10px;flex-shrink:0}
+.ssel-pop{position:fixed;z-index:400;background:var(--surface);border:1px solid var(--purple);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden}
+.ssel-pop .ssel-q{border:none;border-bottom:1px solid var(--border);border-radius:0;background:var(--input-bg)}
+.ssel-ops{overflow:auto;max-height:260px}
+.ssel-op{padding:9px 12px;cursor:pointer;font-size:13px}
+.ssel-op.hl{background:rgba(var(--purple-rgb),.18)}
+.ssel-op.sel{color:var(--green);font-weight:700}
+.ssel-grp{padding:8px 12px 4px;font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:800;letter-spacing:.4px}
+.ssel-vazio{padding:10px 12px;color:var(--muted);font-size:12px}
+.ssel-add{display:block;width:100%;text-align:left;padding:10px 12px;background:rgba(var(--green-rgb),.08);color:var(--green);font-weight:700;font-size:13px;border-top:1px solid var(--border)}
+/* Lista suspensa pesquisável com múltipla escolha */
+.msel{position:relative}
+.msel-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.msel-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(var(--purple-rgb),.15);border:1px solid var(--purple);color:var(--purple-light);border-radius:14px;padding:3px 6px 3px 10px;font-size:12px}
+.msel-chip button{background:none;color:inherit;font-size:13px;line-height:1;padding:0 2px}
+.msel-list{margin-top:4px;max-height:220px;overflow:auto;background:var(--input-bg);border:1px solid var(--border);border-radius:8px}
+.msel-opt{display:flex!important;align-items:center;gap:8px;padding:8px 10px;margin:0!important;font-size:13px!important;font-weight:400!important;color:var(--text)!important;text-transform:none!important;cursor:pointer}
+.msel-opt:hover{background:rgba(var(--purple-rgb),.1)}
+.msel-opt input{width:auto}
+.msel-opt .tag{margin-left:auto}
+.msel-vazio{padding:10px;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
 
 <!-- ============ LOGIN ============ -->
 <div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo"><div class="emb" id="login-logo-emb">🌿</div><h1 id="login-nome-loja">BEST <span>BUDS</span></h1><p>Sistema de Gestão</p></div>
-    <div id="login-err" class="login-err"></div>
-    <div class="field"><label>Nome de usuário</label><input type="text" id="login-email" autocomplete="off" placeholder="seu.usuario"></div>
-    <div class="field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••"></div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">Entrar</button>
+  <div class="login-form-col">
+    <form class="login-box" onsubmit="event.preventDefault();doLogin()" autocomplete="on">
+      <div class="login-mobile-logo"><div class="emb" id="login-logo-emb">🌿</div></div>
+      <h1 class="login-titulo">Bem-vindo</h1>
+      <p class="login-sub">Acesse sua conta para continuar</p>
+      <div id="login-err" class="login-err" role="alert"></div>
+      <div class="field"><label for="login-email">Usuário</label><input type="text" id="login-email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Digite seu usuário"></div>
+      <div class="field"><label for="login-senha">Senha</label>
+        <div class="login-senha-wrap"><input type="password" id="login-senha" autocomplete="current-password" placeholder="Digite sua senha">
+          <button type="button" class="login-olho" id="login-olho" title="Mostrar senha" aria-label="Mostrar senha" onclick="alternarSenhaLogin()"></button></div></div>
+      <div class="login-acoes">
+        <button type="button" class="login-link" onclick="modalRedefinirSenha()">Redefinir senha</button>
+      </div>
+      <button type="submit" class="login-entrar" id="login-btn">Entrar</button>
+    </form>
+  </div>
+  <div class="login-painel" aria-hidden="true">
+    <div class="login-marca" id="login-marca"></div>
+    <div class="login-vidro"><b id="login-vidro-nome">BEST BUDS</b><small>Sistema de Gestão</small><p>Vendas, estoque do Baú, compras e produção em um só lugar.</p></div>
   </div>
 </div>
 
@@ -186,7 +287,7 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <span class="vselo" id="h-versao">v4.1.0</span>
+  <span class="vselo" id="h-versao">v4.5.3</span>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -203,6 +304,11 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
   <div class="modal" id="modal-box"></div>
 </div>
 
+<!-- ============ MODAL 2ª CAMADA (por cima de formulários) ============ -->
+<div class="modal-bg" id="modal2-bg" style="z-index:150">
+  <div class="modal" id="modal2-box"></div>
+</div>
+
 <!-- ============ CONFIRM CUSTOM ============ -->
 <div class="modal-bg" id="confirm-bg">
   <div class="modal" style="max-width:400px">
@@ -217,11 +323,12 @@ p.page-sub{color:var(--muted);margin-bottom:20px;font-size:13px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.1.0';
+const VERSAO='v4.5.3';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+try{localStorage.removeItem('bb_manter_conectado')}catch(e){} // preferência da v4.5.0 (removida)
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,10)}
 function nowISO(){return new Date().toISOString()}
@@ -263,7 +370,7 @@ let db=null, session=null;
    que as telas já esperam (db.produtos, db.itens, db.vendas com itens embutidos, etc.) */
 async function carregarTudo(){
   const[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,
-    taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens]=await Promise.all([
+    taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha,cfgPrivada]=await Promise.all([
     sb.from('profiles').select('*').order('criado_em'),
     sb.from('produtos').select('*').order('ordem'),
     sb.from('itens').select('*').order('nome'),
@@ -280,9 +387,12 @@ async function carregarTudo(){
     sb.from('estoque_bau').select('*').order('data',{ascending:false}),
     sb.from('configuracoes').select('*').eq('id',1).single(),
     sb.from('ajustes_caixa').select('*').order('data',{ascending:false}),
-    sb.from('fornecedor_itens').select('*')
+    sb.from('fornecedor_itens').select('*'),
+    sb.from('categorias_itens').select('*').order('ordem').order('nome'),
+    sb.from('solicitacoes_senha').select('*').eq('status','pendente').order('criado_em'),
+    sb.from('config_privada').select('*').eq('id',1).maybeSingle()
   ]);
-  for(const r of[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens])
+  for(const r of[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha,cfgPrivada])
     if(r.error)throw r.error;
 
   const porReceita={};
@@ -311,6 +421,9 @@ async function carregarTudo(){
     receitas:(receitas.data||[]).map(r=>({...r,insumos:porReceita[r.id]||[]})),
     fornecedores:(fornecedores.data||[]),
     fornecedor_itens:(fornItens.data||[]),
+    categorias:(categorias.data||[]),
+    pedidos_senha:(pedidosSenha.data||[]),
+    senha_padrao_reset:(cfgPrivada.data&&cfgPrivada.data.senha_padrao_reset)||'',
     parcerias:parceriasArr,
     descontos:parceriasArr,
     taxas_deslocamento:(taxas.data||[]).map(t=>({...t,valor:Number(t.valor)})),
@@ -328,10 +441,12 @@ async function carregarTudo(){
 async function doLogin(){
   const usuario=(document.getElementById('login-email').value||'').trim().toLowerCase();
   const senha=document.getElementById('login-senha').value||'';
-  const err=document.getElementById('login-err');
+  const err=document.getElementById('login-err'),btn=document.getElementById('login-btn');
   err.style.display='none';
-  if(!usuario||!senha){err.textContent='Informe usuário e senha.';err.style.display='block';return}
+  if(!usuario||!senha){err.textContent=!usuario?'Informe seu usuário.':'Informe sua senha.';err.style.display='block';return}
+  btn.disabled=true;btn.textContent='Entrando…';
   const{data,error}=await sb.auth.signInWithPassword({email:usuario+'@'+EMAIL_DOMAIN,password:senha});
+  btn.disabled=false;btn.textContent='Entrar';
   if(error||!data.user){
     const credenciaisErradas=error&&/invalid.*credentials/i.test(error.message||'');
     err.textContent=credenciaisErradas?'Nome de usuário ou senha inválidos.':('Erro ao entrar: '+(error?error.message:'resposta inesperada do servidor.'));
@@ -350,6 +465,34 @@ async function finishLogin(perfil){
   startApp();
 }
 async function logout(){await sb.auth.signOut();location.reload()}
+const OLHO_ABERTO='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const OLHO_FECHADO='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.9 8.4 2 12 2 12s3.6 7 10 7a10.6 10.6 0 0 0 5.4-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+function alternarSenhaLogin(){
+  const i=document.getElementById('login-senha'),b=document.getElementById('login-olho'),mostrar=i.type==='password';
+  i.type=mostrar?'text':'password';b.innerHTML=mostrar?OLHO_FECHADO:OLHO_ABERTO;
+  b.title=b.ariaLabel=mostrar?'Ocultar senha':'Mostrar senha';
+}
+/* Redefinir senha: gera um pedido que Gerente ou acima aprova em Configurações → Usuários */
+function modalRedefinirSenha(){
+  const u=(document.getElementById('login-email').value||'').trim();
+  openModal(`<h3>Redefinir senha</h3>
+  <p class="muted" style="margin-bottom:14px">Informe seu usuário. Um Gerente, Diretor ou Sócio vai aprovar o pedido; depois disso sua senha volta para a senha padrão e você cria uma nova no primeiro acesso.</p>
+  <div class="field"><label>Usuário</label><input id="rs-usuario" autocapitalize="none" value="${esc(u)}" placeholder="Digite seu usuário"></div>
+  <p id="rs-msg" style="font-size:13px;display:none"></p>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
+  <button class="btn btn-purple" id="rs-btn" onclick="enviarPedidoSenha()">Solicitar redefinição</button></div>`);
+  setTimeout(()=>document.getElementById('rs-usuario').focus(),50);
+}
+async function enviarPedidoSenha(){
+  const u=document.getElementById('rs-usuario').value.trim().toLowerCase(),msg=document.getElementById('rs-msg'),btn=document.getElementById('rs-btn');
+  if(!u){msg.style.color='var(--danger)';msg.textContent='Informe seu usuário.';msg.style.display='block';return}
+  btn.disabled=true;
+  const{error}=await sb.rpc('solicitar_redefinicao_senha',{p_usuario:u});
+  btn.disabled=false;
+  if(error){msg.style.color='var(--danger)';msg.textContent='Não foi possível enviar o pedido: '+error.message;msg.style.display='block';return}
+  msg.style.color='var(--green)';msg.textContent='Pedido enviado. Assim que for aprovado, entre com a senha padrão (peça-a a quem aprovou).';msg.style.display='block';
+  btn.style.display='none';
+}
 
 function openTrocaSenha(u){
   const bg=document.getElementById('modal-bg'),box=document.getElementById('modal-box');
@@ -407,6 +550,7 @@ function go(mod){
   window.scrollTo(0,0);
 }
 function startApp(){
+  document.body.classList.add('logado');
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-header').style.display='flex';
   document.getElementById('main-content').style.display='block';
@@ -434,8 +578,10 @@ function render(){
 }
 
 /* ================= MODAIS / CONFIRM ================= */
-function openModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal-bg').classList.add('open')}
+function openModal(html){const mb=document.getElementById('modal-box');mb.classList.remove('modal-larga');mb.innerHTML=html;document.getElementById('modal-bg').classList.add('open')}
 function closeModal(){document.getElementById('modal-bg').classList.remove('open')}
+function openModal2(html){document.getElementById('modal2-box').innerHTML=html;document.getElementById('modal2-bg').classList.add('open')}
+function closeModal2(){document.getElementById('modal2-bg').classList.remove('open')}
 function closeConfirm(){document.getElementById('confirm-bg').classList.remove('open')}
 function confirmar(titulo,msg,cb){
   document.getElementById('confirm-title').textContent=titulo;
@@ -590,19 +736,25 @@ async function finalizarVenda(){
 }
 
 /* ================= BAÚ ================= */
-const CAT_LABEL={materia_prima:'Matéria-Prima',insumo_auxiliar:'Insumo Auxiliar',produto_nao_acabado:'Produto Não Acabado',produto_final:'Produto Final'};
+/* Categorias vêm da tabela categorias_itens (Configurações → Cadastro Central de Itens) */
+function catInfo(c){return (db&&db.categorias||[]).find(x=>x.codigo===c)||{codigo:c,nome:c,controla_estoque:true,compravel:false,aparece_receitas:true}}
+function catNome(c){return catInfo(c).nome}
+function controlaEstoque(c){return !!catInfo(c).controla_estoque}
+function catCompravel(c){return !!catInfo(c).compravel&&!!catInfo(c).controla_estoque}
+function catReceitas(c){return !!catInfo(c).aparece_receitas}
+function itensCompraveis(){return db.itens.filter(i=>i.status==='ativo'&&catCompravel(i.categoria)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'))}
 const MOV_LABEL={entrada_compra:'Entrada (Compra)',entrada_producao:'Entrada (Produção)',saida_producao:'Saída (Produção)',saida_deducao:'Saída (Dedução)',ajuste_entrada:'Ajuste (+)',ajuste_saida:'Ajuste (−)'};
 
 function saldoItem(itemId){
   return db.estoque_bau.filter(m=>m.item_id===itemId).reduce((s,m)=>s+(m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada'?m.quantidade:-m.quantidade),0);
 }
 function itensComAlerta(){
-  return db.itens.filter(i=>i.status==='ativo'&&i.categoria!=='produto_final'&&i.qtd_minima>0&&saldoItem(i.id)<=i.qtd_minima);
+  return db.itens.filter(i=>i.status==='ativo'&&controlaEstoque(i.categoria)&&i.qtd_minima>0&&saldoItem(i.id)<=i.qtd_minima);
 }
 function renderBau(c){
   if(bauTela==='compra')return telaCompraHTML(c);
   if(bauTela==='producao')return telaProducaoHTML(c);
-  const itens=db.itens.filter(i=>i.categoria!=='produto_final'&&i.status==='ativo');
+  const itens=db.itens.filter(i=>controlaEstoque(i.categoria)&&i.status==='ativo');
   const movs=[...db.estoque_bau].map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));const movsF=aplicarFiltros(movs,'bau');ordenarLista(movsF,'data','desc');const paginaBau=pagina(movsF,'bau');
   const alertas=itensComAlerta();
   c.innerHTML=`
@@ -618,7 +770,7 @@ function renderBau(c){
     const alerta=i.qtd_minima>0&&s<=i.qtd_minima;
     return`<div class="sum-card ${alerta?'limite':''}"><div class="sl">${esc(i.nome)}</div>
       <div class="sv" style="color:${s>0?'var(--green)':'var(--muted)'}">${s} ${esc(i.unidade_medida)}</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">${CAT_LABEL[i.categoria]}${i.qtd_minima>0?` · mín: ${i.qtd_minima}`:''}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${catNome(i.categoria)}${i.qtd_minima>0?` · mín: ${i.qtd_minima}`:''}</div>
       ${isGerente()?`<div style="margin-top:10px;display:flex;gap:6px">
         <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="modalAjusteBau('${i.id}','entrada')">+ Entrada</button>
         <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="modalAjusteBau('${i.id}','saida')">− Saída</button>
@@ -668,7 +820,8 @@ function modalReceita(id){
   if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem criar ou editar receitas.');
   const r=id?db.receitas.find(x=>x.id===id):null;
   const ins=r?(r.insumos||[]):[];
-  const itensSel=db.itens.filter(i=>i.status==='ativo');
+  const usados=new Set(ins.map(x=>x.item_id));
+  const itensSel=db.itens.filter(i=>(i.status==='ativo'&&catReceitas(i.categoria))||usados.has(i.id));
   const cons=ins.filter(x=>x.papel==='consumo'),prod=ins.filter(x=>x.papel==='produzido');
   openModal(`<h3>${r?'Editar receita':'Nova receita'}</h3>
   <div class="field"><label>Nome da receita</label><input id="r-nome" value="${r?esc(r.nome):''}"></div>
@@ -688,7 +841,7 @@ function modalReceita(id){
   <button class="btn btn-purple" onclick="salvarReceita('${id||''}')">Salvar</button></div>`);
 }
 function linhaReceita(ri,itensSel,tipo){
-  const opts=itensSel.map(i=>`<option value="${i.id}" ${ri.item_id===i.id?'selected':''}>${esc(i.nome)} (${CAT_LABEL[i.categoria]})</option>`).join('');
+  const opts=itensSel.map(i=>`<option value="${i.id}" ${ri.item_id===i.id?'selected':''}>${esc(i.nome)} (${catNome(i.categoria)})</option>`).join('');
   return`<div class="row2" style="margin-bottom:8px" data-${tipo}>
     <select class="ri-item">${opts}</select>
     <div style="display:flex;gap:6px">
@@ -697,7 +850,7 @@ function linhaReceita(ri,itensSel,tipo){
     </div></div>`;
 }
 function addLinhaReceita(tipo){
-  const itensSel=db.itens.filter(i=>i.status==='ativo');
+  const itensSel=db.itens.filter(i=>i.status==='ativo'&&catReceitas(i.categoria));
   const d=document.createElement('div');
   d.innerHTML=linhaReceita({item_id:'',quantidade:''},itensSel,tipo);
   document.getElementById(tipo==='cons'?'r-cons':'r-prod').appendChild(d.firstElementChild);
@@ -773,7 +926,87 @@ function atualizarPreviaProducao(rid){
   el.innerHTML=`<div class="card" style="padding:12px;margin-top:10px"><b>Resumo da produção</b>
     <div style="margin-top:8px;color:var(--warning-light)"><b>⬇️ Insumos consumidos</b>${cons.map(x=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span>−${x.ri.quantidade*q} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div>—</div>'}</div>
     <div style="margin-top:8px;color:var(--green)"><b>⬆️ Itens produzidos</b>${prd.map(x=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span>+${x.ri.quantidade*q} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div>Produto final — não entra no Baú</div>'}</div>
-    ${falt.length?`<div style="color:var(--danger);margin-top:10px">Saldo insuficiente. Quantidade máxima possível: <b>${Math.max(0,max)}</b>.</div>`:''}</div>`;
+    ${falt.length?`<div style="color:var(--danger);margin-top:10px">Saldo insuficiente. Quantidade máxima possível: <b>${Math.max(0,max)}</b>.</div>${blocoCascata(rid,q)}`:''}</div>`;
+}
+
+/* ================= PRODUÇÃO EM CASCATA =================
+   Quando faltam insumos, procura receitas ativas que os produzam e monta um plano que começa pela
+   primeira receita da cadeia (a mais "de baixo") até chegar à receita pedida. Tudo é simulado sobre
+   o saldo atual do Baú; nada é gravado antes da confirmação. */
+function receitaProdutora(itemId,pilha){
+  return [...db.receitas].filter(r=>r.status==='ativo'&&!pilha.includes(r.id)&&(r.insumos||[]).some(x=>x.papel==='produzido'&&x.item_id===itemId&&x.quantidade>0))
+    .sort((a,b)=>(a.ordem||99)-(b.ordem||99))[0]||null;
+}
+function planejarCascata(rid,q){
+  const saldo={};db.itens.forEach(i=>{saldo[i.id]=saldoItem(i.id)});
+  const inicial={...saldo},passos=[];
+  const produzir=(r,qtd,pilha)=>{
+    const cons=(r.insumos||[]).filter(x=>x.papel==='consumo');
+    for(let tentativa=0;tentativa<10;tentativa++){
+      let produziuAlgo=false;
+      for(const x of cons){
+        const it=db.itens.find(i=>i.id===x.item_id);if(!it||!controlaEstoque(it.categoria))continue;
+        const falta=x.quantidade*qtd-saldo[it.id];if(falta<=0)continue;
+        const r2=receitaProdutora(it.id,[...pilha,r.id]);if(!r2)continue;
+        const porLote=(r2.insumos||[]).find(y=>y.papel==='produzido'&&y.item_id===it.id).quantidade;
+        produzir(r2,Math.ceil(falta/porLote),[...pilha,r.id]);produziuAlgo=true;
+      }
+      if(!produziuAlgo)break;
+    }
+    const mov=[];
+    cons.forEach(x=>{const it=db.itens.find(i=>i.id===x.item_id);if(it&&controlaEstoque(it.categoria)){saldo[it.id]-=x.quantidade*qtd;mov.push({it,q:-x.quantidade*qtd})}});
+    (r.insumos||[]).filter(x=>x.papel==='produzido').forEach(x=>{const it=db.itens.find(i=>i.id===x.item_id);if(it&&controlaEstoque(it.categoria)){saldo[it.id]+=x.quantidade*qtd;mov.push({it,q:x.quantidade*qtd})}});
+    passos.push({r,qtd,mov});
+  };
+  produzir(db.receitas.find(x=>x.id===rid),q,[]);
+  const faltas=db.itens.filter(i=>saldo[i.id]<-1e-9).map(i=>({it:i,falta:-saldo[i.id]}));
+  const efeito=db.itens.filter(i=>Math.abs(saldo[i.id]-inicial[i.id])>1e-9).map(i=>({it:i,antes:inicial[i.id],depois:saldo[i.id]}));
+  return{passos,faltas,efeito,possivel:!faltas.length,temCascata:passos.length>1};
+}
+function blocoCascata(rid,q){
+  const pl=planejarCascata(rid,q);
+  if(!pl.temCascata)return '';
+  if(!pl.possivel)return `<div style="margin-top:10px;font-size:12px;color:var(--muted)">Nem com produção em cascata é possível: falta${pl.faltas.length>1?'m':''} ${pl.faltas.map(f=>`<b style="color:var(--danger)">${fmtQtd(f.falta)} ${esc(f.it.unidade_medida)} de ${esc(f.it.nome)}</b>`).join(', ')} (compre antes de produzir).</div>`;
+  return `<div style="margin-top:12px;padding:10px;border:1px dashed var(--purple);border-radius:8px">
+    <div style="font-size:13px">É possível produzir em <b>cascata</b>: ${pl.passos.length-1} produção(ões) anterior(es) geram os insumos que faltam.</div>
+    <button class="btn btn-purple btn-sm" style="margin-top:8px" onclick="revisarCascata('${rid}')">🔗 Ver produção em cascata</button></div>`;
+}
+function fmtQtd(n){return Number(n.toFixed(4)).toLocaleString('pt-BR')}
+function revisarCascata(rid){
+  const q=Math.max(1,parseInt(document.getElementById('prod-qtd')?.value)||1);
+  const pl=planejarCascata(rid,q);
+  if(!pl.possivel||!pl.temCascata)return toast('⚠️ A produção em cascata não é possível com o saldo atual.');
+  openModal2(`<h3>🔗 Produção em cascata</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:10px">As produções serão feitas nesta ordem, numa única operação. Confira antes de confirmar.</p>
+    <div class="resumo">${pl.passos.map((p,i)=>`
+      <div class="rs-sec">${i+1}. ${esc(p.r.nome)} × ${p.qtd}${i===pl.passos.length-1?' <span style="color:var(--green)">(pedida)</span>':''}</div>
+      ${p.mov.map(m=>`<div class="rs-l"><span>${esc(m.it.nome)}</span><b style="color:${m.q<0?'var(--warning-light)':'var(--green)'}">${m.q<0?'−':'+'}${fmtQtd(Math.abs(m.q))} ${esc(m.it.unidade_medida)}</b></div>`).join('')||'<div class="rs-l"><span class="muted">Produto final — não movimenta o Baú</span></div>'}`).join('')}
+      <div class="rs-sec" style="margin-top:14px">Saldo no Baú (antes → depois)</div>
+      ${pl.efeito.map(e=>`<div class="rs-l"><span>${esc(e.it.nome)}</span><span>${fmtQtd(e.antes)} → <b>${fmtQtd(e.depois)}</b> ${esc(e.it.unidade_medida)}</span></div>`).join('')}
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal2()">Voltar</button>
+    <button class="btn btn-primary" id="btn-conf-cascata" onclick="confirmarCascata('${rid}',${q})">Confirmar produção em cascata</button></div>`);
+}
+async function confirmarCascata(rid,q){
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem produzir.');
+  const pl=planejarCascata(rid,q);
+  if(!pl.possivel)return toast('⚠️ O saldo mudou e a cascata não é mais possível. Revise a produção.');
+  const btn=document.getElementById('btn-conf-cascata');if(btn){btn.disabled=true;btn.textContent='Produzindo…'}
+  let opId;try{opId=await nextOpId()}catch(e){if(btn){btn.disabled=false;btn.textContent='Confirmar produção em cascata'}return toast('⚠️ Erro ao gerar ID: '+(e.message||e))}
+  const alvo=pl.passos[pl.passos.length-1].r.nome,saldo={},movimentos=[];
+  pl.passos.forEach(p=>p.mov.forEach(m=>{
+    if(saldo[m.it.id]===undefined)saldo[m.it.id]=saldoItem(m.it.id);
+    saldo[m.it.id]+=m.q;
+    const tipo=m.q>0?'entrada_producao':(m.it.categoria==='produto_nao_acabado'?'saida_deducao':'saida_producao');
+    movimentos.push({operacao_id:opId,item_id:m.it.id,tipo_movimento:tipo,quantidade:Math.abs(m.q),usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,
+      origem:'produção em cascata: '+p.r.nome+(p.r.nome!==alvo?' (para '+alvo+')':''),saldo_resultante:saldo[m.it.id]});
+  }));
+  // um único insert: ou grava a cascata inteira, ou nada
+  const{data,error}=await sb.from('estoque_bau').insert(movimentos).select();
+  if(error){if(btn){btn.disabled=false;btn.textContent='Confirmar produção em cascata'}return toast('⚠️ Erro ao gravar a produção: '+error.message)}
+  data.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
+  reg('Produção em cascata',`${alvo} × ${q} — ID ${opId} — ${pl.passos.map(p=>p.r.nome+' ×'+p.qtd).join(' → ')}`);
+  closeModal2();closeModal();toast('✅ Produção em cascata executada. ID: '+opId);render();
 }
 async function confirmarProducao(rid){
   const r=db.receitas.find(x=>x.id===rid);if(!r)return;
@@ -782,17 +1015,17 @@ async function confirmarProducao(rid){
   if(!Number.isInteger(q)||q<1){err.textContent='Informe uma quantidade inteira mínima de 1.';err.style.display='block';return}
   const cons=(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>({ri:x,it:db.itens.find(i=>i.id===x.item_id)}));
   const falt=cons.filter(x=>x.it&&saldoItem(x.it.id)<x.ri.quantidade*q);
-  if(falt.length){err.textContent='Estoque insuficiente. Reduza a quantidade conforme a sugestão do resumo.';err.style.display='block';return}
+  if(falt.length){err.textContent='Estoque insuficiente. Reduza a quantidade'+(planejarCascata(rid,q).possivel&&planejarCascata(rid,q).temCascata?' ou use a produção em cascata indicada no resumo.':' conforme a sugestão do resumo.');err.style.display='block';return}
   const producaoId=await nextOpId();
   const prd=(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>({ri:x,it:db.itens.find(i=>i.id===x.item_id)}));
   const movimentos=[];
   cons.forEach(x=>{
-    if(!x.it||x.it.categoria==='produto_final')return;
+    if(!x.it||!controlaEstoque(x.it.categoria))return;
     const tipo=x.it.categoria==='produto_nao_acabado'?'saida_deducao':'saida_producao';
     movimentos.push({operacao_id:producaoId,item_id:x.it.id,tipo_movimento:tipo,quantidade:x.ri.quantidade*q,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,origem:'produção: '+r.nome,saldo_resultante:saldoItem(x.it.id)-x.ri.quantidade*q});
   });
   prd.forEach(x=>{
-    if(!x.it||x.it.categoria==='produto_final')return;
+    if(!x.it||!controlaEstoque(x.it.categoria))return;
     movimentos.push({operacao_id:producaoId,item_id:x.it.id,tipo_movimento:'entrada_producao',quantidade:x.ri.quantidade*q,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,origem:'produção: '+r.nome,saldo_resultante:saldoItem(x.it.id)+x.ri.quantidade*q});
   });
   const{data,error}=await sb.from('estoque_bau').insert(movimentos).select();
@@ -802,126 +1035,206 @@ async function confirmarProducao(rid){
 }
 
 /* ================= COMPRAS (ABA PRÓPRIA) ================= */
-/* Select de fornecedor por linha: Matéria-Prima escolhe entre os fornecedores vinculados; Insumo Auxiliar usa o fornecedor geral */
-function selectFornLinha(cls,itemId,selId){
-  const it=db.itens.find(i=>i.id===itemId);
-  if(!it||it.categoria!=='materia_prima')return`<select class="${cls}" disabled title="Usa o fornecedor geral da compra"><option value="">— fornecedor geral —</option></select>`;
-  const fs=fornecedoresDoItem(itemId);
-  if(!fs.length)return`<select class="${cls}" disabled title="Vincule fornecedores a esta Matéria-Prima em Configurações → Fornecedores"><option value="">Sem fornecedor vinculado</option></select>`;
-  const sel=selId&&fs.some(f=>f.id===selId)?selId:(fs.length===1?fs[0].id:'');
-  return`<select class="${cls}">${fs.length>1?`<option value="" ${sel?'':'selected'}>Selecione o fornecedor…</option>`:''}${fs.map(f=>`<option value="${f.id}" ${f.id===sel?'selected':''}>${esc(f.nome)}</option>`).join('')}</select>`;
+/* Formulário de compra com duas seções independentes (ambas opcionais, ao menos uma linha no total):
+   • Insumos — item e fornecedor escolhidos só entre cadastrados; preço vem do cadastro; dá entrada no Baú.
+   • Itens não controlados — tudo digitado; só registro financeiro.
+   O mesmo formulário serve a Nova compra (prefixo "c") e à edição no Histórico Financeiro (prefixo "ec"). */
+function fornOptionsHTML(itemId,selId){
+  const ativos=db.fornecedores.filter(f=>f.status==='ativo'||f.id===selId).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  const vinc=itemId?fornecedoresDoItem(itemId).map(f=>f.id):[];
+  const op=f=>`<option value="${f.id}" ${f.id===selId?'selected':''}>${esc(f.nome)}</option>`;
+  const a=ativos.filter(f=>vinc.includes(f.id)),b=ativos.filter(f=>!vinc.includes(f.id));
+  return `<option value="" disabled hidden ${selId?'':'selected'}>Selecione o fornecedor...</option>`+
+    (a.length?`<optgroup label="Vinculados a este item">${a.map(op).join('')}</optgroup>`+(b.length?`<optgroup label="Outros fornecedores">${b.map(op).join('')}</optgroup>`:''):b.map(op).join(''));
 }
-function trocarFornLinha(linha,cls,itemSel){const atual=linha.querySelector('.'+cls);const d=document.createElement('div');d.innerHTML=selectFornLinha(cls,itemSel.value,atual?atual.value:'');atual.replaceWith(d.firstElementChild)}
-function linhaCompraItem(ci){
-  const disp=db.itens.filter(i=>i.status==='ativo'&&(i.categoria==='materia_prima'||i.categoria==='insumo_auxiliar'));
-  const opts=disp.map(i=>`<option value="${i.id}" data-preco="${i.preco_unitario||0}" ${ci&&ci.item_id===i.id?'selected':''}>${esc(i.nome)} (${esc(i.unidade_medida)})</option>`).join('');
-  const itemId=ci&&ci.item_id?ci.item_id:(disp[0]?disp[0].id:'');
-  return`<div class="row3" style="margin-bottom:8px;grid-template-columns:2fr 1.5fr 1fr auto auto;align-items:center;gap:6px" data-citem>
-    <select class="ci-item" onchange="trocarFornLinha(this.closest('[data-citem]'),'ci-forn',this);atualizarPrecoLinha(this)">${opts}</select>
-    ${selectFornLinha('ci-forn',itemId,ci&&ci.fornecedor_id)}
-    <input class="ci-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci?ci.quantidade:''}" oninput="recalcTotalCompra()">
-    <span class="ci-preco-display money" style="white-space:nowrap;display:flex;align-items:center;justify-content:flex-end;min-width:90px">—</span>
-    <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('[data-citem]').remove();recalcTotalCompra()">✕</button></div>`;
+function linhaInsumo(p,ci){
+  ci=ci||{};
+  const disp=itensCompraveis();
+  if(ci.item_id&&!disp.some(i=>i.id===ci.item_id)){const it=db.itens.find(i=>i.id===ci.item_id);if(it)disp.unshift(it)}
+  const preco=ci.preco_unitario!=null?ci.preco_unitario:'';
+  return`<div class="cmp-row" data-ins data-preco="${preco}" oninput="this.classList.remove('linha-erro')" onchange="this.classList.remove('linha-erro')">
+    <select class="ins-item" onchange="aoTrocarInsumo(this,'${p}')"><option value="" disabled hidden ${ci.item_id?'':'selected'}>Selecione um insumo...</option>${disp.map(i=>`<option value="${i.id}" data-preco="${i.preco_unitario||0}" ${ci.item_id===i.id?'selected':''}>${esc(i.nome)} (${esc(i.unidade_medida)})</option>`).join('')}</select>
+    <select class="ins-forn" data-ssel-extra="fornSselExtra" onchange="recalcCompra('${p}')">${fornOptionsHTML(ci.item_id,ci.fornecedor_id)}</select>
+    <input class="ins-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="recalcCompra('${p}')">
+    <span class="cmp-val ins-preco" title="Valor unitário do cadastro">${preco!==''?fmt(preco):'—'}</span>
+    <span class="cmp-val cmp-sub">—</span>
+    <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('.cmp-row').remove();recalcCompra('${p}')">✕</button></div>`;
 }
-/* Resolve fornecedor do cabeçalho e de cada linha. Linha sem fornecedor próprio herda o geral.
-   Sem fornecedor geral: 1 fornecedor nas linhas → ele; vários → nomes unidos por " + ". */
-function resolverFornecedoresCompra(fornNome,itens){
-  const fGeral=fornNome?db.fornecedores.find(x=>x.nome.toLowerCase()===fornNome.toLowerCase()):null;
-  const nomeGeral=fGeral?fGeral.nome:fornNome;
-  const linhas=itens.map(ci=>{
-    const f=ci.fornecedor_id?db.fornecedores.find(x=>x.id===ci.fornecedor_id):null;
-    return{...ci,fornecedor_id:f?f.id:(fGeral?fGeral.id:null),fornecedor_nome:f?f.nome:(nomeGeral||null)};
+function linhaNC(p,ci){
+  ci=ci||{};
+  return`<div class="cmp-row" data-nc oninput="this.classList.remove('linha-erro')">
+    <input class="nc-nome" placeholder="Item" value="${esc(ci.nome||'')}">
+    <input class="nc-forn" list="${p}-forn-dl" autocomplete="off" placeholder="Fornecedor" value="${esc(ci.fornecedor_nome||'')}">
+    <input class="nc-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="recalcCompra('${p}')">
+    <input class="nc-preco" type="number" min="0.01" step="0.01" placeholder="Valor unit." value="${ci.preco_unitario??''}" oninput="recalcCompra('${p}')">
+    <span class="cmp-val cmp-sub">—</span>
+    <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('.cmp-row').remove();recalcCompra('${p}')">✕</button></div>`;
+}
+function formCompraHTML(p,k){
+  const its=(k&&k.itens)||[];
+  const ins=its.filter(i=>i.item_id),nc=its.filter(i=>!i.item_id);
+  const cab=`<div class="cmp-row cmp-head"><span>${'%s'}</span><span>Fornecedor</span><span>Qtd</span><span>Valor unit.</span><span>Subtotal</span><span></span></div>`;
+  return`
+    <div class="section-title" style="margin-top:6px">📦 Insumos <span class="cmp-hint">opcional — dá entrada no Baú</span></div>
+    ${cab.replace('%s','Insumo')}
+    <div id="${p}-ins">${ins.map(i=>linhaInsumo(p,i)).join('')}</div>
+    <button class="btn btn-ghost btn-sm" onclick="addLinhaCompra('${p}','ins')">+ Adicionar insumo</button>
+    <div class="section-title" style="margin-top:18px">🧾 Itens não controlados <span class="cmp-hint">opcional — não dá entrada no Baú</span></div>
+    ${cab.replace('%s','Item')}
+    <div id="${p}-nc">${nc.map(i=>linhaNC(p,i)).join('')}</div>
+    <button class="btn btn-ghost btn-sm" onclick="addLinhaCompra('${p}','nc')">+ Adicionar item não controlado</button>
+    <datalist id="${p}-forn-dl">${db.fornecedores.filter(f=>f.status==='ativo').map(f=>`<option value="${esc(f.nome)}">`).join('')}</datalist>
+    <div class="cmp-total" id="${p}-total"></div>
+    <p id="${p}-err" style="color:var(--danger);font-size:13px;display:none;margin-top:10px"></p>`;
+}
+function addLinhaCompra(p,sec){
+  const d=document.createElement('div');d.innerHTML=sec==='ins'?linhaInsumo(p):linhaNC(p);
+  document.getElementById(p+'-'+sec).appendChild(d.firstElementChild);recalcCompra(p);
+}
+/* Troca de insumo: preço do cadastro + fornecedores vinculados no topo; 1 vinculado → já selecionado */
+function aoTrocarInsumo(sel,p){
+  const linha=sel.closest('.cmp-row'),opt=sel.options[sel.selectedIndex];
+  const preco=opt?parseFloat(opt.getAttribute('data-preco')||'0'):0;
+  linha.dataset.preco=preco;linha.querySelector('.ins-preco').textContent=fmt(preco);
+  const fs=linha.querySelector('.ins-forn'),vinc=fornecedoresDoItem(sel.value);
+  const atual=fs.value;
+  fs.innerHTML=fornOptionsHTML(sel.value,atual||(vinc.length===1?vinc[0].id:''));
+  fs.value=atual||(vinc.length===1?vinc[0].id:'');
+  recalcCompra(p);
+}
+/* Lê as duas seções. Linha incompleta é destacada e bloqueia o registro. */
+function lerFormCompra(p){
+  const erros=[],ins=[],nc=[];
+  document.querySelectorAll(`#${p}-ins [data-ins]`).forEach(r=>{
+    const item_id=r.querySelector('.ins-item').value,fornecedor_id=r.querySelector('.ins-forn').value;
+    const quantidade=parseFloat(r.querySelector('.ins-qtd').value),preco_unitario=parseFloat(r.dataset.preco);
+    const it=db.itens.find(i=>i.id===item_id),f=db.fornecedores.find(x=>x.id===fornecedor_id);
+    const falta=[!it&&'insumo',!f&&'fornecedor cadastrado',!(quantidade>0)&&'quantidade'].filter(Boolean);
+    r.classList.toggle('linha-erro',falta.length>0);
+    if(falta.length)erros.push(`Insumos — ${it?'"'+it.nome+'"':'linha '+(ins.length+1)}: falta ${falta.join(', ')}.`);
+    ins.push({item_id,nome:it?it.nome:'?',quantidade,preco_unitario:preco_unitario||0,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:'',_it:it});
   });
-  if(nomeGeral)return{fornecedor_id:fGeral?fGeral.id:null,fornecedor_nome:nomeGeral,linhas};
-  const distintos=[...new Map(linhas.filter(l=>l.fornecedor_nome).map(l=>[l.fornecedor_id||l.fornecedor_nome,l])).values()];
-  if(distintos.length===1)return{fornecedor_id:distintos[0].fornecedor_id,fornecedor_nome:distintos[0].fornecedor_nome,linhas};
-  if(distintos.length>1)return{fornecedor_id:null,fornecedor_nome:distintos.map(l=>l.fornecedor_nome).join(' + '),linhas};
-  return{fornecedor_id:null,fornecedor_nome:'Fornecedor avulso',linhas};
+  document.querySelectorAll(`#${p}-nc [data-nc]`).forEach(r=>{
+    const nome=r.querySelector('.nc-nome').value.trim(),fn=r.querySelector('.nc-forn').value.trim();
+    const quantidade=parseFloat(r.querySelector('.nc-qtd').value),preco_unitario=parseFloat(r.querySelector('.nc-preco').value);
+    const falta=[!nome&&'item',!fn&&'fornecedor',!(quantidade>0)&&'quantidade',!(preco_unitario>0)&&'valor unitário'].filter(Boolean);
+    r.classList.toggle('linha-erro',falta.length>0);
+    if(falta.length)erros.push(`Itens não controlados — ${nome?'"'+nome+'"':'linha '+(nc.length+1)}: falta ${falta.join(', ')}.`);
+    const f=db.fornecedores.find(x=>x.nome.toLowerCase()===fn.toLowerCase());
+    nc.push({item_id:null,nome,quantidade,preco_unitario,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:fn});
+  });
+  const sub=l=>(l.quantidade>0&&l.preco_unitario>0)?l.quantidade*l.preco_unitario:0;
+  const totIns=ins.reduce((s,l)=>s+sub(l),0),totNc=nc.reduce((s,l)=>s+sub(l),0);
+  return{ins,nc,erros,totIns,totNc,total:totIns+totNc};
 }
-/* Matéria-Prima com vários fornecedores vinculados exige escolha na linha */
-function linhaSemFornecedor(itens){
-  const ci=itens.find(ci=>!ci.fornecedor_id&&fornecedoresDoItem(ci.item_id).length>1);
-  return ci?db.itens.find(i=>i.id===ci.item_id):null;
+function recalcCompra(p){
+  const box=document.getElementById(p+'-total');if(!box)return;
+  document.querySelectorAll(`#${p}-ins .cmp-row, #${p}-nc .cmp-row`).forEach(r=>{
+    const q=parseFloat((r.querySelector('.ins-qtd,.nc-qtd')||{}).value);
+    const pu=r.hasAttribute('data-ins')?parseFloat(r.dataset.preco):parseFloat(r.querySelector('.nc-preco').value);
+    r.querySelector('.cmp-sub').textContent=(q>0&&pu>0)?fmt(q*pu):'—';
+  });
+  const f=lerFormCompraSilencioso(p);
+  box.innerHTML=`<span>Insumos <b>${fmt(f.totIns)}</b></span><span class="op">+</span><span>Itens não controlados <b>${fmt(f.totNc)}</b></span><span class="op">=</span><span class="tot">Total <b>${fmt(f.total)}</b></span>`;
 }
-function precoItemSelecionado(sel){const opt=sel.options[sel.selectedIndex];return opt?parseFloat(opt.getAttribute('data-preco')||'0'):0}
-function atualizarPrecoLinha(sel){const linha=sel.closest('[data-citem]');if(linha)linha.querySelector('.ci-preco-display').textContent=fmt(precoItemSelecionado(sel));recalcTotalCompra()}
-function addCompraItem(){
-  const d=document.createElement('div');
-  d.innerHTML=linhaCompraItem(null);
-  const linha=d.firstElementChild;
-  document.getElementById('c-itens').appendChild(linha);
-  atualizarPrecoLinha(linha.querySelector('.ci-item'));
+/* Mesmo cálculo sem marcar erros (usado enquanto o usuário digita) */
+function lerFormCompraSilencioso(p){
+  const marcadas=[...document.querySelectorAll(`#${p}-ins .cmp-row, #${p}-nc .cmp-row`)].map(r=>[r,r.classList.contains('linha-erro')]);
+  const f=lerFormCompra(p);marcadas.forEach(([r,m])=>r.classList.toggle('linha-erro',m));return f;
 }
-function itensCompraForm(){
-  return [...document.querySelectorAll('#c-itens [data-citem]')].map(d=>{
-    const sel=d.querySelector('.ci-item'),fs=d.querySelector('.ci-forn');
-    return{item_id:sel.value,fornecedor_id:fs&&fs.value||null,quantidade:parseFloat(d.querySelector('.ci-qtd').value),preco_unitario:precoItemSelecionado(sel)}
-  }).filter(x=>x.item_id&&x.quantidade>0&&x.preco_unitario>0);
+/* Cabeçalho da compra: 1 fornecedor → ele; vários → nomes unidos por " + " */
+function fornecedorCabecalho(linhas){
+  const d=[...new Map(linhas.filter(l=>l.fornecedor_nome).map(l=>[l.fornecedor_nome.toLowerCase(),l])).values()];
+  if(d.length===1)return{fornecedor_id:d[0].fornecedor_id,fornecedor_nome:d[0].fornecedor_nome};
+  if(d.length>1)return{fornecedor_id:null,fornecedor_nome:d.map(l=>l.fornecedor_nome).join(' + ')};
+  return{fornecedor_id:null,fornecedor_nome:'Fornecedor avulso'};
 }
-function recalcTotalCompra(){
-  const itens=itensCompraForm();
-  const inp=document.getElementById('c-valor');
-  if(!inp)return;
-  if(itens.length){
-    inp.value=itens.reduce((s,x)=>s+x.quantidade*x.preco_unitario,0).toFixed(2);
-    inp.disabled=true;
-  }else{
-    inp.disabled=false;
+function validarFormCompra(p){
+  const f=lerFormCompra(p),e=document.getElementById(p+'-err');
+  e.style.display='none';
+  if(!f.ins.length&&!f.nc.length){e.textContent='Adicione pelo menos uma linha em Insumos ou em Itens não controlados.';e.style.display='block';return null}
+  if(f.erros.length){
+    e.innerHTML=f.erros.map(esc).join('<br>')+(f.ins.some(l=>!l.fornecedor_id)?`<br><span style="color:var(--muted)">${isGerente()?'Fornecedor ainda não cadastrado? Pesquise o nome na lista do fornecedor e use "+ Cadastrar fornecedor".':'Insumos só aceitam fornecedores cadastrados — peça a um Gerente para cadastrar o fornecedor.'}</span>`:'');
+    e.style.display='block';
+    const r=document.querySelector(`#${p}-ins .linha-erro, #${p}-nc .linha-erro`);if(r)r.scrollIntoView({block:'center',behavior:'smooth'});
+    return null;
   }
+  return f;
 }
-async function salvarCompra(){
-  const fornNome=document.getElementById('c-forn').value.trim();
+/* Atalho "+ Cadastrar fornecedor" dentro da lista do fornecedor (só para quem pode cadastrar) */
+function fornSselExtra(sel,q){
+  if(!isGerente())return q?`<div class="ssel-vazio">Fornecedor não cadastrado. Insumos só aceitam fornecedores cadastrados — peça a um Gerente para cadastrá-lo.</div>`:'';
+  return`<button type="button" class="ssel-add" onclick="cadastrarFornecedorAtalho(${esc(JSON.stringify(q))})">+ Cadastrar fornecedor${q?' “'+esc(q)+'”':''}</button>`;
+}
+function cadastrarFornecedorAtalho(nome){
+  const sel=_sselAberto;sselFechar();if(!sel)return;
+  const linha=sel.closest('.cmp-row'),itemId=linha.querySelector('.ins-item').value;
+  const p=linha.parentElement.id.replace(/-ins$/,'');
+  modalFornecedor(null,{nome,itemId,onSaved:f=>{
+    if(!f)return;
+    document.querySelectorAll(`#${p}-ins [data-ins]`).forEach(r=>{
+      const fs=r.querySelector('.ins-forn'),v=r===linha?f.id:fs.value;
+      fs.innerHTML=fornOptionsHTML(r.querySelector('.ins-item').value,v);fs.value=v;
+    });
+    const dl=document.getElementById(p+'-forn-dl');if(dl)dl.innerHTML=db.fornecedores.filter(x=>x.status==='ativo').map(x=>`<option value="${esc(x.nome)}">`).join('');
+    linha.classList.remove('linha-erro');recalcCompra(p);toast('✅ Fornecedor "'+f.nome+'" cadastrado e selecionado.');
+  }});
+}
+/* Resumo minimalista antes de registrar */
+function resumoCompraHTML(f,extra){
+  const l=x=>`<div class="rs-l"><span>${x.quantidade}× ${esc(x.nome)} <span class="muted">· ${esc(x.fornecedor_nome)}</span></span><b>${fmt(x.quantidade*x.preco_unitario)}</b></div>`;
+  return`<div class="resumo">
+    ${f.ins.length?`<div class="rs-sec">Insumos (entram no Baú)</div>${f.ins.map(l).join('')}`:''}
+    ${f.nc.length?`<div class="rs-sec">Itens não controlados</div>${f.nc.map(l).join('')}`:''}
+    <div class="rs-tot"><span>Total</span><b>${fmt(f.total)}</b></div>
+    ${extra||''}</div>`;
+}
+let _compraPendente=null;
+function salvarCompra(){
   const data=document.getElementById('c-data').value;
   const e=document.getElementById('c-err');
-  const fail=m=>{e.textContent=m;e.style.display='block'};
-  if(!data)return fail('Informe a data da compra.');
-  const itens=itensCompraForm();
-  const itemInvalido=itens.map(ci=>db.itens.find(i=>i.id===ci.item_id)).find(it=>it&&!['materia_prima','insumo_auxiliar'].includes(it.categoria));
-  if(itemInvalido)return fail(`"${itemInvalido.nome}" não pode ser usado como insumo de compra (só Matéria-Prima ou Insumo Auxiliar).`);
-  const semForn=linhaSemFornecedor(itens);
-  if(semForn)return fail(`Selecione o fornecedor da linha "${semForn.nome}".`);
-  let valor=parseFloat(document.getElementById('c-valor').value);
-  if(itens.length)valor=itens.reduce((s,x)=>s+x.quantidade*x.preco_unitario,0);
-  if(!(valor>0))return fail('O valor total deve ser estritamente maior que zero.');
-  const rf=resolverFornecedoresCompra(fornNome,itens);
-  const fornecedorNome=rf.fornecedor_nome;
-  if(db.compras.some(x=>x.status==='ativa'&&x.fornecedor_nome===fornecedorNome&&(x.data_local||x.data.slice(0,10))===data&&x.valor_total===valor))
-    return fail('Compra duplicada (mesmo fornecedor, data e valor) — verifique antes de registrar.');
-  const operacaoId=await nextOpId();
-  const cabecalho={operacao_id:operacaoId,fornecedor_id:rf.fornecedor_id,fornecedor_nome:fornecedorNome,
+  if(!data){e.textContent='Informe a data da compra.';e.style.display='block';return}
+  const f=validarFormCompra('c');if(!f)return;
+  const cab=fornecedorCabecalho([...f.ins,...f.nc]);
+  if(db.compras.some(x=>x.status==='ativa'&&x.fornecedor_nome===cab.fornecedor_nome&&(x.data_local||x.data.slice(0,10))===data&&Math.abs(x.valor_total-f.total)<0.005)){
+    e.textContent='Compra duplicada (mesmo fornecedor, data e valor) — verifique antes de registrar.';e.style.display='block';return;
+  }
+  const desc=document.getElementById('c-desc').value.trim();
+  _compraPendente={f,cab,data,desc};
+  openModal2(`<h3>Confirmar compra</h3>
+    ${resumoCompraHTML(f,`<div class="rs-meta">${dataBR(data)}${desc?' · '+esc(desc):''}</div>`)}
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal2()">Voltar</button>
+    <button class="btn btn-primary" id="btn-conf-compra" onclick="efetivarCompra()">Confirmar compra</button></div>`);
+}
+async function efetivarCompra(){
+  const pend=_compraPendente;if(!pend)return;
+  const btn=document.getElementById('btn-conf-compra');if(btn){btn.disabled=true;btn.textContent='Registrando…'}
+  const{f,cab,data,desc}=pend;
+  const fail=m=>{closeModal2();const e=document.getElementById('c-err');e.textContent=m;e.style.display='block'};
+  let operacaoId;try{operacaoId=await nextOpId()}catch(err){return fail('Erro ao gerar ID da operação: '+(err.message||err))}
+  const cabecalho={operacao_id:operacaoId,fornecedor_id:cab.fornecedor_id,fornecedor_nome:cab.fornecedor_nome,
     data:new Date(data+'T'+new Date().toTimeString().slice(0,8)).toISOString(),data_local:data,
-    valor_total:valor,descricao:document.getElementById('c-desc').value.trim(),
-    usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,status:'ativa'};
+    valor_total:f.total,descricao:desc,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,status:'ativa'};
   const{data:kRow,error:e1}=await sb.from('compras').insert(cabecalho).select().single();
   if(e1)return fail('Erro ao registrar compra: '+e1.message);
-  let itensInseridos=[];
-  if(itens.length){
-    const itensRows=rf.linhas.map(ci=>{
-      const it=db.itens.find(i=>i.id===ci.item_id);
-      if(it&&Math.abs((it.preco_unitario||0)-ci.preco_unitario)>0.0001)toast('ℹ️ Preço divergente do cadastro para '+it.nome+'. Compra mantida para auditoria.');
-      return{compra_id:kRow.id,item_id:ci.item_id,nome:it?it.nome:'?',quantidade:ci.quantidade,preco_unitario:ci.preco_unitario,fornecedor_id:ci.fornecedor_id,fornecedor_nome:ci.fornecedor_nome};
-    });
-    const{data:itd,error:e2}=await sb.from('compra_itens').insert(itensRows).select();
-    if(e2){await sb.from('compras').delete().eq('id',kRow.id);return fail('Erro ao registrar itens: '+e2.message)}
-    itensInseridos=itd;
-    const saldosLocais={};
-    const movimentos=rf.linhas.map(ci=>{
-      const it=db.itens.find(i=>i.id===ci.item_id);if(!it)return null;
-      const saldoAnt=(saldosLocais[it.id]??saldoItem(it.id));
-      saldosLocais[it.id]=saldoAnt+ci.quantidade;
-      return{item_id:it.id,tipo_movimento:'entrada_compra',operacao_id:operacaoId,quantidade:ci.quantidade,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,origem:'compra: '+(ci.fornecedor_nome||fornecedorNome),saldo_resultante:saldoAnt+ci.quantidade};
-    }).filter(Boolean);
-    if(movimentos.length){
-      const{data:bd,error:e3}=await sb.from('estoque_bau').insert(movimentos).select();
-      if(e3)toast('⚠️ Compra salva, mas houve erro ao lançar no Baú: '+e3.message);
-      else bd.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
-    }
+  const linhas=[...f.ins,...f.nc].map(({_it,...l})=>({...l,compra_id:kRow.id}));
+  const{data:itd,error:e2}=await sb.from('compra_itens').insert(linhas).select();
+  if(e2){await sb.from('compras').delete().eq('id',kRow.id);return fail('Erro ao registrar itens: '+e2.message)}
+  const saldos={};
+  const movimentos=f.ins.filter(l=>l._it&&controlaEstoque(l._it.categoria)).map(l=>{
+    const ant=saldos[l.item_id]??saldoItem(l.item_id);saldos[l.item_id]=ant+l.quantidade;
+    return{item_id:l.item_id,tipo_movimento:'entrada_compra',operacao_id:operacaoId,quantidade:l.quantidade,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,origem:'compra: '+l.fornecedor_nome,saldo_resultante:ant+l.quantidade};
+  });
+  if(movimentos.length){
+    const{data:bd,error:e3}=await sb.from('estoque_bau').insert(movimentos).select();
+    if(e3)toast('⚠️ Compra salva, mas houve erro ao lançar no Baú: '+e3.message);
+    else bd.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
   }
-  const k={...kRow,itens:itensInseridos.map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario),fornecedor_id:i.fornecedor_id,fornecedor_nome:i.fornecedor_nome})),valor_total:Number(kRow.valor_total)};
+  const k={...kRow,itens:(itd||[]).map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario),fornecedor_id:i.fornecedor_id,fornecedor_nome:i.fornecedor_nome})),valor_total:Number(kRow.valor_total)};
   db.compras.unshift(k);
-  reg('Compra registrada',`${k.fornecedor_nome} — ${fmt(valor)}${itens.length?` (${itens.length} insumo(s) entraram no Baú)`:''}`);
-  bauTela=null;
-  toast('✅ Compra registrada!'+(itens.length?' Entrada de insumos no Baú.':''));
+  reg('Compra registrada',`${k.fornecedor_nome} — ${fmt(f.total)}${movimentos.length?` (${movimentos.length} insumo(s) entraram no Baú)`:''}`);
+  _compraPendente=null;closeModal2();bauTela=null;
+  toast('✅ Compra registrada!'+(movimentos.length?' Entrada de insumos no Baú.':''));
   render();
 }
 /* ================= TELAS DE COMPRA E PRODUÇÃO (dentro do Baú) ================= */
@@ -934,32 +1247,21 @@ function telaProducao(){
 }
 function fecharTelaBau(){bauTela=null;render()}
 function telaCompraHTML(c){
- const itensDisp=db.itens.filter(i=>i.status==='ativo'&&(i.categoria==='materia_prima'||i.categoria==='insumo_auxiliar'));
  c.innerHTML=`
   <h2 class="page-title">🚚 Nova compra</h2>
   <p class="page-sub">Registro de despesa e entrada de insumos no Baú.</p>
   <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">← Voltar ao Baú</button>
-  <div class="card" style="max-width:760px">
+  <div class="card" style="max-width:980px">
     <div class="row2">
-      <div class="field"><label>Fornecedor geral (opcional)</label>
-        <input id="c-forn" list="forn-list" placeholder="Usado nas linhas sem fornecedor próprio">
-        <datalist id="forn-list">${db.fornecedores.filter(f=>f.status==='ativo').map(f=>`<option value="${esc(f.nome)}">`).join('')}</datalist></div>
       <div class="field"><label>Data</label><input id="c-data" type="date" value="${todayISO()}"></div>
+      <div class="field"><label>Observação (opcional)</label><input id="c-desc"></div>
     </div>
-    <div class="row2">
-      <div class="field"><label>Valor total da despesa ($)</label><input id="c-valor" type="number" min="0.01" step="0.01" placeholder="0,00"></div>
-      <div class="field"><label>Descrição / Observação (opcional)</label><input id="c-desc"></div>
-    </div>
-    <div class="section-title" style="margin-top:10px">Itens de insumo (opcional — dá entrada no Baú)</div>
-    <div id="c-itens"></div>
-    <button class="btn btn-ghost btn-sm" onclick="addCompraItem()">+ Adicionar item</button>
-    <p style="color:var(--muted);font-size:12px;margin-top:6px">Com insumos informados, o valor total é calculado automaticamente pela soma dos itens (preço fixo do cadastro). Cada Matéria-Prima usa um dos fornecedores vinculados a ela — uma mesma compra pode reunir fornecedores diferentes. Insumos Auxiliares usam o fornecedor geral.</p>
-    <p id="c-err" style="color:var(--danger);font-size:13px;display:none;margin-top:10px"></p>
+    ${formCompraHTML('c')}
     <div style="margin-top:16px;display:flex;gap:8px">
       <button class="btn btn-primary" onclick="salvarCompra()">Registrar compra</button>
     </div>
   </div>`;
- window._compraItens=[];
+ recalcCompra('c');
 }
 function telaProducaoHTML(c){
  const ger=isGerente();
@@ -1214,72 +1516,55 @@ async function salvarEdicaoVendaFin(id){
  reg('Venda editada',itens.length+' item(ns) — entrada '+fmt(entrada)+', repasse '+fmt(repasse));
  closeModal();render();toast('✅ Venda atualizada.');
 }
-/* Editar compra: fornecedor, itens/quantidades e descrição */
+/* Editar compra: mesmas duas seções da Nova compra. Não refaz as entradas no Baú. */
 function editCompraFin(id){
  if(!isGerente())return;
  const k=db.compras.find(x=>x.id===id);if(!k)return;
- const itensDisp=db.itens.filter(i=>i.status==='ativo'&&(i.categoria==='materia_prima'||i.categoria==='insumo_auxiliar'));
- const linhas=(k.itens||[]).map(i=>linhaItemCompraEdit(i,itensDisp)).join('');
+ // linhas antigas sem fornecedor próprio herdam o do cabeçalho
+ const cabF=db.fornecedores.find(f=>f.id===k.fornecedor_id)||db.fornecedores.find(f=>f.nome.toLowerCase()===(k.fornecedor_nome||'').toLowerCase());
+ const itens=(k.itens||[]).map(i=>{
+   const f=db.fornecedores.find(x=>x.id===i.fornecedor_id)||(i.fornecedor_nome?db.fornecedores.find(x=>x.nome.toLowerCase()===i.fornecedor_nome.toLowerCase()):null)||(i.fornecedor_nome?null:cabF);
+   return{...i,fornecedor_id:f?f.id:null,fornecedor_nome:i.fornecedor_nome||(f?f.nome:(k.fornecedor_nome!=='Fornecedor avulso'?k.fornecedor_nome:''))};
+ });
  openModal(`<h3>Editar compra</h3>
- <div class="field"><label>Fornecedor geral (opcional)</label><input id="ec-forn" list="ec-forn-list" value="${esc(k.fornecedor_nome||'')}"><datalist id="ec-forn-list">${db.fornecedores.filter(f=>f.status==='ativo').map(f=>`<option value="${esc(f.nome)}">`).join('')}</datalist></div>
- <div class="section-title" style="color:var(--warning-light)">Insumos comprados</div>
- <div id="ec-itens">${linhas||'<p class="muted" style="font-size:12px">Nenhum insumo registrado nesta compra.</p>'}</div>
- <button class="btn btn-ghost btn-sm" onclick="addItemCompraEdit()">+ Adicionar insumo</button>
- <div class="field" style="margin-top:14px"><label>Descrição / Observação</label><input id="ec-desc" value="${esc(k.descricao||'')}"></div>
- <p id="ec-err" style="color:var(--danger);font-size:13px;display:none"></p>
+ ${formCompraHTML('ec',{...k,itens})}
+ <div class="field" style="margin-top:14px"><label>Observação</label><input id="ec-desc" value="${esc(k.descricao||'')}"></div>
+ <p class="muted" style="font-size:12px">A edição não refaz as entradas no Baú — ajuste o estoque pelo Baú (+ Entrada / − Saída) se mudar insumos ou quantidades.</p>
  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
  <button class="btn btn-purple" onclick="salvarEdicaoCompraFin('${id}')">Salvar</button></div>`);
-}
-function linhaItemCompraEdit(i,itensDisp){
- const opts=itensDisp.map(it=>`<option value="${it.id}" ${it.id===i.item_id?'selected':''}>${esc(it.nome)} (${esc(it.unidade_medida)})</option>`).join('');
- const itemId=i.item_id||(itensDisp[0]?itensDisp[0].id:'');
- return`<div class="row3" style="margin-bottom:8px;grid-template-columns:2fr 1.5fr 1fr auto" data-ecitem>
-  <select class="eci-item" onchange="trocarFornLinha(this.closest('[data-ecitem]'),'eci-forn',this)">${opts}</select>
-  ${selectFornLinha('eci-forn',itemId,i.fornecedor_id)}
-  <input class="eci-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${i.quantidade??i.qtd}">
-  <button class="iconbtn btn-del-linha" onclick="this.closest('[data-ecitem]').remove()">✕</button></div>`;
-}
-function addItemCompraEdit(){
- const itensDisp=db.itens.filter(i=>i.status==='ativo'&&(i.categoria==='materia_prima'||i.categoria==='insumo_auxiliar'));
- const d=document.createElement('div');
- d.innerHTML=linhaItemCompraEdit({item_id:'',quantidade:''},itensDisp);
- document.getElementById('ec-itens').appendChild(d.firstElementChild);
+ document.getElementById('modal-box').classList.add('modal-larga');
+ recalcCompra('ec');
 }
 async function salvarEdicaoCompraFin(id){
  const k=db.compras.find(x=>x.id===id);if(!k)return;
- const e=document.getElementById('ec-err');
- const forn=document.getElementById('ec-forn').value.trim();
- const itens=[...document.querySelectorAll('#ec-itens [data-ecitem]')].map(d=>{
-  const sel=d.querySelector('.eci-item'),fs=d.querySelector('.eci-forn');const it=db.itens.find(x=>x.id===sel.value);
-  return{item_id:sel.value,fornecedor_id:fs&&fs.value||null,nome:it?it.nome:'?',quantidade:parseFloat(d.querySelector('.eci-qtd').value)||0,preco_unitario:it?it.preco_unitario:0};
- }).filter(x=>x.item_id&&x.quantidade>0);
  const desc=document.getElementById('ec-desc').value.trim();
- const itemInvalido=itens.map(ci=>db.itens.find(i=>i.id===ci.item_id)).find(it=>it&&!['materia_prima','insumo_auxiliar'].includes(it.categoria));
- if(itemInvalido){e.textContent=`"${itemInvalido.nome}" não pode ser usado como insumo de compra (só Matéria-Prima ou Insumo Auxiliar).`;e.style.display='block';return}
- if(!itens.length&&!(k.valor_total>0)){e.textContent='Adicione ao menos um insumo ou mantenha o valor total.';e.style.display='block';return}
- const semForn=linhaSemFornecedor(itens);
- if(semForn){e.textContent=`Selecione o fornecedor da linha "${semForn.nome}".`;e.style.display='block';return}
- const rf=resolverFornecedoresCompra(forn,itens);
- const patch={fornecedor_id:rf.fornecedor_id,fornecedor_nome:rf.fornecedor_nome,descricao:desc};
- if(itens.length)patch.valor_total=itens.reduce((s,x)=>s+x.quantidade*x.preco_unitario,0);
+ const semLinhas=!document.querySelector('#ec-ins .cmp-row, #ec-nc .cmp-row');
+ let patch,linhas=null;
+ if(semLinhas&&!(k.itens||[]).length){patch={descricao:desc}} // compra antiga só com valor total
+ else{
+   const f=validarFormCompra('ec');if(!f)return;
+   patch={...fornecedorCabecalho([...f.ins,...f.nc]),descricao:desc,valor_total:f.total};
+   linhas=[...f.ins,...f.nc].map(({_it,...l})=>({...l,compra_id:id}));
+ }
+ const e=document.getElementById('ec-err');
  const{error:e1}=await sb.from('compras').update(patch).eq('id',id);
  if(e1){e.textContent='Erro ao salvar: '+e1.message;e.style.display='block';return}
- await sb.from('compra_itens').delete().eq('compra_id',id);
- let itd=[];
- if(itens.length){
-  const{data,error:e2}=await sb.from('compra_itens').insert(rf.linhas.map(i=>({...i,compra_id:id}))).select();
+ if(linhas){
+  const{error:ed}=await sb.from('compra_itens').delete().eq('compra_id',id);
+  if(ed){e.textContent='Erro ao salvar itens: '+ed.message;e.style.display='block';return}
+  const{data,error:e2}=await sb.from('compra_itens').insert(linhas).select();
   if(e2){e.textContent='Erro ao salvar itens: '+e2.message;e.style.display='block';return}
-  itd=data;
+  k.itens=data.map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario),fornecedor_id:i.fornecedor_id,fornecedor_nome:i.fornecedor_nome}));
  }
  Object.assign(k,patch);
- k.itens=itd.map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario),fornecedor_id:i.fornecedor_id,fornecedor_nome:i.fornecedor_nome}));
- reg('Compra editada',rf.fornecedor_nome+' — '+fmt(k.valor_total));
+ reg('Compra editada',k.fornecedor_nome+' — '+fmt(k.valor_total));
  closeModal();render();toast('✅ Compra atualizada.');
 }
 
 /* ================= CONFIGURAÇÕES ================= */
 function renderConfig(c){
-  const tabs=[['usuarios','Usuários'],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['logo','Identidade Visual']];
+  const nPed=(db.pedidos_senha||[]).length;
+  const tabs=[['usuarios','Usuários'+(nPed?' 🔑'+nPed:'')],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['logo','Identidade Visual']];
   c.innerHTML=`<h2 class="page-title">Configurações</h2><p class="page-sub">Centro de parametrização — exclusivo do perfil Gerente.</p>
   <div class="cfg-tabs">${tabs.map(t=>`<button class="cfg-tab ${cfgTabAtual===t[0]?'active':''}" onclick="cfgTabAtual='${t[0]}';render()">${t[1]}</button>`).join('')}</div>
   <div id="cfg-body"></div>`;
@@ -1297,13 +1582,14 @@ function renderConfig(c){
 /* Perfil com mais acesso primeiro (Sócio > Diretor > Gerente > Vendedor), depois nome A→Z */
 function usuariosOrdenados(){return [...db.usuarios].sort((a,b)=>(PERFIL_NIVEL[b.perfil]||0)-(PERFIL_NIVEL[a.perfil]||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}))}
 function cfgUsuarios(b){
-  b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  const T='cfg_usuarios',F=tabelaFiltravel(T,usuariosOrdenados,{nome:u=>u.nome,usuario:u=>u.usuario||'—',perfil:u=>PERFIL_LABEL[u.perfil]||u.perfil,status:u=>u.status,data:u=>u.criado_em});
+  b.innerHTML=`${painelPedidosSenha()}<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">👥 Usuários</div>
     <button class="btn btn-purple btn-sm" onclick="modalUsuario()">+ Novo usuário</button></div>
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Sócio gerencia todos os perfis, incluindo outros Sócios. <b>Diretor</b> tem as mesmas permissões do Sócio, exceto que não pode alterar, ativar/inativar, excluir ou promover ninguém ao perfil <b>Sócio</b>. Gerentes podem cadastrar vendedores. Ninguém altera o próprio perfil. Deve existir sempre ao menos um sócio ativo.</p>
-  <div class="table-wrap"><table>
-  <tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Criado em</th><th>Ações</th></tr>
-  ${usuariosOrdenados().map(u=>{
+  ${F.barra}<div class="table-wrap"><table>
+  <tr>${thCol(T,'nome','Nome')}${thCol(T,'usuario','Usuário')}${thCol(T,'perfil','Perfil')}${thCol(T,'status','Status')}${thCol(T,'data','Criado em')}<th>Ações</th></tr>
+  ${F.rows.map(u=>{
     const sociosAtivos=db.usuarios.filter(x=>x.perfil==='socio'&&x.status==='ativo').length;
     const ehUltimoSocio=u.perfil==='socio'&&u.status==='ativo'&&sociosAtivos<=1;
     return`<tr>
@@ -1316,7 +1602,58 @@ function cfgUsuarios(b){
       ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)?`<button class="iconbtn" title="${u.status==='ativo'?'Inativar':'Ativar'}" onclick="toggleStatusUsuario('${u.id}')">${u.status==='ativo'?'⏸️':'▶️'}</button>`:''}
       ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)&&isSocioOuDiretor()&&u.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirUsuario('${u.id}')">🗑️</button>`:''}
       ${ehUltimoSocio?'<span class="tag y" title="Deve existir ao menos um sócio ativo">🔒 último sócio</span>':''}</td>
-  </tr>`}).join('')}</table></div>`;
+  </tr>`}).join('')||linhaSemResultado(6,T)}</table></div>`;
+}
+/* ---- Pedidos de redefinição de senha (feitos na tela de login) ---- */
+function painelPedidosSenha(){
+  const ps=db.pedidos_senha||[],temSenha=!!db.senha_padrao_reset,edita=isSocioOuDiretor();
+  return `<div class="card" style="margin-bottom:18px;${ps.length?'border-color:var(--warning-border)':''}">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="section-title" style="margin:0">🔑 Pedidos de redefinição de senha ${ps.length?`<span class="tag y">${ps.length} pendente(s)</span>`:''}</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)">Senha padrão: <b style="color:${temSenha?'var(--green)':'var(--danger)'}">${temSenha?'definida':'não definida'}</b>
+        ${edita?`<button class="btn btn-ghost btn-sm" onclick="modalSenhaPadrao()">${temSenha?'Alterar':'Definir'}</button>`:''}</div>
+    </div>
+    ${ps.length?`<div class="table-wrap" style="margin-top:12px"><table><tr><th>Usuário</th><th>Nome</th><th>Perfil</th><th>Pedido em</th><th>Ações</th></tr>
+      ${ps.map(x=>{const u=db.usuarios.find(y=>y.id===x.usuario_id);const pode=u&&podeGerenciarUsuario(u)&&u.id!==session.usuario_id;return`<tr>
+        <td><b>${esc(x.usuario)}</b></td><td>${esc(u?u.nome:'—')}</td><td>${u?`<span class="badge ${u.perfil}">${PERFIL_LABEL[u.perfil]}</span>`:'—'}</td>
+        <td style="color:var(--muted)">${dataHoraBR(x.criado_em)}</td>
+        <td>${pode?`<button class="btn btn-primary btn-sm" onclick="aprovarPedidoSenha('${x.id}')">Aprovar</button> <button class="btn btn-ghost btn-sm" onclick="recusarPedidoSenha('${x.id}')">Recusar</button>`:'<span class="muted" style="font-size:12px">sem permissão para este perfil</span>'}</td></tr>`}).join('')}</table></div>`
+    :'<p class="muted" style="font-size:12px;margin-top:8px">Nenhum pedido pendente. Pedidos feitos em "Redefinir senha", na tela de login, aparecem aqui.</p>'}
+  </div>`;
+}
+function modalSenhaPadrao(){
+  if(!isSocioOuDiretor())return;
+  openModal(`<h3>Senha padrão de redefinição</h3>
+  <p class="muted" style="margin-bottom:14px">Ao aprovar um pedido, a senha do usuário volta para esta senha e ele é obrigado a criar uma nova no primeiro acesso. Ela fica guardada no banco (visível só para Gerente ou acima), nunca no código do site.</p>
+  <div class="field"><label>Senha padrão (mínimo 6 caracteres)</label><input id="sp-senha" type="text" autocomplete="off" value="${esc(db.senha_padrao_reset)}"></div>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-purple" onclick="salvarSenhaPadrao()">Salvar</button></div>`);
+}
+async function salvarSenhaPadrao(){
+  const v=document.getElementById('sp-senha').value;
+  if(v.length<6)return toast('⚠️ A senha padrão deve ter no mínimo 6 caracteres.');
+  const{data,error}=await sb.from('config_privada').update({senha_padrao_reset:v,atualizado_em:nowISO()}).eq('id',1).select();
+  if(error||!data||!data.length)return toast('⚠️ Não foi possível salvar: '+(error?error.message:'sem permissão.'));
+  db.senha_padrao_reset=v;reg('Senha padrão de redefinição alterada','');closeModal();render();toast('✅ Senha padrão salva.');
+}
+function aprovarPedidoSenha(pid){
+  const x=db.pedidos_senha.find(p=>p.id===pid);if(!x)return;
+  if(!db.senha_padrao_reset)return toast(isSocioOuDiretor()?'⚠️ Defina a senha padrão antes de aprovar.':'⚠️ A senha padrão ainda não foi definida. Peça a um Sócio ou Diretor.');
+  confirmar('Aprovar redefinição','A senha de "'+x.usuario+'" voltará para a senha padrão e ele deverá criar uma nova no primeiro acesso. Confirmar?',async()=>{
+    try{await chamarAdminUsers({action:'reset_password',targetUserId:x.usuario_id,senha:db.senha_padrao_reset})}catch(e){return toast('⚠️ Não foi possível redefinir: '+e.message)}
+    await resolverPedidoSenha(x,'aprovada');
+    reg('Redefinição de senha aprovada',x.usuario);toast('✅ Senha de "'+x.usuario+'" redefinida para a senha padrão.');
+  });
+}
+function recusarPedidoSenha(pid){
+  const x=db.pedidos_senha.find(p=>p.id===pid);if(!x)return;
+  confirmar('Recusar pedido','O pedido de "'+x.usuario+'" será recusado e a senha continua a mesma. Confirmar?',async()=>{
+    await resolverPedidoSenha(x,'recusada');reg('Redefinição de senha recusada',x.usuario);
+  });
+}
+async function resolverPedidoSenha(x,status){
+  const{error}=await sb.from('solicitacoes_senha').update({status,resolvido_em:nowISO(),resolvido_por:session.usuario_id,resolvido_por_nome:sessionUser().nome}).eq('id',x.id);
+  if(error)toast('⚠️ Erro ao atualizar o pedido: '+error.message);
+  db.pedidos_senha=db.pedidos_senha.filter(p=>p.id!==x.id);render();
 }
 function podeGerenciarUsuario(alvo){
   // Sócio gerencia todos, inclusive outros Sócios.
@@ -1434,6 +1771,7 @@ function excluirUsuario(id){
 }
 /* ---- Catálogo PDV (com alíquota global, imagem e exclusão) ---- */
 function cfgProdutos(b){
+  const T='cfg_produtos',F=tabelaFiltravel(T,()=>[...db.produtos].sort((a,b)=>a.ordem-b.ordem),{nome:p=>p.nome,preco:p=>fmt(p.preco),rateio:p=>p.rateio,status:p=>p.status,data:p=>p.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🏷️ Catálogo de Venda (PDV)</div>
     <button class="btn btn-purple btn-sm" onclick="modalProduto()">+ Novo produto</button></div>
@@ -1444,18 +1782,19 @@ function cfgProdutos(b){
       <button class="btn btn-primary btn-sm" onclick="salvarAliquotaGlobal()">Salvar</button>
     </div>
   </div>
-  <div class="table-wrap"><table>
-  <tr><th>Imagem</th><th>Ordem</th><th>Produto</th><th>Preço</th><th>Rateio</th><th>Status</th><th>Ações</th></tr>
-  ${[...db.produtos].sort((a,b)=>a.ordem-b.ordem).map(p=>`<tr>
+  ${F.barra}<div class="table-wrap"><table>
+  <tr><th>Imagem</th><th>Ordem</th>${thCol(T,'nome','Produto')}${thCol(T,'preco','Preço')}${thCol(T,'rateio','Rateio')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  ${F.rows.map(p=>`<tr>
     <td>${p.imagem?`<img class="thumb" src="${imgSrc(p.imagem)}">`:'🌿'}</td>
     <td>${p.ordem}</td><td><b>${esc(p.nome)}</b></td>
     <td class="money">${fmt(p.preco)}</td><td><span class="tag">${esc(p.rateio)}</span></td>
     <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
+    <td style="color:var(--muted)">${dataHoraBR(p.criado_em)}</td>
     <td><button class="iconbtn" onclick="moverProduto('${p.id}',-1)">↑</button><button class="iconbtn" onclick="moverProduto('${p.id}',1)">↓</button>
       <button class="iconbtn" onclick="modalProduto('${p.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleProduto('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir linha" onclick="excluirProduto('${p.id}')">🗑️</button>`:''}</td>
-  </tr>`).join('')}</table></div>`;
+  </tr>`).join('')||linhaSemResultado(8,T)}</table></div>`;
 }
 async function salvarAliquotaGlobal(){
   const g=parseFloat(document.getElementById('al-global').value);
@@ -1552,23 +1891,88 @@ async function moverProduto(id,dir){
 }
 /* ---- Cadastro Central de Itens (preço unitário, qtd mínima, inativar/excluir) ---- */
 function cfgItens(b){
+  const sn=v=>v?'Sim':'Não';
+  const T='cfg_itens',F=tabelaFiltravel(T,()=>db.itens,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,preco:i=>fmt(i.preco_unitario),qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
+  const TC='cfg_categorias',FC=tabelaFiltravel(TC,()=>db.categorias,{nome:c=>c.nome,estoque:c=>sn(c.controla_estoque),compravel:c=>sn(c.compravel&&c.controla_estoque),receitas:c=>sn(c.aparece_receitas),itens:c=>String(db.itens.filter(i=>i.categoria===c.codigo).length),data:c=>c.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">📦 Cadastro Central de Itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalItem()">+ Novo item</button></div>
-  <div class="table-wrap"><table>
-  <tr><th>Item</th><th>Categoria</th><th>Un.</th><th>Preço unitário</th><th>Qtd mínima</th><th>Saldo Baú</th><th>Status</th><th>Ações</th></tr>
-  ${db.itens.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&i.categoria!=='produto_final'&&s<=i.qtd_minima;return`<tr>
+  ${F.barra}<div class="table-wrap"><table>
+  <tr>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'preco','Preço unitário')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  ${F.rows.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr>
     <td><b>${esc(i.nome)}</b>${alerta?' <span class="tag r">⚠️ no mínimo</span>':''}</td>
-    <td><span class="tag">${CAT_LABEL[i.categoria]}</span></td>
+    <td><span class="tag">${catNome(i.categoria)}</span></td>
     <td style="color:var(--muted)">${esc(i.unidade_medida)}</td>
     <td class="money">${fmt(i.preco_unitario)}</td>
     <td>${i.qtd_minima||0}</td>
-    <td>${i.categoria==='produto_final'?'<span style="color:var(--muted)">n/a</span>':s}</td>
+    <td>${!controlaEstoque(i.categoria)?'<span style="color:var(--muted)">n/a</span>':s}</td>
     <td><span class="badge ${i.status==='ativo'?'ativo':'inativo'}">${i.status}</span></td>
+    <td style="color:var(--muted)">${dataHoraBR(i.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalItem('${i.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleItem('${i.id}')">${i.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')}</table></div>`;
+  </tr>`}).join('')||linhaSemResultado(9,T)}</table></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
+    <div class="section-title" style="margin:0">🏷️ Categorias de itens</div>
+    <button class="btn btn-purple btn-sm" onclick="modalCategoria()">+ Nova categoria</button></div>
+  <p style="color:var(--muted);font-size:12px;margin-bottom:12px"><b>Controle de estoque</b>: itens entram no Baú. <b>Pode ser comprada</b>: itens aparecem em "Insumos" na compra e podem ser vinculados a fornecedores (exige controle de estoque). <b>Aparece nas Receitas</b>: itens aparecem na lista das Receitas.</p>
+  ${FC.barra}<div class="table-wrap"><table>
+  <tr>${thCol(TC,'nome','Categoria')}${thCol(TC,'estoque','Controle de estoque')}${thCol(TC,'compravel','Pode ser comprada')}${thCol(TC,'receitas','Aparece nas Receitas')}${thCol(TC,'itens','Itens')}${thCol(TC,'data','Cadastrado em')}<th>Ações</th></tr>
+  ${FC.rows.map(c=>{const n=db.itens.filter(i=>i.categoria===c.codigo).length;return`<tr>
+    <td><b>${esc(c.nome)}</b></td><td>${simNao(c.controla_estoque)}</td><td>${simNao(c.compravel&&c.controla_estoque)}</td><td>${simNao(c.aparece_receitas)}</td>
+    <td>${n}</td><td style="color:var(--muted)">${dataHoraBR(c.criado_em)}</td>
+    <td><button class="iconbtn" onclick="modalCategoria('${esc(c.codigo)}')">✏️</button>${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir categoria" onclick="excluirCategoria('${esc(c.codigo)}')">🗑️</button>`:''}</td>
+  </tr>`}).join('')||linhaSemResultado(7,TC)}</table></div>`;
+}
+function simNao(v){return `<span class="tag ${v?'g':''}">${v?'Sim':'Não'}</span>`}
+function slugCategoria(nome){return nome.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'categoria'}
+function modalCategoria(codigo){
+  const c=codigo?db.categorias.find(x=>x.codigo===codigo):null;
+  const chk=(id,label,v,dis,extra='')=>`<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;font-weight:400;color:var(--text);margin:0 0 10px"><input type="checkbox" id="${id}" style="width:auto" ${v?'checked':''} ${dis?'disabled':''} ${extra}> ${label}</label>`;
+  openModal(`<h3>${c?'Editar categoria':'Nova categoria'}</h3>
+  <div class="field"><label>Nome da categoria</label><input id="cat-nome" value="${c?esc(c.nome):''}"></div>
+  ${chk('cat-estoque','Controle de estoque (itens entram no Baú)',c?c.controla_estoque:true,false,`onchange="const k=document.getElementById('cat-compravel');k.disabled=!this.checked;if(!this.checked)k.checked=false"`)}
+  ${chk('cat-compravel','Pode ser comprada (aparece em "Insumos" na compra e no vínculo com fornecedores)',c?(c.compravel&&c.controla_estoque):true,c&&!c.controla_estoque)}
+  ${chk('cat-receitas','Aparece na lista suspensa das Receitas',c?c.aparece_receitas:true,false)}
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+  <button class="btn btn-purple" onclick="salvarCategoria('${c?esc(c.codigo):''}')">Salvar</button></div>`);
+}
+async function salvarCategoria(codigo){
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem cadastrar categorias.');
+  const c=codigo?db.categorias.find(x=>x.codigo===codigo):null;
+  const nome=document.getElementById('cat-nome').value.trim();
+  const estoque=document.getElementById('cat-estoque').checked;
+  const campos={compravel:estoque&&document.getElementById('cat-compravel').checked,aparece_receitas:document.getElementById('cat-receitas').checked};
+  if(!nome)return toast('⚠️ Informe o nome da categoria.');
+  if(db.categorias.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.codigo!==codigo))return toast('⚠️ Já existe uma categoria com esse nome.');
+  Object.assign(campos,{nome,controla_estoque:estoque});
+  if(c&&c.controla_estoque&&!estoque){
+    const ids=db.itens.filter(i=>i.categoria===c.codigo).map(i=>i.id);
+    if(db.estoque_bau.some(m=>ids.includes(m.item_id)))return toast('⚠️ Não é possível desligar o controle de estoque: há itens desta categoria com movimentações no Baú.');
+  }
+  if(c){
+    const{error}=await sb.from('categorias_itens').update(campos).eq('codigo',c.codigo);
+    if(error)return toast('⚠️ Erro ao salvar: '+error.message);
+    Object.assign(c,campos);reg('Categoria editada',c.nome);
+  }else{
+    let cod=slugCategoria(nome),n=2;while(db.categorias.some(x=>x.codigo===cod))cod=slugCategoria(nome)+'_'+(n++);
+    const ordem=Math.max(0,...db.categorias.map(x=>x.ordem||0))+1;
+    const{data,error}=await sb.from('categorias_itens').insert({codigo:cod,ordem,...campos}).select().single();
+    if(error)return toast('⚠️ Erro ao salvar: '+error.message);
+    db.categorias.push(data);reg('Categoria criada',nome);
+  }
+  closeModal();render();
+}
+function excluirCategoria(codigo){
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir categorias.');
+  const c=db.categorias.find(x=>x.codigo===codigo);if(!c)return;
+  const n=db.itens.filter(i=>i.categoria===codigo).length;
+  if(n)return toast('⚠️ Não é possível excluir "'+c.nome+'": há '+n+' item(ns) nesta categoria. Mude a categoria deles antes.');
+  confirmar('Excluir categoria','A categoria "'+c.nome+'" será removida. Confirmar?',async()=>{
+    const{error}=await sb.from('categorias_itens').delete().eq('codigo',codigo);
+    if(error)return toast('⚠️ Erro ao excluir: '+error.message);
+    db.categorias=db.categorias.filter(x=>x.codigo!==codigo);reg('Categoria excluída',c.nome);render();
+  });
 }
 function modalItem(id){
   const it=id?db.itens.find(x=>x.id===id):null;
@@ -1576,10 +1980,7 @@ function modalItem(id){
   <div class="field"><label>Nome</label><input id="i-nome" value="${it?esc(it.nome):''}"></div>
   <div class="row3">
     <div class="field"><label>Categoria</label><select id="i-cat">
-      <option value="materia_prima" ${it&&it.categoria==='materia_prima'?'selected':''}>Matéria-Prima</option>
-      <option value="insumo_auxiliar" ${it&&it.categoria==='insumo_auxiliar'?'selected':''}>Insumo Auxiliar</option>
-      <option value="produto_nao_acabado" ${it&&it.categoria==='produto_nao_acabado'?'selected':''}>Produto Não Acabado</option>
-      <option value="produto_final" ${it&&it.categoria==='produto_final'?'selected':''}>Produto Final</option></select></div>
+      ${it?'':'<option value="" disabled hidden selected>Selecione a categoria...</option>'}${db.categorias.map(c=>`<option value="${esc(c.codigo)}" ${it&&it.categoria===c.codigo?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></div>
     <div class="field"><label>Unidade</label><input id="i-un" value="${it?esc(it.unidade_medida):'un'}"></div>
     <div class="field"><label>Preço unitário ($)</label><input id="i-custo" type="number" min="0" step="0.01" value="${it?it.preco_unitario:0}"></div>
   </div>
@@ -1594,6 +1995,7 @@ async function salvarItem(id){
   const custo=parseFloat(document.getElementById('i-custo').value)||0;
   const min=parseFloat(document.getElementById('i-min').value)||0;
   if(!nome)return toast('⚠️ Informe o nome do item.');
+  if(!cat)return toast('⚠️ Selecione a categoria do item.');
   const campos={nome,categoria:cat,unidade_medida:un,preco_unitario:custo,qtd_minima:min};
   if(id){
     const{error}=await sb.from('itens').update(campos).eq('id',id);
@@ -1646,13 +2048,18 @@ function excluirItem(id){
 }
 /* ---- Receitas (gerenciamento + ordenação) ---- */
 function cfgReceitas(b){
+  const nmIt=id=>{const it=db.itens.find(i=>i.id===id);return it?it.nome:'?'};
+  const T='cfg_receitas',F=tabelaFiltravel(T,()=>[...db.receitas].sort((a,b2)=>(a.ordem||99)-(b2.ordem||99)),{
+    nome:r=>r.nome,status:r=>r.status,data:r=>r.criado_em,
+    consome:r=>(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'—',
+    produz:r=>(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🏭 Receitas de Produção</div>
     <button class="btn btn-purple btn-sm" onclick="modalReceita()">+ Nova receita</button></div>
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px">A ordem definida aqui é a ordem em que as receitas aparecem na tela de produção do Baú.</p>
-  <div class="table-wrap"><table>
-  <tr><th>Ordem</th><th>Receita</th><th>Consome</th><th>Produz</th><th>Status</th><th>Ações</th></tr>
-  ${[...db.receitas].sort((a,b2)=>(a.ordem||99)-(b2.ordem||99)).map(r=>{
+  ${F.barra}<div class="table-wrap"><table>
+  <tr><th>Ordem</th>${thCol(T,'nome','Receita')}${thCol(T,'consome','Consome')}${thCol(T,'produz','Produz')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  ${F.rows.map(r=>{
     const cons=(r.insumos||[]).filter(x=>x.papel==='consumo');
     const prd=(r.insumos||[]).filter(x=>x.papel==='produzido');
     const nm=id=>{const it=db.itens.find(i=>i.id===id);return it?it.nome:'?'};
@@ -1661,11 +2068,12 @@ function cfgReceitas(b){
     <td style="color:var(--muted);font-size:12px">${cons.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'—'}</td>
     <td style="color:var(--muted);font-size:12px">${prd.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'}</td>
     <td><span class="badge ${r.status==='ativo'?'ativo':'inativo'}">${r.status}</span></td>
+    <td style="color:var(--muted)">${dataHoraBR(r.criado_em)}</td>
     <td><button class="iconbtn" onclick="moverReceita('${r.id}',-1)">↑</button><button class="iconbtn" onclick="moverReceita('${r.id}',1)">↓</button>
       <button class="iconbtn" onclick="modalReceita('${r.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleReceita('${r.id}')">${r.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirReceita('${r.id}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')||'<tr><td colspan="6" class="empty">Nenhuma receita cadastrada.</td></tr>'}</table></div>`;
+  </tr>`}).join('')||linhaSemResultado(7,T)}</table></div>`;
 }
 async function moverReceita(id,dir){
   const rs=[...db.receitas].sort((a,b)=>(a.ordem||99)-(b.ordem||99));
@@ -1685,39 +2093,66 @@ async function toggleReceita(id){
   r.status=novo;reg('Receita '+(novo==='ativo'?'ativada':'inativada'),r.nome);render();
 }
 /* ---- Fornecedores ---- */
-/* ---- Vínculo Fornecedor ↔ Matéria-Prima (tabela fornecedor_itens) ---- */
-function itensDoFornecedor(fid){const ids=db.fornecedor_itens.filter(x=>x.fornecedor_id===fid).map(x=>x.item_id);return db.itens.filter(i=>ids.includes(i.id)&&i.categoria==='materia_prima')}
+/* ---- Vínculo Fornecedor ↔ Item de compra (tabela fornecedor_itens) ---- */
+function itensDoFornecedor(fid){const ids=db.fornecedor_itens.filter(x=>x.fornecedor_id===fid).map(x=>x.item_id);return db.itens.filter(i=>ids.includes(i.id)&&catCompravel(i.categoria))}
 function fornecedoresDoItem(itemId){
-  const it=db.itens.find(i=>i.id===itemId);if(!it||it.categoria!=='materia_prima')return [];
+  const it=db.itens.find(i=>i.id===itemId);if(!it||!catCompravel(it.categoria))return [];
   const ids=db.fornecedor_itens.filter(x=>x.item_id===itemId).map(x=>x.fornecedor_id);
   return db.fornecedores.filter(f=>f.status==='ativo'&&ids.includes(f.id));
 }
 function cfgFornecedores(b){
+  const T='cfg_fornecedores',F=tabelaFiltravel(T,()=>db.fornecedores,{nome:f=>f.nome,itens:f=>itensDoFornecedor(f.id).map(i=>i.nome).join(', ')||'—',status:f=>f.status,data:f=>f.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🚚 Fornecedores</div>
     <button class="btn btn-purple btn-sm" onclick="modalFornecedor()">+ Novo fornecedor</button></div>
-  <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Vincule cada fornecedor às Matérias-Primas que ele fornece. Na compra, cada linha de Matéria-Prima escolhe entre os fornecedores vinculados — assim uma única compra pode ter fornecedores diferentes.</p>
-  <div class="table-wrap"><table>
-  <tr><th>Nome</th><th>Matérias-Primas</th><th>Status</th><th>Ações</th></tr>
-  ${db.fornecedores.map(f=>{const its=itensDoFornecedor(f.id);return`<tr>
+  <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Vincule cada fornecedor às Matérias-Primas e aos Insumos Auxiliares que ele fornece. Na compra, o campo fornecedor de cada linha sugere os fornecedores vinculados àquele item.</p>
+  ${F.barra}<div class="table-wrap"><table>
+  <tr>${thCol(T,'nome','Nome')}${thCol(T,'itens','Itens fornecidos')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  ${F.rows.map(f=>{const its=itensDoFornecedor(f.id);return`<tr>
     <td><b>${esc(f.nome)}</b></td>
     <td style="color:var(--muted);font-size:12px">${its.length?its.map(i=>esc(i.nome)).join(', '):'—'}</td>
     <td><span class="badge ${f.status==='ativo'?'ativo':'inativo'}">${f.status}</span></td>
+    <td style="color:var(--muted)">${dataHoraBR(f.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalFornecedor('${f.id}')">✏️</button>
     <button class="iconbtn" onclick="toggleFornecedor('${f.id}')">${f.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirFornecedor('${f.id}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')||'<tr><td colspan="4" class="empty">Nenhum fornecedor cadastrado.</td></tr>'}</table></div>`;
+  </tr>`}).join('')||linhaSemResultado(5,T)}</table></div>`;
 }
-function modalFornecedor(id){
+/* Atalho da compra: abre o cadastro por cima do formulário (2ª camada) e devolve o fornecedor criado */
+let _fornAtalho=null;
+function modalFornecedor(id,opts){
+  opts=opts||{};
   const f=id?db.fornecedores.find(x=>x.id===id):null;
   const vinculados=new Set(f?itensDoFornecedor(f.id).map(i=>i.id):[]);
-  const mps=db.itens.filter(i=>i.categoria==='materia_prima'&&(i.status==='ativo'||vinculados.has(i.id)));
-  openModal(`<h3>${f?'Editar fornecedor':'Novo fornecedor'}</h3>
-  <div class="field"><label>Razão social / Nome fantasia</label><input id="f-nome" value="${f?esc(f.nome):''}"></div>
-  <div class="field"><label>Matérias-Primas fornecidas</label>
-    <div id="f-itens" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">${mps.map(i=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;text-transform:none;font-weight:400;color:var(--text);margin:0"><input type="checkbox" style="width:auto" value="${i.id}" ${vinculados.has(i.id)?'checked':''}> ${esc(i.nome)}</label>`).join('')||'<p class="muted" style="font-size:12px">Nenhuma Matéria-Prima cadastrada.</p>'}</div></div>
-  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+  if(opts.itemId)vinculados.add(opts.itemId);
+  const itens=db.itens.filter(i=>catCompravel(i.categoria)&&(i.status==='ativo'||vinculados.has(i.id)))
+    .sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  _fornAtalho=opts.onSaved||null;
+  (opts.onSaved?openModal2:openModal)(`<h3>${f?'Editar fornecedor':'Novo fornecedor'}</h3>
+  <div class="field"><label>Razão social / Nome fantasia</label><input id="f-nome" value="${f?esc(f.nome):esc(opts.nome||'')}"></div>
+  <div class="field"><label>Itens fornecidos (categorias que podem ser compradas)</label>
+    <div class="msel" id="f-msel">
+      <div class="msel-chips" id="f-chips"></div>
+      <input id="f-busca" autocomplete="off" placeholder="🔍 Pesquisar itens…" onfocus="mselAbrir(true)" oninput="mselFiltrar(this.value)">
+      <div class="msel-list" id="f-itens" style="display:none">${itens.map(i=>`<label class="msel-opt" data-nome="${esc(i.nome.toLowerCase())}"><input type="checkbox" value="${i.id}" data-label="${esc(i.nome)}" ${vinculados.has(i.id)?'checked':''} onchange="mselChips()"> ${esc(i.nome)}<span class="tag">${esc(catNome(i.categoria))}</span></label>`).join('')}<div class="msel-vazio" id="f-vazio" style="display:${itens.length?'none':'block'}">${itens.length?'Nenhum item encontrado.':'Nenhum item de categoria comprável cadastrado.'}</div></div>
+    </div></div>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModalFornecedor()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarFornecedor('${id||''}')">Salvar</button></div>`);
+  mselChips();
 }
+function fecharModalFornecedor(){if(_fornAtalho){_fornAtalho=null;closeModal2()}else closeModal()}
+function mselAbrir(abrir){const l=document.getElementById('f-itens');if(l)l.style.display=abrir?'block':'none'}
+function mselFiltrar(q){
+  q=q.trim().toLowerCase();let vis=0;
+  document.querySelectorAll('#f-itens .msel-opt').forEach(o=>{const ok=!q||o.dataset.nome.includes(q);o.style.display=ok?'':'none';if(ok)vis++});
+  const v=document.getElementById('f-vazio');if(v)v.style.display=vis?'none':'block';
+  mselAbrir(true);
+}
+function mselChips(){
+  const box=document.getElementById('f-chips');if(!box)return;
+  box.innerHTML=[...document.querySelectorAll('#f-itens input:checked')].map(c=>`<span class="msel-chip">${esc(c.dataset.label)}<button type="button" title="Remover" onclick="mselDesmarcar('${c.value}')">×</button></span>`).join('');
+}
+function mselDesmarcar(itemId){const c=document.querySelector(`#f-itens input[value="${itemId}"]`);if(c){c.checked=false;mselChips()}}
+document.addEventListener('mousedown',e=>{const m=document.getElementById('f-msel');if(m&&!m.contains(e.target))mselAbrir(false)});
 async function salvarFornecedor(id){
   const nome=document.getElementById('f-nome').value.trim();
   if(!nome)return toast('⚠️ Informe o nome do fornecedor.');
@@ -1745,9 +2180,10 @@ async function salvarFornecedor(id){
   }
   if(adicionar.length){
     const{data,error}=await sb.from('fornecedor_itens').insert(adicionar).select();
-    if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao vincular Matérias-Primas: '+error.message);
+    if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao vincular itens: '+error.message);
     db.fornecedor_itens.push(...data);
   }
+  if(_fornAtalho){const cb=_fornAtalho;_fornAtalho=null;closeModal2();cb(db.fornecedores.find(x=>x.id===fid));return}
   closeModal();render();
 }
 async function toggleFornecedor(id){
@@ -1758,19 +2194,22 @@ async function toggleFornecedor(id){
   f.status=novo;render();
 }
 /* ---- Descontos ---- */
+function descontoResumo(p){return p.tipo==='fixa'?p.desconto_fixo+'%':(p.faixas||[]).map(fx=>`${fx.quantidade_min}–${fx.quantidade_max===null?'∞':fx.quantidade_max}: ${fx.percentual_desconto}%`).join(' · ')||'—'}
 function cfgDescontos(b){
+  const T='cfg_descontos',F=tabelaFiltravel(T,()=>[...db.parcerias].sort((a,b)=>a.ordem-b.ordem),{nome:p=>p.nome,tipo:p=>p.tipo==='fixa'?'Fixa':'Escalonada',desconto:p=>descontoResumo(p),status:p=>p.status});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🤝 Descontos Comerciais</div>
     <button class="btn btn-purple btn-sm" onclick="modalDescontos()">+ Novo desconto</button></div>
-  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
-  ${[...db.parcerias].sort((a,b)=>a.ordem-b.ordem).map(p=>`<div class="card">
-    <div style="display:flex;justify-content:space-between"><b>${esc(p.nome)}</b>
-      <span><button class="iconbtn" onclick="modalDescontos('${p.id}')">✏️</button>
-      <button class="iconbtn" onclick="toggleDescontos('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirDesconto('${p.id}')">🗑️</button>`:''}</span></div>
-    <div style="margin-top:6px"><span class="tag ${p.status==='ativo'?'g':'r'}">${p.status}</span> <span class="tag">${p.tipo==='fixa'?'Desconto fixo '+p.desconto_fixo+'%':'Escalonada'}</span></div>
-    ${p.tipo==='escalonada'?(p.faixas||[]).map(fx=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px dashed var(--border);margin-top:4px">
-      <span style="color:var(--muted)">${fx.quantidade_min} a ${fx.quantidade_max===null?'+∞':fx.quantidade_max} itens</span><b style="color:var(--green)">${fx.percentual_desconto}%</b></div>`).join(''):''}
-  </div>`).join('')}</div>`;
+  ${F.barra}<div class="table-wrap"><table>
+  <tr>${thCol(T,'nome','Nome')}${thCol(T,'tipo','Tipo')}${thCol(T,'desconto','Desconto')}${thCol(T,'status','Status')}<th>Ações</th></tr>
+  ${F.rows.map(p=>`<tr>
+    <td><b>${esc(p.nome)}</b></td>
+    <td><span class="tag">${p.tipo==='fixa'?'Fixa':'Escalonada'}</span></td>
+    <td style="font-size:12px">${esc(descontoResumo(p))}</td>
+    <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
+    <td><button class="iconbtn" onclick="modalDescontos('${p.id}')">✏️</button>
+      <button class="iconbtn" onclick="toggleDescontos('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirDesconto('${p.id}')">🗑️</button>`:''}</td>
+  </tr>`).join('')||linhaSemResultado(5,T)}</table></div>`;
 }
 function modalDescontos(id){
   const p=id?db.parcerias.find(x=>x.id===id):null;
@@ -1848,6 +2287,7 @@ async function toggleDescontos(id){
 }
 /* ---- Deslocamento (ex-Taxas + alíquota da taxa) ---- */
 function cfgDeslocamento(b){
+  const T='cfg_deslocamento',F=tabelaFiltravel(T,()=>[...db.taxas_deslocamento].sort((a,b)=>a.ordem-b.ordem),{nome:t=>t.nome,valor:t=>fmt(t.valor),status:t=>t.status});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🚗 Deslocamento</div>
     <button class="btn btn-purple btn-sm" onclick="modalTaxa()">+ Nova taxa</button></div>
@@ -1858,14 +2298,14 @@ function cfgDeslocamento(b){
       <button class="btn btn-primary btn-sm" onclick="salvarAliquotaTaxa()">Salvar</button>
     </div>
   </div>
-  <div class="table-wrap"><table>
-  <tr><th>Ordem</th><th>Localidade</th><th>Valor</th><th>Status</th><th>Ações</th></tr>
-  ${[...db.taxas_deslocamento].sort((a,b)=>a.ordem-b.ordem).map(t=>`<tr>
+  ${F.barra}<div class="table-wrap"><table>
+  <tr><th>Ordem</th>${thCol(T,'nome','Localidade')}${thCol(T,'valor','Valor')}${thCol(T,'status','Status')}<th>Ações</th></tr>
+  ${F.rows.map(t=>`<tr>
     <td>${t.ordem}</td><td><b>${esc(t.nome)}</b></td><td class="money">${fmt(t.valor)}</td>
     <td><span class="badge ${t.status==='ativo'?'ativo':'inativo'}">${t.status}</span></td>
     <td><button class="iconbtn" onclick="modalTaxa('${t.id}')">✏️</button>
     <button class="iconbtn" onclick="toggleTaxa('${t.id}')">${t.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirTaxa('${t.id}')">🗑️</button>`:''}</td>
-  </tr>`).join('')}</table></div>`;
+  </tr>`).join('')||linhaSemResultado(5,T)}</table></div>`;
 }
 async function salvarAliquotaTaxa(){
   const t=parseFloat(document.getElementById('al-taxa').value);
@@ -1961,10 +2401,20 @@ async function removerLogo(){
 function aplicarLogo(){
   const h=document.getElementById('h-logo'), emb=document.getElementById('login-logo-emb');
   const url=db&&db.identidade_visual&&db.identidade_visual.logotipo;
+  aplicarMarcaLogin();
   if(!url){if(h)h.textContent='🌿';if(emb)emb.textContent='🌿';return}
   if(h)h.innerHTML=`<img class="logo-img" src="${url}" alt="logo">`;
-  if(emb)emb.innerHTML=`<img class="logo-img" src="${url}" alt="logo" style="height:56px;max-width:180px;object-fit:contain">`;
+  if(emb)emb.innerHTML=`<img class="logo-img" src="${url}" alt="logo">`;
 }
+/* Painel da tela de login: logo cadastrada em Configurações → Identidade Visual; sem logo, o nome da loja estilizado */
+function aplicarMarcaLogin(){
+  const box=document.getElementById('login-marca');if(!box)return;
+  const url=db&&db.identidade_visual&&db.identidade_visual.logotipo,nome=nomeLojaAtual();
+  const v=document.getElementById('login-vidro-nome');if(v)v.textContent=nome;
+  if(url){box.innerHTML=`<img src="${url}" alt="${esc(nome)}">`;const img=box.querySelector('img');img.onerror=()=>{box.innerHTML=marcaTexto(nome)};return}
+  box.innerHTML=marcaTexto(nome);
+}
+function marcaTexto(nome){const p=nome.trim().split(/\s+/),ult=p.pop();return `<div class="login-marca-nome">${p.length?esc(p.join(' ')):''}<span>${esc(ult||'')}</span></div>`}
 
 /* ---- Nome da loja ---- */
 function nomeLojaAtual(){return (db&&db.identidade_visual&&db.identidade_visual.nome_loja)||'BEST BUDS'}
@@ -1977,6 +2427,7 @@ function aplicarNomeLoja(){
   if(h1)h1.innerHTML=(partes.length?esc(partes.join(' '))+' ':'')+'<span>'+esc(ultima||'')+'</span>';
   const hd=document.getElementById('h-nome-loja');
   if(hd){hd.textContent=nome;hd.title=nome}
+  aplicarMarcaLogin();
 }
 
 /* ---- Paleta de cores (todos os hex usados no site) ---- */
@@ -2146,9 +2597,20 @@ const GETTERS={
  bau:{operacao_id:r=>r.operacao_id,data:r=>r.data,usuario_nome:r=>r.usuario_nome,item_nome:r=>r.item_nome,tipo_movimento:r=>r.tipo_movimento,quantidade:r=>r.quantidade,saldo_resultante:r=>r.saldo_resultante,origem:r=>r.origem},
  financeiro:{data:r=>r.data,usuario_nome:r=>r.usuario_nome,tipo_label:r=>r.tipo_label,itens:r=>r.itens,desconto:r=>r.desconto,deslocamento:r=>r.deslocamento,descricao:r=>r.descricao,entrada:r=>r.entrada,repasse:r=>r.repasse,valor:r=>r.valor,status:r=>r.status}
 };
+/* Tabelas de Configurações usam o MESMO filtro do Baú/Financeiro: cada tabela registra sua fonte de linhas e os
+   "getters" (texto exibido em cada coluna). A coluna de chave "data" usa o filtro De/Até. */
+const FONTES_FILTRO={};
+function tabelaFiltravel(tipo,fonte,getters){
+  FONTES_FILTRO[tipo]=fonte;GETTERS[tipo]=getters;
+  if(!regConsulta[tipo])regConsulta[tipo]={page:1,size:10,filtros:{}};
+  const todas=fonte(),rows=aplicarFiltros(todas,tipo);
+  return{todas,rows,barra:filtroAtivo(tipo)?`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">${contadorFiltro(tipo,rows.length,todas.length)}</div>`:''};
+}
+function linhaSemResultado(n,tipo){return `<tr><td colspan="${n}" class="empty">${filtroAtivo(tipo)?'Nenhum registro corresponde aos filtros.':'Nenhum registro cadastrado.'}</td></tr>`}
 function valoresColuna(tipo,key){
  let a=[];
- if(tipo==='bau')a=db.estoque_bau.map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));
+ if(FONTES_FILTRO[tipo])a=FONTES_FILTRO[tipo]();
+ else if(tipo==='bau')a=db.estoque_bau.map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));
  else if(tipo==='financeiro')a=linhasFinanceiro();
  const get=GETTERS[tipo][key];
  return [...new Set(a.map(r=>String(get?get(r):(r[key]??''))).filter(v=>v!==''))].sort((x,y)=>x.localeCompare(y,'pt-BR',{numeric:true}));
@@ -2283,7 +2745,80 @@ function excluirSelecionadas(tipo){
  });
 }
 
+/* ================= LISTA SUSPENSA PESQUISÁVEL (todos os <select>) =================
+   Cada <select> ganha um botão com lista + busca. O <select> original continua no DOM (oculto) e segue
+   sendo a fonte do valor, então todo onchange/value existente funciona igual.
+   Adaptação por campo: busca aparece com mais de 6 opções; optgroup vira título de grupo;
+   opção vazia "hidden" vira placeholder; data-ssel-extra="fn" acrescenta um rodapé (ex.: cadastrar fornecedor);
+   data-nosearch desliga o recurso num select específico. */
+const SSEL_MIN_BUSCA=6;
+let _sselAberto=null,_sselPop=null;
+function sselNorm(t){return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
+(function(){const P=HTMLSelectElement.prototype;['value','selectedIndex'].forEach(k=>{const d=Object.getOwnPropertyDescriptor(P,k);Object.defineProperty(P,k,{configurable:true,enumerable:d.enumerable,get(){return d.get.call(this)},set(v){d.set.call(this,v);if(this._ssel)this._ssel.sync()}})})})();
+function sselAplicar(sel){
+  if(sel._ssel||sel.multiple||sel.hasAttribute('data-nosearch'))return;
+  const btn=document.createElement('button');btn.type='button';btn.className='ssel-btn';
+  btn.style.cssText=sel.style.cssText;btn.style.display='';
+  sel.style.display='none';sel.after(btn);
+  const sync=()=>{
+    const o=sel.options[sel.selectedIndex];const vazio=!o||(o.value===''&&(o.hidden||o.disabled));
+    btn.innerHTML=`<span class="ssel-lbl ${vazio?'ph':''}">${esc(o?o.text:'Selecione...')}</span><span class="ssel-car">▼</span>`;
+    btn.disabled=sel.disabled;btn.title=o&&!vazio?o.text:'';
+  };
+  sel._ssel={btn,sync};
+  btn.addEventListener('click',()=>{_sselAberto===sel?sselFechar():sselAbrir(sel)});
+  btn.addEventListener('keydown',e=>{if(['ArrowDown','Enter',' '].includes(e.key)){e.preventDefault();sselAbrir(sel)}});
+  sel.addEventListener('change',sync);
+  new MutationObserver(sync).observe(sel,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled','selected']});
+  sync();
+}
+function sselAbrir(sel){
+  sselFechar();if(sel.disabled)return;
+  _sselAberto=sel;sel._ssel.btn.classList.add('aberto');
+  const pop=document.createElement('div');pop.className='ssel-pop';_sselPop=pop;
+  const itens=[];
+  [...sel.children].forEach(ch=>{
+    if(ch.tagName==='OPTGROUP'){itens.push({grp:ch.label});[...ch.children].forEach(o=>itens.push({o}))}
+    else itens.push({o:ch});
+  });
+  const visiveis=itens.filter(x=>x.grp||!(x.o.hidden||(x.o.disabled&&x.o.value==='')));
+  const nOps=visiveis.filter(x=>x.o).length;
+  const extraFn=sel.dataset.sselExtra&&window[sel.dataset.sselExtra];
+  const comBusca=nOps>SSEL_MIN_BUSCA||!!extraFn;
+  pop.innerHTML=`${comBusca?'<input class="ssel-q" placeholder="🔍 Pesquisar..." autocomplete="off">':''}<div class="ssel-ops"></div><div class="ssel-extra"></div>`;
+  const q=pop.querySelector('.ssel-q'),ops=pop.querySelector('.ssel-ops'),extra=pop.querySelector('.ssel-extra');
+  let hl=-1,lista=[];
+  const desenhar=()=>{
+    const t=q?sselNorm(q.value.trim()):'';
+    const res=[];let grp=null;
+    visiveis.forEach(x=>{if(x.grp){grp=x.grp;return}if(!t||sselNorm(x.o.text).includes(t)){if(grp!==null&&!res.some(r=>r.grp===grp))res.push({grp});res.push(x)}});
+    lista=res.filter(x=>x.o);hl=lista.findIndex(x=>x.o.selected&&x.o.value!=='');if(hl<0&&t&&lista.length)hl=0;
+    ops.innerHTML=res.map(x=>x.grp!==undefined?`<div class="ssel-grp">${esc(x.grp)}</div>`:`<div class="ssel-op ${x.o.selected&&x.o.value!==''?'sel':''} ${lista[hl]===x?'hl':''}" data-i="${lista.indexOf(x)}">${esc(x.o.text)}</div>`).join('')||`<div class="ssel-vazio">Nenhum resultado${t?' para “'+esc(q.value.trim())+'”':''}.</div>`;
+    extra.innerHTML=extraFn?extraFn(sel,q?q.value.trim():''):'';
+  };
+  const escolher=i=>{const x=lista[i];if(!x||x.o.disabled)return;sel.value=x.o.value;sel.dispatchEvent(new Event('change',{bubbles:true}));sselFechar();sel._ssel.btn.focus()};
+  ops.addEventListener('mousedown',e=>{const d=e.target.closest('.ssel-op');if(d){e.preventDefault();escolher(+d.dataset.i)}});
+  const mover=dlt=>{if(!lista.length)return;hl=(hl+dlt+lista.length)%lista.length;ops.querySelectorAll('.ssel-op').forEach(d=>d.classList.toggle('hl',+d.dataset.i===hl));const d=ops.querySelector('.ssel-op.hl');if(d)d.scrollIntoView({block:'nearest'})};
+  const teclas=e=>{if(e.key==='ArrowDown'){e.preventDefault();mover(1)}else if(e.key==='ArrowUp'){e.preventDefault();mover(-1)}else if(e.key==='Enter'){e.preventDefault();escolher(hl<0?0:hl)}else if(e.key==='Escape'){e.preventDefault();sselFechar();sel._ssel.btn.focus()}};
+  if(q){q.addEventListener('input',desenhar);q.addEventListener('keydown',teclas)}else pop.addEventListener('keydown',teclas);
+  pop.tabIndex=-1;
+  document.body.appendChild(pop);desenhar();
+  const r=sel._ssel.btn.getBoundingClientRect(),w=Math.max(r.width,240);
+  pop.style.width=w+'px';pop.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+'px';
+  if(window.innerHeight-r.bottom<320&&r.top>window.innerHeight-r.bottom){pop.style.bottom=(window.innerHeight-r.top+4)+'px'}else pop.style.top=(r.bottom+4)+'px';
+  (q||pop).focus();
+  const d=ops.querySelector('.ssel-op.sel');if(d)d.scrollIntoView({block:'nearest'});
+}
+function sselFechar(){if(_sselPop){_sselPop.remove();_sselPop=null}if(_sselAberto){_sselAberto._ssel.btn.classList.remove('aberto');_sselAberto=null}}
+document.addEventListener('mousedown',e=>{if(_sselPop&&!_sselPop.contains(e.target)&&!(_sselAberto&&_sselAberto._ssel.btn.contains(e.target)))sselFechar()});
+window.addEventListener('resize',sselFechar);
+document.addEventListener('scroll',e=>{if(_sselPop&&!_sselPop.contains(e.target))sselFechar()},true);
+new MutationObserver(ms=>{ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.tagName==='SELECT')sselAplicar(n);else n.querySelectorAll&&n.querySelectorAll('select').forEach(sselAplicar)}));if(_sselAberto&&!_sselAberto.isConnected)sselFechar()}).observe(document.documentElement,{childList:true,subtree:true});
+document.querySelectorAll('select').forEach(sselAplicar);
+
 /* ================= INIT ================= */
+document.getElementById('login-olho').innerHTML=OLHO_ABERTO;
+aplicarMarcaLogin();
 (async()=>{
   const{data:{session:sessAuth}}=await sb.auth.getSession();
   if(sessAuth?.user){
