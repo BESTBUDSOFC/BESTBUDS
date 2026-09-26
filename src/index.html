@@ -377,7 +377,7 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.9.0';
+const VERSAO='v4.9.1';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -891,7 +891,7 @@ function renderBau(c){
       const linhaMov=(m,sub,ultima)=>`<tr class="${sub?'sublinha'+(ultima?' ultima':''):''}${rev(m)?' linha-revertida':''}">${sub?'<td class="td-exp"><span class="sub-guia"></span></td>'+(podeExcluirLinhas()?'<td></td>':''):tdExpandir('',0)+tdSelIds('bau',[m.id])}<td>${sub?'<span class="sub-seta">↳</span> ':''}${dataHoraBR(m.data)}</td><td>${esc(m.usuario_nome||'—')}</td><td>${esc(m.item_nome||'—')}</td>
         <td><span class="tag ${ent(m)?'g':'r'}">${MOV_LABEL[m.tipo_movimento]||m.tipo_movimento}</span>${!sub&&rev(m)?tagRev:''}</td>
         <td class="${ent(m)?'mov-in':'mov-out'}">${ent(m)?'+':'−'}${m.quantidade}</td>
-        <td>${m.saldo_resultante}</td><td style="color:var(--muted)">${esc(m.origem||'—')}</td>${isGerente()?`<td>${sub?'':acoesBau('m:'+m.id,rev(m))}</td>`:''}</tr>`;
+        <td>${m.saldo_resultante}</td><td style="color:var(--muted)">${esc(m.origem||'—')}</td>${isGerente()?`<td>${sub?'':acoesBau(m.operacao_id||('m:'+m.id),rev(m))}</td>`:''}</tr>`;
       if(!g.grupo)return linhaMov(g.movs[0],false);
       const aberto=expandidos.has(g.chave);
       const grev=g.movs.every(rev);
