@@ -377,7 +377,7 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.9.1';
+const VERSAO='v4.9.2';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -947,7 +947,7 @@ function reverterLancamentoBau(chave){
   const ms=movsDoLancamentoBau(chave).filter(m=>m.status!=='revertida');if(!ms.length)return;
   const neg=saldoNegativoAoReverter(ms);
   if(neg.length)return toast('⚠️ Não é possível reverter: o saldo ficaria negativo em '+neg.join(', ')+'. Reverta antes as produções/saídas que usaram esse estoque.');
-  confirmar('Reverter lançamento do Baú',(ms.length>1?'As '+ms.length+' movimentações deste lançamento':'A movimentação')+' deixarão de contar no saldo (continuam no livro como revertidas). Confirmar?',async()=>{
+  confirmar('Reverter lançamento do Baú',(ms.length>1?'As '+ms.length+' movimentações deste lançamento deixarão de contar no saldo (continuam no livro como revertidas).':'A movimentação deixará de contar no saldo (continua no livro como revertida).')+' Confirmar?',async()=>{
     if(!await reverterMovsBau(ms))return;
     reg('Lançamento do Baú revertido',chave+' — '+ms.length+' movimentação(ões)');render();toast('✅ Lançamento revertido.');
   });
