@@ -209,6 +209,19 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .cart-line .iconbtn{color:var(--danger);border:1px solid var(--danger);background:rgba(var(--danger-rgb),.08);font-weight:800}
 .cart-line .iconbtn:hover{background:rgba(var(--danger-rgb),.25)}
 .iconbtn:hover{background:var(--border)}
+.td-exp{width:34px;padding-left:6px!important;padding-right:0!important}
+.btn-exp{display:inline-flex;align-items:center;gap:2px;background:#282836;color:var(--text);border-radius:6px;padding:2px 6px;font-size:11px;font-weight:800;line-height:18px;transition:background .15s}
+.btn-exp small{font-size:10px;color:var(--muted)}
+.btn-exp.aberto{background:var(--purple);color:#fff}.btn-exp.aberto small{color:#fff}
+.btn-exp:hover{background:#34344A}.btn-exp.aberto:hover{background:var(--purple-hover)}
+.btn-exp{display:inline-flex}.btn-exp:not(.aberto){transform:none}
+tr.linha-pai.aberta td{border-bottom-color:transparent}
+tr.sublinha td{background:rgba(var(--purple-rgb),.06);font-size:13px;border-bottom:1px dashed var(--border)}
+tr.sublinha td:first-child{position:relative}
+tr.sublinha .sub-guia{position:absolute;left:16px;top:0;bottom:0;border-left:2px solid var(--purple)}
+tr.sublinha.ultima .sub-guia{bottom:50%}
+tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
+.sub-seta{color:var(--purple);font-weight:800;margin-right:2px}
 .aux-linha{display:grid;grid-template-columns:1fr 78px 96px 34px;gap:6px;align-items:center;margin-bottom:6px}
 .aux-valor{text-align:right;font-weight:700;color:var(--purple)}
 .linha-aux td{background:rgba(var(--purple-rgb),.05)}
@@ -327,7 +340,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <span class="vselo" id="h-versao">v4.7.0</span>
+  <span class="vselo" id="h-versao">v4.8.0</span>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -363,7 +376,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.7.0';
+const VERSAO='v4.8.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -798,7 +811,7 @@ async function finalizarVenda(){
   db.vendas.unshift(v);
   reg('Venda finalizada',`ID ${v.operacao_id||'—'} — ${v.itens.map(i=>i.qtd+'× '+i.nome).join(', ')} — total ${fmt(v.total)}`);
   limparCupom();
-  toast(`✅ Venda ${v.operacao_id?'ID '+v.operacao_id+' ':''}registrada!\nTotal: ${fmt(v.total)} · Repasse: ${fmt(v.cota_funcionario)} · Loja: ${fmt(v.receita_loja)}`);
+  toast(`✅ Venda registrada!\nTotal: ${fmt(v.total)} · Repasse: ${fmt(v.cota_funcionario)} · Loja: ${fmt(v.receita_loja)}`);
   render();
 }
 
@@ -849,7 +862,8 @@ function renderBau(c){
   if(bauTela==='compra')return telaCompraHTML(c);
   if(bauTela==='producao')return telaProducaoHTML(c);
   const itens=itensOrdenados().filter(i=>controlaEstoque(i.categoria)&&i.status==='ativo');
-  const movs=[...db.estoque_bau].map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));const movsF=aplicarFiltros(movs,'bau');ordenarLista(movsF,'data','desc');const paginaBau=pagina(movsF,'bau');
+  const movs=[...db.estoque_bau].map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));const movsF=aplicarFiltros(movs,'bau');
+  const gruposBau=agruparBau(movs,movsF);const paginaBau=pagina(gruposBau,'bau');
   const alertas=itensComAlerta();
   c.innerHTML=`
   <h2 class="page-title">Baú — Estoque de Insumos</h2>
@@ -871,15 +885,56 @@ function renderBau(c){
       </div>`:''}
     </div>`}).join('')||'<div class="empty">Sem itens com saldo.</div>'}</div>
   <div class="section-title"><span>📜 Livro de movimentações</span></div>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">${isGerente()?`<button class="btn btn-export btn-sm" onclick="exportarRegistros('bau')">⬇ Exportar CSV</button>`:``}${contadorFiltro('bau',movsF.length,db.estoque_bau.length)}${botaoExcluirSel('bau')}</div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">${isGerente()?`<button class="btn btn-export btn-sm" onclick="exportarRegistros('bau')">⬇ Exportar CSV</button>`:``}${contadorFiltro('bau',gruposBau.length,agruparBau(movs,movs).length)}${botaoExcluirSel('bau')}</div>
   <div class="table-wrap"><table>
-    <tr>${thSelTodos('bau',paginaBau.rows)}${thCol('bau','operacao_id','ID')}${thCol('bau','data','Data/hora')}${thCol('bau','usuario_nome','Usuário')}${thCol('bau','item_nome','Item')}${thCol('bau','tipo_movimento','Tipo')}${thCol('bau','quantidade','Qtd')}${thCol('bau','saldo_resultante','Saldo resultante')}${thCol('bau','origem','Origem')}${isSocioOuDiretor()?'<th>Ações</th>':''}</tr>
-    ${paginaBau.rows.map(m=>{const it=db.itens.find(i=>i.id===m.item_id);return`
-    <tr>${tdSel('bau',m.id)}<td><code>${esc(m.operacao_id||'—')}</code></td><td>${dataHoraBR(m.data)}</td><td>${esc(m.usuario_nome||'—')}</td><td>${it?esc(it.nome):'—'}</td>
-    <td><span class="tag ${(m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada')?'g':'r'}">${MOV_LABEL[m.tipo_movimento]||m.tipo_movimento}</span></td>
-    <td class="${(m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada')?'mov-in':'mov-out'}">${(m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada')?'+':'−'}${m.quantidade}</td>
-    <td>${m.saldo_resultante}</td><td style="color:var(--muted)">${esc(m.origem||'—')}</td>${isSocioOuDiretor()?`<td><button class="iconbtn" onclick="excluirMovimentoBau('${m.id}')">🗑️</button></td>`:''}</tr>`}).join('')||`<tr><td colspan="${isSocioOuDiretor()?9:8}" class="empty">Nenhuma movimentação registrada.</td></tr>`}
+    <tr><th class="td-exp"></th>${thSelTodosIds('bau',paginaBau.rows.map(g=>g.ids))}${thCol('bau','data','Data/hora')}${thCol('bau','usuario_nome','Usuário')}${thCol('bau','item_nome','Item')}${thCol('bau','tipo_movimento','Tipo')}${thCol('bau','quantidade','Qtd')}${thCol('bau','saldo_resultante','Saldo resultante')}${thCol('bau','origem','Origem')}${isSocioOuDiretor()?'<th>Ações</th>':''}</tr>
+    ${paginaBau.rows.map(g=>{
+      const ent=m=>m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada';
+      const linhaMov=(m,sub,ultima)=>`<tr class="${sub?'sublinha'+(ultima?' ultima':''):''}">${sub?'<td class="td-exp"><span class="sub-guia"></span></td>'+(podeExcluirLinhas()?'<td></td>':''):tdExpandir('',0)+tdSelIds('bau',[m.id])}<td>${sub?'<span class="sub-seta">↳</span> ':''}${dataHoraBR(m.data)}</td><td>${esc(m.usuario_nome||'—')}</td><td>${esc(m.item_nome||'—')}</td>
+        <td><span class="tag ${ent(m)?'g':'r'}">${MOV_LABEL[m.tipo_movimento]||m.tipo_movimento}</span></td>
+        <td class="${ent(m)?'mov-in':'mov-out'}">${ent(m)?'+':'−'}${m.quantidade}</td>
+        <td>${m.saldo_resultante}</td><td style="color:var(--muted)">${esc(m.origem||'—')}</td>${isSocioOuDiretor()?`<td>${sub?'':`<button class="iconbtn" onclick="excluirMovimentoBau('${m.id}')">🗑️</button>`}</td>`:''}</tr>`;
+      if(!g.grupo)return linhaMov(g.movs[0],false);
+      const aberto=expandidos.has(g.chave);
+      return `<tr class="linha-pai ${aberto?'aberta':''}">${tdExpandir(g.chave,g.filhos.length)}${tdSelIds('bau',g.ids)}<td>${dataHoraBR(g.data)}</td><td>${esc(g.usuario)}</td><td>${esc(g.resumoItens)}</td>
+        <td><span class="tag">${esc(g.rotulo)}</span></td><td style="color:var(--muted)">${g.movs.length} mov.</td><td style="color:var(--muted)">—</td><td style="color:var(--muted)">${esc(g.origem)}</td>${isSocioOuDiretor()?`<td><button class="iconbtn" title="Excluir o lançamento inteiro" onclick="excluirGrupoBau('${g.chave}')">🗑️</button></td>`:''}</tr>`+
+        (aberto?g.filhos.map((m,n)=>linhaMov(m,true,n===g.filhos.length-1)).join(''):'');
+    }).join('')||`<tr><td colspan="${isSocioOuDiretor()?10:9}" class="empty">Nenhuma movimentação registrada.</td></tr>`}
   </table></div>${paginacao('bau',paginaBau)}`;
+}
+/* Baú: movimentos da mesma operação (produção, produção em cascata, compra com vários insumos) viram um lançamento com sublinhas */
+function agruparBau(todos,filtrados){
+  const ok=new Set(filtrados.map(m=>m.id)),porOp={};
+  todos.forEach(m=>{const k=m.operacao_id||('m:'+m.id);(porOp[k]=porOp[k]||[]).push(m)});
+  return Object.entries(porOp).map(([chave,ms])=>{
+    const passam=ms.filter(m=>ok.has(m.id));if(!passam.length)return null;
+    // ordem lógica: etapas anteriores da cascata primeiro; dentro de cada etapa, saídas antes das entradas
+    const pos=m=>(/\(para /.test(m.origem||'')?0:1)*10+(m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada'?1:0);
+    ms.sort((a,b)=>(new Date(a.data)-new Date(b.data))||(pos(a)-pos(b)));
+    const data=ms.reduce((d,m)=>m.data>d?m.data:d,ms[0].data);
+    if(ms.length===1)return{grupo:false,chave,movs:ms,ids:[ms[0].id],data};
+    const o=(ms[0].origem||'').toLowerCase(),cascata=o.startsWith('produção em cascata'),compra=ms.every(m=>m.tipo_movimento==='entrada_compra'),producao=!compra&&ms.some(m=>/producao|deducao/.test(m.tipo_movimento));
+    const rotulo=cascata?'Produção em cascata':compra?'Compra':producao?'Produção':'Lançamento';
+    const origem=cascata?(ms.find(m=>/\(para /.test(m.origem||''))?.origem.match(/\(para (.*)\)/)?.[1]||ms[0].origem):compra?[...new Set(ms.map(m=>(m.origem||'').replace(/^compra:\s*/,'')))].join(' + '):(ms[0].origem||'—');
+    const nomes=[...new Set(ms.map(m=>m.item_nome))];
+    return{grupo:true,chave,movs:ms,filhos:ms.filter(m=>ok.has(m.id)),ids:ms.map(m=>m.id),data,usuario:ms[0].usuario_nome||'—',rotulo,
+      origem:(cascata?'para ':'')+origem,resumoItens:nomes.length<=2?nomes.join(', '):nomes.slice(0,2).join(', ')+' +'+(nomes.length-2)};
+  }).filter(Boolean).sort((a,b)=>new Date(b.data)-new Date(a.data));
+}
+function tdSelIds(tipo,ids){if(!podeExcluirLinhas())return '';const marc=ids.every(id=>selExclusao[tipo].has(id));return `<td><input type="checkbox" style="width:auto" data-sel-${tipo} value="${ids.join(',')}" ${marc?'checked':''} onchange="toggleSelLinha('${tipo}','${ids.join(',')}',this.checked)"></td>`}
+function thSelTodosIds(tipo,listas){if(!podeExcluirLinhas())return '';const todos=listas.flat();return `<th style="width:34px"><input type="checkbox" id="sel-todos-${tipo}" style="width:auto" title="Selecionar todas" onchange="toggleSelTodos('${tipo}',this.checked)" ${todos.length&&todos.every(id=>selExclusao[tipo].has(id))?'checked':''}></th>`}
+function excluirGrupoBau(chave){
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir movimentações.');
+  const ms=db.estoque_bau.filter(m=>(m.operacao_id||('m:'+m.id))===chave);if(!ms.length)return;
+  confirmar('Excluir lançamento do Baú',`As ${ms.length} movimentações deste lançamento serão removidas e os saldos recalculados. Confirmar?`,async()=>{
+    const ids=ms.map(m=>m.id),itens=[...new Set(ms.map(m=>m.item_id))];
+    const{error}=await sb.from('estoque_bau').delete().in('id',ids);
+    if(error)return toast('⚠️ Erro ao excluir: '+error.message);
+    db.estoque_bau=db.estoque_bau.filter(m=>!ids.includes(m.id));
+    for(const it of itens)await recalcularSaldosItem(it);
+    ids.forEach(id=>selExclusao.bau.delete(id));
+    reg('Lançamento do Baú excluído',chave+' — '+ids.length+' movimentação(ões)');render();toast('✅ Lançamento excluído.');
+  });
 }
 function modalAjusteBau(itemId,tipo){
   const it=db.itens.find(i=>i.id===itemId);if(!it)return;
@@ -995,6 +1050,7 @@ async function delReceita(id){
 }
 function excluirReceita(id){
   if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir linhas de cadastro.');
+  if((db.receitas.find(x=>x.id===id)||{}).status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');
   delReceita(id);
 }
 function execProducao(rid){
@@ -1100,7 +1156,7 @@ async function confirmarCascata(rid,q){
   if(error){if(btn){btn.disabled=false;btn.textContent='Confirmar produção em cascata'}return toast('⚠️ Erro ao gravar a produção: '+error.message)}
   data.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
   reg('Produção em cascata',`${alvo} × ${q} — ID ${opId} — ${pl.passos.map(p=>p.r.nome+' ×'+p.qtd).join(' → ')}`);
-  closeModal2();closeModal();toast('✅ Produção em cascata executada. ID: '+opId);render();
+  closeModal2();closeModal();toast('✅ Produção em cascata executada.');render();
 }
 async function confirmarProducao(rid){
   const r=db.receitas.find(x=>x.id===rid);if(!r)return;
@@ -1125,7 +1181,7 @@ async function confirmarProducao(rid){
   const{data,error}=await sb.from('estoque_bau').insert(movimentos).select();
   if(error){err.textContent='Erro ao gravar produção: '+error.message;err.style.display='block';return}
   data.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
-  reg('Produção executada',`${r.nome} — ID ${producaoId} — quantidade ${q}`);closeModal();toast('✅ Produção executada. ID: '+producaoId);render();
+  reg('Produção executada',`${r.nome} — ID ${producaoId} — quantidade ${q}`);closeModal();toast('✅ Produção executada.');render();
 }
 
 /* ================= COMPRAS (ABA PRÓPRIA) ================= */
@@ -1389,7 +1445,6 @@ function paginacao(tipo,p){const q=regConsulta[tipo];return `<div style="display
 
 /* Colunas visíveis por usuário (persistidas no banco) */
 const COLS_FIN=[
- {key:'operacao_id',label:'ID',fixa:true},
  {key:'data',label:'Data/hora',fixa:true},
  {key:'usuario_nome',label:'Usuário'},
  {key:'tipo_label',label:'Tipo'},
@@ -1422,6 +1477,16 @@ function modalColunasFin(){
  <p class="muted" style="font-size:11px;margin-top:10px">A coluna Data/hora é sempre visível.</p>
  <div class="modal-actions"><button class="btn btn-primary" onclick="closeModal()">Fechar</button></div>`);
 }
+/* ---- Lançamento com sublinhas (venda→auxiliares, compra→itens, produção/compra no Baú→movimentos) ---- */
+const expandidos=new Set();
+function alternarExpandir(ch){expandidos.has(ch)?expandidos.delete(ch):expandidos.add(ch);render()}
+function tdExpandir(ch,n){return `<td class="td-exp">${n?`<button class="btn-exp ${expandidos.has(ch)?'aberto':''}" title="${expandidos.has(ch)?'Recolher':'Mostrar'} ${n} linha(s)" onclick="alternarExpandir('${esc(ch)}')">▸<small>${n}</small></button>`:''}</td>`}
+/* Agrupa linhas filtradas: o pai aparece se ele ou algum filho passou no filtro; sem o pai no filtro, mostra só os filhos que passaram */
+function agruparLinhas(todas,filtradas,chavePai){
+  const ok=new Set(filtradas),filhosDe={};
+  todas.filter(r=>chavePai(r)).forEach(r=>(filhosDe[chavePai(r)]=filhosDe[chavePai(r)]||[]).push(r));
+  return todas.filter(r=>!chavePai(r)).map(p=>{const fs=filhosDe[p.id]||[];return{p,todos:fs,filhos:ok.has(p)?fs:fs.filter(f=>ok.has(f)),passa:ok.has(p)||fs.some(f=>ok.has(f))}}).filter(g=>g.passa);
+}
 /* Repasse da venda dividido: cada auxiliar recebe o valor gravado (ou % × repasse); o principal fica com o restante */
 function repasseDaVenda(v){
   const cota=Number(v.cota_funcionario)||0;
@@ -1431,23 +1496,29 @@ function repasseDaVenda(v){
 function linhasFinanceiro(){
  const rows=[];
  db.vendas.filter(v=>v.status!=='excluida').forEach(v=>{const rp=repasseDaVenda(v);rows.push({id:'venda:'+v.id,tipo:'venda',operacao_id:v.operacao_id||'',data:v.data,usuario_nome:v.usuario_nome||'',tipo_label:'Venda',itens:(v.itens||[]).map(i=>i.qtd+'× '+i.nome).join(', '),desconto:v.parceria_nome||'—',deslocamento:(v.taxa_nome&&v.taxa_valor>0)?v.taxa_nome+' ('+fmt(v.taxa_valor)+')':'—',descricao:'—',entrada:v.receita_loja||0,repasse:rp.principal,valor:v.total||0,status:v.status,v});
-  rp.aux.forEach((a,k)=>rows.push({id:'aux:'+v.id+':'+k,tipo:'auxiliar',operacao_id:v.operacao_id||'',data:v.data,usuario_nome:a.nome||'?',tipo_label:'Auxiliar',itens:'—',desconto:'—',deslocamento:'—',descricao:'Referente ao auxílio na venda ID '+(v.operacao_id||'—'),entrada:null,repasse:a.valor,valor:null,status:v.status,v}))});
- db.compras.filter(k=>k.status!=='excluida').forEach(k=>rows.push({id:'compra:'+k.id,tipo:'compra',operacao_id:k.operacao_id||'',data:k.data,usuario_nome:k.usuario_nome||'',tipo_label:'Compra',itens:(k.itens||[]).map(i=>{const it=db.itens.find(x=>x.id===i.item_id);const nome=i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?');const q=i.qtd??i.quantidade;return (q??'?')+'× '+nome+(i.fornecedor_nome&&i.fornecedor_nome!==k.fornecedor_nome?' ('+i.fornecedor_nome+')':'')}).join(', ')||'—',desconto:'—',deslocamento:'—',descricao:k.descricao||'—',entrada:0,repasse:0,valor:-(k.valor_total||0),status:k.status,k}));
- (db.ajustes_caixa||[]).forEach(a=>rows.push({id:'ajuste:'+a.id,tipo:'ajuste',operacao_id:a.operacao_id||'',data:a.data,usuario_nome:a.usuario_nome||'',tipo_label:'Ajuste de Caixa ('+(a.tipo==='entrada'?'+':'−')+')',itens:'—',desconto:'—',deslocamento:'—',descricao:a.motivo||'—',entrada:0,repasse:0,valor:a.tipo==='entrada'?a.valor:-a.valor,status:'ativa',a}));
+  rp.aux.forEach((a,k)=>rows.push({id:'aux:'+v.id+':'+k,pai:'venda:'+v.id,tipo:'auxiliar',operacao_id:v.operacao_id||'',data:v.data,usuario_nome:a.nome||'?',tipo_label:'Auxiliar',itens:'—',desconto:'—',deslocamento:'—',descricao:'Referente ao auxílio na venda de '+(v.usuario_nome||'—'),entrada:null,repasse:a.valor,valor:null,status:v.status,v}))});
+ db.compras.filter(k=>k.status!=='excluida').forEach(k=>{rows.push({id:'compra:'+k.id,tipo:'compra',operacao_id:k.operacao_id||'',data:k.data,usuario_nome:k.usuario_nome||'',tipo_label:'Compra',itens:(k.itens||[]).map(i=>{const it=db.itens.find(x=>x.id===i.item_id);const nome=i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?');const q=i.qtd??i.quantidade;return (q??'?')+'× '+nome+(i.fornecedor_nome&&i.fornecedor_nome!==k.fornecedor_nome?' ('+i.fornecedor_nome+')':'')}).join(', ')||'—',desconto:'—',deslocamento:'—',descricao:k.descricao||'—',entrada:0,repasse:0,valor:-(k.valor_total||0),status:k.status,k});
+  if((k.itens||[]).length>1)(k.itens||[]).forEach((i,n)=>{const it=db.itens.find(x=>x.id===i.item_id);const q=Number(i.qtd??i.quantidade)||0;rows.push({id:'citem:'+k.id+':'+n,pai:'compra:'+k.id,tipo:'compra_item',operacao_id:k.operacao_id||'',data:k.data,usuario_nome:i.fornecedor_nome||k.fornecedor_nome||'',tipo_label:i.item_id?'Insumo':'Não controlado',itens:q+'× '+(i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?')),desconto:'—',deslocamento:'—',descricao:(i.item_id?'Entrada no Baú':'Sem entrada no Baú')+' · '+fmt(Number(i.preco_unitario)||0)+'/un',entrada:null,repasse:null,valor:-(q*(Number(i.preco_unitario)||0)),status:k.status,k})})});
+ (db.ajustes_caixa||[]).forEach(a=>rows.push({id:'ajuste:'+a.id,tipo:'ajuste',operacao_id:'',data:a.data,usuario_nome:a.usuario_nome||'',tipo_label:'Ajuste de Caixa ('+(a.tipo==='entrada'?'+':'−')+')',itens:'—',desconto:'—',deslocamento:'—',descricao:a.motivo||'—',entrada:0,repasse:0,valor:a.tipo==='entrada'?a.valor:-a.valor,status:a.status||'ativa',a}));
  return rows;
+}
+function caixaAtualValor(){return db.vendas.filter(v=>v.status==='ativa').reduce((s,v)=>s+(v.receita_loja||0),0)-db.compras.filter(k=>k.status==='ativa').reduce((s,k)=>s+(k.valor_total||0),0)+(db.ajustes_caixa||[]).filter(a=>(a.status||'ativa')==='ativa').reduce((s,a)=>s+(a.tipo==='entrada'?a.valor:-a.valor),0)}
+function acoesFin(r){
+  const ajuste=r.tipo==='ajuste',id=ajuste?r.a.id:(r.tipo==='venda'?r.v.id:r.k.id);
+  if(r.status==='ativa')return `<button class="iconbtn" title="Editar" onclick="${ajuste?`modalAjusteCaixa('${r.a.tipo}','${id}')`:r.tipo==='venda'?`editVendaFin('${id}')`:`editCompraFin('${id}')`}">✏️</button><button class="iconbtn" title="Reverter" onclick="reverterFin('${r.tipo}','${r.id}')">↩️</button>`;
+  return isSocioOuDiretor()?`<button class="iconbtn" title="Apagar linha" onclick="apagarFin('${r.tipo}','${r.id}')">🗑️</button>`:'';
 }
 function renderFinanceiro(c){
  const todas=linhasFinanceiro();
- let rows=todas;
- rows=aplicarFiltros(rows,'financeiro');
- rows.sort((a,b)=>new Date(b.data).getTime()-new Date(a.data).getTime());
- const paginaFin=pagina(rows,'financeiro');
+ const rows=aplicarFiltros(todas,'financeiro');
+ const grupos=agruparLinhas(todas,rows,r=>r.pai).sort((a,b)=>new Date(b.p.data).getTime()-new Date(a.p.data).getTime());
+ const paginaFin=pagina(grupos,'financeiro');
  const ativas=rows.filter(r=>r.status==='ativa');
  const entradas=ativas.filter(r=>r.tipo==='venda').reduce((s,r)=>s+r.entrada,0);
  const saidas=ativas.filter(r=>r.tipo==='compra').reduce((s,r)=>s+(-r.valor),0);
  const repasse=ativas.filter(r=>r.tipo==='venda'||r.tipo==='auxiliar').reduce((s,r)=>s+r.repasse,0);
  const volBruto=ativas.filter(r=>r.tipo==='venda').reduce((s,r)=>s+r.valor,0);
- const caixaAtual=db.vendas.filter(v=>v.status==='ativa').reduce((s,v)=>s+(v.receita_loja||0),0)-db.compras.filter(k=>k.status==='ativa').reduce((s,k)=>s+(k.valor_total||0),0)+(db.ajustes_caixa||[]).reduce((s,a)=>s+(a.tipo==='entrada'?a.valor:-a.valor),0);
+ const caixaAtual=caixaAtualValor();
  const ger=isGerente();
  const vis=colunasVisiveis();
  const cell=(key,r)=>{
@@ -1460,7 +1531,6 @@ function renderFinanceiro(c){
   if(key==='descricao')return `<td style="color:var(--muted)">${esc(r.descricao)}</td>`;
   if(key==='entrada')return `<td class="money" style="color:var(--info)">${r.tipo==='venda'?fmt(r.entrada):'—'}</td>`;
   if(key==='repasse')return `<td style="color:var(--purple)">${r.tipo==='venda'||r.tipo==='auxiliar'?fmt(r.repasse):'—'}</td>`;
-  if(key==='operacao_id')return `<td><code>${esc(r.operacao_id||'—')}</code></td>`;
   if(key==='valor')return r.valor==null?'<td style="color:var(--muted)">—</td>':r.valor>=0?`<td class="money">${fmt(r.valor)}</td>`:`<td class="money-neg">−${fmt(-r.valor)}</td>`;
   if(key==='status')return `<td><span class="tag ${r.status==='ativa'?'g':'r'}">${r.status}</span></td>`;
   return '<td></td>';
@@ -1478,37 +1548,49 @@ function renderFinanceiro(c){
     <div class="sum-card"><div class="sl">Repasse Equipe</div><div class="sv" style="color:var(--purple)">${fmt(repasse)}</div></div>
     <div class="sum-card"><div class="sl">Volume Vendas Bruto</div><div class="sv">${fmt(volBruto)}</div></div>
     <div class="sum-card"><div class="sl">Saídas</div><div class="sv money-neg">${fmt(saidas)}</div></div>
-    <div class="sum-card"><div class="sl">Total Lançamentos</div><div class="sv">${rows.length}</div></div>
+    <div class="sum-card"><div class="sl">Total Lançamentos</div><div class="sv">${grupos.length}</div></div>
   </div>
   <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <button class="btn btn-ghost btn-sm" onclick="modalColunasFin()">▦ Colunas</button>
-    ${contadorFiltro('financeiro',rows.length,todas.length)}
+    ${contadorFiltro('financeiro',grupos.length,todas.filter(r=>!r.pai).length)}
     ${ger?`<button class="btn btn-export btn-sm" onclick="exportarRegistros('financeiro')">⬇ Exportar CSV</button>`:``}
     ${botaoExcluirSel('financeiro')}
   </div>
   <div class="table-wrap"><table>
-    <tr>${thSelTodos('financeiro',paginaFin.rows.filter(r=>r.tipo!=='auxiliar'))}${COLS_FIN.filter(c=>vis.includes(c.key)).map(c=>thCol('financeiro',c.key,c.label)).join('')}${ger?'<th>Ações</th>':''}</tr>
-    ${paginaFin.rows.map(r=>r.tipo==='auxiliar'?`<tr class="linha-aux">${podeExcluirLinhas()?'<td></td>':''}${vis.map(k=>cell(k,r)).join('')}${ger?'<td></td>':''}</tr>`:`<tr>${tdSel('financeiro',r.id)}${vis.map(k=>cell(k,r)).join('')}${ger?`<td style="white-space:nowrap">${r.tipo==='ajuste'?(isSocioOuDiretor()?`<button class="iconbtn" title="Excluir ajuste" onclick="excluirAjusteCaixa('${r.a.id}')">🗑️</button>`:''):r.status==='ativa'?`<button class="iconbtn" title="Editar" onclick="${r.tipo==='venda'?`editVendaFin('${r.v.id}')`:`editCompraFin('${r.k.id}')`}">✏️</button><button class="iconbtn" title="Reverter" onclick="reverterFin('${r.tipo}','${r.id}')">↩️</button>`:''}${r.tipo!=='ajuste'&&isSocioOuDiretor()&&r.status==='revertida'?`<button class="iconbtn" title="Apagar linha" onclick="apagarFin('${r.tipo}','${r.id}')">🗑️</button>`:''}</td>`:''}</tr>`).join('')||`<tr><td colspan="${vis.length+(ger?2:1)}" class="empty">Nenhum lançamento no filtro atual.</td></tr>`}
+    <tr><th class="td-exp"></th>${thSelTodos('financeiro',paginaFin.rows.map(g=>g.p))}${COLS_FIN.filter(c=>vis.includes(c.key)).map(c=>thCol('financeiro',c.key,c.label)).join('')}${ger?'<th>Ações</th>':''}</tr>
+    ${paginaFin.rows.map(g=>{const r=g.p,aberto=expandidos.has(r.id);return `<tr class="${g.filhos.length?'linha-pai':''} ${aberto?'aberta':''}">${tdExpandir(r.id,g.filhos.length)}${tdSel('financeiro',r.id)}${vis.map(k=>cell(k,r)).join('')}${ger?`<td style="white-space:nowrap">${acoesFin(r)}</td>`:''}</tr>`+
+      (aberto?g.filhos.map((f,n)=>`<tr class="sublinha ${n===g.filhos.length-1?'ultima':''}"><td class="td-exp"><span class="sub-guia"></span></td>${podeExcluirLinhas()?'<td></td>':''}${vis.map((k,ci)=>ci===0?cell(k,f).replace('<td>','<td><span class="sub-seta">↳</span> '):cell(k,f)).join('')}${ger?'<td></td>':''}</tr>`).join(''):'')}).join('')||`<tr><td colspan="${vis.length+(ger?3:2)}" class="empty">Nenhum lançamento no filtro atual.</td></tr>`}
   </table></div>${paginacao('financeiro',paginaFin)}`;
 }
 /* Ajuste manual de caixa (Gerente+): entrada/saída direta, sem venda ou compra por trás */
-function modalAjusteCaixa(tipo){
+function modalAjusteCaixa(tipo,id){
   if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem ajustar o caixa.');
-  const caixaAtual=db.vendas.filter(v=>v.status==='ativa').reduce((s,v)=>s+(v.receita_loja||0),0)-db.compras.filter(k=>k.status==='ativa').reduce((s,k)=>s+(k.valor_total||0),0)+(db.ajustes_caixa||[]).reduce((s,a)=>s+(a.tipo==='entrada'?a.valor:-a.valor),0);
-  openModal(`<h3>${tipo==='entrada'?'➕ Entrada avulsa':'➖ Saída avulsa'} — Caixa</h3>
+  const a=id?db.ajustes_caixa.find(x=>x.id===id):null;
+  const caixaAtual=caixaAtualValor();
+  openModal(`<h3>${a?'✏️ Editar ajuste de caixa':tipo==='entrada'?'➕ Entrada avulsa — Caixa':'➖ Saída avulsa — Caixa'}</h3>
   <p style="color:var(--muted);margin-bottom:14px">Saldo atual: <b style="color:var(--green)">${fmt(caixaAtual)}</b></p>
-  <div class="field"><label>Valor ($)</label><input id="ac-valor" type="number" min="0.01" step="0.01"></div>
-  <div class="field"><label>Motivo / observação (opcional)</label><input id="ac-motivo" placeholder="ex.: acerto de caixa, correção, retirada"></div>
+  ${a?`<div class="field"><label>Tipo</label><select id="ac-tipo"><option value="entrada" ${a.tipo==='entrada'?'selected':''}>Entrada (+)</option><option value="saida" ${a.tipo==='saida'?'selected':''}>Saída (−)</option></select></div>`:''}
+  <div class="field"><label>Valor ($)</label><input id="ac-valor" type="number" min="0.01" step="0.01" value="${a?a.valor:''}"></div>
+  <div class="field"><label>Motivo / observação (opcional)</label><input id="ac-motivo" placeholder="ex.: acerto de caixa, correção, retirada" value="${a?esc(a.motivo||''):''}"></div>
   <p id="ac-err" style="color:var(--danger);font-size:13px;display:none"></p>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-  <button class="btn btn-primary" onclick="salvarAjusteCaixa('${tipo}')">Confirmar</button></div>`);
+  <button class="btn btn-primary" onclick="salvarAjusteCaixa('${tipo}','${id||''}')">${a?'Salvar':'Confirmar'}</button></div>`);
 }
-async function salvarAjusteCaixa(tipo){
+async function salvarAjusteCaixa(tipo,id){
   if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem ajustar o caixa.');
   const valor=parseFloat(document.getElementById('ac-valor').value);
   const motivo=document.getElementById('ac-motivo').value.trim();
   const e=document.getElementById('ac-err');
   if(!(valor>0)){e.textContent='Informe um valor maior que zero.';e.style.display='block';return}
+  if(id){
+    const a=db.ajustes_caixa.find(x=>x.id===id);if(!a)return;
+    const novoTipo=document.getElementById('ac-tipo').value;
+    const{error}=await sb.from('ajustes_caixa').update({tipo:novoTipo,valor,motivo}).eq('id',id);
+    if(error){e.textContent='Erro ao salvar: '+error.message;e.style.display='block';return}
+    Object.assign(a,{tipo:novoTipo,valor,motivo});
+    reg('Ajuste de caixa editado',(novoTipo==='entrada'?'+':'−')+fmt(valor)+(motivo?' — '+motivo:''));
+    closeModal();toast('✅ Ajuste atualizado.');render();return;
+  }
   const registro={tipo,valor,motivo,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome};
   const{data,error}=await sb.from('ajustes_caixa').insert(registro).select().single();
   if(error){e.textContent='Erro ao salvar: '+error.message;e.style.display='block';return}
@@ -1519,6 +1601,7 @@ async function salvarAjusteCaixa(tipo){
 function excluirAjusteCaixa(id){
   if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir ajustes de caixa.');
   const a=db.ajustes_caixa.find(x=>x.id===id);if(!a)return;
+  if((a.status||'ativa')!=='revertida')return toast('⚠️ Reverta o ajuste antes de excluir.');
   confirmar('Excluir ajuste de caixa','O lançamento será removido definitivamente do caixa. Confirmar?',async()=>{
     const{error}=await sb.from('ajustes_caixa').delete().eq('id',id);
     if(error)return toast('⚠️ Erro ao excluir: '+error.message);
@@ -1527,32 +1610,30 @@ function excluirAjusteCaixa(id){
     render();toast('✅ Ajuste excluído.');
   });
 }
-/* Reverter: só muda o status (sem estorno no Baú) */
+/* Reverter: só muda o status (sem estorno no Baú). Vale para venda, compra e ajuste de caixa. */
+const FIN_TABELA={venda:'vendas',compra:'compras',ajuste:'ajustes_caixa'},FIN_LISTA={venda:'vendas',compra:'compras',ajuste:'ajustes_caixa'},FIN_NOME={venda:'Venda',compra:'Compra',ajuste:'Ajuste de caixa'};
 function reverterFin(tipo,id){
  if(!isGerente())return;
- const realId=tipo==='venda'?id.replace('venda:',''):id.replace('compra:','');
- confirmar('Reverter lançamento','O registro será marcado como revertido e sairá dos totais. Confirmar?',async()=>{
-  const tabela=tipo==='venda'?'vendas':'compras';
-  const{error}=await sb.from(tabela).update({status:'revertida'}).eq('id',realId);
+ const realId=id.slice(id.indexOf(':')+1);
+ confirmar('Reverter lançamento','O registro será marcado como revertido e sairá dos totais'+(tipo==='ajuste'?' e do caixa':'')+'. Confirmar?',async()=>{
+  const{error}=await sb.from(FIN_TABELA[tipo]).update({status:'revertida'}).eq('id',realId);
   if(error)return toast('⚠️ Erro ao reverter: '+error.message);
-  if(tipo==='venda'){const v=db.vendas.find(x=>x.id===realId);if(v){v.status='revertida';reg('Venda revertida',fmt(v.total))}}
-  else{const k=db.compras.find(x=>x.id===realId);if(k){k.status='revertida';reg('Compra revertida',fmt(k.valor_total))}}
+  const o=db[FIN_LISTA[tipo]].find(x=>x.id===realId);
+  if(o){o.status='revertida';reg(FIN_NOME[tipo]+' revertida',fmt(o.total??o.valor_total??o.valor))}
   render();
  });
 }
 /* Apagar: exclui a linha por completo — só permitido se status = revertida */
 function apagarFin(tipo,id){
  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem apagar linhas.');
- const realId=tipo==='venda'?id.replace('venda:',''):id.replace('compra:','');
- const obj=tipo==='venda'?db.vendas.find(x=>x.id===realId):db.compras.find(x=>x.id===realId);
+ const realId=id.slice(id.indexOf(':')+1);
+ const obj=db[FIN_LISTA[tipo]].find(x=>x.id===realId);
  if(!obj)return;
- if(obj.status!=='revertida')return toast('⚠️ Só é possível apagar linhas com status "revertida".');
+ if((obj.status||'ativa')!=='revertida')return toast('⚠️ Só é possível apagar linhas com status "revertida".');
  confirmar('Apagar linha','A linha será excluída por completo do histórico. Confirmar?',async()=>{
-  const tabela=tipo==='venda'?'vendas':'compras';
-  const{error}=await sb.from(tabela).delete().eq('id',realId);
+  const{error}=await sb.from(FIN_TABELA[tipo]).delete().eq('id',realId);
   if(error)return toast('⚠️ Erro ao apagar: '+error.message);
-  if(tipo==='venda')db.vendas=db.vendas.filter(x=>x.id!==realId);
-  else db.compras=db.compras.filter(x=>x.id!==realId);
+  db[FIN_LISTA[tipo]]=db[FIN_LISTA[tipo]].filter(x=>x.id!==realId);
   selExclusao.financeiro.delete(id);
   reg('Lançamento apagado',tipo+' '+realId);
   render();toast('✅ Linha apagada.');
@@ -1895,7 +1976,7 @@ function cfgProdutos(b){
     <td style="color:var(--muted)">${dataHoraBR(p.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalProduto('${p.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleProduto('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>
-      ${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir linha" onclick="excluirProduto('${p.id}')">🗑️</button>`:''}</td>
+      ${isSocioOuDiretor()&&p.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirProduto('${p.id}')">🗑️</button>`:''}</td>
   </tr>`).join('')||linhaSemResultado(8,T)}</table></div>`;
 }
 async function salvarAliquotaGlobal(){
@@ -1974,6 +2055,7 @@ async function toggleProduto(id){
 function excluirProduto(id){
   if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir linhas de cadastro.');
   const p=db.produtos.find(x=>x.id===id);if(!p)return;
+  if(p.status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');
   confirmar('Excluir produto',`"${p.nome}" será removido do catálogo. Vendas antigas permanecem no histórico. Confirmar?`,async()=>{
     const{error}=await sb.from('produtos').delete().eq('id',id);
     if(error)return toast('⚠️ Erro ao excluir: '+error.message);
@@ -2004,7 +2086,7 @@ function cfgItens(b){
     <td style="color:var(--muted)">${dataHoraBR(i.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalItem('${i.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleItem('${i.id}')">${i.status==='ativo'?'⏸️':'▶️'}</button>
-      ${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
+      ${isSocioOuDiretor()&&i.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
   </tr>`}).join('')||linhaSemResultado(10,T)}</table></div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
     <div class="section-title" style="margin:0">🏷️ Categorias de itens</div>
@@ -2128,6 +2210,7 @@ async function vinculosDoItem(id){
 function excluirItem(id){
   if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir linhas de cadastro.');
   const it=db.itens.find(x=>x.id===id);if(!it)return;
+  if(it.status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');
   confirmar('Excluir item',`"${it.nome}" será removido do cadastro. Só é possível excluir se o item não estiver em receitas, compras ou movimentações do Baú. Confirmar?`,async()=>{
     let motivos;
     try{motivos=await vinculosDoItem(id)}catch(e){return toast('⚠️ Erro ao verificar vínculos: '+(e.message||e))}
@@ -2166,7 +2249,7 @@ function cfgReceitas(b){
     <td style="color:var(--muted)">${dataHoraBR(r.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalReceita('${r.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleReceita('${r.id}')">${r.status==='ativo'?'⏸️':'▶️'}</button>
-      ${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirReceita('${r.id}')">🗑️</button>`:''}</td>
+      ${isSocioOuDiretor()&&r.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirReceita('${r.id}')">🗑️</button>`:''}</td>
   </tr>`}).join('')||linhaSemResultado(7,T)}</table></div>`;
 }
 async function toggleReceita(id){
@@ -2198,7 +2281,7 @@ function cfgFornecedores(b){
     <td><span class="badge ${f.status==='ativo'?'ativo':'inativo'}">${f.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(f.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalFornecedor('${f.id}')">✏️</button>
-    <button class="iconbtn" onclick="toggleFornecedor('${f.id}')">${f.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirFornecedor('${f.id}')">🗑️</button>`:''}</td>
+    <button class="iconbtn" onclick="toggleFornecedor('${f.id}')">${f.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()&&f.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirFornecedor('${f.id}')">🗑️</button>`:''}</td>
   </tr>`}).join('')||linhaSemResultado(6,T)}</table></div>`;
 }
 /* Atalho da compra: abre o cadastro por cima do formulário (2ª camada) e devolve o fornecedor criado */
@@ -2292,7 +2375,7 @@ function cfgDescontos(b){
     <td style="font-size:12px">${esc(descontoResumo(p))}</td>
     <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
     <td><button class="iconbtn" onclick="modalDescontos('${p.id}')">✏️</button>
-      <button class="iconbtn" onclick="toggleDescontos('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirDesconto('${p.id}')">🗑️</button>`:''}</td>
+      <button class="iconbtn" onclick="toggleDescontos('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()&&p.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirDesconto('${p.id}')">🗑️</button>`:''}</td>
   </tr>`).join('')||linhaSemResultado(6,T)}</table></div>`;
 }
 function modalDescontos(id){
@@ -2388,7 +2471,7 @@ function cfgDeslocamento(b){
     ${setasOrdem('moverTaxa',t.id)}<td><b>${esc(t.nome)}</b></td><td class="money">${fmt(t.valor)}</td>
     <td><span class="badge ${t.status==='ativo'?'ativo':'inativo'}">${t.status}</span></td>
     <td><button class="iconbtn" onclick="modalTaxa('${t.id}')">✏️</button>
-    <button class="iconbtn" onclick="toggleTaxa('${t.id}')">${t.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()?`<button class="iconbtn" onclick="excluirTaxa('${t.id}')">🗑️</button>`:''}</td>
+    <button class="iconbtn" onclick="toggleTaxa('${t.id}')">${t.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()&&t.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirTaxa('${t.id}')">🗑️</button>`:''}</td>
   </tr>`).join('')||linhaSemResultado(5,T)}</table></div>`;
 }
 async function salvarAliquotaTaxa(){
@@ -2736,9 +2819,9 @@ async function excluirMovimentoBau(id){
     reg('Movimento do Baú excluído',m.operacao_id||m.id);render();
   });
 }
-function excluirFornecedor(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const f=db.fornecedores.find(x=>x.id===id);if(!f)return;if(db.compras.some(k=>k.fornecedor_id===id||(k.itens||[]).some(i=>i.fornecedor_id===id)))return toast('⚠️ Não é possível excluir: há compras vinculadas.');confirmar('Excluir fornecedor','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('fornecedores').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.fornecedores=db.fornecedores.filter(x=>x.id!==id);db.fornecedor_itens=db.fornecedor_itens.filter(x=>x.fornecedor_id!==id);reg('Fornecedor excluído',f.nome);render()})}
-function excluirDesconto(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const d=db.parcerias.find(x=>x.id===id);if(!d)return;if(db.vendas.some(v=>v.parceria_id===id))return toast('⚠️ Não é possível excluir: há vendas vinculadas.');confirmar('Excluir desconto','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('parcerias').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.parcerias=db.parcerias.filter(x=>x.id!==id);db.descontos=db.parcerias;reg('Desconto excluído',d.nome);render()})}
-function excluirTaxa(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const t=db.taxas_deslocamento.find(x=>x.id===id);if(!t)return;if(db.vendas.some(v=>v.taxa_id===id))return toast('⚠️ Não é possível excluir: há vendas vinculadas.');confirmar('Excluir deslocamento','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('taxas_deslocamento').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.taxas_deslocamento=db.taxas_deslocamento.filter(x=>x.id!==id);reg('Deslocamento excluído',t.nome);render()})}
+function excluirFornecedor(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const f=db.fornecedores.find(x=>x.id===id);if(!f)return;if(f.status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');if(db.compras.some(k=>k.fornecedor_id===id||(k.itens||[]).some(i=>i.fornecedor_id===id)))return toast('⚠️ Não é possível excluir: há compras vinculadas.');confirmar('Excluir fornecedor','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('fornecedores').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.fornecedores=db.fornecedores.filter(x=>x.id!==id);db.fornecedor_itens=db.fornecedor_itens.filter(x=>x.fornecedor_id!==id);reg('Fornecedor excluído',f.nome);render()})}
+function excluirDesconto(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const d=db.parcerias.find(x=>x.id===id);if(!d)return;if(d.status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');if(db.vendas.some(v=>v.parceria_id===id))return toast('⚠️ Não é possível excluir: há vendas vinculadas.');confirmar('Excluir desconto','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('parcerias').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.parcerias=db.parcerias.filter(x=>x.id!==id);db.descontos=db.parcerias;reg('Desconto excluído',d.nome);render()})}
+function excluirTaxa(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const t=db.taxas_deslocamento.find(x=>x.id===id);if(!t)return;if(t.status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');if(db.vendas.some(v=>v.taxa_id===id))return toast('⚠️ Não é possível excluir: há vendas vinculadas.');confirmar('Excluir deslocamento','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('taxas_deslocamento').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.taxas_deslocamento=db.taxas_deslocamento.filter(x=>x.id!==id);reg('Deslocamento excluído',t.nome);render()})}
 
 
 /* ================= FILTRO POR DROPDOWN v2.6.0 ================= */
@@ -2876,13 +2959,14 @@ function contadorFiltro(tipo,total,totalGeral){return filtroAtivo(tipo)?`<span s
 /* ================= SELEÇÃO MÚLTIPLA v2.7.0 ================= */
 const selExclusao={bau:new Set(),financeiro:new Set()};
 function podeExcluirLinhas(){return isSocioOuDiretor()}
-function toggleSelLinha(tipo,id,marcado){const s=selExclusao[tipo];if(marcado)s.add(id);else s.delete(id);atualizarBotaoExcluirSel(tipo);const th=document.getElementById('sel-todos-'+tipo);if(th)th.checked=[...document.querySelectorAll('[data-sel-'+tipo+']')].every(c=>c.checked)}
-function toggleSelTodos(tipo,marcado){const s=selExclusao[tipo];if(marcado)[...document.querySelectorAll('[data-sel-'+tipo+']')].forEach(c=>{c.checked=true;s.add(c.value)});else{s.clear();[...document.querySelectorAll('[data-sel-'+tipo+']')].forEach(c=>c.checked=false)}atualizarBotaoExcluirSel(tipo)}
+function toggleSelLinha(tipo,id,marcado){const s=selExclusao[tipo];String(id).split(',').forEach(x=>{if(marcado)s.add(x);else s.delete(x)});atualizarBotaoExcluirSel(tipo);const th=document.getElementById('sel-todos-'+tipo);if(th)th.checked=[...document.querySelectorAll('[data-sel-'+tipo+']')].every(c=>c.checked)}
+function toggleSelTodos(tipo,marcado){const s=selExclusao[tipo];if(marcado)[...document.querySelectorAll('[data-sel-'+tipo+']')].forEach(c=>{c.checked=true;c.value.split(',').forEach(x=>s.add(x))});else{s.clear();[...document.querySelectorAll('[data-sel-'+tipo+']')].forEach(c=>c.checked=false)}atualizarBotaoExcluirSel(tipo)}
 /* Status de uma linha selecionada do Financeiro ('venda:<id>' | 'compra:<id>' | 'ajuste:<id>') */
 function statusSelFin(selId){
   if(selId.startsWith('venda:')){const v=db.vendas.find(x=>x.id===selId.slice(6));return v?v.status:null}
   if(selId.startsWith('compra:')){const k=db.compras.find(x=>x.id===selId.slice(7));return k?k.status:null}
-  return 'ativa'; // ajuste de caixa: sempre ativo, não é reversível
+  if(selId.startsWith('ajuste:')){const a=db.ajustes_caixa.find(x=>x.id===selId.slice(7));return a?(a.status||'ativa'):null}
+  return null;
 }
 /* Excluir: só quando TODAS as selecionadas estão revertidas. Reverter: só quando TODAS estão ativas (e são vendas/compras). */
 function estadoSelecao(tipo){
@@ -2890,7 +2974,7 @@ function estadoSelecao(tipo){
   if(tipo!=='financeiro')return{n,excluir:n>0,reverter:false};
   return{n,
     excluir:n>0&&ids.every(id=>statusSelFin(id)==='revertida'),
-    reverter:n>0&&ids.every(id=>!id.startsWith('ajuste:')&&statusSelFin(id)==='ativa')};
+    reverter:n>0&&ids.every(id=>statusSelFin(id)==='ativa')};
 }
 function botaoExcluirSel(tipo){
   if(!podeExcluirLinhas())return '';
@@ -2911,13 +2995,16 @@ async function reverterSelecionadas(){
   const ids=[...selExclusao.financeiro];
   const vendaIds=ids.filter(x=>x.startsWith('venda:')).map(x=>x.replace('venda:','')).filter(id=>{const v=db.vendas.find(x=>x.id===id);return v&&v.status==='ativa'});
   const compraIds=ids.filter(x=>x.startsWith('compra:')).map(x=>x.replace('compra:','')).filter(id=>{const k=db.compras.find(x=>x.id===id);return k&&k.status==='ativa'});
-  if(!vendaIds.length&&!compraIds.length)return toast('ℹ️ Nada selecionado precisa ser revertido — já pode excluir.');
-  confirmar('Reverter selecionadas',(vendaIds.length+compraIds.length)+' lançamento(s) serão marcados como revertidos e sairão dos totais. Confirmar?',async()=>{
+  const ajusteIds=ids.filter(x=>x.startsWith('ajuste:')).map(x=>x.replace('ajuste:','')).filter(id=>{const a=db.ajustes_caixa.find(x=>x.id===id);return a&&(a.status||'ativa')==='ativa'});
+  if(!vendaIds.length&&!compraIds.length&&!ajusteIds.length)return toast('ℹ️ Nada selecionado precisa ser revertido — já pode excluir.');
+  confirmar('Reverter selecionadas',(vendaIds.length+compraIds.length+ajusteIds.length)+' lançamento(s) serão marcados como revertidos e sairão dos totais. Confirmar?',async()=>{
     if(vendaIds.length){const{error}=await sb.from('vendas').update({status:'revertida'}).in('id',vendaIds);if(error)return toast('⚠️ Erro ao reverter vendas: '+error.message)}
     if(compraIds.length){const{error}=await sb.from('compras').update({status:'revertida'}).in('id',compraIds);if(error)return toast('⚠️ Erro ao reverter compras: '+error.message)}
+    if(ajusteIds.length){const{error}=await sb.from('ajustes_caixa').update({status:'revertida'}).in('id',ajusteIds);if(error)return toast('⚠️ Erro ao reverter ajustes: '+error.message)}
+    ajusteIds.forEach(id=>{const a=db.ajustes_caixa.find(x=>x.id===id);if(a)a.status='revertida'});
     vendaIds.forEach(id=>{const v=db.vendas.find(x=>x.id===id);if(v)v.status='revertida'});
     compraIds.forEach(id=>{const k=db.compras.find(x=>x.id===id);if(k)k.status='revertida'});
-    reg('Reversão em lote',(vendaIds.length+compraIds.length)+' lançamento(s)');
+    reg('Reversão em lote',(vendaIds.length+compraIds.length+ajusteIds.length)+' lançamento(s)');
     render();toast('✅ Revertido(s). A seleção continua marcada — pode excluir agora.');
   });
 }
@@ -2933,7 +3020,8 @@ function excluirSelecionadas(tipo){
    idsParaExcluir=ids.filter(x=>{
      if(x.startsWith('venda:')){const v=db.vendas.find(v=>v.id===x.replace('venda:',''));return v&&v.status==='revertida'}
      if(x.startsWith('compra:')){const k=db.compras.find(k=>k.id===x.replace('compra:',''));return k&&k.status==='revertida'}
-     return true; // ajuste:
+     if(x.startsWith('ajuste:')){const a=db.ajustes_caixa.find(a=>a.id===x.replace('ajuste:',''));return a&&a.status==='revertida'}
+     return false;
    });
    bloqueadas=ids.length-idsParaExcluir.length;
    if(bloqueadas>0&&idsParaExcluir.length===0)return toast('⚠️ '+bloqueadas+' venda(s)/compra(s) selecionada(s) ainda estão ativas — reverta antes de excluir (botão "↩️ Reverter selecionadas").');
