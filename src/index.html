@@ -209,6 +209,11 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .cart-line .iconbtn{color:var(--danger);border:1px solid var(--danger);background:rgba(var(--danger-rgb),.08);font-weight:800}
 .cart-line .iconbtn:hover{background:rgba(var(--danger-rgb),.25)}
 .iconbtn:hover{background:var(--border)}
+.aux-linha{display:grid;grid-template-columns:1fr 78px 96px 34px;gap:6px;align-items:center;margin-bottom:6px}
+.aux-valor{text-align:right;font-weight:700;color:var(--purple)}
+.linha-aux td{background:rgba(var(--purple-rgb),.05)}
+.linha-aux td:nth-child(n){font-size:13px}
+.aux-resumo{font-size:12px;color:var(--muted);margin:4px 0 8px}
 .iconbtn.btn-ordem{background:#282836;color:var(--text);width:28px;height:28px;padding:0;margin-right:4px;font-size:15px;font-weight:700;line-height:28px;text-align:center}
 .iconbtn.btn-ordem:hover{background:#34344A}
 .drop-zone{border:2px dashed var(--border);border-radius:var(--r);padding:32px;text-align:center;color:var(--muted);cursor:pointer;transition:.15s}
@@ -322,7 +327,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <span class="vselo" id="h-versao">v4.6.5</span>
+  <span class="vselo" id="h-versao">v4.7.0</span>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -358,7 +363,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.6.5';
+const VERSAO='v4.7.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -586,6 +591,7 @@ function go(mod){
 }
 function startApp(){
   document.body.classList.add('logado');
+  iniciarTempoReal();
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-header').style.display='flex';
   document.getElementById('main-content').style.display='block';
@@ -693,13 +699,15 @@ function renderPDV(c){
             ${taxasAtivas().map(t=>`<option value="${t.id}" ${pdvState.taxaId===t.id?'selected':''}>${esc(t.nome)} (${fmt(t.valor)})</option>`).join('')}
           </select></div>
       </div>
-      ${pdvState.cupom.length?`<div class="field"><label>Vendedores auxiliares (partilha em linhas — opcional)</label>
-        <div id="aux-list">${pdvState.auxiliares.map((a,i)=>`<div style="display:flex;gap:6px;margin-bottom:6px" data-aux>
-          <input placeholder="Nome do auxiliar" value="${esc(a.nome)}" oninput="pdvState.auxiliares[${i}].nome=this.value">
-          <input class="aux-pct" type="number" min="0" max="100" placeholder="% do repasse" value="${a.pct||''}" style="max-width:110px" oninput="pdvState.auxiliares[${i}].pct=parseFloat(this.value)||0">
-          <button class="iconbtn btn-del-suave" onclick="pdvState.auxiliares.splice(${i},1);renderPDV(document.getElementById('main-content'))">✕</button>
+      ${pdvState.cupom.length?`<div class="field"><label>Vendedores auxiliares (opcional — % do repasse)</label>
+        <div id="aux-list">${pdvState.auxiliares.map((a,i)=>`<div class="aux-linha" data-aux>
+          <select onchange="pdvState.auxiliares[${i}].usuario_id=this.value;renderPDV(document.getElementById('main-content'))">${opcoesAuxiliar(a.usuario_id,i)}</select>
+          <input class="aux-pct" type="number" min="0" max="100" step="0.1" placeholder="%" value="${a.pct||''}" oninput="pdvState.auxiliares[${i}].pct=parseFloat(this.value)||0;atualizarValoresAux()">
+          <span class="aux-valor money" data-aux-valor="${i}">—</span>
+          <button class="iconbtn btn-del-suave" title="Remover auxiliar" onclick="pdvState.auxiliares.splice(${i},1);renderPDV(document.getElementById('main-content'))">✕</button>
         </div>`).join('')}</div>
-        <button class="btn btn-ghost btn-sm" onclick="pdvState.auxiliares.push({nome:'',pct:''});renderPDV(document.getElementById('main-content'))">+ Adicionar auxiliar</button>
+        ${pdvState.auxiliares.length?`<div class="aux-resumo" id="aux-resumo"></div>`:''}
+        <button class="btn btn-ghost btn-sm" onclick="pdvState.auxiliares.push({usuario_id:'',pct:''});renderPDV(document.getElementById('main-content'))">+ Adicionar auxiliar</button>
       </div>`:''}
       <div id="cupom-lista">${cup.itens.length?cup.itens.map(x=>`
         <div class="cart-line">
@@ -722,6 +730,26 @@ function renderPDV(c){
       </div>
     </div>
   </div>`;
+  atualizarValoresAux();
+}
+/* Vendedor auxiliar: escolhido entre os usuários ativos (menos quem está vendendo e quem já foi escolhido) */
+function opcoesAuxiliar(sel,idx){
+  const usados=pdvState.auxiliares.filter((a,i)=>i!==idx).map(a=>a.usuario_id);
+  const us=usuariosOrdenados().filter(u=>u.status==='ativo'&&u.id!==session.usuario_id&&!usados.includes(u.id)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  return `<option value="" disabled hidden ${sel?'':'selected'}>Selecione o vendedor auxiliar...</option>`+us.map(u=>`<option value="${u.id}" ${u.id===sel?'selected':''}>${esc(u.nome)}${u.usuario?' ('+esc(u.usuario)+')':''}</option>`).join('');
+}
+/* Repasse de cada auxiliar = repasse da venda × % ; o vendedor principal fica com o restante */
+function repartirRepasse(cota,auxiliares){
+  const aux=(auxiliares||[]).map(a=>({...a,valor:Math.round(cota*(parseFloat(a.pct)||0))/100}));
+  const somaAux=aux.reduce((s,a)=>s+a.valor,0);
+  return{aux,principal:Math.round((cota-somaAux)*100)/100,somaPct:aux.reduce((s,a)=>s+(parseFloat(a.pct)||0),0)};
+}
+function atualizarValoresAux(){
+  const cup=calcCupom(),r=repartirRepasse(cup.cota,pdvState.auxiliares);
+  r.aux.forEach((a,i)=>{const el=document.querySelector(`[data-aux-valor="${i}"]`);if(el)el.textContent=a.pct?fmt(a.valor):'—'});
+  const box=document.getElementById('aux-resumo');
+  if(box)box.innerHTML=r.somaPct>100?`<span style="color:var(--danger)">A soma dos % passa de 100 (${r.somaPct}%).</span>`
+    :`Repasse total <b>${fmt(cup.cota)}</b> · auxiliares <b>${fmt(cup.cota-r.principal)}</b> · fica com você <b style="color:var(--purple)">${fmt(r.principal)}</b>`;
 }
 function addCupom(pid,qtd){
   const l=pdvState.cupom.find(x=>x.prodId===pid);
@@ -746,15 +774,19 @@ function limparCupom(){pdvState={cupom:[],parceriaId:null,taxaId:null,auxiliares
 async function finalizarVenda(){
   const cup=calcCupom();
   if(!cup.itens.length)return;
-  const somaPct=(pdvState.auxiliares||[]).reduce((s,a)=>s+(parseFloat(a.pct)||0),0);
+  const auxs=pdvState.auxiliares||[];
+  if(auxs.some(a=>!a.usuario_id))return toast('⚠️ Selecione o vendedor auxiliar em todas as linhas (ou remova a linha).');
+  if(auxs.some(a=>!(parseFloat(a.pct)>0)))return toast('⚠️ Informe o % do repasse de cada vendedor auxiliar.');
+  const somaPct=auxs.reduce((s,a)=>s+(parseFloat(a.pct)||0),0);
   if(somaPct>100)return toast('⚠️ A soma dos % dos auxiliares não pode passar de 100.');
+  let operacaoId;try{operacaoId=await nextOpId()}catch(err){return toast('⚠️ Erro ao gerar o ID da venda: '+(err.message||err))}
   const cabecalho={
-    usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,
+    operacao_id:operacaoId,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,
     parceria_id:pdvState.parceriaId,parceria_nome:cup.parceria?cup.parceria.nome:null,
     taxa_id:pdvState.taxaId,taxa_nome:cup.taxa?cup.taxa.nome:null,taxa_valor:cup.taxaValor,
     subtotal:cup.subtotal,desconto:cup.desconto,pct_desconto:cup.pct,
     total:cup.total,cota_funcionario:cup.cota,receita_loja:cup.loja,
-    auxiliares:(pdvState.auxiliares||[]).filter(a=>a.nome||a.pct).map(a=>({nome:a.nome,pct:parseFloat(a.pct)||0})),
+    auxiliares:repartirRepasse(cup.cota,auxs).aux.map(a=>{const u=db.usuarios.find(x=>x.id===a.usuario_id);return{usuario_id:a.usuario_id,nome:u?u.nome:'?',pct:parseFloat(a.pct)||0,valor:a.valor}}),
     status:'ativa'
   };
   const{data:vRow,error:e1}=await sb.from('vendas').insert(cabecalho).select().single();
@@ -764,9 +796,9 @@ async function finalizarVenda(){
   if(e2){await sb.from('vendas').delete().eq('id',vRow.id);return toast('⚠️ Erro ao registrar itens da venda: '+e2.message)}
   const v={...vRow,itens:itensInseridos.map(i=>({produto_id:i.produto_id,nome:i.nome,qtd:Number(i.qtd),preco_unit:Number(i.preco_unit),rateio:i.rateio}))};
   db.vendas.unshift(v);
-  reg('Venda finalizada',`${v.itens.map(i=>i.qtd+'× '+i.nome).join(', ')} — total ${fmt(v.total)}`);
+  reg('Venda finalizada',`ID ${v.operacao_id||'—'} — ${v.itens.map(i=>i.qtd+'× '+i.nome).join(', ')} — total ${fmt(v.total)}`);
   limparCupom();
-  toast(`✅ Venda registrada!\nTotal: ${fmt(v.total)} · Repasse: ${fmt(v.cota_funcionario)} · Loja: ${fmt(v.receita_loja)}`);
+  toast(`✅ Venda ${v.operacao_id?'ID '+v.operacao_id+' ':''}registrada!\nTotal: ${fmt(v.total)} · Repasse: ${fmt(v.cota_funcionario)} · Loja: ${fmt(v.receita_loja)}`);
   render();
 }
 
@@ -1357,6 +1389,7 @@ function paginacao(tipo,p){const q=regConsulta[tipo];return `<div style="display
 
 /* Colunas visíveis por usuário (persistidas no banco) */
 const COLS_FIN=[
+ {key:'operacao_id',label:'ID',fixa:true},
  {key:'data',label:'Data/hora',fixa:true},
  {key:'usuario_nome',label:'Usuário'},
  {key:'tipo_label',label:'Tipo'},
@@ -1372,7 +1405,7 @@ const COLS_FIN=[
 function colunasVisiveis(){
  const u=sessionUser();if(!u)return COLS_FIN.map(c=>c.key);
  if(!u.colunas_fin)u.colunas_fin=COLS_FIN.map(c=>c.key);
- return COLS_FIN.filter(c=>u.colunas_fin.includes(c.key)).map(c=>c.key);
+ return COLS_FIN.filter(c=>c.fixa||u.colunas_fin.includes(c.key)).map(c=>c.key);
 }
 async function alternarColunaFin(key){
  const u=sessionUser();let vis=colunasVisiveis();
@@ -1389,11 +1422,18 @@ function modalColunasFin(){
  <p class="muted" style="font-size:11px;margin-top:10px">A coluna Data/hora é sempre visível.</p>
  <div class="modal-actions"><button class="btn btn-primary" onclick="closeModal()">Fechar</button></div>`);
 }
+/* Repasse da venda dividido: cada auxiliar recebe o valor gravado (ou % × repasse); o principal fica com o restante */
+function repasseDaVenda(v){
+  const cota=Number(v.cota_funcionario)||0;
+  const aux=(v.auxiliares||[]).filter(a=>a&&(a.nome||a.usuario_id)).map(a=>({...a,valor:a.pct!=null&&a.pct!==''?Math.round(cota*(parseFloat(a.pct)||0))/100:Number(a.valor)||0}));
+  return{aux,principal:Math.round((cota-aux.reduce((s,a)=>s+a.valor,0))*100)/100};
+}
 function linhasFinanceiro(){
  const rows=[];
- db.vendas.filter(v=>v.status!=='excluida').forEach(v=>rows.push({id:'venda:'+v.id,tipo:'venda',data:v.data,usuario_nome:v.usuario_nome||'',tipo_label:'Venda',itens:(v.itens||[]).map(i=>i.qtd+'× '+i.nome).join(', '),desconto:v.parceria_nome||'—',deslocamento:(v.taxa_nome&&v.taxa_valor>0)?v.taxa_nome+' ('+fmt(v.taxa_valor)+')':'—',descricao:'—',entrada:v.receita_loja||0,repasse:v.cota_funcionario||0,valor:v.total||0,status:v.status,v}));
- db.compras.filter(k=>k.status!=='excluida').forEach(k=>rows.push({id:'compra:'+k.id,tipo:'compra',data:k.data,usuario_nome:k.usuario_nome||'',tipo_label:'Compra',itens:(k.itens||[]).map(i=>{const it=db.itens.find(x=>x.id===i.item_id);const nome=i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?');const q=i.qtd??i.quantidade;return (q??'?')+'× '+nome+(i.fornecedor_nome&&i.fornecedor_nome!==k.fornecedor_nome?' ('+i.fornecedor_nome+')':'')}).join(', ')||'—',desconto:'—',deslocamento:'—',descricao:k.descricao||'—',entrada:0,repasse:0,valor:-(k.valor_total||0),status:k.status,k}));
- (db.ajustes_caixa||[]).forEach(a=>rows.push({id:'ajuste:'+a.id,tipo:'ajuste',data:a.data,usuario_nome:a.usuario_nome||'',tipo_label:'Ajuste de Caixa ('+(a.tipo==='entrada'?'+':'−')+')',itens:'—',desconto:'—',deslocamento:'—',descricao:a.motivo||'—',entrada:0,repasse:0,valor:a.tipo==='entrada'?a.valor:-a.valor,status:'ativa',a}));
+ db.vendas.filter(v=>v.status!=='excluida').forEach(v=>{const rp=repasseDaVenda(v);rows.push({id:'venda:'+v.id,tipo:'venda',operacao_id:v.operacao_id||'',data:v.data,usuario_nome:v.usuario_nome||'',tipo_label:'Venda',itens:(v.itens||[]).map(i=>i.qtd+'× '+i.nome).join(', '),desconto:v.parceria_nome||'—',deslocamento:(v.taxa_nome&&v.taxa_valor>0)?v.taxa_nome+' ('+fmt(v.taxa_valor)+')':'—',descricao:'—',entrada:v.receita_loja||0,repasse:rp.principal,valor:v.total||0,status:v.status,v});
+  rp.aux.forEach((a,k)=>rows.push({id:'aux:'+v.id+':'+k,tipo:'auxiliar',operacao_id:v.operacao_id||'',data:v.data,usuario_nome:a.nome||'?',tipo_label:'Auxiliar',itens:'—',desconto:'—',deslocamento:'—',descricao:'Referente ao auxílio na venda ID '+(v.operacao_id||'—'),entrada:null,repasse:a.valor,valor:null,status:v.status,v}))});
+ db.compras.filter(k=>k.status!=='excluida').forEach(k=>rows.push({id:'compra:'+k.id,tipo:'compra',operacao_id:k.operacao_id||'',data:k.data,usuario_nome:k.usuario_nome||'',tipo_label:'Compra',itens:(k.itens||[]).map(i=>{const it=db.itens.find(x=>x.id===i.item_id);const nome=i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?');const q=i.qtd??i.quantidade;return (q??'?')+'× '+nome+(i.fornecedor_nome&&i.fornecedor_nome!==k.fornecedor_nome?' ('+i.fornecedor_nome+')':'')}).join(', ')||'—',desconto:'—',deslocamento:'—',descricao:k.descricao||'—',entrada:0,repasse:0,valor:-(k.valor_total||0),status:k.status,k}));
+ (db.ajustes_caixa||[]).forEach(a=>rows.push({id:'ajuste:'+a.id,tipo:'ajuste',operacao_id:a.operacao_id||'',data:a.data,usuario_nome:a.usuario_nome||'',tipo_label:'Ajuste de Caixa ('+(a.tipo==='entrada'?'+':'−')+')',itens:'—',desconto:'—',deslocamento:'—',descricao:a.motivo||'—',entrada:0,repasse:0,valor:a.tipo==='entrada'?a.valor:-a.valor,status:'ativa',a}));
  return rows;
 }
 function renderFinanceiro(c){
@@ -1405,7 +1445,7 @@ function renderFinanceiro(c){
  const ativas=rows.filter(r=>r.status==='ativa');
  const entradas=ativas.filter(r=>r.tipo==='venda').reduce((s,r)=>s+r.entrada,0);
  const saidas=ativas.filter(r=>r.tipo==='compra').reduce((s,r)=>s+(-r.valor),0);
- const repasse=ativas.filter(r=>r.tipo==='venda').reduce((s,r)=>s+r.repasse,0);
+ const repasse=ativas.filter(r=>r.tipo==='venda'||r.tipo==='auxiliar').reduce((s,r)=>s+r.repasse,0);
  const volBruto=ativas.filter(r=>r.tipo==='venda').reduce((s,r)=>s+r.valor,0);
  const caixaAtual=db.vendas.filter(v=>v.status==='ativa').reduce((s,v)=>s+(v.receita_loja||0),0)-db.compras.filter(k=>k.status==='ativa').reduce((s,k)=>s+(k.valor_total||0),0)+(db.ajustes_caixa||[]).reduce((s,a)=>s+(a.tipo==='entrada'?a.valor:-a.valor),0);
  const ger=isGerente();
@@ -1419,8 +1459,9 @@ function renderFinanceiro(c){
   if(key==='deslocamento')return `<td>${esc(r.deslocamento)}</td>`;
   if(key==='descricao')return `<td style="color:var(--muted)">${esc(r.descricao)}</td>`;
   if(key==='entrada')return `<td class="money" style="color:var(--info)">${r.tipo==='venda'?fmt(r.entrada):'—'}</td>`;
-  if(key==='repasse')return `<td style="color:var(--purple)">${r.tipo==='venda'?fmt(r.repasse):'—'}</td>`;
-  if(key==='valor')return r.valor>=0?`<td class="money">${fmt(r.valor)}</td>`:`<td class="money-neg">−${fmt(-r.valor)}</td>`;
+  if(key==='repasse')return `<td style="color:var(--purple)">${r.tipo==='venda'||r.tipo==='auxiliar'?fmt(r.repasse):'—'}</td>`;
+  if(key==='operacao_id')return `<td><code>${esc(r.operacao_id||'—')}</code></td>`;
+  if(key==='valor')return r.valor==null?'<td style="color:var(--muted)">—</td>':r.valor>=0?`<td class="money">${fmt(r.valor)}</td>`:`<td class="money-neg">−${fmt(-r.valor)}</td>`;
   if(key==='status')return `<td><span class="tag ${r.status==='ativa'?'g':'r'}">${r.status}</span></td>`;
   return '<td></td>';
  };
@@ -1446,8 +1487,8 @@ function renderFinanceiro(c){
     ${botaoExcluirSel('financeiro')}
   </div>
   <div class="table-wrap"><table>
-    <tr>${thSelTodos('financeiro',paginaFin.rows)}${COLS_FIN.filter(c=>vis.includes(c.key)).map(c=>thCol('financeiro',c.key,c.label)).join('')}${ger?'<th>Ações</th>':''}</tr>
-    ${paginaFin.rows.map(r=>`<tr>${tdSel('financeiro',r.id)}${vis.map(k=>cell(k,r)).join('')}${ger?`<td style="white-space:nowrap">${r.tipo==='ajuste'?(isSocioOuDiretor()?`<button class="iconbtn" title="Excluir ajuste" onclick="excluirAjusteCaixa('${r.a.id}')">🗑️</button>`:''):r.status==='ativa'?`<button class="iconbtn" title="Editar" onclick="${r.tipo==='venda'?`editVendaFin('${r.v.id}')`:`editCompraFin('${r.k.id}')`}">✏️</button><button class="iconbtn" title="Reverter" onclick="reverterFin('${r.tipo}','${r.id}')">↩️</button>`:''}${r.tipo!=='ajuste'&&isSocioOuDiretor()&&r.status==='revertida'?`<button class="iconbtn" title="Apagar linha" onclick="apagarFin('${r.tipo}','${r.id}')">🗑️</button>`:''}</td>`:''}</tr>`).join('')||`<tr><td colspan="${vis.length+(ger?2:1)}" class="empty">Nenhum lançamento no filtro atual.</td></tr>`}
+    <tr>${thSelTodos('financeiro',paginaFin.rows.filter(r=>r.tipo!=='auxiliar'))}${COLS_FIN.filter(c=>vis.includes(c.key)).map(c=>thCol('financeiro',c.key,c.label)).join('')}${ger?'<th>Ações</th>':''}</tr>
+    ${paginaFin.rows.map(r=>r.tipo==='auxiliar'?`<tr class="linha-aux">${podeExcluirLinhas()?'<td></td>':''}${vis.map(k=>cell(k,r)).join('')}${ger?'<td></td>':''}</tr>`:`<tr>${tdSel('financeiro',r.id)}${vis.map(k=>cell(k,r)).join('')}${ger?`<td style="white-space:nowrap">${r.tipo==='ajuste'?(isSocioOuDiretor()?`<button class="iconbtn" title="Excluir ajuste" onclick="excluirAjusteCaixa('${r.a.id}')">🗑️</button>`:''):r.status==='ativa'?`<button class="iconbtn" title="Editar" onclick="${r.tipo==='venda'?`editVendaFin('${r.v.id}')`:`editCompraFin('${r.k.id}')`}">✏️</button><button class="iconbtn" title="Reverter" onclick="reverterFin('${r.tipo}','${r.id}')">↩️</button>`:''}${r.tipo!=='ajuste'&&isSocioOuDiretor()&&r.status==='revertida'?`<button class="iconbtn" title="Apagar linha" onclick="apagarFin('${r.tipo}','${r.id}')">🗑️</button>`:''}</td>`:''}</tr>`).join('')||`<tr><td colspan="${vis.length+(ger?2:1)}" class="empty">Nenhum lançamento no filtro atual.</td></tr>`}
   </table></div>${paginacao('financeiro',paginaFin)}`;
 }
 /* Ajuste manual de caixa (Gerente+): entrada/saída direta, sem venda ou compra por trás */
@@ -2664,8 +2705,8 @@ function exportarRegistros(tipo){
  if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem exportar planilhas.');
  let rows=[],heads=['Módulo','Data/hora','Usuário','Descrição','Valor','Repasse','Loja','Status'];
  if(tipo==='financeiro'){
-  heads=['Módulo','Data/hora','Usuário','Tipo','Itens','Desconto','Deslocamento','Descrição','Entrada','Repasse','Valor','Status'];
-  rows=aplicarFiltros(linhasFinanceiro(),'financeiro').map(r=>['Financeiro',dataHoraBR(r.data),r.usuario_nome,r.tipo_label,r.itens,r.desconto,r.deslocamento,r.descricao,r.entrada||0,r.repasse||0,r.valor||0,r.status]);
+  heads=['Módulo','ID','Data/hora','Usuário','Tipo','Itens','Desconto','Deslocamento','Descrição','Entrada','Repasse','Valor','Status'];
+  rows=aplicarFiltros(linhasFinanceiro(),'financeiro').map(r=>['Financeiro',r.operacao_id||'',dataHoraBR(r.data),r.usuario_nome,r.tipo_label,r.itens,r.desconto,r.deslocamento,r.descricao,r.entrada==null?'':r.entrada,r.repasse||0,r.valor==null?'':r.valor,r.status]);
  }
  if(tipo==='bau'){heads=['Módulo','Data/hora','Usuário','Item','Tipo','Quantidade','Saldo resultante','Origem','ID'];rows=aplicarFiltros(db.estoque_bau.map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''})),'bau').map(m=>['Baú',dataHoraBR(m.data),m.usuario_nome||'',m.item_nome,MOV_LABEL[m.tipo_movimento]||m.tipo_movimento,m.quantidade,m.saldo_resultante||0,m.origem||'',m.operacao_id||''])}
  const csv=[heads.join(';')].concat(rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')));const blob=new Blob(['\ufeff'+csv.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bestbuds-'+tipo+'-'+todayISO()+'.csv';a.click();URL.revokeObjectURL(a.href);reg('Registros exportados (CSV)',tipo+' — '+rows.length+' linha(s)');toast('✅ CSV exportado: '+rows.length+' linha(s).')
@@ -2703,7 +2744,7 @@ function excluirTaxa(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sóc
 /* ================= FILTRO POR DROPDOWN v2.6.0 ================= */
 const GETTERS={
  bau:{operacao_id:r=>r.operacao_id,data:r=>r.data,usuario_nome:r=>r.usuario_nome,item_nome:r=>r.item_nome,tipo_movimento:r=>r.tipo_movimento,quantidade:r=>r.quantidade,saldo_resultante:r=>r.saldo_resultante,origem:r=>r.origem},
- financeiro:{data:r=>r.data,usuario_nome:r=>r.usuario_nome,tipo_label:r=>r.tipo_label,itens:r=>r.itens,desconto:r=>r.desconto,deslocamento:r=>r.deslocamento,descricao:r=>r.descricao,entrada:r=>r.entrada,repasse:r=>r.repasse,valor:r=>r.valor,status:r=>r.status}
+ financeiro:{operacao_id:r=>r.operacao_id,data:r=>r.data,usuario_nome:r=>r.usuario_nome,tipo_label:r=>r.tipo_label,itens:r=>r.itens,desconto:r=>r.desconto,deslocamento:r=>r.deslocamento,descricao:r=>r.descricao,entrada:r=>r.entrada,repasse:r=>r.repasse,valor:r=>r.valor,status:r=>r.status}
 };
 /* Tabelas de Configurações usam o MESMO filtro do Baú/Financeiro: cada tabela registra sua fonte de linhas e os
    "getters" (texto exibido em cada coluna). A coluna de chave "data" usa o filtro De/Até. */
@@ -2725,7 +2766,7 @@ function linhasFonte(tipo){
    get devolve o número bruto (null = sem valor na linha); moeda formata como dinheiro. */
 const NUMERICOS={
  bau:{quantidade:{get:r=>r.quantidade},saldo_resultante:{get:r=>r.saldo_resultante}},
- financeiro:{entrada:{get:r=>r.tipo==='venda'?r.entrada:null,moeda:1},repasse:{get:r=>r.tipo==='venda'?r.repasse:null,moeda:1},valor:{get:r=>r.valor,moeda:1}},
+ financeiro:{entrada:{get:r=>r.tipo==='venda'?r.entrada:null,moeda:1},repasse:{get:r=>r.tipo==='venda'||r.tipo==='auxiliar'?r.repasse:null,moeda:1},valor:{get:r=>r.valor,moeda:1}},
  cfg_produtos:{preco:{get:p=>p.preco,moeda:1}},
  cfg_itens:{preco:{get:i=>i.preco_unitario,moeda:1},qtd_minima:{get:i=>i.qtd_minima||0},saldo:{get:i=>controlaEstoque(i.categoria)?saldoItem(i.id):null}},
  cfg_categorias:{itens:{get:c=>db.itens.filter(i=>i.categoria===c.codigo).length}},
@@ -2921,6 +2962,37 @@ function excluirSelecionadas(tipo){
   ids.forEach(id=>selExclusao[tipo].delete(id));
   render();toast('✅ '+ids.length+' linha(s) excluída(s).'+(bloqueadas?' '+bloqueadas+' continuam selecionadas, ainda ativas.':''));
  });
+}
+
+/* ================= ATUALIZAÇÃO AUTOMÁTICA (Supabase Realtime) =================
+   Qualquer inserção/alteração/exclusão feita por outro usuário recarrega os dados em ~1 s.
+   A tela só é redesenhada quando é seguro (sem modal aberto, sem formulário de compra/produção
+   aberto e sem campo em edição); caso contrário a atualização espera e é aplicada logo depois. */
+const TABELAS_TEMPO_REAL=['vendas','venda_itens','compras','compra_itens','estoque_bau','ajustes_caixa','itens','produtos','receitas','receita_insumos',
+  'fornecedores','fornecedor_itens','parcerias','parceria_faixas','taxas_deslocamento','categorias_itens','profiles','configuracoes','solicitacoes_senha'];
+let _rtCanal=null,_rtTimer=null,_rtPendente=false,_rtCarregando=false;
+function iniciarTempoReal(){
+  if(_rtCanal||!sb.channel)return;
+  _rtCanal=sb.channel('bestbuds-sync');
+  TABELAS_TEMPO_REAL.forEach(t=>_rtCanal.on('postgres_changes',{event:'*',schema:'public',table:t},agendarSincronizacao));
+  _rtCanal.subscribe();
+  setInterval(()=>{if(_rtPendente&&podeRedesenhar()){_rtPendente=false;render()}},1500);
+}
+function agendarSincronizacao(){clearTimeout(_rtTimer);_rtTimer=setTimeout(sincronizarAgora,700)}
+async function sincronizarAgora(){
+  if(_rtCarregando){agendarSincronizacao();return}
+  _rtCarregando=true;
+  try{await carregarTudo();aplicarIdentidadeVisual()}catch(e){console.warn('[Best Buds] falha ao sincronizar',e);_rtCarregando=false;return}
+  _rtCarregando=false;
+  if(podeRedesenhar())render();else _rtPendente=true;
+}
+function podeRedesenhar(){
+  if(document.querySelector('.modal-bg.open'))return false;
+  if(typeof bauTela!=='undefined'&&bauTela)return false;
+  if(filtroAberto||_sselAberto)return false;
+  const a=document.activeElement,mc=document.getElementById('main-content');
+  if(a&&mc&&mc.contains(a)&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return false;
+  return true;
 }
 
 /* ================= LISTA SUSPENSA PESQUISÁVEL (todos os <select>) =================
