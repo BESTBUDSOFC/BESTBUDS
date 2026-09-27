@@ -261,9 +261,17 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
   #bottom-nav{display:none!important}
 }
 /* Formulário de compra (duas seções) */
-.cmp-row{display:grid;grid-template-columns:2fr 1.6fr .7fr .9fr .9fr 34px;gap:6px;align-items:center;margin-bottom:8px;padding:3px;border-radius:10px;border:1px solid transparent}
+.cmp-row{display:grid;grid-template-columns:2fr 1.7fr .7fr 1fr .9fr 104px 34px;gap:6px;align-items:center;margin-bottom:8px;padding:3px;border-radius:10px;border:1px solid transparent}
 .cmp-head{margin-bottom:4px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.cmp-head span:nth-child(4),.cmp-head span:nth-child(5){text-align:right}
+.cmp-head span:nth-child(5){text-align:right}
+.cmp-card{max-width:1180px}
+.cmp-tabela{border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:6px;background:rgba(0,0,0,.12)}
+.cp-preco-fixo{display:flex;align-items:center;gap:6px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden}
+.cp-preco-fixo b{color:var(--text);font-weight:600}
+.cp-tipo-tag{display:inline-block;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.cp-tipo-tag.auto{background:rgba(var(--info-rgb,59,130,246),.16);color:#9EC1FF;border:1px solid rgba(var(--info-rgb,59,130,246),.35)}
+.cp-tipo-tag.manual{background:rgba(var(--green-rgb),.12);color:var(--green);border:1px solid rgba(var(--green-rgb),.35)}
+.cmp-total .btn{margin-left:8px}
 #cfg-body td:last-child{white-space:nowrap}
 .cmp-val{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
 .cmp-sub{color:var(--text);font-weight:700}
@@ -273,10 +281,13 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .cmp-total b{color:var(--text)}
 .cmp-total .op{color:var(--muted);font-weight:700}
 .cmp-total .tot b{color:var(--green);font-size:16px}
-.modal.modal-larga{max-width:980px}
+.modal.modal-larga{max-width:1180px}
 @media(max-width:700px){
   .cmp-row{grid-template-columns:1fr 1fr;padding:8px;border-color:var(--border)}
-  .cmp-row>.nc-nome,.cmp-row>.nc-forn,.cmp-row>.ssel-btn{grid-column:span 2}
+  .cmp-row{grid-template-columns:1fr 1fr 34px;grid-template-areas:"item item del" "forn forn forn" "qtd preco preco" "sub tipo tipo"}
+  .cmp-row>.cp-item{grid-area:item}.cmp-row>.cp-forn-cel{grid-area:forn}.cmp-row>.cp-qtd{grid-area:qtd}.cmp-row>.cp-preco-cel{grid-area:preco}
+  .cmp-row>.cmp-sub{grid-area:sub;text-align:left}.cmp-row>.cp-tipo{grid-area:tipo;justify-self:end}.cmp-row>.btn-del-linha{grid-area:del}
+  .cmp-tabela{padding:8px}
   .cmp-row>.btn-del-linha{justify-self:end}
   .cmp-head{display:none}
 }
@@ -301,10 +312,17 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .ssel-op.sel{color:var(--green);font-weight:700}
 .ssel-grp{padding:8px 12px 4px;font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:800;letter-spacing:.4px}
 .ssel-vazio{padding:10px 12px;color:var(--muted);font-size:12px}
+.ssel-sub{color:var(--muted);font-size:11px;margin-left:6px}
 .ssel-add{display:block;width:100%;text-align:left;padding:10px 12px;background:rgba(var(--green-rgb),.08);color:var(--green);font-weight:700;font-size:13px;border-top:1px solid var(--border)}
 /* Lista suspensa pesquisável com múltipla escolha */
 .msel{position:relative}
 .msel-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.fvinc{margin-bottom:8px}
+.fvinc-head,.fvinc-row{display:grid;grid-template-columns:1fr 150px 34px;gap:8px;align-items:center}
+.fvinc-head{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.fvinc-row{padding:4px 0;border-bottom:1px dashed var(--border)}
+.fvinc-nome{font-size:13px}
+.campo-erro{border-color:var(--danger)!important;background:rgba(var(--danger-rgb),.08)!important}
 .msel-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(var(--purple-rgb),.15);border:1px solid var(--purple);color:var(--purple-light);border-radius:14px;padding:3px 6px 3px 10px;font-size:12px}
 .msel-chip button{background:none;color:inherit;font-size:13px;line-height:1;padding:0 2px}
 .msel-list{margin-top:4px;max-height:220px;overflow:auto;background:var(--input-bg);border:1px solid var(--border);border-radius:8px}
@@ -382,7 +400,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.12.0';
+const VERSAO='v4.13.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -475,10 +493,10 @@ async function carregarTudo(){
   db={
     usuarios:(perfis.data||[]),
     produtos:(produtos.data||[]).map(p=>({...p,preco:Number(p.preco),imagem:p.imagem_url})),
-    itens:(itens.data||[]).map(i=>({...i,preco_unitario:Number(i.preco_unitario),qtd_minima:Number(i.qtd_minima)})),
+    itens:(itens.data||[]).map(i=>({...i,qtd_minima:Number(i.qtd_minima)})),
     receitas:(receitas.data||[]).map(r=>({...r,insumos:porReceita[r.id]||[]})),
     fornecedores:(fornecedores.data||[]),
-    fornecedor_itens:(fornItens.data||[]),
+    fornecedor_itens:(fornItens.data||[]).map(x=>({...x,preco_unitario:x.preco_unitario==null?null:Number(x.preco_unitario)})),
     categorias:(categorias.data||[]),
     pedidos_senha:(pedidosSenha.data||[]),
     parcerias:parceriasArr,
@@ -1234,94 +1252,111 @@ async function confirmarProducao(rid){
   reg('Produção executada',`${r.nome} — ID ${producaoId} — quantidade ${q}`);closeModal();toast('✅ Produção executada.');render();
 }
 
-/* ================= COMPRAS (ABA PRÓPRIA) ================= */
-/* Formulário de compra com duas seções independentes (ambas opcionais, ao menos uma linha no total):
-   • Insumos — item e fornecedor escolhidos só entre cadastrados; preço vem do cadastro; dá entrada no Baú.
-   • Itens não controlados — tudo digitado; só registro financeiro.
+/* ================= COMPRAS ================= */
+/* Lista única de itens da compra. Cada linha vira, sozinha, um de dois tipos:
+   • Automático — o item digitado/escolhido existe no cadastro (categoria comprável). O fornecedor é escolhido entre os
+     vinculados ao item e o valor unitário vem desse vínculo (Configurações › Fornecedores), travado. Dá entrada no Baú.
+   • Manual — item que não está no cadastro. Fornecedor e valor unitário são digitados. Só registro financeiro.
    O mesmo formulário serve a Nova compra (prefixo "c") e à edição no Histórico Financeiro (prefixo "ec"). */
+function precoFornItem(fid,itemId){const v=db.fornecedor_itens.find(x=>x.fornecedor_id===fid&&x.item_id===itemId);return v&&v.preco_unitario!=null?Number(v.preco_unitario):null}
+function itemCompravelPorNome(nome){const n=sselNorm(String(nome||'').trim());return n?itensCompraveis().find(i=>sselNorm(i.nome)===n)||null:null}
 function fornOptionsHTML(itemId,selId){
-  const ativos=db.fornecedores.filter(f=>f.status==='ativo'||f.id===selId).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
-  const vinc=itemId?fornecedoresDoItem(itemId).map(f=>f.id):[];
-  const op=f=>`<option value="${f.id}" ${f.id===selId?'selected':''}>${esc(f.nome)}</option>`;
-  const a=ativos.filter(f=>vinc.includes(f.id)),b=ativos.filter(f=>!vinc.includes(f.id));
-  return `<option value="" disabled hidden ${selId?'':'selected'}>Selecione o fornecedor...</option>`+
-    (a.length?`<optgroup label="Vinculados a este item">${a.map(op).join('')}</optgroup>`+(b.length?`<optgroup label="Outros fornecedores">${b.map(op).join('')}</optgroup>`:''):b.map(op).join(''));
+  const lista=[...fornecedoresDoItem(itemId)];
+  if(selId&&!lista.some(f=>f.id===selId)){const f=db.fornecedores.find(x=>x.id===selId);if(f)lista.push(f)}
+  lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  return `<option value="" disabled hidden ${selId?'':'selected'}>${lista.length?'Selecione o fornecedor...':'Nenhum fornecedor vinculado'}</option>`+
+    lista.map(f=>{const pr=precoFornItem(f.id,itemId);return`<option value="${f.id}" ${f.id===selId?'selected':''}>${esc(f.nome)}${pr!=null?' · '+fmt(pr):''}</option>`}).join('');
 }
-function linhaInsumo(p,ci){
-  ci=ci||{};
-  const disp=itensCompraveis();
-  if(ci.item_id&&!disp.some(i=>i.id===ci.item_id)){const it=db.itens.find(i=>i.id===ci.item_id);if(it)disp.unshift(it)}
-  const preco=ci.preco_unitario!=null?ci.preco_unitario:'';
-  return`<div class="cmp-row" data-ins data-preco="${preco}" oninput="this.classList.remove('linha-erro')" onchange="this.classList.remove('linha-erro')">
-    <select class="ins-item" onchange="aoTrocarInsumo(this,'${p}')"><option value="" disabled hidden ${ci.item_id?'':'selected'}>Selecione um insumo...</option>${disp.map(i=>`<option value="${i.id}" data-preco="${i.preco_unitario||0}" ${ci.item_id===i.id?'selected':''}>${esc(i.nome)} (${esc(i.unidade_medida)})</option>`).join('')}</select>
-    <select class="ins-forn" data-ssel-extra="fornSselExtra" onchange="recalcCompra('${p}')">${fornOptionsHTML(ci.item_id,ci.fornecedor_id)}</select>
-    <input class="ins-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="recalcCompra('${p}')">
-    <span class="cmp-val ins-preco" title="Valor unitário do cadastro">${preco!==''?fmt(preco):'—'}</span>
-    <span class="cmp-val cmp-sub">—</span>
-    <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('.cmp-row').remove();recalcCompra('${p}')">✕</button></div>`;
+const TIPO_COMPRA={auto:['Automático','Item do cadastro: preço do fornecedor e entrada no Baú'],manual:['Manual','Item não cadastrado: fornecedor e valor digitados, só registro financeiro']};
+function tagTipoCompra(auto,vazio){if(vazio)return '';const t=TIPO_COMPRA[auto?'auto':'manual'];return`<span class="cp-tipo-tag ${auto?'auto':'manual'}" title="${t[1]}">${t[0]}</span>`}
+function celFornCompra(p,itemId,fornId,fornNome){
+  return itemId?`<select class="cp-forn" data-ssel-extra="fornSselExtra" onchange="aoTrocarFornCompra(this,'${p}')">${fornOptionsHTML(itemId,fornId)}</select>`
+    :`<input class="cp-forn-txt" data-combo="fornecedores" autocomplete="off" placeholder="Fornecedor" value="${esc(fornNome||'')}">`;
 }
-function linhaNC(p,ci){
+function celPrecoCompra(p,itemId,preco){
+  return itemId?`<span class="cp-preco-fixo" title="Valor do fornecedor para este item (Configurações › Fornecedores)">🔒 <b>${preco!==''&&preco!=null?fmt(preco):'—'}</b></span>`
+    :`<input class="cp-preco" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${preco??''}" oninput="recalcCompra('${p}')">`;
+}
+function linhaCompra(p,ci){
   ci=ci||{};
-  return`<div class="cmp-row" data-nc oninput="this.classList.remove('linha-erro')">
-    <input class="nc-nome" placeholder="Item" value="${esc(ci.nome||'')}">
-    <input class="nc-forn" list="${p}-forn-dl" autocomplete="off" placeholder="Fornecedor" value="${esc(ci.fornecedor_nome||'')}">
-    <input class="nc-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="recalcCompra('${p}')">
-    <input class="nc-preco" type="number" min="0.01" step="0.01" placeholder="Valor unit." value="${ci.preco_unitario??''}" oninput="recalcCompra('${p}')">
+  const it=ci.item_id?db.itens.find(i=>i.id===ci.item_id):null;
+  let forn=ci.fornecedor_id||'',preco=ci.preco_unitario;
+  if(it&&!forn){const v=fornecedoresDoItem(it.id);if(v.length===1)forn=v[0].id}
+  if(it&&preco==null&&forn)preco=precoFornItem(forn,it.id);
+  return`<div class="cmp-row" data-cmp data-item="${it?it.id:''}" data-preco="${it&&preco!=null?preco:''}" oninput="this.classList.remove('linha-erro')" onchange="this.classList.remove('linha-erro')">
+    <input class="cp-item" data-combo="itens" autocomplete="off" placeholder="Item (digite ou escolha)" value="${esc(it?it.nome:(ci.nome||''))}" oninput="aoDigitarItemCompra(this,'${p}')" onblur="nomeCanonicoItem(this)">
+    <div class="cp-forn-cel">${celFornCompra(p,it&&it.id,forn,ci.fornecedor_nome)}</div>
+    <input class="cp-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="recalcCompra('${p}')">
+    <div class="cp-preco-cel">${celPrecoCompra(p,it&&it.id,it?preco:ci.preco_unitario)}</div>
     <span class="cmp-val cmp-sub">—</span>
+    <span class="cp-tipo">${tagTipoCompra(!!it,!it&&!ci.nome)}</span>
     <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('.cmp-row').remove();recalcCompra('${p}')">✕</button></div>`;
 }
 function formCompraHTML(p,k){
   const its=(k&&k.itens)||[];
-  const ins=its.filter(i=>i.item_id),nc=its.filter(i=>!i.item_id);
-  const cab=`<div class="cmp-row cmp-head"><span>${'%s'}</span><span>Fornecedor</span><span>Qtd</span><span>Valor unit.</span><span>Subtotal</span><span></span></div>`;
   return`
-    <div class="section-title" style="margin-top:6px">📦 Insumos <span class="cmp-hint">opcional — dá entrada no Baú</span></div>
-    ${cab.replace('%s','Insumo')}
-    <div id="${p}-ins">${ins.map(i=>linhaInsumo(p,i)).join('')}</div>
-    <button class="btn btn-ghost btn-sm" onclick="addLinhaCompra('${p}','ins')">+ Adicionar insumo</button>
-    <div class="section-title" style="margin-top:18px">🧾 Itens não controlados <span class="cmp-hint">opcional — não dá entrada no Baú</span></div>
-    ${cab.replace('%s','Item')}
-    <div id="${p}-nc">${nc.map(i=>linhaNC(p,i)).join('')}</div>
-    <button class="btn btn-ghost btn-sm" onclick="addLinhaCompra('${p}','nc')">+ Adicionar item não controlado</button>
-    <datalist id="${p}-forn-dl">${db.fornecedores.filter(f=>f.status==='ativo').map(f=>`<option value="${esc(f.nome)}">`).join('')}</datalist>
+    <div class="cmp-tabela">
+      <div class="cmp-row cmp-head"><span>Item</span><span>Fornecedor</span><span>Qtd</span><span>Valor unit.</span><span>Subtotal</span><span>Tipo</span><span></span></div>
+      <div id="${p}-linhas">${(its.length?its:(k?[]:[{}])).map(i=>linhaCompra(p,i)).join('')}</div>
+      <button class="btn btn-ghost btn-sm" onclick="addLinhaCompra('${p}')">+ Adicionar linha</button>
+    </div>
     <div class="cmp-total" id="${p}-total"></div>
     <p id="${p}-err" style="color:var(--danger);font-size:13px;display:none;margin-top:10px"></p>`;
 }
-function addLinhaCompra(p,sec){
-  const d=document.createElement('div');d.innerHTML=sec==='ins'?linhaInsumo(p):linhaNC(p);
-  document.getElementById(p+'-'+sec).appendChild(d.firstElementChild);recalcCompra(p);
+function addLinhaCompra(p,ci){
+  const d=document.createElement('div');d.innerHTML=linhaCompra(p,ci);
+  const r=d.firstElementChild;document.getElementById(p+'-linhas').appendChild(r);recalcCompra(p);
+  const inp=r.querySelector('.cp-item');if(inp&&!ci)inp.focus();
+  return r;
 }
-/* Troca de insumo: preço do cadastro + fornecedores vinculados no topo; 1 vinculado → já selecionado */
-function aoTrocarInsumo(sel,p){
-  const linha=sel.closest('.cmp-row'),opt=sel.options[sel.selectedIndex];
-  const preco=opt?parseFloat(opt.getAttribute('data-preco')||'0'):0;
-  linha.dataset.preco=preco;linha.querySelector('.ins-preco').textContent=fmt(preco);
-  const fs=linha.querySelector('.ins-forn'),vinc=fornecedoresDoItem(sel.value);
-  const atual=fs.value;
-  fs.innerHTML=fornOptionsHTML(sel.value,atual||(vinc.length===1?vinc[0].id:''));
-  fs.value=atual||(vinc.length===1?vinc[0].id:'');
+/* Ao digitar/escolher o item: se bater com um item do cadastro, a linha vira Automático; senão, Manual. */
+function aoDigitarItemCompra(inp,p){
+  const r=inp.closest('.cmp-row'),it=itemCompravelPorNome(inp.value),novo=it?it.id:'';
+  r.querySelector('.cp-tipo').innerHTML=tagTipoCompra(!!it,!inp.value.trim());
+  if(r.dataset.item===novo)return recalcCompra(p);
+  // guarda o que foi digitado na linha Manual, para voltar a mostrar se ela deixar de ser Automático
+  const ft=r.querySelector('.cp-forn-txt'),pt=r.querySelector('.cp-preco');
+  if(ft)r.dataset.fornTxt=ft.value;if(pt)r.dataset.precoTxt=pt.value;
+  const fornTxt=r.dataset.fornTxt||'',precoTxt=r.dataset.precoTxt||'';
+  r.dataset.item=novo;
+  let forn='',preco='';
+  if(it){const v=fornecedoresDoItem(it.id);if(v.length===1){forn=v[0].id;const pr=precoFornItem(forn,it.id);preco=pr!=null?pr:''}}
+  r.dataset.preco=preco;
+  r.querySelector('.cp-forn-cel').innerHTML=celFornCompra(p,novo,forn,fornTxt);
+  r.querySelector('.cp-preco-cel').innerHTML=celPrecoCompra(p,novo,it?preco:precoTxt);
   recalcCompra(p);
 }
-/* Lê as duas seções. Linha incompleta é destacada e bloqueia o registro. */
+/* Item do cadastro digitado com outra grafia ("pacote b") fica com o nome do cadastro ao sair do campo */
+function nomeCanonicoItem(inp){const r=inp.closest('.cmp-row');const it=r&&r.dataset.item&&db.itens.find(i=>i.id===r.dataset.item);if(it&&inp.value!==it.nome)inp.value=it.nome}
+/* Fornecedor escolhido → valor unitário do vínculo fornecedor ↔ item */
+function aoTrocarFornCompra(sel,p){
+  const r=sel.closest('.cmp-row'),pr=precoFornItem(sel.value,r.dataset.item);
+  r.dataset.preco=pr!=null?pr:'';
+  r.querySelector('.cp-preco-cel').innerHTML=celPrecoCompra(p,r.dataset.item,r.dataset.preco);
+  recalcCompra(p);
+}
+/* Lê a lista e separa Automático (ins, entra no Baú) de Manual (nc). Linha incompleta é destacada e bloqueia o registro. */
 function lerFormCompra(p){
   const erros=[],ins=[],nc=[];
-  document.querySelectorAll(`#${p}-ins [data-ins]`).forEach(r=>{
-    const item_id=r.querySelector('.ins-item').value,fornecedor_id=r.querySelector('.ins-forn').value;
-    const quantidade=parseFloat(r.querySelector('.ins-qtd').value),preco_unitario=parseFloat(r.dataset.preco);
-    const it=db.itens.find(i=>i.id===item_id),f=db.fornecedores.find(x=>x.id===fornecedor_id);
-    const falta=[!it&&'insumo',!f&&'fornecedor cadastrado',!(quantidade>0)&&'quantidade'].filter(Boolean);
+  document.querySelectorAll(`#${p}-linhas [data-cmp]`).forEach((r,n)=>{
+    const quantidade=parseFloat(r.querySelector('.cp-qtd').value);
+    const nomeDig=r.querySelector('.cp-item').value.trim();
+    let falta,linha;
+    if(r.dataset.item){
+      const it=db.itens.find(i=>i.id===r.dataset.item),f=db.fornecedores.find(x=>x.id===(r.querySelector('.cp-forn')||{}).value);
+      const preco_unitario=parseFloat(r.dataset.preco);
+      falta=[!f&&'fornecedor',!(quantidade>0)&&'quantidade',f&&!(preco_unitario>0)&&'valor do fornecedor para este item'].filter(Boolean);
+      linha={item_id:it.id,nome:it.nome,quantidade,preco_unitario:preco_unitario||0,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:'',_it:it};
+      ins.push(linha);
+    }else{
+      const fn=(r.querySelector('.cp-forn-txt')||{}).value.trim(),preco_unitario=parseFloat((r.querySelector('.cp-preco')||{}).value);
+      falta=[!nomeDig&&'item',!fn&&'fornecedor',!(quantidade>0)&&'quantidade',!(preco_unitario>0)&&'valor unitário'].filter(Boolean);
+      const f=db.fornecedores.find(x=>sselNorm(x.nome)===sselNorm(fn));
+      linha={item_id:null,nome:nomeDig,quantidade,preco_unitario,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:fn};
+      nc.push(linha);
+    }
     r.classList.toggle('linha-erro',falta.length>0);
-    if(falta.length)erros.push(`Insumos — ${it?'"'+it.nome+'"':'linha '+(ins.length+1)}: falta ${falta.join(', ')}.`);
-    ins.push({item_id,nome:it?it.nome:'?',quantidade,preco_unitario:preco_unitario||0,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:'',_it:it});
-  });
-  document.querySelectorAll(`#${p}-nc [data-nc]`).forEach(r=>{
-    const nome=r.querySelector('.nc-nome').value.trim(),fn=r.querySelector('.nc-forn').value.trim();
-    const quantidade=parseFloat(r.querySelector('.nc-qtd').value),preco_unitario=parseFloat(r.querySelector('.nc-preco').value);
-    const falta=[!nome&&'item',!fn&&'fornecedor',!(quantidade>0)&&'quantidade',!(preco_unitario>0)&&'valor unitário'].filter(Boolean);
-    r.classList.toggle('linha-erro',falta.length>0);
-    if(falta.length)erros.push(`Itens não controlados — ${nome?'"'+nome+'"':'linha '+(nc.length+1)}: falta ${falta.join(', ')}.`);
-    const f=db.fornecedores.find(x=>x.nome.toLowerCase()===fn.toLowerCase());
-    nc.push({item_id:null,nome,quantidade,preco_unitario,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:fn});
+    if(falta.length)erros.push(`Linha ${n+1}${linha.nome?' ("'+linha.nome+'")':''}: falta ${falta.join(', ')}.`);
   });
   const sub=l=>(l.quantidade>0&&l.preco_unitario>0)?l.quantidade*l.preco_unitario:0;
   const totIns=ins.reduce((s,l)=>s+sub(l),0),totNc=nc.reduce((s,l)=>s+sub(l),0);
@@ -1329,17 +1364,17 @@ function lerFormCompra(p){
 }
 function recalcCompra(p){
   const box=document.getElementById(p+'-total');if(!box)return;
-  document.querySelectorAll(`#${p}-ins .cmp-row, #${p}-nc .cmp-row`).forEach(r=>{
-    const q=parseFloat((r.querySelector('.ins-qtd,.nc-qtd')||{}).value);
-    const pu=r.hasAttribute('data-ins')?parseFloat(r.dataset.preco):parseFloat(r.querySelector('.nc-preco').value);
+  document.querySelectorAll(`#${p}-linhas .cmp-row`).forEach(r=>{
+    const q=parseFloat(r.querySelector('.cp-qtd').value);
+    const pu=r.dataset.item?parseFloat(r.dataset.preco):parseFloat((r.querySelector('.cp-preco')||{}).value);
     r.querySelector('.cmp-sub').textContent=(q>0&&pu>0)?fmt(q*pu):'—';
   });
   const f=lerFormCompraSilencioso(p);
-  box.innerHTML=`<span>Insumos <b>${fmt(f.totIns)}</b></span><span class="op">+</span><span>Itens não controlados <b>${fmt(f.totNc)}</b></span><span class="op">=</span><span class="tot">Total <b>${fmt(f.total)}</b></span>`;
+  box.innerHTML=`<span>Insumos: <b>${fmt(f.totIns)}</b></span><span class="op">+</span><span>Itens não controlados: <b>${fmt(f.totNc)}</b></span><span class="op">=</span><span class="tot">Total: <b>${fmt(f.total)}</b></span>${p==='c'?'<button class="btn btn-primary" onclick="salvarCompra()">Registrar compra</button>':''}`;
 }
 /* Mesmo cálculo sem marcar erros (usado enquanto o usuário digita) */
 function lerFormCompraSilencioso(p){
-  const marcadas=[...document.querySelectorAll(`#${p}-ins .cmp-row, #${p}-nc .cmp-row`)].map(r=>[r,r.classList.contains('linha-erro')]);
+  const marcadas=[...document.querySelectorAll(`#${p}-linhas .cmp-row`)].map(r=>[r,r.classList.contains('linha-erro')]);
   const f=lerFormCompra(p);marcadas.forEach(([r,m])=>r.classList.toggle('linha-erro',m));return f;
 }
 /* Cabeçalho da compra: 1 fornecedor → ele; vários → nomes unidos por " + " */
@@ -1352,32 +1387,34 @@ function fornecedorCabecalho(linhas){
 function validarFormCompra(p){
   const f=lerFormCompra(p),e=document.getElementById(p+'-err');
   e.style.display='none';
-  if(!f.ins.length&&!f.nc.length){e.textContent='Adicione pelo menos uma linha em Insumos ou em Itens não controlados.';e.style.display='block';return null}
+  if(!f.ins.length&&!f.nc.length){e.textContent='Adicione pelo menos um item na compra.';e.style.display='block';return null}
   if(f.erros.length){
-    e.innerHTML=f.erros.map(esc).join('<br>')+(f.ins.some(l=>!l.fornecedor_id)?`<br><span style="color:var(--muted)">${isGerente()?'Fornecedor ainda não cadastrado? Pesquise o nome na lista do fornecedor e use "+ Cadastrar fornecedor".':'Insumos só aceitam fornecedores cadastrados — peça a um Gerente para cadastrar o fornecedor.'}</span>`:'');
+    e.innerHTML=f.erros.map(esc).join('<br>')+(f.ins.some(l=>!l.fornecedor_id)?`<br><span style="color:var(--muted)">${isGerente()?'Item sem fornecedor vinculado? Abra a lista do fornecedor e use "+ Vincular fornecedor" (informe o valor do item nesse fornecedor).':'Itens do cadastro só aceitam fornecedores vinculados a eles — peça a um Gerente para vincular o fornecedor e o valor.'}</span>`:'');
     e.style.display='block';
-    const r=document.querySelector(`#${p}-ins .linha-erro, #${p}-nc .linha-erro`);if(r)r.scrollIntoView({block:'center',behavior:'smooth'});
+    const r=document.querySelector(`#${p}-linhas .linha-erro`);if(r)r.scrollIntoView({block:'center',behavior:'smooth'});
     return null;
   }
   return f;
 }
-/* Atalho "+ Cadastrar fornecedor" dentro da lista do fornecedor (só para quem pode cadastrar) */
+/* Atalho na lista do fornecedor: vincular um fornecedor existente ao item ou cadastrar um novo (com o valor do item) */
 function fornSselExtra(sel,q){
-  if(!isGerente())return q?`<div class="ssel-vazio">Fornecedor não cadastrado. Insumos só aceitam fornecedores cadastrados — peça a um Gerente para cadastrá-lo.</div>`:'';
-  return`<button type="button" class="ssel-add" onclick="cadastrarFornecedorAtalho(${esc(JSON.stringify(q))})">+ Cadastrar fornecedor${q?' “'+esc(q)+'”':''}</button>`;
+  if(!isGerente())return `<div class="ssel-vazio">${q?'Fornecedor não vinculado a este item. ':''}Peça a um Gerente para vincular fornecedores e valores a este item.</div>`;
+  const existe=q&&db.fornecedores.find(f=>sselNorm(f.nome)===sselNorm(q));
+  return`<button type="button" class="ssel-add" onclick="cadastrarFornecedorAtalho(${esc(JSON.stringify(q))})">${existe?'+ Vincular “'+esc(existe.nome)+'” a este item':'+ Vincular fornecedor'+(q?' “'+esc(q)+'”':'')}</button>`;
 }
 function cadastrarFornecedorAtalho(nome){
   const sel=_sselAberto;sselFechar();if(!sel)return;
-  const linha=sel.closest('.cmp-row'),itemId=linha.querySelector('.ins-item').value;
-  const p=linha.parentElement.id.replace(/-ins$/,'');
-  modalFornecedor(null,{nome,itemId,onSaved:f=>{
+  const linha=sel.closest('.cmp-row'),itemId=linha.dataset.item;
+  const p=linha.parentElement.id.replace(/-linhas$/,'');
+  const existe=nome&&db.fornecedores.find(f=>sselNorm(f.nome)===sselNorm(nome));
+  modalFornecedor(existe?existe.id:null,{nome,itemId,onSaved:f=>{
     if(!f)return;
-    document.querySelectorAll(`#${p}-ins [data-ins]`).forEach(r=>{
-      const fs=r.querySelector('.ins-forn'),v=r===linha?f.id:fs.value;
-      fs.innerHTML=fornOptionsHTML(r.querySelector('.ins-item').value,v);fs.value=v;
+    document.querySelectorAll(`#${p}-linhas [data-cmp]`).forEach(r=>{
+      if(r.dataset.item!==itemId)return;
+      const fs=r.querySelector('.cp-forn'),v=r===linha?f.id:fs.value;
+      fs.innerHTML=fornOptionsHTML(itemId,v);fs.value=v;aoTrocarFornCompra(fs,p);
     });
-    const dl=document.getElementById(p+'-forn-dl');if(dl)dl.innerHTML=db.fornecedores.filter(x=>x.status==='ativo').map(x=>`<option value="${esc(x.nome)}">`).join('');
-    linha.classList.remove('linha-erro');recalcCompra(p);toast('✅ Fornecedor "'+f.nome+'" cadastrado e selecionado.');
+    linha.classList.remove('linha-erro');recalcCompra(p);toast('✅ Fornecedor "'+f.nome+'" vinculado e selecionado.');
   }});
 }
 /* Resumo minimalista antes de registrar */
@@ -1448,18 +1485,15 @@ function telaProducao(){
 function fecharTelaBau(){bauTela=null;render()}
 function telaCompraHTML(c){
  c.innerHTML=`
-  <h2 class="page-title">🚚 Nova compra</h2>
+  <h2 class="page-title">🚚 Registrar compra</h2>
   <p class="page-sub">Registro de despesa e entrada de insumos no Baú.</p>
   <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">← Voltar ao Baú</button>
-  <div class="card" style="max-width:980px">
+  <div class="card cmp-card">
     <div class="row2">
       <div class="field"><label>Data</label><input id="c-data" type="date" value="${todayISO()}"></div>
       <div class="field"><label>Observação (opcional)</label><input id="c-desc"></div>
     </div>
     ${formCompraHTML('c')}
-    <div style="margin-top:16px;display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="salvarCompra()">Registrar compra</button>
-    </div>
   </div>`;
  recalcCompra('c');
 }
@@ -1772,7 +1806,7 @@ function editCompraFin(id){
 async function salvarEdicaoCompraFin(id){
  const k=db.compras.find(x=>x.id===id);if(!k)return;
  const desc=document.getElementById('ec-desc').value.trim();
- const semLinhas=!document.querySelector('#ec-ins .cmp-row, #ec-nc .cmp-row');
+ const semLinhas=!document.querySelector('#ec-linhas .cmp-row');
  let patch,linhas=null;
  if(semLinhas&&!(k.itens||[]).length){patch={descricao:desc}} // compra antiga só com valor total
  else{
@@ -2095,19 +2129,18 @@ function excluirProduto(id){
 /* ---- Cadastro Central de Itens (preço unitário, qtd mínima, inativar/excluir) ---- */
 function cfgItens(b){
   const sn=v=>v?'Sim':'Não';
-  const T='cfg_itens',F=tabelaFiltravel(T,itensOrdenados,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,preco:i=>fmt(i.preco_unitario),qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
+  const T='cfg_itens',F=tabelaFiltravel(T,itensOrdenados,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
   const TC='cfg_categorias',FC=tabelaFiltravel(TC,()=>ordenarPorOrdem([...db.categorias]),{nome:c=>c.nome,estoque:c=>sn(c.controla_estoque),compravel:c=>sn(c.compravel&&c.controla_estoque),receitas:c=>sn(c.aparece_receitas),itens:c=>String(db.itens.filter(i=>i.categoria===c.codigo).length),data:c=>c.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">📦 Cadastro Central de Itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalItem()">+ Novo item</button></div>
   ${F.barra}<div class="table-wrap"><table>
-  <tr><th>Ordem</th>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'preco','Preço unitário')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  <tr><th>Ordem</th>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
   ${F.rows.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr class="${i.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverItem',i.id)}
     <td><b>${esc(i.nome)}</b>${alerta?' <span class="tag r">⚠️ no mínimo</span>':''}</td>
     <td><span class="tag">${catNome(i.categoria)}</span></td>
     <td style="color:var(--muted)">${esc(i.unidade_medida)}</td>
-    <td class="money">${fmt(i.preco_unitario)}</td>
     <td>${i.qtd_minima||0}</td>
     <td>${!controlaEstoque(i.categoria)?'<span style="color:var(--muted)">n/a</span>':s}</td>
     <td><span class="badge ${i.status==='ativo'?'ativo':'inativo'}">${i.status}</span></td>
@@ -2115,7 +2148,7 @@ function cfgItens(b){
     <td><button class="iconbtn" onclick="modalItem('${i.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleItem('${i.id}')">${i.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()&&i.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')||linhaSemResultado(10,T)}</table></div>
+  </tr>`}).join('')||linhaSemResultado(9,T)}</table></div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
     <div class="section-title" style="margin:0">🏷️ Categorias de itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalCategoria()">+ Nova categoria</button></div>
@@ -2182,12 +2215,12 @@ function modalItem(id){
   const it=id?db.itens.find(x=>x.id===id):null;
   openModal(`<h3>${it?'Editar item':'Novo item'}</h3>
   <div class="field"><label>Nome</label><input id="i-nome" value="${it?esc(it.nome):''}"></div>
-  <div class="row3">
+  <div class="row2">
     <div class="field"><label>Categoria</label><select id="i-cat">
       ${it?'':'<option value="" disabled hidden selected>Selecione a categoria...</option>'}${db.categorias.map(c=>`<option value="${esc(c.codigo)}" ${it&&it.categoria===c.codigo?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></div>
     <div class="field"><label>Unidade</label><input id="i-un" value="${it?esc(it.unidade_medida):'un'}"></div>
-    <div class="field"><label>Preço unitário ($)</label><input id="i-custo" type="number" min="0" step="0.01" value="${it?it.preco_unitario:0}"></div>
   </div>
+  <p class="muted" style="font-size:12px;margin:-4px 0 12px">O valor de compra fica no cadastro de cada fornecedor (Configurações › Fornecedores), porque cada fornecedor tem o seu preço.</p>
   <div class="field" style="max-width:220px"><label>Qtd mínima de estoque (alerta no Baú)</label><input id="i-min" type="number" min="0" step="0.01" value="${it?it.qtd_minima:0}"></div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarItem('${id||''}')">Salvar</button></div>`);
@@ -2196,11 +2229,10 @@ async function salvarItem(id){
   const nome=document.getElementById('i-nome').value.trim();
   const cat=document.getElementById('i-cat').value;
   const un=document.getElementById('i-un').value.trim()||'un';
-  const custo=parseFloat(document.getElementById('i-custo').value)||0;
   const min=parseFloat(document.getElementById('i-min').value)||0;
   if(!nome)return toast('⚠️ Informe o nome do item.');
   if(!cat)return toast('⚠️ Selecione a categoria do item.');
-  const campos={nome,categoria:cat,unidade_medida:un,preco_unitario:custo,qtd_minima:min};
+  const campos={nome,categoria:cat,unidade_medida:un,qtd_minima:min};
   if(id){
     const{error}=await sb.from('itens').update(campos).eq('id',id);
     if(error)return toast('⚠️ Erro ao salvar: '+error.message);
@@ -2209,7 +2241,7 @@ async function salvarItem(id){
     campos.ordem=Math.max(0,...db.itens.map(x=>x.ordem||0))+1;
     const{data,error}=await sb.from('itens').insert(campos).select().single();
     if(error)return toast('⚠️ Erro ao salvar: '+error.message);
-    db.itens.push({...data,preco_unitario:Number(data.preco_unitario),qtd_minima:Number(data.qtd_minima)});reg('Item criado',nome);
+    db.itens.push({...data,qtd_minima:Number(data.qtd_minima)});reg('Item criado',nome);
   }
   closeModal();render();
 }
@@ -2300,12 +2332,12 @@ function cfgFornecedores(b){
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🚚 Fornecedores</div>
     <button class="btn btn-purple btn-sm" onclick="modalFornecedor()">+ Novo fornecedor</button></div>
-  <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Vincule cada fornecedor às Matérias-Primas e aos Insumos Auxiliares que ele fornece. Na compra, o campo fornecedor de cada linha sugere os fornecedores vinculados àquele item.</p>
+  <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Vincule cada fornecedor aos itens que ele fornece e informe o valor de cada item nesse fornecedor. Na compra, ao escolher o fornecedor de um item, o valor unitário vem daqui.</p>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Nome')}${thCol(T,'itens','Itens fornecidos')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
   ${F.rows.map(f=>{const its=itensDoFornecedor(f.id);return`<tr class="${f.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverFornecedor',f.id)}<td><b>${esc(f.nome)}</b></td>
-    <td style="color:var(--muted);font-size:12px">${its.length?its.map(i=>esc(i.nome)).join(', '):'—'}</td>
+    <td style="color:var(--muted);font-size:12px">${its.length?its.map(i=>{const pr=precoFornItem(f.id,i.id);return esc(i.nome)+` <b style="color:var(--text)">${pr!=null?fmt(pr):'—'}</b>`}).join(' · '):'—'}</td>
     <td><span class="badge ${f.status==='ativo'?'ativo':'inativo'}">${f.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(f.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalFornecedor('${f.id}')">✏️</button>
@@ -2322,17 +2354,19 @@ function modalFornecedor(id,opts){
   const itens=db.itens.filter(i=>catCompravel(i.categoria)&&(i.status==='ativo'||vinculados.has(i.id)))
     .sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   _fornAtalho=opts.onSaved||null;
+  _fornPrecos={};vinculados.forEach(iid=>{const pr=f?precoFornItem(f.id,iid):null;_fornPrecos[iid]=pr!=null&&pr>0?pr:''});
   (opts.onSaved?openModal2:openModal)(`<h3>${f?'Editar fornecedor':'Novo fornecedor'}</h3>
   <div class="field"><label>Razão social / Nome fantasia</label><input id="f-nome" value="${f?esc(f.nome):esc(opts.nome||'')}"></div>
-  <div class="field"><label>Itens fornecidos (categorias que podem ser compradas)</label>
+  <div class="field"><label>Itens fornecidos e valor de cada um neste fornecedor</label>
     <div class="msel" id="f-msel">
-      <div class="msel-chips" id="f-chips"></div>
+      <div class="fvinc" id="f-chips"></div>
       <input id="f-busca" autocomplete="off" placeholder="🔍 Pesquisar itens…" onfocus="mselAbrir(true)" oninput="mselFiltrar(this.value)">
       <div class="msel-list" id="f-itens" style="display:none">${itens.map(i=>`<label class="msel-opt" data-nome="${esc(i.nome.toLowerCase())}"><input type="checkbox" value="${i.id}" data-label="${esc(i.nome)}" ${vinculados.has(i.id)?'checked':''} onchange="mselChips()"> ${esc(i.nome)}<span class="tag">${esc(catNome(i.categoria))}</span></label>`).join('')}<div class="msel-vazio" id="f-vazio" style="display:${itens.length?'none':'block'}">${itens.length?'Nenhum item encontrado.':'Nenhum item de categoria comprável cadastrado.'}</div></div>
     </div></div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModalFornecedor()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarFornecedor('${id||''}')">Salvar</button></div>`);
   mselChips();
+  if(opts.itemId){const inp=document.querySelector(`.fvinc-row[data-item="${opts.itemId}"] .fvinc-preco`);if(inp)setTimeout(()=>inp.focus(),60)}
 }
 function fecharModalFornecedor(){if(_fornAtalho){_fornAtalho=null;closeModal2()}else closeModal()}
 function mselAbrir(abrir){const l=document.getElementById('f-itens');if(l)l.style.display=abrir?'block':'none'}
@@ -2342,9 +2376,15 @@ function mselFiltrar(q){
   const v=document.getElementById('f-vazio');if(v)v.style.display=vis?'none':'block';
   mselAbrir(true);
 }
+/* Itens vinculados ao fornecedor: uma linha por item com o valor dele neste fornecedor (obrigatório) */
+let _fornPrecos={};
 function mselChips(){
   const box=document.getElementById('f-chips');if(!box)return;
-  box.innerHTML=[...document.querySelectorAll('#f-itens input:checked')].map(c=>`<span class="msel-chip">${esc(c.dataset.label)}<button type="button" title="Remover" onclick="mselDesmarcar('${c.value}')">×</button></span>`).join('');
+  const marc=[...document.querySelectorAll('#f-itens input:checked')];
+  box.innerHTML=marc.length?`<div class="fvinc-head"><span>Item</span><span>Valor unitário</span><span></span></div>`+marc.map(c=>{const it=db.itens.find(i=>i.id===c.value);return`<div class="fvinc-row" data-item="${c.value}">
+    <span class="fvinc-nome">${esc(c.dataset.label)}${it?` <span class="muted">(${esc(it.unidade_medida)})</span>`:''}</span>
+    <input class="fvinc-preco" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${_fornPrecos[c.value]??''}" oninput="_fornPrecos['${c.value}']=this.value;this.classList.remove('campo-erro')">
+    <button type="button" class="iconbtn" title="Remover item" onclick="mselDesmarcar('${c.value}')">✕</button></div>`}).join(''):'<p class="muted" style="font-size:12px;margin:0 0 6px">Nenhum item vinculado. Pesquise abaixo e marque os itens que este fornecedor vende.</p>';
 }
 function mselDesmarcar(itemId){const c=document.querySelector(`#f-itens input[value="${itemId}"]`);if(c){c.checked=false;mselChips()}}
 document.addEventListener('mousedown',e=>{const m=document.getElementById('f-msel');if(m&&!m.contains(e.target))mselAbrir(false)});
@@ -2353,6 +2393,12 @@ async function salvarFornecedor(id){
   if(!nome)return toast('⚠️ Informe o nome do fornecedor.');
   if(db.fornecedores.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.id!==id))return toast('⚠️ Já existe um fornecedor com esse nome.');
   const marcados=[...document.querySelectorAll('#f-itens input:checked')].map(c=>c.value);
+  const precos={};
+  for(const iid of marcados){
+    const v=parseFloat(_fornPrecos[iid]);
+    if(!(v>0)){const it=db.itens.find(i=>i.id===iid);const inp=document.querySelector(`.fvinc-row[data-item="${iid}"] .fvinc-preco`);if(inp){inp.classList.add('campo-erro');inp.focus()}return toast('⚠️ Informe o valor de "'+(it?it.nome:'item')+'" neste fornecedor.')}
+    precos[iid]=Math.round(v*100)/100;
+  }
   const campos={nome};
   let fid=id;
   if(id){
@@ -2367,16 +2413,18 @@ async function salvarFornecedor(id){
   // sincroniza vínculos com Matérias-Primas
   const atuais=db.fornecedor_itens.filter(x=>x.fornecedor_id===fid);
   const remover=atuais.filter(x=>!marcados.includes(x.item_id)).map(x=>x.id);
-  const adicionar=marcados.filter(itemId=>!atuais.some(x=>x.item_id===itemId)).map(item_id=>({fornecedor_id:fid,item_id}));
+  // novos vínculos e vínculos com valor alterado vão numa chamada só (upsert pelo par fornecedor+item)
+  const gravar=marcados.filter(itemId=>{const a=atuais.find(x=>x.item_id===itemId);return !a||Number(a.preco_unitario)!==precos[itemId]}).map(item_id=>({fornecedor_id:fid,item_id,preco_unitario:precos[item_id]}));
   if(remover.length){
     const{error}=await sb.from('fornecedor_itens').delete().in('id',remover);
     if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao remover vínculos: '+error.message);
     db.fornecedor_itens=db.fornecedor_itens.filter(x=>!remover.includes(x.id));
   }
-  if(adicionar.length){
-    const{data,error}=await sb.from('fornecedor_itens').insert(adicionar).select();
-    if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao vincular itens: '+error.message);
-    db.fornecedor_itens.push(...data);
+  if(gravar.length){
+    const{data,error}=await sb.from('fornecedor_itens').upsert(gravar,{onConflict:'fornecedor_id,item_id'}).select();
+    if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao gravar itens e valores: '+error.message);
+    data.forEach(d=>{const v={...d,preco_unitario:Number(d.preco_unitario)};const i=db.fornecedor_itens.findIndex(x=>x.fornecedor_id===d.fornecedor_id&&x.item_id===d.item_id);if(i>=0)db.fornecedor_itens[i]=v;else db.fornecedor_itens.push(v)});
+    reg('Valores do fornecedor atualizados',nome+' — '+gravar.length+' item(ns)');
   }
   if(_fornAtalho){const cb=_fornAtalho;_fornAtalho=null;closeModal2();cb(db.fornecedores.find(x=>x.id===fid));return}
   closeModal();render();
@@ -2887,7 +2935,7 @@ const NUMERICOS={
  bau:{quantidade:{get:r=>r.quantidade},saldo_resultante:{get:r=>r.saldo_resultante}},
  financeiro:{entrada:{get:r=>r.tipo==='venda'?r.entrada:null,moeda:1},repasse:{get:r=>r.tipo==='venda'||r.tipo==='auxiliar'?r.repasse:null,moeda:1},valor:{get:r=>r.valor,moeda:1}},
  cfg_produtos:{preco:{get:p=>p.preco,moeda:1}},
- cfg_itens:{preco:{get:i=>i.preco_unitario,moeda:1},qtd_minima:{get:i=>i.qtd_minima||0},saldo:{get:i=>controlaEstoque(i.categoria)?saldoItem(i.id):null}},
+ cfg_itens:{qtd_minima:{get:i=>i.qtd_minima||0},saldo:{get:i=>controlaEstoque(i.categoria)?saldoItem(i.id):null}},
  cfg_categorias:{itens:{get:c=>db.itens.filter(i=>i.categoria===c.codigo).length}},
  cfg_deslocamento:{valor:{get:t=>t.valor,moeda:1}}
 };
@@ -3128,10 +3176,9 @@ function podeRedesenhar(){
 /* ================= LISTA SUSPENSA PESQUISÁVEL (todos os <select>) =================
    Cada <select> ganha um botão com lista + busca. O <select> original continua no DOM (oculto) e segue
    sendo a fonte do valor, então todo onchange/value existente funciona igual.
-   Adaptação por campo: busca aparece com mais de 6 opções; optgroup vira título de grupo;
+   Toda lista tem o campo de pesquisa; optgroup vira título de grupo;
    opção vazia "hidden" vira placeholder; data-ssel-extra="fn" acrescenta um rodapé (ex.: cadastrar fornecedor);
    data-nosearch desliga o recurso num select específico. */
-const SSEL_MIN_BUSCA=6;
 let _sselAberto=null,_sselPop=null;
 function sselNorm(t){return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
 (function(){const P=HTMLSelectElement.prototype;['value','selectedIndex'].forEach(k=>{const d=Object.getOwnPropertyDescriptor(P,k);Object.defineProperty(P,k,{configurable:true,enumerable:d.enumerable,get(){return d.get.call(this)},set(v){d.set.call(this,v);if(this._ssel)this._ssel.sync()}})})})();
@@ -3164,7 +3211,7 @@ function sselAbrir(sel){
   const visiveis=itens.filter(x=>x.grp||!(x.o.hidden||(x.o.disabled&&x.o.value==='')));
   const nOps=visiveis.filter(x=>x.o).length;
   const extraFn=sel.dataset.sselExtra&&window[sel.dataset.sselExtra];
-  const comBusca=nOps>SSEL_MIN_BUSCA||!!extraFn;
+  const comBusca=true; // mesmo filtro em todas as listas suspensas
   pop.innerHTML=`${comBusca?'<input class="ssel-q" placeholder="🔍 Pesquisar..." autocomplete="off">':''}<div class="ssel-ops"></div><div class="ssel-extra"></div>`;
   const q=pop.querySelector('.ssel-q'),ops=pop.querySelector('.ssel-ops'),extra=pop.querySelector('.ssel-extra');
   let hl=-1,lista=[];
@@ -3195,6 +3242,58 @@ window.addEventListener('resize',sselFechar);
 document.addEventListener('scroll',e=>{if(_sselPop&&!_sselPop.contains(e.target))sselFechar()},true);
 new MutationObserver(ms=>{ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.tagName==='SELECT')sselAplicar(n);else n.querySelectorAll&&n.querySelectorAll('select').forEach(sselAplicar)}));if(_sselAberto&&!_sselAberto.isConnected)sselFechar()}).observe(document.documentElement,{childList:true,subtree:true});
 document.querySelectorAll('select').forEach(sselAplicar);
+
+
+/* ================= CAMPO COM LISTA SUSPENSA QUE ACEITA TEXTO LIVRE =================
+   <input data-combo="itens|fornecedores">: digitar filtra a lista (mesmo visual e filtro das listas suspensas),
+   mas o valor digitado é aceito mesmo fora da lista (ex.: item não cadastrado na compra). */
+const COMBO_FONTES={
+  itens:()=>itensCompraveis().map(i=>({v:i.nome,sub:catNome(i.categoria)})),
+  fornecedores:()=>db.fornecedores.filter(f=>f.status==='ativo').sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(f=>({v:f.nome}))
+};
+const COMBO_FORA={itens:'não está no cadastro — a linha fica como item Manual (não entra no Baú).',fornecedores:'não está cadastrado — será registrado como fornecedor avulso.'};
+let _comboInp=null,_comboPop=null,_comboHl=-1,_comboLista=[];
+function comboFechar(){if(_comboPop){_comboPop.remove();_comboPop=null}_comboInp=null}
+function comboDesenhar(){
+  const inp=_comboInp;if(!inp||!_comboPop)return;
+  const fonte=COMBO_FONTES[inp.dataset.combo];const t=sselNorm(inp.value.trim());
+  _comboLista=(fonte?fonte():[]).filter(o=>!t||sselNorm(o.v).includes(t));
+  const exato=_comboLista.some(o=>sselNorm(o.v)===t);
+  if(_comboHl>=_comboLista.length)_comboHl=_comboLista.length-1;
+  _comboPop.querySelector('.ssel-ops').innerHTML=_comboLista.map((o,i)=>`<div class="ssel-op ${sselNorm(o.v)===t?'sel':''} ${i===_comboHl?'hl':''}" data-i="${i}">${esc(o.v)}${o.sub?` <span class="ssel-sub">${esc(o.sub)}</span>`:''}</div>`).join('')||(t?'':`<div class="ssel-vazio">Nenhuma opção cadastrada.</div>`);
+  _comboPop.querySelector('.ssel-extra').innerHTML=t&&!exato?`<div class="ssel-vazio">“${esc(inp.value.trim())}” ${COMBO_FORA[inp.dataset.combo]||''}</div>`:'';
+}
+function comboAbrir(inp){
+  sselFechar();if(_comboInp!==inp)comboFechar();
+  if(!_comboPop){
+    _comboInp=inp;_comboHl=-1;
+    const pop=document.createElement('div');pop.className='ssel-pop combo-pop';pop.innerHTML='<div class="ssel-ops"></div><div class="ssel-extra"></div>';_comboPop=pop;
+    pop.addEventListener('mousedown',e=>{e.preventDefault();const d=e.target.closest('.ssel-op');if(d)comboEscolher(+d.dataset.i)});
+    document.body.appendChild(pop);
+  }
+  const r=inp.getBoundingClientRect(),w=Math.max(r.width,260);
+  _comboPop.style.width=w+'px';_comboPop.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+'px';
+  _comboPop.style.top='';_comboPop.style.bottom='';
+  if(window.innerHeight-r.bottom<300&&r.top>window.innerHeight-r.bottom)_comboPop.style.bottom=(window.innerHeight-r.top+4)+'px';else _comboPop.style.top=(r.bottom+4)+'px';
+  comboDesenhar();
+}
+function comboEscolher(i){
+  const inp=_comboInp,o=_comboLista[i];if(!inp||!o)return;
+  inp.value=o.v;comboFechar();inp.dispatchEvent(new Event('input',{bubbles:true}));
+}
+document.addEventListener('focusin',e=>{const inp=e.target.closest&&e.target.closest('input[data-combo]');if(inp)comboAbrir(inp);else if(_comboPop&&!_comboPop.contains(e.target))comboFechar()});
+document.addEventListener('input',e=>{if(e.target===_comboInp){_comboHl=e.target.value.trim()?0:-1;comboDesenhar()}},true);
+document.addEventListener('keydown',e=>{
+  if(!_comboInp||e.target!==_comboInp)return;
+  const n=_comboLista.length;
+  if(e.key==='ArrowDown'){e.preventDefault();if(n){_comboHl=(_comboHl+1)%n;comboDesenhar()}}
+  else if(e.key==='ArrowUp'){e.preventDefault();if(n){_comboHl=(_comboHl-1+n)%n;comboDesenhar()}}
+  else if(e.key==='Enter'){if(_comboHl>=0&&n){e.preventDefault();comboEscolher(_comboHl)}else comboFechar()}
+  else if(e.key==='Escape'||e.key==='Tab')comboFechar();
+});
+document.addEventListener('mousedown',e=>{if(_comboPop&&!_comboPop.contains(e.target)&&e.target!==_comboInp)comboFechar()});
+document.addEventListener('scroll',e=>{if(_comboPop&&!_comboPop.contains(e.target))comboFechar()},true);
+window.addEventListener('resize',comboFechar);
 
 /* ================= INIT ================= */
 document.getElementById('login-olho').innerHTML=OLHO_ABERTO;
