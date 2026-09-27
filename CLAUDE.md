@@ -41,6 +41,8 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - **Automático:** item do cadastro. O fornecedor é escolhido entre os vinculados ao item e o valor vem do vínculo, travado. Dá entrada no Baú.
   - **Manual:** item digitado que não está no cadastro. Fornecedor e valor são digitados. Só registro financeiro.
 - Subtotal: no Automático é travado (qtd × valor do fornecedor). No Manual é digitável: qtd + valor unitário calcula o subtotal; qtd + subtotal calcula o valor unitário. Manda o último campo de valor digitado.
+- Vendedor registra compras e produções (grava só em nome próprio), mas não cadastra fornecedores, itens nem vínculos. Ajustes manuais de estoque (+ Entrada / − Saída) são de Gerente para cima.
+- No cadastro do fornecedor, os itens aparecem na ordem em que foram colocados (`fornecedor_itens.criado_em`); item novo vai sempre para o fim.
 - Toda lista suspensa tem o mesmo campo de pesquisa. Campos de texto com lista (`data-combo`) aceitam valores fora da lista.
 
 ## Avisos

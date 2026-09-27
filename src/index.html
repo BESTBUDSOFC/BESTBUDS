@@ -417,7 +417,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.14.1';
+const VERSAO='v4.15.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -485,7 +485,7 @@ async function carregarTudo(){
     sb.from('estoque_bau').select('*').order('data',{ascending:false}),
     sb.from('configuracoes').select('*').eq('id',1).single(),
     sb.from('ajustes_caixa').select('*').order('data',{ascending:false}),
-    sb.from('fornecedor_itens').select('*'),
+    sb.from('fornecedor_itens').select('*').order('criado_em',{ascending:true}),
     sb.from('categorias_itens').select('*').order('ordem').order('nome'),
     sb.from('solicitacoes_senha').select('*').eq('status','pendente').order('criado_em')
   ]);
@@ -2398,11 +2398,15 @@ let _fornAtalho=null;
 function modalFornecedor(id,opts){
   opts=opts||{};
   const f=id?db.fornecedores.find(x=>x.id===id):null;
-  const vinculados=new Set(f?itensDoFornecedor(f.id).map(i=>i.id):[]);
+  // vínculos na ordem em que foram criados (fornecedor_itens vem ordenado por criado_em)
+  const idsCompraveis=new Set(f?itensDoFornecedor(f.id).map(i=>i.id):[]);
+  const vinculados=new Set(f?db.fornecedor_itens.filter(x=>x.fornecedor_id===f.id&&idsCompraveis.has(x.item_id)).map(x=>x.item_id):[]);
   if(opts.itemId)vinculados.add(opts.itemId);
   const itens=db.itens.filter(i=>catCompravel(i.categoria)&&(i.status==='ativo'||vinculados.has(i.id)))
     .sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   _fornAtalho=opts.onSaved||null;
+  // ordem das linhas = ordem em que os itens foram colocados (vínculos já existentes primeiro, cada item novo no fim)
+  _fornOrdem=[...vinculados];
   _fornPrecos={};vinculados.forEach(iid=>{const pr=f?precoFornItem(f.id,iid):null;_fornPrecos[iid]=pr!=null&&pr>0?pr:''});
   (opts.onSaved?openModal2:openModal)(`<h3>${f?'Editar fornecedor':'Novo fornecedor'}</h3>
   <div class="field"><label>Razão social / Nome fantasia</label><input id="f-nome" value="${f?esc(f.nome):esc(opts.nome||'')}"></div>
@@ -2432,10 +2436,14 @@ function mselFiltrar(q){
   mselAbrir(true);
 }
 /* Itens vinculados ao fornecedor: uma linha por item com o valor dele neste fornecedor (obrigatório) */
-let _fornPrecos={};
+let _fornPrecos={},_fornOrdem=[];
 function mselChips(){
   const box=fq('#f-chips');if(!box)return;
-  const marc=fqa('#f-itens input:checked');
+  const marcados=fqa('#f-itens input:checked');
+  const ids=marcados.map(c=>c.value);
+  _fornOrdem=_fornOrdem.filter(id=>ids.includes(id));             // desmarcados saem
+  ids.forEach(id=>{if(!_fornOrdem.includes(id))_fornOrdem.push(id)}); // recém-marcados entram no fim
+  const marc=_fornOrdem.map(id=>marcados.find(c=>c.value===id));
   box.innerHTML=marc.length?`<div class="fvinc-head"><span>Item</span><span>Valor unitário</span><span></span></div>`+marc.map(c=>{const it=db.itens.find(i=>i.id===c.value);return`<div class="fvinc-row" data-item="${c.value}">
     <span class="fvinc-nome">${esc(c.dataset.label)}${it?` <span class="muted">(${esc(it.unidade_medida)})</span>`:''}</span>
     <input class="fvinc-preco" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${_fornPrecos[c.value]??''}" oninput="_fornPrecos['${c.value}']=this.value;this.classList.remove('campo-erro')">
