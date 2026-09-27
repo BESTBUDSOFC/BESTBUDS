@@ -43,6 +43,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Subtotal: no Automático é travado (qtd × valor do fornecedor). No Manual é digitável: qtd + valor unitário calcula o subtotal; qtd + subtotal calcula o valor unitário. Manda o último campo de valor digitado.
 - A categoria decide: "pode ser comprada" (aparece na compra e nos vínculos com fornecedor) e "controle de estoque" (entra no Baú) são independentes.
 - A lista de itens da compra é agrupada por categoria (na ordem das categorias), com divisória entre os grupos. Gerente ou acima tem o atalho "+ Cadastrar item" no rodapé da lista (abre o cadastro no `modal2`, só com categorias compráveis, e escolhe o item na linha).
+- Item do cadastro sem o fornecedor desejado: a lista de fornecedores da linha mostra, para Gerente ou acima, "Vincular fornecedor já cadastrado" (fornecedores ativos ainda não vinculados ao item; escolher um pede só o valor e grava o vínculo) e "+ Cadastrar novo fornecedor".
 - Vendedor registra compras e produções (grava só em nome próprio), mas não cadastra fornecedores, itens nem vínculos. Ajustes manuais de estoque (+ Entrada / − Saída) são de Gerente para cima.
 - No cadastro do fornecedor, os itens aparecem na ordem em que foram colocados (`fornecedor_itens.criado_em`); item novo vai sempre para o fim.
 - Toda lista suspensa tem o mesmo campo de pesquisa. Campos de texto com lista (`data-combo`) aceitam valores fora da lista.
@@ -59,6 +60,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 ## Menu lateral e topo
 
 - Topo: logo, nome da loja com a tipografia da tela de login (1ª parte cheia, última palavra vazada) e a versão ao lado. Não há "Sair" no topo no computador; no celular (sem menu lateral) o "Sair" e o selo do perfil continuam no topo.
-- Menu lateral, abaixo dos módulos: "On-line" e "Off-line" com a contagem, recolhidos por padrão; clicar abre ou fecha a lista. Cada pessoa aparece com o nome e, abaixo, o selo do perfil (o mesmo da aba Usuários). Presença pelo Supabase Realtime (canal `presenca`, chave = id do usuário), sem gravar no banco.
+- Menu lateral: módulos de operação no alto; "Configurações" fica separada, logo acima do rodapé com o usuário.
+- Menu lateral, abaixo dos módulos: "On-line" e "Off-line" com a contagem, recolhidos por padrão; clicar abre ou fecha a lista. Cada pessoa aparece com o nome e, na frente, o selo do perfil em tamanho menor (mesmo desenho da aba Usuários). Presença pelo Supabase Realtime (canal `presenca`, chave = id do usuário), sem gravar no banco.
 - Rodapé do menu: nome, selo do perfil e o botão "Sair".
 - Não há avatares (removidos na v4.17.3).

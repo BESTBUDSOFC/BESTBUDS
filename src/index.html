@@ -149,6 +149,8 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 #btn-sair:hover{color:var(--danger);border-color:var(--danger)}
 #sidebar-nav{position:fixed;top:60px;left:0;bottom:0;width:240px;background:var(--surface);border-right:1px solid var(--border);display:none;flex-direction:column;padding:12px 10px;gap:4px;z-index:40}
 #nav-mods{display:flex;flex-direction:column;gap:4px;flex:none}
+#nav-cfg{flex:none;padding-top:8px;border-top:1px solid var(--border)}
+#nav-cfg:empty{display:none}
 /* Membros da equipe (presença em tempo real) + rodapé com o perfil */
 .eq-sec{flex:1;min-height:0;overflow:auto;margin-top:10px;padding-top:6px;border-top:1px solid var(--border)}
 .eq-grp{display:flex;align-items:center;gap:8px;width:100%;background:transparent;border-radius:8px;font-size:12px;font-weight:700;color:var(--muted);padding:9px 8px;text-align:left}
@@ -159,8 +161,10 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .eq-grp .seta{font-size:10px;transition:transform .15s}
 .eq-grp.aberto .seta{transform:rotate(90deg)}
 .eq-lista{padding:2px 0 6px 23px}
-.eq-item{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:6px 8px;border-radius:8px}
-.eq-item+.eq-item{margin-top:4px}
+.eq-item{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:8px;min-width:0}
+.eq-item .nm{flex:0 1 auto;min-width:0}
+.badge.mini{flex:none;padding:1px 6px;font-size:9px;line-height:1.4}
+.eq-item+.eq-item{margin-top:2px}
 .eq-item.off{opacity:.55}
 .eq-item .nm,.eq-perfil .nm{font-size:13px;font-weight:600;color:var(--text);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .eq-vazio{font-size:12px;color:var(--muted);padding:2px 8px 4px}
@@ -363,6 +367,9 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .ssel-grp~.ssel-op{padding-left:18px}
 .ssel-vazio{padding:10px 12px;color:var(--muted);font-size:12px}
 .ssel-sub{color:var(--muted);font-size:11px;margin-left:6px}
+.ssel-vinc{max-height:180px;overflow:auto}
+.ssel-vinc-op{display:block;width:100%;text-align:left;background:transparent;color:var(--text)}
+.ssel-vinc-op:hover{background:rgba(var(--purple-rgb),.18)}
 .ssel-add{display:block;width:100%;text-align:left;padding:10px 12px;background:rgba(var(--green-rgb),.08);color:var(--green);font-weight:700;font-size:13px;border-top:1px solid var(--border)}
 /* Lista suspensa pesquisável com múltipla escolha */
 .msel{position:relative}
@@ -421,7 +428,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 </header>
 
 <!-- ============ NAV LATERAL (DESKTOP) ============ -->
-<nav id="sidebar-nav"><div id="nav-mods"></div><div class="eq-sec" id="eq-sec"></div><div class="eq-perfil" id="eq-perfil"></div></nav>
+<nav id="sidebar-nav"><div id="nav-mods"></div><div class="eq-sec" id="eq-sec"></div><div id="nav-cfg"></div><div class="eq-perfil" id="eq-perfil"></div></nav>
 <!-- ============ NAV INFERIOR (MOBILE) ============ -->
 <nav id="bottom-nav"><div class="bn-inner" id="bn-inner"></div></nav>
 
@@ -454,7 +461,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.17.3';
+const VERSAO='v4.17.4';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -680,8 +687,10 @@ function buildNav(){
   const mods=MODULOS.filter(m=>m.perfis.includes(sessionUser().perfil));
   const sb_=document.getElementById('nav-mods'),bn=document.getElementById('bn-inner');
   renderEquipe();renderPerfilRodape();
-  if(sb_)sb_.innerHTML=mods.map(m=>
-    `<button class="nav-item ${m.id===moduloAtual?'active':''}" onclick="go('${m.id}')"><span class="ic">${m.ic}</span>${m.nome}${selosMenu(m)}</button>`).join('');
+  // menu lateral: módulos de operação no alto; Configurações separada, logo acima do rodapé com o usuário
+  const btnNav=m=>`<button class="nav-item ${m.id===moduloAtual?'active':''}" onclick="go('${m.id}')"><span class="ic">${m.ic}</span>${m.nome}${selosMenu(m)}</button>`;
+  if(sb_)sb_.innerHTML=mods.filter(m=>m.id!=='config').map(btnNav).join('');
+  const cfg=document.getElementById('nav-cfg');if(cfg)cfg.innerHTML=mods.filter(m=>m.id==='config').map(btnNav).join('');
   if(bn)bn.innerHTML=mods.map(m=>
     `<button class="nav-item ${m.id===moduloAtual?'active':''}" onclick="go('${m.id}')"><span class="ic">${m.ic}</span>${m.nome.split(' ')[0]}${selosMenu(m)}</button>`).join('');
 }
@@ -1492,10 +1501,50 @@ function validarFormCompra(p){
   return f;
 }
 /* Atalho na lista do fornecedor: vincular um fornecedor existente ao item ou cadastrar um novo (com o valor do item) */
+/* Rodapé da lista de fornecedores de um item da compra (Gerente+):
+   • fornecedores já cadastrados e ainda não vinculados ao item → escolher um abre só o valor do item nesse fornecedor;
+   • "+ Cadastrar novo fornecedor" → cadastro completo na 2ª camada. */
 function fornSselExtra(sel,q){
   if(!isGerente())return `<div class="ssel-vazio">${q?'Fornecedor não vinculado a este item. ':''}Peça a um Gerente para vincular fornecedores e valores a este item.</div>`;
+  const itemId=sel.closest('.cmp-row').dataset.item,t=sselNorm(q||'');
+  const vinc=new Set(db.fornecedor_itens.filter(x=>x.item_id===itemId).map(x=>x.fornecedor_id));
+  const livres=db.fornecedores.filter(f=>f.status==='ativo'&&!vinc.has(f.id)&&(!t||sselNorm(f.nome).includes(t))).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   const existe=q&&db.fornecedores.find(f=>sselNorm(f.nome)===sselNorm(q));
-  return`<button type="button" class="ssel-add" onclick="cadastrarFornecedorAtalho(${esc(JSON.stringify(q))})">${existe?'+ Vincular “'+esc(existe.nome)+'” a este item':'+ Vincular fornecedor'+(q?' “'+esc(q)+'”':'')}</button>`;
+  return (livres.length?`<div class="ssel-grp">Vincular fornecedor já cadastrado</div><div class="ssel-vinc">${livres.map(f=>`<button type="button" class="ssel-op ssel-vinc-op" onclick="vincularFornecedorExistente('${f.id}')">🔗 ${esc(f.nome)}</button>`).join('')}</div>`:'')
+    +(existe?'':`<button type="button" class="ssel-add" onclick="cadastrarFornecedorAtalho(${esc(JSON.stringify(q))})">+ Cadastrar novo fornecedor${q?' “'+esc(q)+'”':''}</button>`);
+}
+/* Vincula um fornecedor existente ao item da linha: pede só o valor do item nesse fornecedor */
+let _vincPend=null;
+function vincularFornecedorExistente(fid){
+  const sel=_sselAberto;sselFechar();if(!sel||!isGerente())return;
+  const linha=sel.closest('.cmp-row'),itemId=linha.dataset.item,f=db.fornecedores.find(x=>x.id===fid),it=db.itens.find(x=>x.id===itemId);
+  if(!f||!it)return;
+  _vincPend={linha,itemId,fid};
+  openModal2(`<h3>Vincular fornecedor</h3>
+    <p class="muted" style="font-size:13px;margin:-6px 0 14px">“${esc(f.nome)}” passa a fornecer “${esc(it.nome)}”. O valor fica gravado no cadastro do fornecedor (Configurações › Fornecedores).</p>
+    <div class="field" style="max-width:220px"><label>Valor unitário de ${esc(it.nome)}</label><input id="vinc-preco" type="number" min="0.01" step="0.01" placeholder="$ 0,00" onkeydown="if(event.key==='Enter')salvarVinculoFornecedor()"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="_vincPend=null;closeModal2()">Cancelar</button><button class="btn btn-primary" id="btn-vinc" onclick="salvarVinculoFornecedor()">Vincular e escolher</button></div>`);
+  setTimeout(()=>{const i=document.getElementById('vinc-preco');if(i)i.focus()},50);
+}
+async function salvarVinculoFornecedor(){
+  const v=_vincPend;if(!v)return;
+  const preco=parseFloat(document.getElementById('vinc-preco').value);
+  if(!(preco>0))return toast('⚠️ Informe o valor do item neste fornecedor.');
+  const btn=document.getElementById('btn-vinc');btn.disabled=true;
+  const{data,error}=await sb.from('fornecedor_itens').insert({fornecedor_id:v.fid,item_id:v.itemId,preco_unitario:preco}).select().single();
+  btn.disabled=false;
+  if(error)return toast('⚠️ Não foi possível vincular: '+error.message);
+  db.fornecedor_itens.push({...(data||{fornecedor_id:v.fid,item_id:v.itemId}),preco_unitario:preco});
+  _vincPend=null;closeModal2();
+  const p=v.linha.parentElement.id.replace(/-linhas$/,''),f=db.fornecedores.find(x=>x.id===v.fid),it=db.itens.find(x=>x.id===v.itemId);
+  document.querySelectorAll(`#${p}-linhas [data-cmp]`).forEach(r=>{     // atualiza todas as linhas do mesmo item
+    if(r.dataset.item!==v.itemId)return;
+    const fs=r.querySelector('.cp-forn'),val=r===v.linha?v.fid:fs.value;
+    fs.innerHTML=fornOptionsHTML(v.itemId,val);fs.value=val;aoTrocarFornCompra(fs,p);
+  });
+  v.linha.classList.remove('linha-erro');recalcCompra(p);
+  reg('Fornecedor vinculado a item',`${f?f.nome:''} — ${it?it.nome:''} — ${fmt(preco)}`);
+  toast('✅ "'+(f?f.nome:'')+'" vinculado e escolhido.');
 }
 function cadastrarFornecedorAtalho(nome){
   const sel=_sselAberto;sselFechar();if(!sel)return;
@@ -3346,7 +3395,7 @@ function sselAbrir(sel){
     const res=[];let grp=null;
     visiveis.forEach(x=>{if(x.grp){grp=x.grp;return}if(!t||sselNorm(x.o.text).includes(t)){if(grp!==null&&!res.some(r=>r.grp===grp))res.push({grp});res.push(x)}});
     lista=res.filter(x=>x.o);hl=lista.findIndex(x=>x.o.selected&&x.o.value!=='');if(hl<0&&t&&lista.length)hl=0;
-    ops.innerHTML=res.map(x=>x.grp!==undefined?`<div class="ssel-grp">${esc(x.grp)}</div>`:`<div class="ssel-op ${x.o.selected&&x.o.value!==''?'sel':''} ${lista[hl]===x?'hl':''}" data-i="${lista.indexOf(x)}">${esc(x.o.text)}</div>`).join('')||`<div class="ssel-vazio">Nenhum resultado${t?' para “'+esc(q.value.trim())+'”':''}.</div>`;
+    ops.innerHTML=res.map(x=>x.grp!==undefined?`<div class="ssel-grp">${esc(x.grp)}</div>`:`<div class="ssel-op ${x.o.selected&&x.o.value!==''?'sel':''} ${lista[hl]===x?'hl':''}" data-i="${lista.indexOf(x)}">${esc(x.o.text)}</div>`).join('')||(extraFn?'':`<div class="ssel-vazio">Nenhum resultado${t?' para “'+esc(q.value.trim())+'”':''}.</div>`);   // com rodapé (ex.: vincular fornecedor), ele mesmo orienta
     extra.innerHTML=extraFn?extraFn(sel,q?q.value.trim():''):'';
   };
   const escolher=i=>{const x=lista[i];if(!x||x.o.disabled)return;sel.value=x.o.value;sel.dispatchEvent(new Event('change',{bubbles:true}));sselFechar();sel._ssel.btn.focus()};
@@ -3467,7 +3516,7 @@ function iniciarPresenca(){
   });
   _presCanal.subscribe(status=>{if(status==='SUBSCRIBED')_presCanal.track({usuario_id:eu,desde:new Date().toISOString()})});
 }
-function seloPerfil(u){return `<span class="badge ${esc(u.perfil)}">${esc(PERFIL_LABEL[u.perfil]||u.perfil)}</span>`}
+function seloPerfil(u,mini){return `<span class="badge ${esc(u.perfil)}${mini?' mini':''}">${esc(PERFIL_LABEL[u.perfil]||u.perfil)}</span>`}
 function membrosEquipe(){return (db.usuarios||[]).filter(u=>u.status==='ativo').sort((a,b)=>(PERFIL_NIVEL[b.perfil]||0)-(PERFIL_NIVEL[a.perfil]||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}))}
 function alternarEquipe(k){_eqAberto[k]=!_eqAberto[k];renderEquipe()}
 function renderEquipe(){
@@ -3475,7 +3524,7 @@ function renderEquipe(){
   const eu=session.usuario_id,todos=membrosEquipe();
   const estaOn=u=>u.id===eu||_online.has(u.id);   // quem está vendo a tela está on-line
   const on=todos.filter(estaOn),off=todos.filter(u=>!estaOn(u));
-  const item=(u,ok)=>`<div class="eq-item ${ok?'':'off'}"><span class="nm" title="${esc(u.nome)}">${esc(u.nome)}${u.id===eu?' <span class="muted" style="font-size:11px;font-weight:400">(você)</span>':''}</span>${seloPerfil(u)}</div>`;
+  const item=(u,ok)=>`<div class="eq-item ${ok?'':'off'}"><span class="nm" title="${esc(u.nome)}">${esc(u.nome)}${u.id===eu?' <span class="muted" style="font-size:11px;font-weight:400">(você)</span>':''}</span>${seloPerfil(u,true)}</div>`;
   const grupo=(k,tit,lista,ok,vazio)=>`<button class="eq-grp ${ok?'on':''} ${_eqAberto[k]?'aberto':''}" aria-expanded="${_eqAberto[k]}" onclick="alternarEquipe('${k}')"><span class="seta">▶</span><span class="dot"></span>${tit}<span class="n">${lista.length}</span></button>
     ${_eqAberto[k]?`<div class="eq-lista">${lista.map(u=>item(u,ok)).join('')||`<div class="eq-vazio">${vazio}</div>`}</div>`:''}`;
   el.innerHTML=grupo('on','On-line',on,true,'Ninguém on-line.')+grupo('off','Off-line',off,false,'Todos on-line.');
