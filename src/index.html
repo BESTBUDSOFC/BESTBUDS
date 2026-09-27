@@ -245,11 +245,18 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .lf-slider b{min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
 .aviso-bg{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:16px}
 .aviso-bg.open{display:flex}
-.aviso-box{background:var(--surface);border:1px solid var(--warning-border);border-radius:16px;max-width:520px;width:100%;padding:22px 22px 18px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.aviso-box{background:var(--surface);border:1px solid var(--warning-border);border-radius:16px;max-width:520px;width:100%;max-height:92vh;overflow:auto;padding:22px 22px 18px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
 .aviso-topo{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--warning)}
 .aviso-titulo{margin:6px 0 10px;font-size:20px}
 .aviso-msg{white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.5}
 .aviso-meta{margin-top:12px;font-size:12px;color:var(--muted)}
+.aviso-img{display:block;margin:0 0 10px;border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--input-bg)}
+.aviso-img img{display:block;width:100%;max-height:50vh;object-fit:contain}
+.aviso-lista .aviso-img img{max-height:220px}
+.aviso-img-btn{display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;letter-spacing:0}
+.aviso-img-prev{position:relative;margin-top:8px;max-width:260px;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.aviso-img-prev img{display:block;width:100%;max-height:180px;object-fit:contain;background:var(--input-bg)}
+.aviso-img-prev .iconbtn{position:absolute;top:6px;right:6px;background:var(--surface)}
 .aviso-lista{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto}
 .aviso-item{border:1px solid var(--border);border-radius:10px;padding:12px}
 .aviso-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
@@ -283,6 +290,8 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .cp-preco-fixo b{color:var(--text);font-weight:600}
 .cp-tipo-tag{display:inline-block;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
 .cp-tipo-tag.auto{background:rgba(var(--info-rgb,59,130,246),.16);color:#9EC1FF;border:1px solid rgba(var(--info-rgb,59,130,246),.35)}
+.cp-tipo-tag:has(small){border-radius:10px;padding:4px 10px;text-align:center}
+.cp-tipo-tag small{display:block;font-size:10px;font-weight:600;opacity:.85;margin-top:1px}
 .cp-tipo-tag.manual{background:rgba(var(--green-rgb),.12);color:var(--green);border:1px solid rgba(var(--green-rgb),.35)}
 .cmp-total .btn{margin-left:8px}
 #cfg-body td:last-child{white-space:nowrap}
@@ -323,7 +332,9 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .ssel-op{padding:9px 12px;cursor:pointer;font-size:13px}
 .ssel-op.hl{background:rgba(var(--purple-rgb),.18)}
 .ssel-op.sel{color:var(--green);font-weight:700}
-.ssel-grp{padding:8px 12px 4px;font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:800;letter-spacing:.4px}
+.ssel-grp{padding:10px 12px 4px;font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:800;letter-spacing:.4px;border-top:1px solid var(--border);margin-top:4px}
+.ssel-grp:first-child{border-top:none;margin-top:0}
+.ssel-grp~.ssel-op{padding-left:18px}
 .ssel-vazio{padding:10px 12px;color:var(--muted);font-size:12px}
 .ssel-sub{color:var(--muted);font-size:11px;margin-left:6px}
 .ssel-add{display:block;width:100%;text-align:left;padding:10px 12px;background:rgba(var(--green-rgb),.08);color:var(--green);font-weight:700;font-size:13px;border-top:1px solid var(--border)}
@@ -417,7 +428,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.15.0';
+const VERSAO='v4.16.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -443,7 +454,7 @@ function imgSrc(url){return url||null}
 async function uploadImagem(file,pasta){
   if(!file)return null;
   if(!['image/png','image/jpeg','image/webp'].includes(file.type))throw new Error('Formato inválido. Use PNG, JPG ou WebP.');
-  const ext=(file.name.split('.').pop()||'png').toLowerCase();
+  const ext={'image/png':'png','image/jpeg':'jpg','image/webp':'webp'}[file.type];
   const caminho=pasta+'/'+uid()+'.'+ext;
   const{error}=await sb.storage.from('midia').upload(caminho,file,{cacheControl:'3600',upsert:false});
   if(error)throw error;
@@ -868,7 +879,7 @@ async function finalizarVenda(){
 function catInfo(c){return (db&&db.categorias||[]).find(x=>x.codigo===c)||{codigo:c,nome:c,controla_estoque:true,compravel:false,aparece_receitas:true}}
 function catNome(c){return catInfo(c).nome}
 function controlaEstoque(c){return !!catInfo(c).controla_estoque}
-function catCompravel(c){return !!catInfo(c).compravel&&!!catInfo(c).controla_estoque}
+function catCompravel(c){return !!catInfo(c).compravel}
 function catReceitas(c){return !!catInfo(c).aparece_receitas}
 /* ---- Ordem manual (setas ↑ ↓ na coluna Ordem de todas as tabelas de Configurações) ---- */
 function ordenarPorOrdem(arr){return arr.sort((a,b)=>(a.ordem??1e9)-(b.ordem??1e9)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'))}
@@ -1280,7 +1291,8 @@ async function confirmarProducao(rid){
 /* ================= COMPRAS ================= */
 /* Lista única de itens da compra. Cada linha vira, sozinha, um de dois tipos:
    • Automático — o item digitado/escolhido existe no cadastro (categoria comprável). O fornecedor é escolhido entre os
-     vinculados ao item e o valor unitário vem desse vínculo (Configurações › Fornecedores), travado. Dá entrada no Baú.
+     vinculados ao item e o valor unitário vem desse vínculo (Configurações › Fornecedores), travado. Dá entrada no Baú
+     só se a categoria do item tiver controle de estoque; sem controle, fica só no financeiro ("sem Baú").
    • Manual — item que não está no cadastro. Fornecedor e valor unitário são digitados. Só registro financeiro.
    O mesmo formulário serve a Nova compra (prefixo "c") e à edição no Histórico Financeiro (prefixo "ec"). */
 function precoFornItem(fid,itemId){const v=db.fornecedor_itens.find(x=>x.fornecedor_id===fid&&x.item_id===itemId);return v&&v.preco_unitario!=null?Number(v.preco_unitario):null}
@@ -1292,8 +1304,13 @@ function fornOptionsHTML(itemId,selId){
   return `<option value="" disabled hidden ${selId?'':'selected'}>${lista.length?'Selecione o fornecedor...':'Nenhum fornecedor vinculado'}</option>`+
     lista.map(f=>{const pr=precoFornItem(f.id,itemId);return`<option value="${f.id}" ${f.id===selId?'selected':''}>${esc(f.nome)}${pr!=null?' · '+fmt(pr):''}</option>`}).join('');
 }
-const TIPO_COMPRA={auto:['Automático','Item do cadastro: preço do fornecedor e entrada no Baú'],manual:['Manual','Item não cadastrado: fornecedor e valor digitados, só registro financeiro']};
-function tagTipoCompra(auto,vazio){if(vazio)return '';const t=TIPO_COMPRA[auto?'auto':'manual'];return`<span class="cp-tipo-tag ${auto?'auto':'manual'}" title="${t[1]}">${t[0]}</span>`}
+const TIPO_COMPRA={auto:['Automático','Item do cadastro: preço do fornecedor e entrada no Baú'],sembau:['Automático','Item do cadastro sem controle de estoque (pela categoria): preço do fornecedor, só registro financeiro — não entra no Baú'],manual:['Manual','Item não cadastrado: fornecedor e valor digitados, só registro financeiro']};
+/* it = item do cadastro (Automático) ou null (Manual) */
+function tagTipoCompra(it,vazio){
+  if(vazio)return '';
+  const k=!it?'manual':controlaEstoque(it.categoria)?'auto':'sembau',t=TIPO_COMPRA[k];
+  return`<span class="cp-tipo-tag ${k==='manual'?'manual':'auto'}" title="${t[1]}">${t[0]}${k==='sembau'?'<small>sem Baú</small>':''}</span>`;
+}
 function celFornCompra(p,itemId,fornId,fornNome){
   return itemId?`<select class="cp-forn" data-ssel-extra="fornSselExtra" onchange="aoTrocarFornCompra(this,'${p}')">${fornOptionsHTML(itemId,fornId)}</select>`
     :`<input class="cp-forn-txt" data-combo="fornecedores" autocomplete="off" placeholder="Fornecedor" value="${esc(fornNome||'')}">`;
@@ -1334,7 +1351,7 @@ function linhaCompra(p,ci){
     <input class="cp-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="aoEditarValorCompra(this,'qtd','${p}')">
     <div class="cp-preco-cel">${celPrecoCompra(p,it&&it.id,it?preco:ci.preco_unitario)}</div>
     <div class="cp-sub-cel">${celSubCompra(p,it&&it.id,!it&&ci.quantidade>0&&ci.preco_unitario>0?arred2(ci.quantidade*ci.preco_unitario):'')}</div>
-    <span class="cp-tipo">${tagTipoCompra(!!it,!it&&!ci.nome)}</span>
+    <span class="cp-tipo">${tagTipoCompra(it,!it&&!ci.nome)}</span>
     <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('.cmp-row').remove();recalcCompra('${p}')">✕</button></div>`;
 }
 function formCompraHTML(p,k){
@@ -1357,7 +1374,7 @@ function addLinhaCompra(p,ci){
 /* Ao digitar/escolher o item: se bater com um item do cadastro, a linha vira Automático; senão, Manual. */
 function aoDigitarItemCompra(inp,p){
   const r=inp.closest('.cmp-row'),it=itemCompravelPorNome(inp.value),novo=it?it.id:'';
-  r.querySelector('.cp-tipo').innerHTML=tagTipoCompra(!!it,!inp.value.trim());
+  r.querySelector('.cp-tipo').innerHTML=tagTipoCompra(it,!inp.value.trim());
   if(r.dataset.item===novo)return recalcCompra(p);
   // guarda o que foi digitado na linha Manual, para voltar a mostrar se ela deixar de ser Automático
   const ft=r.querySelector('.cp-forn-txt'),pt=r.querySelector('.cp-preco'),st=r.querySelector('.cp-sub');
@@ -1408,8 +1425,10 @@ function lerFormCompra(p){
     if(falta.length)erros.push(`Linha ${n+1}${linha.nome?' ("'+linha.nome+'")':''}: falta ${falta.join(', ')}.`);
   });
   const sub=l=>(l.quantidade>0&&l.preco_unitario>0)?l.quantidade*l.preco_unitario:0;
-  const totIns=ins.reduce((s,l)=>s+sub(l),0),totNc=nc.reduce((s,l)=>s+sub(l),0);
-  return{ins,nc,erros,totIns,totNc,total:totIns+totNc};
+  // totBau: itens que entram no Baú; totFin: só financeiro (Manual + itens do cadastro sem controle de estoque)
+  const noBau=l=>l._it&&controlaEstoque(l._it.categoria);
+  const totBau=ins.filter(noBau).reduce((s,l)=>s+sub(l),0),totFin=ins.filter(l=>!noBau(l)).reduce((s,l)=>s+sub(l),0)+nc.reduce((s,l)=>s+sub(l),0);
+  return{ins,nc,erros,totBau,totFin,total:totBau+totFin};
 }
 function recalcCompra(p){
   const box=document.getElementById(p+'-total');if(!box)return;
@@ -1419,7 +1438,7 @@ function recalcCompra(p){
     const b=r.querySelector('.cp-sub-fixo b');if(b)b.textContent=(q>0&&pu>0)?fmt(q*pu):'—';
   });
   const f=lerFormCompraSilencioso(p);
-  box.innerHTML=`<span>Insumos: <b>${fmt(f.totIns)}</b></span><span class="op">+</span><span>Itens não controlados: <b>${fmt(f.totNc)}</b></span><span class="op">=</span><span class="tot">Total: <b>${fmt(f.total)}</b></span>${p==='c'?'<button class="btn btn-primary" onclick="salvarCompra()">Registrar compra</button>':''}`;
+  box.innerHTML=`<span title="Itens do cadastro com controle de estoque">Entra no Baú: <b>${fmt(f.totBau)}</b></span><span class="op">+</span><span title="Itens Manuais e itens do cadastro sem controle de estoque">Só financeiro: <b>${fmt(f.totFin)}</b></span><span class="op">=</span><span class="tot">Total: <b>${fmt(f.total)}</b></span>${p==='c'?'<button class="btn btn-primary" onclick="salvarCompra()">Registrar compra</button>':''}`;
 }
 /* Mesmo cálculo sem marcar erros (usado enquanto o usuário digita) */
 function lerFormCompraSilencioso(p){
@@ -1468,10 +1487,11 @@ function cadastrarFornecedorAtalho(nome){
 }
 /* Resumo minimalista antes de registrar */
 function resumoCompraHTML(f,extra){
+  const bau=f.ins.filter(x=>x._it&&controlaEstoque(x._it.categoria)),fin=[...f.ins.filter(x=>!bau.includes(x)),...f.nc];
   const l=x=>`<div class="rs-l"><span>${x.quantidade}× ${esc(x.nome)} <span class="muted">· ${esc(x.fornecedor_nome)}</span></span><b>${fmt(x.quantidade*x.preco_unitario)}</b></div>`;
   return`<div class="resumo">
-    ${f.ins.length?`<div class="rs-sec">Insumos (entram no Baú)</div>${f.ins.map(l).join('')}`:''}
-    ${f.nc.length?`<div class="rs-sec">Itens não controlados</div>${f.nc.map(l).join('')}`:''}
+    ${bau.length?`<div class="rs-sec">Entram no Baú</div>${bau.map(l).join('')}`:''}
+    ${fin.length?`<div class="rs-sec">Só financeiro (não entram no Baú)</div>${fin.map(l).join('')}`:''}
     <div class="rs-tot"><span>Total</span><b>${fmt(f.total)}</b></div>
     ${extra||''}</div>`;
 }
@@ -2179,7 +2199,7 @@ function excluirProduto(id){
 function cfgItens(b){
   const sn=v=>v?'Sim':'Não';
   const T='cfg_itens',F=tabelaFiltravel(T,itensOrdenados,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
-  const TC='cfg_categorias',FC=tabelaFiltravel(TC,()=>ordenarPorOrdem([...db.categorias]),{nome:c=>c.nome,estoque:c=>sn(c.controla_estoque),compravel:c=>sn(c.compravel&&c.controla_estoque),receitas:c=>sn(c.aparece_receitas),itens:c=>String(db.itens.filter(i=>i.categoria===c.codigo).length),data:c=>c.criado_em});
+  const TC='cfg_categorias',FC=tabelaFiltravel(TC,()=>ordenarPorOrdem([...db.categorias]),{nome:c=>c.nome,estoque:c=>sn(c.controla_estoque),compravel:c=>sn(c.compravel),receitas:c=>sn(c.aparece_receitas),itens:c=>String(db.itens.filter(i=>i.categoria===c.codigo).length),data:c=>c.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">📦 Cadastro Central de Itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalItem()">+ Novo item</button></div>
@@ -2205,7 +2225,7 @@ function cfgItens(b){
   ${FC.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(TC,'nome','Categoria')}${thCol(TC,'estoque','Controle de estoque')}${thCol(TC,'compravel','Pode ser comprada')}${thCol(TC,'receitas','Aparece nas Receitas')}${thCol(TC,'itens','Itens')}${thCol(TC,'data','Cadastrado em')}<th>Ações</th></tr>
   ${FC.rows.map(c=>{const n=db.itens.filter(i=>i.categoria===c.codigo).length;return`<tr>
-    ${setasOrdem('moverCategoria',c.codigo)}<td><b>${esc(c.nome)}</b></td><td>${simNao(c.controla_estoque)}</td><td>${simNao(c.compravel&&c.controla_estoque)}</td><td>${simNao(c.aparece_receitas)}</td>
+    ${setasOrdem('moverCategoria',c.codigo)}<td><b>${esc(c.nome)}</b></td><td>${simNao(c.controla_estoque)}</td><td>${simNao(c.compravel)}</td><td>${simNao(c.aparece_receitas)}</td>
     <td>${n}</td><td style="color:var(--muted)">${dataHoraBR(c.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalCategoria('${esc(c.codigo)}')">✏️</button>${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir categoria" onclick="excluirCategoria('${esc(c.codigo)}')">🗑️</button>`:''}</td>
   </tr>`}).join('')||linhaSemResultado(8,TC)}</table></div>`;
@@ -2217,8 +2237,9 @@ function modalCategoria(codigo){
   const chk=(id,label,v,dis,extra='')=>`<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;font-weight:400;color:var(--text);margin:0 0 10px"><input type="checkbox" id="${id}" style="width:auto" ${v?'checked':''} ${dis?'disabled':''} ${extra}> ${label}</label>`;
   openModal(`<h3>${c?'Editar categoria':'Nova categoria'}</h3>
   <div class="field"><label>Nome da categoria</label><input id="cat-nome" value="${c?esc(c.nome):''}"></div>
-  ${chk('cat-estoque','Controle de estoque (itens entram no Baú)',c?c.controla_estoque:true,false,`onchange="const k=document.getElementById('cat-compravel');k.disabled=!this.checked;if(!this.checked)k.checked=false"`)}
-  ${chk('cat-compravel','Pode ser comprada (aparece em "Insumos" na compra e no vínculo com fornecedores)',c?(c.compravel&&c.controla_estoque):true,c&&!c.controla_estoque)}
+  ${chk('cat-estoque','Controle de estoque (itens entram no Baú)',c?c.controla_estoque:true,false)}
+  ${chk('cat-compravel','Pode ser comprada (itens aparecem na compra e no vínculo com fornecedores)',c?c.compravel:true,false)}
+  <p class="muted" style="font-size:12px;margin:-4px 0 12px 26px">Comprável sem controle de estoque: a compra do item fica só no financeiro e não entra no Baú.</p>
   ${chk('cat-receitas','Aparece na lista suspensa das Receitas',c?c.aparece_receitas:true,false)}
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarCategoria('${c?esc(c.codigo):''}')">Salvar</button></div>`);
@@ -2228,7 +2249,7 @@ async function salvarCategoria(codigo){
   const c=codigo?db.categorias.find(x=>x.codigo===codigo):null;
   const nome=document.getElementById('cat-nome').value.trim();
   const estoque=document.getElementById('cat-estoque').checked;
-  const campos={compravel:estoque&&document.getElementById('cat-compravel').checked,aparece_receitas:document.getElementById('cat-receitas').checked};
+  const campos={compravel:document.getElementById('cat-compravel').checked,aparece_receitas:document.getElementById('cat-receitas').checked};
   if(!nome)return toast('⚠️ Informe o nome da categoria.');
   if(db.categorias.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.codigo!==codigo))return toast('⚠️ Já existe uma categoria com esse nome.');
   Object.assign(campos,{nome,controla_estoque:estoque});
@@ -2260,27 +2281,39 @@ function excluirCategoria(codigo){
     db.categorias=db.categorias.filter(x=>x.codigo!==codigo);reg('Categoria excluída',c.nome);render();
   });
 }
-function modalItem(id){
+/* Atalho da compra: opts.onSaved abre o cadastro por cima do formulário (2ª camada), só com categorias compráveis,
+   e devolve o item salvo sem redesenhar a tela (para não perder as linhas já digitadas). */
+let _itemAtalho=null;
+function modalItem(id,opts){
+  opts=opts||{};
   const it=id?db.itens.find(x=>x.id===id):null;
-  openModal(`<h3>${it?'Editar item':'Novo item'}</h3>
-  <div class="field"><label>Nome</label><input id="i-nome" value="${it?esc(it.nome):''}"></div>
+  _itemAtalho=opts.onSaved||null;
+  const cats=_itemAtalho?db.categorias.filter(c=>c.compravel||(it&&it.categoria===c.codigo)):db.categorias;
+  const fechar=_itemAtalho?'fecharModalItem()':'closeModal()';
+  (_itemAtalho?openModal2:openModal)(`<h3>${it?'Editar item':'Novo item'}</h3>
+  ${_itemAtalho?`<p class="muted" style="font-size:12px;margin:-6px 0 12px">Depois de salvar, o item já fica escolhido na linha da compra. Categoria com controle de estoque: a compra entra no Baú; sem controle: só no financeiro.</p>`:''}
+  <div class="field"><label>Nome</label><input id="i-nome" value="${esc(it?it.nome:(opts.nome||''))}"></div>
   <div class="row2">
     <div class="field"><label>Categoria</label><select id="i-cat">
-      ${it?'':'<option value="" disabled hidden selected>Selecione a categoria...</option>'}${db.categorias.map(c=>`<option value="${esc(c.codigo)}" ${it&&it.categoria===c.codigo?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></div>
+      ${it?'':'<option value="" disabled hidden selected>Selecione a categoria...</option>'}${cats.map(c=>`<option value="${esc(c.codigo)}" ${it&&it.categoria===c.codigo?'selected':''}>${esc(c.nome)}${_itemAtalho?(c.controla_estoque?' · entra no Baú':' · sem Baú'):''}</option>`).join('')}</select></div>
     <div class="field"><label>Unidade</label><input id="i-un" value="${it?esc(it.unidade_medida):'un'}"></div>
   </div>
   <p class="muted" style="font-size:12px;margin:-4px 0 12px">O valor de compra fica no cadastro de cada fornecedor (Configurações › Fornecedores), porque cada fornecedor tem o seu preço.</p>
   <div class="field" style="max-width:220px"><label>Qtd mínima de estoque (alerta no Baú)</label><input id="i-min" type="number" min="0" step="0.01" value="${it?it.qtd_minima:0}"></div>
-  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="${fechar}">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarItem('${id||''}')">Salvar</button></div>`);
+  if(_itemAtalho&&!it){const n=document.getElementById('i-nome');n.focus();n.setSelectionRange(n.value.length,n.value.length)}
 }
+function fecharModalItem(){_itemAtalho=null;closeModal2()}
 async function salvarItem(id){
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem cadastrar itens.');
   const nome=document.getElementById('i-nome').value.trim();
   const cat=document.getElementById('i-cat').value;
   const un=document.getElementById('i-un').value.trim()||'un';
   const min=parseFloat(document.getElementById('i-min').value)||0;
   if(!nome)return toast('⚠️ Informe o nome do item.');
   if(!cat)return toast('⚠️ Selecione a categoria do item.');
+  if(db.itens.some(x=>x.id!==id&&sselNorm(x.nome)===sselNorm(nome)))return toast('⚠️ Já existe um item com esse nome no cadastro.');
   const campos={nome,categoria:cat,unidade_medida:un,qtd_minima:min};
   if(id){
     const{error}=await sb.from('itens').update(campos).eq('id',id);
@@ -2290,8 +2323,9 @@ async function salvarItem(id){
     campos.ordem=Math.max(0,...db.itens.map(x=>x.ordem||0))+1;
     const{data,error}=await sb.from('itens').insert(campos).select().single();
     if(error)return toast('⚠️ Erro ao salvar: '+error.message);
-    db.itens.push({...data,qtd_minima:Number(data.qtd_minima)});reg('Item criado',nome);
+    db.itens.push({...data,qtd_minima:Number(data.qtd_minima)});reg('Item criado',nome);id=data.id;
   }
+  if(_itemAtalho){const cb=_itemAtalho;fecharModalItem();cb(db.itens.find(x=>x.id===id));return}
   closeModal();render();
 }
 async function toggleItem(id){
@@ -3313,10 +3347,33 @@ document.querySelectorAll('select').forEach(sselAplicar);
    <input data-combo="itens|fornecedores">: digitar filtra a lista (mesmo visual e filtro das listas suspensas),
    mas o valor digitado é aceito mesmo fora da lista (ex.: item não cadastrado na compra). */
 const COMBO_FONTES={
-  itens:()=>itensCompraveis().map(i=>({v:i.nome,sub:catNome(i.categoria)})),
+  // itens agrupados por categoria (na ordem das categorias), com divisória entre os grupos
+  itens:()=>{const cats=ordenarPorOrdem([...db.categorias]).map(c=>c.codigo),pos=c=>{const k=cats.indexOf(c);return k<0?1e9:k};
+    return itensCompraveis().sort((a,b)=>pos(a.categoria)-pos(b.categoria)||a.nome.localeCompare(b.nome,'pt-BR')).map(i=>({v:i.nome,grp:catNome(i.categoria)}))},
   fornecedores:()=>db.fornecedores.filter(f=>f.status==='ativo').sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(f=>({v:f.nome}))
 };
 const COMBO_FORA={itens:'não está no cadastro — a linha fica como item Manual (não entra no Baú).',fornecedores:'não está cadastrado — será registrado como fornecedor avulso.'};
+/* Rodapé da lista de itens da compra: atalho para cadastrar o item que está sendo comprado (Gerente para cima) */
+const COMBO_EXTRA={
+  itens:(inp,q,exato)=>{
+    if(exato||!isGerente()||!inp.closest('.cmp-row'))return '';
+    const ja=q&&db.itens.find(i=>sselNorm(i.nome)===sselNorm(q));
+    if(ja&&ja.status!=='ativo')return`<div class="ssel-vazio">“${esc(ja.nome)}” está inativo no cadastro. Reative em Configurações › Cadastro Central de Itens.</div>`;
+    if(ja)return`<button type="button" class="ssel-add" onclick="cadastrarItemAtalho()">✏️ “${esc(ja.nome)}” é de categoria que não pode ser comprada — trocar a categoria</button>`;
+    return`<button type="button" class="ssel-add" onclick="cadastrarItemAtalho()">+ Cadastrar ${q?'item “'+esc(q)+'”':'novo item'}</button>`;
+  }
+};
+function cadastrarItemAtalho(){
+  const inp=_comboInp;comboFechar();if(!inp)return;
+  const linha=inp.closest('.cmp-row'),p=linha.parentElement.id.replace(/-linhas$/,''),q=inp.value.trim();
+  const ja=q&&db.itens.find(i=>sselNorm(i.nome)===sselNorm(q));
+  modalItem(ja?ja.id:null,{nome:q,onSaved:it=>{
+    if(!it)return;
+    if(!catCompravel(it.categoria)){toast('⚠️ "'+it.nome+'" foi salvo, mas a categoria não pode ser comprada.');return}
+    inp.value=it.nome;aoDigitarItemCompra(inp,p);linha.classList.remove('linha-erro');
+    toast('✅ Item "'+it.nome+'" cadastrado e escolhido.'+(fornecedoresDoItem(it.id).length?'':' Agora vincule o fornecedor e o valor na lista de Fornecedor.'));
+  }});
+}
 let _comboInp=null,_comboPop=null,_comboHl=-1,_comboLista=[];
 function comboFechar(){if(_comboPop){_comboPop.remove();_comboPop=null}_comboInp=null}
 function comboDesenhar(){
@@ -3325,8 +3382,14 @@ function comboDesenhar(){
   _comboLista=(fonte?fonte():[]).filter(o=>!t||sselNorm(o.v).includes(t));
   const exato=_comboLista.some(o=>sselNorm(o.v)===t);
   if(_comboHl>=_comboLista.length)_comboHl=_comboLista.length-1;
-  _comboPop.querySelector('.ssel-ops').innerHTML=_comboLista.map((o,i)=>`<div class="ssel-op ${sselNorm(o.v)===t?'sel':''} ${i===_comboHl?'hl':''}" data-i="${i}">${esc(o.v)}${o.sub?` <span class="ssel-sub">${esc(o.sub)}</span>`:''}</div>`).join('')||(t?'':`<div class="ssel-vazio">Nenhuma opção cadastrada.</div>`);
-  _comboPop.querySelector('.ssel-extra').innerHTML=t&&!exato?`<div class="ssel-vazio">“${esc(inp.value.trim())}” ${COMBO_FORA[inp.dataset.combo]||''}</div>`:'';
+  let grp;
+  _comboPop.querySelector('.ssel-ops').innerHTML=_comboLista.map((o,i)=>{
+    const cab=o.grp!==undefined&&o.grp!==grp?`<div class="ssel-grp">${esc(o.grp)}</div>`:'';grp=o.grp;
+    return cab+`<div class="ssel-op ${sselNorm(o.v)===t?'sel':''} ${i===_comboHl?'hl':''}" data-i="${i}">${esc(o.v)}${o.sub?` <span class="ssel-sub">${esc(o.sub)}</span>`:''}</div>`;
+  }).join('')||(t?'':`<div class="ssel-vazio">Nenhuma opção cadastrada.</div>`);
+  const extraFn=COMBO_EXTRA[inp.dataset.combo];
+  _comboPop.querySelector('.ssel-extra').innerHTML=(t&&!exato?`<div class="ssel-vazio">“${esc(inp.value.trim())}” ${COMBO_FORA[inp.dataset.combo]||''}</div>`:'')+(extraFn?extraFn(inp,inp.value.trim(),exato):'');
+  const hl=_comboPop.querySelector('.ssel-op.hl');if(hl)hl.scrollIntoView({block:'nearest'});
 }
 function comboAbrir(inp){
   sselFechar();if(_comboInp!==inp)comboFechar();
@@ -3364,8 +3427,43 @@ window.addEventListener('resize',comboFechar);
 /* ================= AVISOS PARA TODOS =================
    Gerente, Diretor ou Sócio publica um aviso (título + mensagem). Ele aparece como pop-up na tela de
    todo mundo que está logado (tempo real) ou assim que a pessoa entrar. Cada pessoa vê o pop-up uma vez
-   (fica registrado em avisos_vistos). Depois de 24 horas o aviso some da tela e o banco o apaga de vez. */
-const AVISO_TITULO_MAX=80,AVISO_MSG_MAX=1000;
+   (fica registrado em avisos_vistos). Depois de 24 horas o aviso some da tela e o banco o apaga de vez.
+   O aviso pode levar uma imagem (Storage "midia/avisos/"); com imagem, a mensagem é opcional. */
+const AVISO_TITULO_MAX=80,AVISO_MSG_MAX=1000,AVISO_IMG_LADO=1600;
+function avisoImgHTML(a){return a.imagem_url?`<a class="aviso-img" href="${esc(a.imagem_url)}" target="_blank" rel="noopener" title="Abrir a imagem em tamanho real"><img src="${esc(a.imagem_url)}" alt="Imagem do aviso" loading="lazy"></a>`:''}
+/* Reduz a foto (celular costuma passar de 5 MB, o limite do Storage) para no máximo 1600 px no lado maior */
+async function reduzirImagem(file,lado){
+  try{
+    const bmp=await createImageBitmap(file);
+    const k=Math.min(1,lado/Math.max(bmp.width,bmp.height));
+    if(k===1&&file.size<=1.5e6)return file;
+    const c=document.createElement('canvas');c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);
+    c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+    let b=await new Promise(r=>c.toBlob(r,'image/webp',.85));
+    if(!b||b.type!=='image/webp')b=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));
+    if(!b||b.size>=file.size)return file;
+    return new File([b],'aviso.'+(b.type==='image/webp'?'webp':'jpg'),{type:b.type});
+  }catch(e){return file}
+}
+let _avisoImg=null;
+function escolherImagemAviso(inp){
+  const f=inp.files&&inp.files[0];inp.value='';
+  if(!f)return;
+  if(!['image/png','image/jpeg','image/webp'].includes(f.type))return toast('⚠️ Formato inválido. Use PNG, JPG ou WebP.');
+  _avisoImg=f;
+  const pv=document.getElementById('av-img-prev');
+  pv.innerHTML=`<img src="${URL.createObjectURL(f)}" alt="Prévia da imagem"><button type="button" class="iconbtn" title="Tirar a imagem" onclick="tirarImagemAviso()">✕</button>`;pv.style.display='';
+}
+function tirarImagemAviso(){_avisoImg=null;const pv=document.getElementById('av-img-prev');if(pv){pv.innerHTML='';pv.style.display='none'}}
+/* Apaga do Storage as imagens de avisos que não estão mais no ar (1 listagem + 1 remoção, sem laço por arquivo) */
+async function limparImagensAvisos(){
+  try{
+    const{data,error}=await sb.storage.from('midia').list('avisos',{limit:1000});if(error||!data)return;
+    const emUso=new Set(avisosAtivos().map(a=>(a.imagem_url||'').split('/').pop()).filter(Boolean));
+    const velhos=data.filter(o=>o.name&&!emUso.has(o.name)&&o.created_at&&Date.now()-new Date(o.created_at).getTime()>24*3600e3).map(o=>'avisos/'+o.name);
+    if(velhos.length)await sb.storage.from('midia').remove(velhos);
+  }catch(e){console.warn('[Best Buds] limpeza de imagens de avisos',e)}
+}
 function avisosAtivos(){const agora=Date.now();return (db.avisos||[]).filter(a=>new Date(a.expira_em).getTime()>agora)}
 function avisosNaoVistos(){return avisosAtivos().filter(a=>!db.avisos_vistos.has(a.id)).sort((a,b)=>new Date(a.criado_em)-new Date(b.criado_em))}
 function tempoRestante(a){const ms=new Date(a.expira_em).getTime()-Date.now();if(ms<=0)return 'expirado';const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);return h?`some em ${h}h${m?String(m).padStart(2,'0'):''}`:`some em ${m} min`}
@@ -3383,7 +3481,8 @@ function mostrarAvisosPendentes(){
   _avisoAtual=a.id;
   document.getElementById('aviso-box').innerHTML=`<div class="aviso-topo">📢 Aviso</div>
     <h3 class="aviso-titulo">${esc(a.titulo)}</h3>
-    <div class="aviso-msg">${esc(a.mensagem)}</div>
+    ${avisoImgHTML(a)}
+    ${a.mensagem?`<div class="aviso-msg">${esc(a.mensagem)}</div>`:''}
     <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
     <div class="modal-actions"><button class="btn btn-primary" id="btn-aviso-ok" onclick="marcarAvisoVisto()">Entendi</button></div>`;
   bg.classList.add('open');
@@ -3403,16 +3502,21 @@ function modalAvisos(){
   ${ger?`<div class="aviso-form">
     <div class="field"><label>Título</label><input id="av-titulo" maxlength="${AVISO_TITULO_MAX}" placeholder="Ex.: Reunião hoje às 20h"></div>
     <div class="field"><label>Mensagem</label><textarea id="av-msg" rows="4" maxlength="${AVISO_MSG_MAX}" placeholder="Escreva o aviso para toda a equipe"></textarea></div>
+    <div class="field"><label>Imagem (opcional)</label>
+      <label class="btn btn-ghost btn-sm aviso-img-btn">🖼️ Escolher imagem<input type="file" id="av-img" accept="image/png,image/jpeg,image/webp" hidden onchange="escolherImagemAviso(this)"></label>
+      <div class="aviso-img-prev" id="av-img-prev" style="display:none"></div></div>
     <p class="muted" style="font-size:12px;margin:-4px 0 10px">Aparece como pop-up na tela de todos e é apagado automaticamente depois de 24 horas.</p>
     <button class="btn btn-primary" id="btn-publicar-aviso" onclick="publicarAviso()">Publicar para todos</button>
   </div>`:''}
   <div class="section-title" style="margin-top:${ger?'18px':'4px'}">Avisos das últimas 24 horas</div>
   <div class="aviso-lista">${lista.length?lista.map(a=>`<div class="aviso-item">
       <div class="aviso-item-top"><b>${esc(a.titulo)}</b>${ger?`<button class="iconbtn" title="Apagar agora" onclick="apagarAviso('${a.id}')">🗑️</button>`:''}</div>
-      <div class="aviso-msg">${esc(a.mensagem)}</div>
+      ${avisoImgHTML(a)}
+      ${a.mensagem?`<div class="aviso-msg">${esc(a.mensagem)}</div>`:''}
       <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
     </div>`).join(''):'<p class="muted" style="font-size:13px">Nenhum aviso nas últimas 24 horas.</p>'}</div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button></div>`);
+  _avisoImg=null;
   // quem abre a lista já viu todos os avisos ativos
   const novos=avisosNaoVistos();
   if(novos.length){novos.forEach(a=>db.avisos_vistos.add(a.id));atualizarSeloAvisos();
@@ -3422,11 +3526,21 @@ async function publicarAviso(){
   if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem publicar avisos.');
   const titulo=document.getElementById('av-titulo').value.trim(),mensagem=document.getElementById('av-msg').value.trim();
   if(!titulo)return toast('⚠️ Informe o título do aviso.');
-  if(!mensagem)return toast('⚠️ Escreva a mensagem do aviso.');
+  if(!mensagem&&!_avisoImg)return toast('⚠️ Escreva a mensagem ou coloque uma imagem no aviso.');
   const btn=document.getElementById('btn-publicar-aviso');btn.disabled=true;
-  const{data,error}=await sb.from('avisos').insert({titulo:titulo.slice(0,AVISO_TITULO_MAX),mensagem:mensagem.slice(0,AVISO_MSG_MAX),criado_por:session.usuario_id,criado_por_nome:sessionUser().nome}).select().single();
-  btn.disabled=false;
-  if(error)return toast('⚠️ Não foi possível publicar: '+error.message);
+  let imagem_url=null;
+  if(_avisoImg){
+    btn.textContent='Enviando imagem…';
+    try{imagem_url=await uploadImagem(await reduzirImagem(_avisoImg,AVISO_IMG_LADO),'avisos')}
+    catch(err){btn.disabled=false;btn.textContent='Publicar para todos';return toast('⚠️ Erro ao enviar a imagem: '+(err.message||err))}
+  }
+  const{data,error}=await sb.from('avisos').insert({titulo:titulo.slice(0,AVISO_TITULO_MAX),mensagem:mensagem.slice(0,AVISO_MSG_MAX),...(imagem_url?{imagem_url}:{}),criado_por:session.usuario_id,criado_por_nome:sessionUser().nome}).select().single();
+  btn.disabled=false;btn.textContent='Publicar para todos';
+  if(error){
+    if(imagem_url)sb.storage.from('midia').remove(['avisos/'+imagem_url.split('/').pop()]).then(()=>{});
+    return toast('⚠️ Não foi possível publicar: '+error.message);
+  }
+  _avisoImg=null;limparImagensAvisos();
   db.avisos.unshift(data);db.avisos_vistos.add(data.id);
   sb.from('avisos_vistos').insert({aviso_id:data.id,usuario_id:session.usuario_id}).then(()=>{});
   reg('Aviso publicado',titulo);toast('✅ Aviso publicado para todos.');modalAvisos();
@@ -3437,6 +3551,7 @@ function apagarAviso(id){
   confirmar('Apagar aviso','O aviso "'+a.titulo+'" sai da tela de todos agora. Confirmar?',async()=>{
     const{error}=await sb.from('avisos').delete().eq('id',id);
     if(error)return toast('⚠️ Erro ao apagar: '+error.message);
+    if(a.imagem_url)sb.storage.from('midia').remove(['avisos/'+a.imagem_url.split('/').pop()]).then(()=>{});
     db.avisos=db.avisos.filter(x=>x.id!==id);reg('Aviso apagado',a.titulo);atualizarSeloAvisos();modalAvisos();
   });
 }

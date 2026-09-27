@@ -38,9 +38,11 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 - O item não tem preço próprio. O valor unitário é do vínculo fornecedor ↔ item (`fornecedor_itens.preco_unitario`), definido em Configurações › Fornecedores e obrigatório para cada item vinculado.
 - A compra é uma lista única de itens. Cada linha é de um de dois tipos:
-  - **Automático:** item do cadastro. O fornecedor é escolhido entre os vinculados ao item e o valor vem do vínculo, travado. Dá entrada no Baú.
+  - **Automático:** item do cadastro. O fornecedor é escolhido entre os vinculados ao item e o valor vem do vínculo, travado. Dá entrada no Baú só se a categoria do item tem controle de estoque; sem controle, fica só no financeiro (tag "Automático · sem Baú").
   - **Manual:** item digitado que não está no cadastro. Fornecedor e valor são digitados. Só registro financeiro.
 - Subtotal: no Automático é travado (qtd × valor do fornecedor). No Manual é digitável: qtd + valor unitário calcula o subtotal; qtd + subtotal calcula o valor unitário. Manda o último campo de valor digitado.
+- A categoria decide: "pode ser comprada" (aparece na compra e nos vínculos com fornecedor) e "controle de estoque" (entra no Baú) são independentes.
+- A lista de itens da compra é agrupada por categoria (na ordem das categorias), com divisória entre os grupos. Gerente ou acima tem o atalho "+ Cadastrar item" no rodapé da lista (abre o cadastro no `modal2`, só com categorias compráveis, e escolhe o item na linha).
 - Vendedor registra compras e produções (grava só em nome próprio), mas não cadastra fornecedores, itens nem vínculos. Ajustes manuais de estoque (+ Entrada / − Saída) são de Gerente para cima.
 - No cadastro do fornecedor, os itens aparecem na ordem em que foram colocados (`fornecedor_itens.criado_em`); item novo vai sempre para o fim.
 - Toda lista suspensa tem o mesmo campo de pesquisa. Campos de texto com lista (`data-combo`) aceitam valores fora da lista.
@@ -49,5 +51,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 - Gerente, Diretor ou Sócio publica um aviso (título até 80 caracteres, mensagem até 1000) pelo botão 📢 no topo.
 - O aviso aparece como pop-up para todos, em tempo real ou ao entrar. Cada pessoa vê o pop-up uma vez (`avisos_vistos`).
+- O aviso pode levar uma imagem (PNG, JPG ou WebP), reduzida no navegador para até 1600 px e enviada ao Storage em `midia/avisos/`. Com imagem, a mensagem é opcional. O banco só aceita imagem desse caminho do Storage.
+- Imagens de avisos vencidos são apagadas pelo site (1 listagem + 1 remoção) quando alguém publica ou apaga um aviso.
 - O banco define o autor e a validade de 24 horas (trigger). Depois disso o aviso some da tela e o pg_cron o apaga de vez (a cada 10 minutos).
 - As janelas de cadastro usadas por atalho abrem na segunda camada (`modal2`), que é esvaziada ao fechar. As funções do cadastro de fornecedor procuram elementos só dentro da janela aberta.
