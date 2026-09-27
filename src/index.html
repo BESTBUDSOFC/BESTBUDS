@@ -152,6 +152,8 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .nav-item:hover{color:var(--text);background:rgba(var(--purple-rgb),.08)}
 .nav-item.active{color:var(--green);background:rgba(var(--green-rgb),.08);border:1px solid rgba(var(--green-rgb),.25)}
 .nav-item .ic{font-size:18px;width:22px;text-align:center}
+.nav-selo{margin-left:auto;font-size:11px;font-weight:800;color:var(--warning);background:rgba(var(--warning-rgb),.14);border:1px solid var(--warning-border);border-radius:999px;padding:1px 7px;line-height:1.4}
+#bottom-nav .nav-selo{margin-left:0;font-size:9px;padding:0 5px}
 #bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:rgba(var(--surface-rgb),.97);border-top:1px solid var(--border);z-index:50}
 #bottom-nav .bn-inner{display:flex;height:100%}
 #bottom-nav .nav-item{flex-direction:column;gap:2px;justify-content:center;font-size:9px;padding:4px;border-radius:0;flex:1}
@@ -216,7 +218,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .btn-exp:hover{background:#34344A}.btn-exp.aberto:hover{background:var(--purple-hover)}
 .btn-exp{display:inline-flex}.btn-exp:not(.aberto){transform:none}
 tr.linha-pai.aberta td{border-bottom-color:transparent}
-tr.linha-revertida td:not(:last-child){opacity:.5}
+tr.linha-inativa td:not(:has(button,input,.btn-exp)){opacity:.5}
 tr.sublinha td{background:rgba(var(--purple-rgb),.06);font-size:13px;border-bottom:1px dashed var(--border)}
 tr.sublinha td:first-child{position:relative}
 tr.sublinha .sub-guia{position:absolute;left:16px;top:0;bottom:0;border-left:2px solid var(--purple)}
@@ -380,7 +382,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.10.0';
+const VERSAO='v4.11.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -591,12 +593,16 @@ let moduloAtual='pdv';
 let pdvState={cupom:[],parceriaId:null,taxaId:null,auxiliares:[]};
 let cfgTabAtual='usuarios';
 
+/* Pedidos de nova senha pendentes aparecem como 🔑N ao lado de "Configurações" no menu */
+function selosMenu(m){const n=m.id==='config'?(db.pedidos_senha||[]).length:0;return n?`<span class="nav-selo" title="${n} pedido(s) de nova senha">🔑${n}</span>`:''}
 function buildNav(){
+  if(!sessionUser())return;
   const mods=MODULOS.filter(m=>m.perfis.includes(sessionUser().perfil));
-  document.getElementById('sidebar-nav').innerHTML=mods.map(m=>
-    `<button class="nav-item ${m.id===moduloAtual?'active':''}" onclick="go('${m.id}')"><span class="ic">${m.ic}</span>${m.nome}</button>`).join('');
-  document.getElementById('bn-inner').innerHTML=mods.map(m=>
-    `<button class="nav-item ${m.id===moduloAtual?'active':''}" onclick="go('${m.id}')"><span class="ic">${m.ic}</span>${m.nome.split(' ')[0]}</button>`).join('');
+  const sb_=document.getElementById('sidebar-nav'),bn=document.getElementById('bn-inner');
+  if(sb_)sb_.innerHTML=mods.map(m=>
+    `<button class="nav-item ${m.id===moduloAtual?'active':''}" onclick="go('${m.id}')"><span class="ic">${m.ic}</span>${m.nome}${selosMenu(m)}</button>`).join('');
+  if(bn)bn.innerHTML=mods.map(m=>
+    `<button class="nav-item ${m.id===moduloAtual?'active':''}" onclick="go('${m.id}')"><span class="ic">${m.ic}</span>${m.nome.split(' ')[0]}${selosMenu(m)}</button>`).join('');
 }
 function go(mod){
   moduloAtual=mod;
@@ -622,6 +628,7 @@ function startApp(){
 function render(){
   const c=document.getElementById('main-content');
   if(!c)return;
+  buildNav();
   try{
     if(moduloAtual==='pdv')renderPDV(c);
     else if(moduloAtual==='bau')renderBau(c);
@@ -889,14 +896,14 @@ function renderBau(c){
     ${paginaBau.rows.map(g=>{
       const ent=m=>m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada';
       const rev=m=>m.status==='revertida',tagRev='<span class="tag r" style="margin-left:6px">Revertida</span>';
-      const linhaMov=(m,sub,ultima)=>`<tr class="${sub?'sublinha'+(ultima?' ultima':''):''}${rev(m)?' linha-revertida':''}">${sub?'<td class="td-exp"><span class="sub-guia"></span></td>'+(podeExcluirLinhas()?'<td></td>':''):tdExpandir('',0)+tdSelIds('bau',[m.id])}<td>${sub?'<span class="sub-seta">↳</span> ':''}${dataHoraBR(m.data)}</td><td>${esc(m.usuario_nome||'—')}</td><td>${esc(m.item_nome||'—')}</td>
+      const linhaMov=(m,sub,ultima)=>`<tr class="${sub?'sublinha'+(ultima?' ultima':''):''}${rev(m)?' linha-inativa':''}">${sub?'<td class="td-exp"><span class="sub-guia"></span></td>'+(podeExcluirLinhas()?'<td></td>':''):tdExpandir('',0)+tdSelIds('bau',[m.id])}<td>${sub?'<span class="sub-seta">↳</span> ':''}${dataHoraBR(m.data)}</td><td>${esc(m.usuario_nome||'—')}</td><td>${esc(m.item_nome||'—')}</td>
         <td><span class="tag ${ent(m)?'g':'r'}">${MOV_LABEL[m.tipo_movimento]||m.tipo_movimento}</span>${!sub&&rev(m)?tagRev:''}</td>
         <td class="${ent(m)?'mov-in':'mov-out'}">${ent(m)?'+':'−'}${m.quantidade}</td>
         <td>${m.saldo_resultante}</td><td style="color:var(--muted)">${esc(m.origem||'—')}</td>${isGerente()?`<td>${sub?'':acoesBau(m.operacao_id||('m:'+m.id),rev(m))}</td>`:''}</tr>`;
       if(!g.grupo)return linhaMov(g.movs[0],false);
       const aberto=expandidos.has(g.chave);
       const grev=g.movs.every(rev);
-      return `<tr class="linha-pai ${aberto?'aberta':''}${grev?' linha-revertida':''}">${tdExpandir(g.chave,g.filhos.length)}${tdSelIds('bau',g.ids)}<td>${dataHoraBR(g.data)}</td><td>${esc(g.usuario)}</td><td>${esc(g.resumoItens)}</td>
+      return `<tr class="linha-pai ${aberto?'aberta':''}${grev?' linha-inativa':''}">${tdExpandir(g.chave,g.filhos.length)}${tdSelIds('bau',g.ids)}<td>${dataHoraBR(g.data)}</td><td>${esc(g.usuario)}</td><td>${esc(g.resumoItens)}</td>
         <td><span class="tag">${esc(g.rotulo)}</span>${grev?tagRev:''}</td><td style="color:var(--muted)">${g.movs.length} mov.</td><td style="color:var(--muted)">—</td><td style="color:var(--muted)">${esc(g.origem)}</td>${isGerente()?`<td>${acoesBau(g.chave,grev)}</td>`:''}</tr>`+
         (aberto?g.filhos.map((m,n)=>linhaMov(m,true,n===g.filhos.length-1)).join(''):'');
     }).join('')||`<tr><td colspan="${isGerente()?10:9}" class="empty">Nenhuma movimentação registrada.</td></tr>`}
@@ -1601,8 +1608,8 @@ function renderFinanceiro(c){
   </div>
   <div class="table-wrap"><table>
     <tr><th class="td-exp"></th>${thSelTodos('financeiro',paginaFin.rows.map(g=>g.p))}${COLS_FIN.filter(c=>vis.includes(c.key)).map(c=>thCol('financeiro',c.key,c.label)).join('')}${ger?'<th>Ações</th>':''}</tr>
-    ${paginaFin.rows.map(g=>{const r=g.p,aberto=expandidos.has(r.id);return `<tr class="${g.filhos.length?'linha-pai':''} ${aberto?'aberta':''}">${tdExpandir(r.id,g.filhos.length)}${tdSel('financeiro',r.id)}${vis.map(k=>cell(k,r)).join('')}${ger?`<td style="white-space:nowrap">${acoesFin(r)}</td>`:''}</tr>`+
-      (aberto?g.filhos.map((f,n)=>`<tr class="sublinha ${n===g.filhos.length-1?'ultima':''}"><td class="td-exp"><span class="sub-guia"></span></td>${podeExcluirLinhas()?'<td></td>':''}${vis.map((k,ci)=>ci===0?cell(k,f).replace('<td>','<td><span class="sub-seta">↳</span> '):cell(k,f)).join('')}${ger?'<td></td>':''}</tr>`).join(''):'')}).join('')||`<tr><td colspan="${vis.length+(ger?3:2)}" class="empty">Nenhum lançamento no filtro atual.</td></tr>`}
+    ${paginaFin.rows.map(g=>{const r=g.p,aberto=expandidos.has(r.id);const ina=r.status==='revertida'?' linha-inativa':'';return `<tr class="${g.filhos.length?'linha-pai':''} ${aberto?'aberta':''}${ina}">${tdExpandir(r.id,g.filhos.length)}${tdSel('financeiro',r.id)}${vis.map(k=>cell(k,r)).join('')}${ger?`<td style="white-space:nowrap">${acoesFin(r)}</td>`:''}</tr>`+
+      (aberto?g.filhos.map((f,n)=>`<tr class="sublinha ${n===g.filhos.length-1?'ultima':''}${ina}"><td class="td-exp"><span class="sub-guia"></span></td>${podeExcluirLinhas()?'<td></td>':''}${vis.map((k,ci)=>ci===0?cell(k,f).replace('<td>','<td><span class="sub-seta">↳</span> '):cell(k,f)).join('')}${ger?'<td></td>':''}</tr>`).join(''):'')}).join('')||`<tr><td colspan="${vis.length+(ger?3:2)}" class="empty">Nenhum lançamento no filtro atual.</td></tr>`}
   </table></div>${paginacao('financeiro',paginaFin)}`;
 }
 /* Ajuste manual de caixa (Gerente+): entrada/saída direta, sem venda ou compra por trás */
@@ -1790,8 +1797,7 @@ async function salvarEdicaoCompraFin(id){
 
 /* ================= CONFIGURAÇÕES ================= */
 function renderConfig(c){
-  const nPed=(db.pedidos_senha||[]).length;
-  const tabs=[['usuarios','Usuários'+(nPed?' 🔑'+nPed:'')],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['logo','Identidade Visual']];
+  const tabs=[['usuarios','Usuários'],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['logo','Identidade Visual']];
   c.innerHTML=`<h2 class="page-title">Configurações</h2><p class="page-sub">Centro de parametrização — exclusivo do perfil Gerente.</p>
   <div class="cfg-tabs">${tabs.map(t=>`<button class="cfg-tab ${cfgTabAtual===t[0]?'active':''}" onclick="cfgTabAtual='${t[0]}';render()">${t[1]}</button>`).join('')}</div>
   <div id="cfg-body"></div>`;
@@ -1809,32 +1815,36 @@ function renderConfig(c){
 /* Perfil com mais acesso primeiro (Sócio > Diretor > Gerente > Vendedor), depois nome A→Z */
 function usuariosOrdenados(){return [...db.usuarios].sort((a,b)=>(PERFIL_NIVEL[b.perfil]||0)-(PERFIL_NIVEL[a.perfil]||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}))}
 function cfgUsuarios(b){
-  const T='cfg_usuarios',F=tabelaFiltravel(T,usuariosOrdenados,{nome:u=>u.nome,usuario:u=>u.usuario||'—',perfil:u=>PERFIL_LABEL[u.perfil]||u.perfil,status:u=>u.status,data:u=>u.criado_em});
+  const T='cfg_usuarios',F=tabelaFiltravel(T,usuariosOrdenados,{nome:u=>u.nome,usuario:u=>u.usuario||'—',perfil:u=>PERFIL_LABEL[u.perfil]||u.perfil,status:u=>u.status,primeiro_acesso:u=>primeiroAcessoFeito(u)?'Feito':'Pendente',data:u=>u.criado_em});
   b.innerHTML=`${avisoPedidosSenha()}<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">👥 Usuários</div>
     <button class="btn btn-purple btn-sm" onclick="modalUsuario()">+ Novo usuário</button></div>
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Sócio gerencia todos os perfis, incluindo outros Sócios. <b>Diretor</b> tem as mesmas permissões do Sócio, exceto que não pode alterar, ativar/inativar, excluir ou promover ninguém ao perfil <b>Sócio</b>. Gerentes podem cadastrar vendedores. Ninguém altera o próprio perfil. Deve existir sempre ao menos um sócio ativo.</p>
   ${F.barra}<div class="table-wrap"><table>
-  <tr>${thCol(T,'nome','Nome')}${thCol(T,'usuario','Usuário')}${thCol(T,'perfil','Perfil')}${thCol(T,'status','Status')}${thCol(T,'data','Criado em')}<th>Ações</th></tr>
+  <tr>${thCol(T,'nome','Nome')}${thCol(T,'usuario','Usuário')}${thCol(T,'perfil','Perfil')}${thCol(T,'status','Status')}${thCol(T,'primeiro_acesso','Primeiro acesso')}${thCol(T,'data','Criado em')}<th>Ações</th></tr>
   ${F.rows.map(u=>{
     const sociosAtivos=db.usuarios.filter(x=>x.perfil==='socio'&&x.status==='ativo').length;
     const ehUltimoSocio=u.perfil==='socio'&&u.status==='ativo'&&sociosAtivos<=1;
     const ped=pedidoSenhaDe(u.id),podeU=podeGerenciarUsuario(u)&&u.id!==session.usuario_id;
-    return`<tr class="${ped?'linha-pedido-senha':''}">
+    return`<tr class="${ped?'linha-pedido-senha':''}${u.status!=='ativo'?' linha-inativa':''}">
     <td><b>${esc(u.nome)}</b>${u.id===session.usuario_id?' <span class="tag">você</span>':''}${ped?`<br><span class="tag y" title="Pedido feito na tela de login">🔑 pediu nova senha · ${dataHoraBR(ped.criado_em)}</span>`:''}</td>
     <td style="color:var(--muted)">${esc(u.usuario||'—')}</td>
     <td><span class="badge ${u.perfil}">${PERFIL_LABEL[u.perfil]||u.perfil}</span></td>
     <td><span class="badge ${u.status==='ativo'?'ativo':'inativo'}">${u.status}</span></td>
+    <td>${primeiroAcessoFeito(u)?`<span class="tag g" title="${u.ultimo_login?'Último acesso: '+dataHoraBR(u.ultimo_login):'Já criou a própria senha'}">✅ Feito</span>`:`<span class="tag y" title="Ainda não entrou para criar a própria senha">⏳ Pendente</span>`}</td>
     <td style="color:var(--muted)">${dataHoraBR(u.criado_em)}</td>
     <td><button class="iconbtn" title="${ped&&podeU?'Editar e definir a senha nova':'Editar'}" onclick="modalUsuario('${u.id}')">✏️</button>${ped&&podeU?`<button class="iconbtn" title="Dispensar o pedido (a senha continua a mesma)" onclick="dispensarPedidoSenha('${ped.id}')">✕</button>`:''}
       ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)?`<button class="iconbtn" title="${u.status==='ativo'?'Inativar':'Ativar'}" onclick="toggleStatusUsuario('${u.id}')">${u.status==='ativo'?'⏸️':'▶️'}</button>`:''}
       ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)&&isSocioOuDiretor()&&u.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirUsuario('${u.id}')">🗑️</button>`:''}
       ${ehUltimoSocio?'<span class="tag y" title="Deve existir ao menos um sócio ativo">🔒 último sócio</span>':''}</td>
-  </tr>`}).join('')||linhaSemResultado(6,T)}</table></div>`;
+  </tr>`}).join('')||linhaSemResultado(7,T)}</table></div>`;
 }
 /* ---- Pedidos de nova senha (feitos na tela de login) ----
    Não existe senha padrão: quem esqueceu pede na tela de login, o pedido destaca a linha da pessoa em Usuários
    e alguém com permissão edita o usuário (✏️) e define uma senha nova. A pessoa troca no primeiro acesso. */
+/* Primeiro acesso feito = a pessoa já entrou e criou a própria senha (sem troca obrigatória pendente).
+   Depois que alguém define uma senha nova para ela, volta a ficar pendente até ela entrar e trocar. */
+function primeiroAcessoFeito(u){return !u.troca_senha_obrigatoria}
 function pedidoSenhaDe(uid){return (db.pedidos_senha||[]).find(p=>p.usuario_id===uid)}
 function avisoPedidosSenha(){
   const n=(db.pedidos_senha||[]).length;if(!n)return '';
@@ -1986,7 +1996,7 @@ function cfgProdutos(b){
   </div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Imagem</th><th>Ordem</th>${thCol(T,'nome','Produto')}${thCol(T,'preco','Preço')}${thCol(T,'rateio','Rateio')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
-  ${F.rows.map(p=>`<tr>
+  ${F.rows.map(p=>`<tr class="${p.status!=='ativo'?'linha-inativa':''}">
     <td>${p.imagem?`<img class="thumb" src="${imgSrc(p.imagem)}">`:'🌿'}</td>
     ${setasOrdem('moverProduto',p.id)}<td><b>${esc(p.nome)}</b></td>
     <td class="money">${fmt(p.preco)}</td><td><span class="tag">${esc(p.rateio)}</span></td>
@@ -2092,7 +2102,7 @@ function cfgItens(b){
     <button class="btn btn-purple btn-sm" onclick="modalItem()">+ Novo item</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'preco','Preço unitário')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
-  ${F.rows.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr>
+  ${F.rows.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr class="${i.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverItem',i.id)}
     <td><b>${esc(i.nome)}</b>${alerta?' <span class="tag r">⚠️ no mínimo</span>':''}</td>
     <td><span class="tag">${catNome(i.categoria)}</span></td>
@@ -2259,7 +2269,7 @@ function cfgReceitas(b){
     const cons=(r.insumos||[]).filter(x=>x.papel==='consumo');
     const prd=(r.insumos||[]).filter(x=>x.papel==='produzido');
     const nm=id=>{const it=db.itens.find(i=>i.id===id);return it?it.nome:'?'};
-    return`<tr>
+    return`<tr class="${r.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverReceita',r.id)}<td><b>${esc(r.nome)}</b></td>
     <td style="color:var(--muted);font-size:12px">${cons.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'—'}</td>
     <td style="color:var(--muted);font-size:12px">${prd.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'}</td>
@@ -2293,7 +2303,7 @@ function cfgFornecedores(b){
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Vincule cada fornecedor às Matérias-Primas e aos Insumos Auxiliares que ele fornece. Na compra, o campo fornecedor de cada linha sugere os fornecedores vinculados àquele item.</p>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Nome')}${thCol(T,'itens','Itens fornecidos')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
-  ${F.rows.map(f=>{const its=itensDoFornecedor(f.id);return`<tr>
+  ${F.rows.map(f=>{const its=itensDoFornecedor(f.id);return`<tr class="${f.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverFornecedor',f.id)}<td><b>${esc(f.nome)}</b></td>
     <td style="color:var(--muted);font-size:12px">${its.length?its.map(i=>esc(i.nome)).join(', '):'—'}</td>
     <td><span class="badge ${f.status==='ativo'?'ativo':'inativo'}">${f.status}</span></td>
@@ -2387,7 +2397,7 @@ function cfgDescontos(b){
     <button class="btn btn-purple btn-sm" onclick="modalDescontos()">+ Novo desconto</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Nome')}${thCol(T,'tipo','Tipo')}${thCol(T,'desconto','Desconto')}${thCol(T,'status','Status')}<th>Ações</th></tr>
-  ${F.rows.map(p=>`<tr>
+  ${F.rows.map(p=>`<tr class="${p.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverDesconto',p.id)}<td><b>${esc(p.nome)}</b></td>
     <td><span class="tag">${p.tipo==='fixa'?'Fixa':'Escalonada'}</span></td>
     <td style="font-size:12px">${esc(descontoResumo(p))}</td>
@@ -2485,7 +2495,7 @@ function cfgDeslocamento(b){
   </div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Localidade')}${thCol(T,'valor','Valor')}${thCol(T,'status','Status')}<th>Ações</th></tr>
-  ${F.rows.map(t=>`<tr>
+  ${F.rows.map(t=>`<tr class="${t.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverTaxa',t.id)}<td><b>${esc(t.nome)}</b></td><td class="money">${fmt(t.valor)}</td>
     <td><span class="badge ${t.status==='ativo'?'ativo':'inativo'}">${t.status}</span></td>
     <td><button class="iconbtn" onclick="modalTaxa('${t.id}')">✏️</button>
