@@ -51,3 +51,18 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - O aviso aparece como pop-up para todos, em tempo real ou ao entrar. Cada pessoa vê o pop-up uma vez (`avisos_vistos`).
 - O banco define o autor e a validade de 24 horas (trigger). Depois disso o aviso some da tela e o pg_cron o apaga de vez (a cada 10 minutos).
 - As janelas de cadastro usadas por atalho abrem na segunda camada (`modal2`), que é esvaziada ao fechar. As funções do cadastro de fornecedor procuram elementos só dentro da janela aberta.
+
+## Pendências (publicação v4.15.0, 27/09/2026)
+
+- **Guia do usuário:** atualizar para v4.15 com prints reais. As fotos e o logotipo vêm do Storage do Supabase, e a rede desta sessão ainda bloqueava `zwnawcnurwbowtdkholm.supabase.co`.
+  - Slides afetados:
+    - 1: versão;
+    - 3: tabela de perfis — o Vendedor agora registra compra e produção; sem a coluna de senha padrão;
+    - 4: Baú do Vendedor;
+    - 5: Usuários, coluna Primeiro acesso e linha apagada;
+    - 9 e 10: fluxo de senha sem senha padrão;
+    - 13: compra em lista única, Automático/Manual e subtotal;
+    - 15: linha revertida apagada;
+    - 18: cola rápida.
+  - Slides novos: Avisos (📢) e valor do item por fornecedor.
+- **Banco:** apagar a tabela `config_privada` (migração `20260927000000_remove_senha_padrao.sql`) quando nenhum navegador pedir mais `config_privada` nos logs, ou seja, quando não houver mais clientes da versão antiga. A senha padrão já foi zerada.
