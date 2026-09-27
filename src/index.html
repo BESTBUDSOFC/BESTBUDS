@@ -382,7 +382,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.11.0';
+const VERSAO='v4.12.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -2822,18 +2822,25 @@ function exportarRegistros(tipo){
  if(tipo==='bau'){heads=['Módulo','Data/hora','Usuário','Item','Tipo','Quantidade','Saldo resultante','Origem','Status','ID'];rows=aplicarFiltros(db.estoque_bau.map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''})),'bau').map(m=>['Baú',dataHoraBR(m.data),m.usuario_nome||'',m.item_nome,MOV_LABEL[m.tipo_movimento]||m.tipo_movimento,m.quantidade,m.saldo_resultante||0,m.origem||'',m.status==='revertida'?'Revertida':'Ativa',m.operacao_id||''])}
  const csv=[heads.join(';')].concat(rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')));const blob=new Blob(['\ufeff'+csv.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bestbuds-'+tipo+'-'+todayISO()+'.csv';a.click();URL.revokeObjectURL(a.href);reg('Registros exportados (CSV)',tipo+' — '+rows.length+' linha(s)');toast('✅ CSV exportado: '+rows.length+' linha(s).')
 }
+/* Recalcula o saldo resultante de um item (ignorando revertidos). A tela recalcula na hora;
+   o banco atualiza tudo numa única chamada (recalcular_saldos_bau), para não gastar uma requisição por linha
+   (o limite de requisições barraria históricos grandes). Sem a função no banco, cai no modo antigo, linha a linha. */
 async function recalcularSaldosItem(itemId){
   let saldo=0;
-  const movs=db.estoque_bau.filter(m=>m.item_id===itemId&&m.status!=='revertida').sort((a,b)=>new Date(a.data).getTime()-new Date(b.data).getTime());
+  const movs=db.estoque_bau.filter(m=>m.item_id===itemId&&m.status!=='revertida').sort((a,b)=>(new Date(a.data).getTime()-new Date(b.data).getTime())||String(a.id).localeCompare(String(b.id)));
   const atualizacoes=[];
   movs.forEach(m=>{
     saldo+=(m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada'?m.quantidade:-m.quantidade);
     if(m.saldo_resultante!==saldo){atualizacoes.push({id:m.id,saldo_resultante:saldo})}
     m.saldo_resultante=saldo;
   });
+  if(!atualizacoes.length)return;
+  const{error}=await sb.rpc('recalcular_saldos_bau',{p_item:itemId});
+  if(!error)return;
+  if(!/recalcular_saldos_bau|PGRST202|function/i.test((error.code||'')+' '+(error.message||''))){console.warn('[Best Buds] falha ao recalcular saldo',error);return}
   for(const a of atualizacoes){
-    const{error}=await sb.from('estoque_bau').update({saldo_resultante:a.saldo_resultante}).eq('id',a.id);
-    if(error)console.warn('[Best Buds] falha ao recalcular saldo',error);
+    const{error:e2}=await sb.from('estoque_bau').update({saldo_resultante:a.saldo_resultante}).eq('id',a.id);
+    if(e2)console.warn('[Best Buds] falha ao recalcular saldo',e2);
   }
 }
 async function excluirMovimentoBau(id){

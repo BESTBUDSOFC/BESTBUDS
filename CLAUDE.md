@@ -12,14 +12,24 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 ## Guia do usuário
 
 - O guia é `docs/Guia_do_Sistema_Best_Buds.pptx`.
-- **Sempre que o site mudar algo que o usuário vê, atualize o guia na mesma entrega.** Isso vale para textos, telas, regras e permissões.
-- Troque os prints das telas que mudaram, mantendo a proporção do quadro da imagem.
-- Ajuste os textos e as notas do apresentador.
-- Atualize a versão no slide 1.
-- Os prints usam dados de demonstração, nunca dados reais.
+- **O guia só é atualizado depois do "aprovado"**, na mesma publicação que leva a mudança para produção. Nunca atualize o guia na branch antes da aprovação.
+- Na publicação, atualize tudo o que mudou e que o usuário vê: textos, telas, regras e permissões.
+  - Troque os prints das telas que mudaram, mantendo a proporção do quadro da imagem.
+  - Ajuste os textos e as notas do apresentador.
+  - Atualize a versão no slide 1.
+- **Os prints são reais.** Use os produtos, itens, receitas, fornecedores, fotos e identidade visual que estão cadastrados no site.
+  - Leia os dados de produção só para consulta, sem gravar nada.
+  - As fotos vêm do Storage do Supabase (`*.supabase.co`). A rede do ambiente precisa liberar esse domínio.
 
 ## Senhas
 
 - Não existe senha padrão.
 - Quem esqueceu a senha pede em "Redefinir senha" na tela de login. O pedido destaca a linha da pessoa em Configurações › Usuários.
 - Um Gerente ou acima edita o usuário (✏️) e define uma senha nova. Ao salvar, o pedido é marcado como atendido. A pessoa troca a senha no primeiro acesso.
+
+## Limite de requisições
+
+- `public.checar_limite_requisicoes()` roda antes de cada requisição da API de dados (`pgrst.db_pre_request`).
+- Escritas (POST, PATCH, PUT, DELETE e rpc) têm limite por minuto: 120 por usuário logado e 10 por IP sem login. Leituras não contam.
+- Passou do limite, a resposta é HTTP 429 com a mensagem "Muitas ações em pouco tempo".
+- Não crie laços que façam uma requisição por linha. Agrupe numa chamada só (ex.: `.in('id', ids)` ou uma função rpc, como `recalcular_saldos_bau`).
