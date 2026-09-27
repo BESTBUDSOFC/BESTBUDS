@@ -243,6 +243,19 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .lf-slider{display:flex;align-items:center;gap:10px}
 .lf-slider input[type=range]{flex:1;padding:0;border:none;background:none;accent-color:var(--purple)}
 .lf-slider b{min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.aviso-bg{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:16px}
+.aviso-bg.open{display:flex}
+.aviso-box{background:var(--surface);border:1px solid var(--warning-border);border-radius:16px;max-width:520px;width:100%;padding:22px 22px 18px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.aviso-topo{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--warning)}
+.aviso-titulo{margin:6px 0 10px;font-size:20px}
+.aviso-msg{white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.5}
+.aviso-meta{margin-top:12px;font-size:12px;color:var(--muted)}
+.aviso-lista{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto}
+.aviso-item{border:1px solid var(--border);border-radius:10px;padding:12px}
+.aviso-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.aviso-form textarea{width:100%;resize:vertical;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font:inherit}
+#btn-avisos{position:relative;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:15px;line-height:1}
+.avisos-selo{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--warning);color:#1a1300;font-size:11px;font-weight:800;line-height:18px;text-align:center}
 .alert-banner{background:rgba(var(--danger-rgb),.08);border:1px solid var(--danger);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
 .alert-banner.aviso-pedido-senha{background:rgba(var(--warning-rgb),.10);border-color:var(--warning-border);color:var(--text)}
 tr.linha-pedido-senha td{background:rgba(var(--warning-rgb),.10)}
@@ -263,7 +276,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 /* Formulário de compra (duas seções) */
 .cmp-row{display:grid;grid-template-columns:2fr 1.7fr .7fr 1fr .9fr 104px 34px;gap:6px;align-items:center;margin-bottom:8px;padding:3px;border-radius:10px;border:1px solid transparent}
 .cmp-head{margin-bottom:4px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.cmp-head span:nth-child(5){text-align:right}
+
 .cmp-card{max-width:1180px}
 .cmp-tabela{border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:6px;background:rgba(0,0,0,.12)}
 .cp-preco-fixo{display:flex;align-items:center;gap:6px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden}
@@ -286,7 +299,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
   .cmp-row{grid-template-columns:1fr 1fr;padding:8px;border-color:var(--border)}
   .cmp-row{grid-template-columns:1fr 1fr 34px;grid-template-areas:"item item del" "forn forn forn" "qtd preco preco" "sub tipo tipo"}
   .cmp-row>.cp-item{grid-area:item}.cmp-row>.cp-forn-cel{grid-area:forn}.cmp-row>.cp-qtd{grid-area:qtd}.cmp-row>.cp-preco-cel{grid-area:preco}
-  .cmp-row>.cmp-sub{grid-area:sub;text-align:left}.cmp-row>.cp-tipo{grid-area:tipo;justify-self:end}.cmp-row>.btn-del-linha{grid-area:del}
+  .cmp-row>.cp-sub-cel{grid-area:sub}.cmp-row>.cp-tipo{grid-area:tipo;justify-self:end}.cmp-row>.btn-del-linha{grid-area:del}
   .cmp-tabela{padding:8px}
   .cmp-row>.btn-del-linha{justify-self:end}
   .cmp-head{display:none}
@@ -327,6 +340,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .msel-chip button{background:none;color:inherit;font-size:13px;line-height:1;padding:0 2px}
 .msel-list{margin-top:4px;max-height:220px;overflow:auto;background:var(--input-bg);border:1px solid var(--border);border-radius:8px}
 .msel-opt{display:flex!important;align-items:center;gap:8px;padding:8px 10px;margin:0!important;font-size:13px!important;font-weight:400!important;color:var(--text)!important;text-transform:none!important;cursor:pointer}
+.msel-opt.oculto{display:none!important}
 .msel-opt:hover{background:rgba(var(--purple-rgb),.1)}
 .msel-opt input{width:auto}
 .msel-opt .tag{margin-left:auto}
@@ -365,6 +379,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
   <span class="vselo" id="h-versao">v4.8.0</span>
+  <button id="btn-avisos" title="Avisos" onclick="modalAvisos()">📢<span id="avisos-selo" class="avisos-selo" style="display:none"></span></button>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -386,6 +401,8 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
   <div class="modal" id="modal2-box"></div>
 </div>
 
+<!-- ============ AVISO (pop-up para todos) ============ -->
+<div id="aviso-bg" class="aviso-bg"><div class="aviso-box" id="aviso-box"></div></div>
 <!-- ============ CONFIRM CUSTOM ============ -->
 <div class="modal-bg" id="confirm-bg">
   <div class="modal" style="max-width:400px">
@@ -400,7 +417,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.13.0';
+const VERSAO='v4.14.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -446,6 +463,10 @@ let db=null, session=null;
 /* Carrega tudo que o perfil logado enxerga (RLS decide o que volta) e monta o mesmo formato
    que as telas já esperam (db.produtos, db.itens, db.vendas com itens embutidos, etc.) */
 async function carregarTudo(){
+  const avisosP=Promise.all([
+    sb.from('avisos').select('*').order('criado_em',{ascending:false}),
+    sb.from('avisos_vistos').select('aviso_id')
+  ]).catch(e=>[{data:[],error:e},{data:[],error:e}]);
   const[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,
     taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha]=await Promise.all([
     sb.from('profiles').select('*').order('criado_em'),
@@ -490,6 +511,8 @@ async function carregarTudo(){
 
   const parceriasArr=(parcerias.data||[]).map(p=>({...p,faixas:porParceria[p.id]||[]}));
   const cfg=config.data||{};
+  const[avisosR,vistosR]=await avisosP;
+  if(avisosR.error)console.warn('[Best Buds] avisos indisponíveis',avisosR.error);
   db={
     usuarios:(perfis.data||[]),
     produtos:(produtos.data||[]).map(p=>({...p,preco:Number(p.preco),imagem:p.imagem_url})),
@@ -499,6 +522,8 @@ async function carregarTudo(){
     fornecedor_itens:(fornItens.data||[]).map(x=>({...x,preco_unitario:x.preco_unitario==null?null:Number(x.preco_unitario)})),
     categorias:(categorias.data||[]),
     pedidos_senha:(pedidosSenha.data||[]),
+    avisos:avisosR.error?[]:(avisosR.data||[]),
+    avisos_vistos:new Set(vistosR.error?[]:(vistosR.data||[]).map(v=>v.aviso_id)),
     parcerias:parceriasArr,
     descontos:parceriasArr,
     taxas_deslocamento:(taxas.data||[]).map(t=>({...t,valor:Number(t.valor)})),
@@ -641,7 +666,7 @@ function startApp(){
   bp.className='badge '+(['gerente','socio','diretor'].includes(u.perfil)?u.perfil:'vendedor');
   document.getElementById('h-versao').textContent=VERSAO;
   aplicarIdentidadeVisual();
-  buildNav();render();
+  buildNav();render();atualizarSeloAvisos();setTimeout(mostrarAvisosPendentes,400);
 }
 function render(){
   const c=document.getElementById('main-content');
@@ -662,7 +687,7 @@ function render(){
 function openModal(html){const mb=document.getElementById('modal-box');mb.classList.remove('modal-larga');mb.innerHTML=html;document.getElementById('modal-bg').classList.add('open')}
 function closeModal(){document.getElementById('modal-bg').classList.remove('open')}
 function openModal2(html){document.getElementById('modal2-box').innerHTML=html;document.getElementById('modal2-bg').classList.add('open')}
-function closeModal2(){document.getElementById('modal2-bg').classList.remove('open')}
+function closeModal2(){document.getElementById('modal2-bg').classList.remove('open');document.getElementById('modal2-box').innerHTML=''}
 function closeConfirm(){document.getElementById('confirm-bg').classList.remove('open')}
 function confirmar(titulo,msg,cb){
   document.getElementById('confirm-title').textContent=titulo;
@@ -1275,7 +1300,27 @@ function celFornCompra(p,itemId,fornId,fornNome){
 }
 function celPrecoCompra(p,itemId,preco){
   return itemId?`<span class="cp-preco-fixo" title="Valor do fornecedor para este item (Configurações › Fornecedores)">🔒 <b>${preco!==''&&preco!=null?fmt(preco):'—'}</b></span>`
-    :`<input class="cp-preco" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${preco??''}" oninput="recalcCompra('${p}')">`;
+    :`<input class="cp-preco" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${preco??''}" oninput="aoEditarValorCompra(this,'preco','${p}')">`;
+}
+/* Subtotal: Automático = travado (quantidade × valor do fornecedor); Manual = digitável.
+   Manual: quantidade + valor unitário → calcula o subtotal; quantidade + subtotal → calcula o valor unitário. */
+function celSubCompra(p,itemId,sub){
+  return itemId?`<span class="cp-preco-fixo cp-sub-fixo" title="Quantidade × valor do fornecedor">🔒 <b>—</b></span>`
+    :`<input class="cp-sub" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${sub??''}" oninput="aoEditarValorCompra(this,'sub','${p}')">`;
+}
+const arred2=v=>Math.round(v*100)/100;
+function aoEditarValorCompra(inp,campo,p){
+  const r=inp.closest('.cmp-row');
+  if(!r.dataset.item){
+    const q=parseFloat(r.querySelector('.cp-qtd').value),pe=r.querySelector('.cp-preco'),se=r.querySelector('.cp-sub');
+    if(campo==='preco'||campo==='sub')r.dataset.base=campo;           // o último campo de valor digitado manda
+    const base=r.dataset.base||'preco';
+    if(q>0){
+      if(base==='sub'){const sv=parseFloat(se.value);if(sv>0)pe.value=arred2(sv/q)}
+      else{const pv=parseFloat(pe.value);if(pv>0)se.value=arred2(pv*q)}
+    }
+  }
+  recalcCompra(p);
 }
 function linhaCompra(p,ci){
   ci=ci||{};
@@ -1286,9 +1331,9 @@ function linhaCompra(p,ci){
   return`<div class="cmp-row" data-cmp data-item="${it?it.id:''}" data-preco="${it&&preco!=null?preco:''}" oninput="this.classList.remove('linha-erro')" onchange="this.classList.remove('linha-erro')">
     <input class="cp-item" data-combo="itens" autocomplete="off" placeholder="Item (digite ou escolha)" value="${esc(it?it.nome:(ci.nome||''))}" oninput="aoDigitarItemCompra(this,'${p}')" onblur="nomeCanonicoItem(this)">
     <div class="cp-forn-cel">${celFornCompra(p,it&&it.id,forn,ci.fornecedor_nome)}</div>
-    <input class="cp-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="recalcCompra('${p}')">
+    <input class="cp-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="aoEditarValorCompra(this,'qtd','${p}')">
     <div class="cp-preco-cel">${celPrecoCompra(p,it&&it.id,it?preco:ci.preco_unitario)}</div>
-    <span class="cmp-val cmp-sub">—</span>
+    <div class="cp-sub-cel">${celSubCompra(p,it&&it.id,!it&&ci.quantidade>0&&ci.preco_unitario>0?arred2(ci.quantidade*ci.preco_unitario):'')}</div>
     <span class="cp-tipo">${tagTipoCompra(!!it,!it&&!ci.nome)}</span>
     <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('.cmp-row').remove();recalcCompra('${p}')">✕</button></div>`;
 }
@@ -1315,15 +1360,16 @@ function aoDigitarItemCompra(inp,p){
   r.querySelector('.cp-tipo').innerHTML=tagTipoCompra(!!it,!inp.value.trim());
   if(r.dataset.item===novo)return recalcCompra(p);
   // guarda o que foi digitado na linha Manual, para voltar a mostrar se ela deixar de ser Automático
-  const ft=r.querySelector('.cp-forn-txt'),pt=r.querySelector('.cp-preco');
-  if(ft)r.dataset.fornTxt=ft.value;if(pt)r.dataset.precoTxt=pt.value;
-  const fornTxt=r.dataset.fornTxt||'',precoTxt=r.dataset.precoTxt||'';
+  const ft=r.querySelector('.cp-forn-txt'),pt=r.querySelector('.cp-preco'),st=r.querySelector('.cp-sub');
+  if(ft)r.dataset.fornTxt=ft.value;if(pt)r.dataset.precoTxt=pt.value;if(st)r.dataset.subTxt=st.value;
+  const fornTxt=r.dataset.fornTxt||'',precoTxt=r.dataset.precoTxt||'',subTxt=r.dataset.subTxt||'';
   r.dataset.item=novo;
   let forn='',preco='';
   if(it){const v=fornecedoresDoItem(it.id);if(v.length===1){forn=v[0].id;const pr=precoFornItem(forn,it.id);preco=pr!=null?pr:''}}
   r.dataset.preco=preco;
   r.querySelector('.cp-forn-cel').innerHTML=celFornCompra(p,novo,forn,fornTxt);
   r.querySelector('.cp-preco-cel').innerHTML=celPrecoCompra(p,novo,it?preco:precoTxt);
+  r.querySelector('.cp-sub-cel').innerHTML=celSubCompra(p,novo,subTxt);
   recalcCompra(p);
 }
 /* Item do cadastro digitado com outra grafia ("pacote b") fica com o nome do cadastro ao sair do campo */
@@ -1349,8 +1395,11 @@ function lerFormCompra(p){
       linha={item_id:it.id,nome:it.nome,quantidade,preco_unitario:preco_unitario||0,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:'',_it:it};
       ins.push(linha);
     }else{
-      const fn=(r.querySelector('.cp-forn-txt')||{}).value.trim(),preco_unitario=parseFloat((r.querySelector('.cp-preco')||{}).value);
-      falta=[!nomeDig&&'item',!fn&&'fornecedor',!(quantidade>0)&&'quantidade',!(preco_unitario>0)&&'valor unitário'].filter(Boolean);
+      const fn=(r.querySelector('.cp-forn-txt')||{}).value.trim();
+      let preco_unitario=parseFloat((r.querySelector('.cp-preco')||{}).value);
+      const subDig=parseFloat((r.querySelector('.cp-sub')||{}).value);
+      if(!(preco_unitario>0)&&subDig>0&&quantidade>0)preco_unitario=arred2(subDig/quantidade);
+      falta=[!nomeDig&&'item',!fn&&'fornecedor',!(quantidade>0)&&'quantidade',!(preco_unitario>0)&&'valor unitário ou subtotal'].filter(Boolean);
       const f=db.fornecedores.find(x=>sselNorm(x.nome)===sselNorm(fn));
       linha={item_id:null,nome:nomeDig,quantidade,preco_unitario,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:fn};
       nc.push(linha);
@@ -1365,9 +1414,9 @@ function lerFormCompra(p){
 function recalcCompra(p){
   const box=document.getElementById(p+'-total');if(!box)return;
   document.querySelectorAll(`#${p}-linhas .cmp-row`).forEach(r=>{
-    const q=parseFloat(r.querySelector('.cp-qtd').value);
-    const pu=r.dataset.item?parseFloat(r.dataset.preco):parseFloat((r.querySelector('.cp-preco')||{}).value);
-    r.querySelector('.cmp-sub').textContent=(q>0&&pu>0)?fmt(q*pu):'—';
+    if(!r.dataset.item)return; // Manual: subtotal é digitável (calculado em aoEditarValorCompra)
+    const q=parseFloat(r.querySelector('.cp-qtd').value),pu=parseFloat(r.dataset.preco);
+    const b=r.querySelector('.cp-sub-fixo b');if(b)b.textContent=(q>0&&pu>0)?fmt(q*pu):'—';
   });
   const f=lerFormCompraSilencioso(p);
   box.innerHTML=`<span>Insumos: <b>${fmt(f.totIns)}</b></span><span class="op">+</span><span>Itens não controlados: <b>${fmt(f.totNc)}</b></span><span class="op">=</span><span class="tot">Total: <b>${fmt(f.total)}</b></span>${p==='c'?'<button class="btn btn-primary" onclick="salvarCompra()">Registrar compra</button>':''}`;
@@ -2365,38 +2414,44 @@ function modalFornecedor(id,opts){
     </div></div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModalFornecedor()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarFornecedor('${id||''}')">Salvar</button></div>`);
+  _fornRoot=document.getElementById(opts.onSaved?'modal2-box':'modal-box');
   mselChips();
-  if(opts.itemId){const inp=document.querySelector(`.fvinc-row[data-item="${opts.itemId}"] .fvinc-preco`);if(inp)setTimeout(()=>inp.focus(),60)}
+  if(opts.itemId){const inp=fq(`.fvinc-row[data-item="${opts.itemId}"] .fvinc-preco`);if(inp)setTimeout(()=>inp.focus(),60)}
 }
 function fecharModalFornecedor(){if(_fornAtalho){_fornAtalho=null;closeModal2()}else closeModal()}
-function mselAbrir(abrir){const l=document.getElementById('f-itens');if(l)l.style.display=abrir?'block':'none'}
+/* Tudo do cadastro de fornecedor é procurado dentro da janela aberta (_fornRoot): assim uma janela antiga
+   (ex.: o atalho da compra) nunca interfere na atual. */
+let _fornRoot=null;
+function fq(sel){return _fornRoot?_fornRoot.querySelector(sel):null}
+function fqa(sel){return _fornRoot?[..._fornRoot.querySelectorAll(sel)]:[]}
+function mselAbrir(abrir){const l=fq('#f-itens');if(l)l.style.display=abrir?'block':'none'}
 function mselFiltrar(q){
-  q=q.trim().toLowerCase();let vis=0;
-  document.querySelectorAll('#f-itens .msel-opt').forEach(o=>{const ok=!q||o.dataset.nome.includes(q);o.style.display=ok?'':'none';if(ok)vis++});
-  const v=document.getElementById('f-vazio');if(v)v.style.display=vis?'none':'block';
+  q=sselNorm(q.trim());let vis=0;
+  fqa('#f-itens .msel-opt').forEach(o=>{const ok=!q||sselNorm(o.dataset.nome).includes(q);o.classList.toggle('oculto',!ok);if(ok)vis++});
+  const v=fq('#f-vazio');if(v)v.style.display=vis?'none':'block';
   mselAbrir(true);
 }
 /* Itens vinculados ao fornecedor: uma linha por item com o valor dele neste fornecedor (obrigatório) */
 let _fornPrecos={};
 function mselChips(){
-  const box=document.getElementById('f-chips');if(!box)return;
-  const marc=[...document.querySelectorAll('#f-itens input:checked')];
+  const box=fq('#f-chips');if(!box)return;
+  const marc=fqa('#f-itens input:checked');
   box.innerHTML=marc.length?`<div class="fvinc-head"><span>Item</span><span>Valor unitário</span><span></span></div>`+marc.map(c=>{const it=db.itens.find(i=>i.id===c.value);return`<div class="fvinc-row" data-item="${c.value}">
     <span class="fvinc-nome">${esc(c.dataset.label)}${it?` <span class="muted">(${esc(it.unidade_medida)})</span>`:''}</span>
     <input class="fvinc-preco" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${_fornPrecos[c.value]??''}" oninput="_fornPrecos['${c.value}']=this.value;this.classList.remove('campo-erro')">
     <button type="button" class="iconbtn" title="Remover item" onclick="mselDesmarcar('${c.value}')">✕</button></div>`}).join(''):'<p class="muted" style="font-size:12px;margin:0 0 6px">Nenhum item vinculado. Pesquise abaixo e marque os itens que este fornecedor vende.</p>';
 }
-function mselDesmarcar(itemId){const c=document.querySelector(`#f-itens input[value="${itemId}"]`);if(c){c.checked=false;mselChips()}}
-document.addEventListener('mousedown',e=>{const m=document.getElementById('f-msel');if(m&&!m.contains(e.target))mselAbrir(false)});
+function mselDesmarcar(itemId){const c=fq(`#f-itens input[value="${itemId}"]`);if(c){c.checked=false;mselChips()}}
+document.addEventListener('mousedown',e=>{const m=fq('#f-msel');if(m&&!m.contains(e.target))mselAbrir(false)});
 async function salvarFornecedor(id){
-  const nome=document.getElementById('f-nome').value.trim();
+  const nome=fq('#f-nome').value.trim();
   if(!nome)return toast('⚠️ Informe o nome do fornecedor.');
   if(db.fornecedores.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.id!==id))return toast('⚠️ Já existe um fornecedor com esse nome.');
-  const marcados=[...document.querySelectorAll('#f-itens input:checked')].map(c=>c.value);
+  const marcados=fqa('#f-itens input:checked').map(c=>c.value);
   const precos={};
   for(const iid of marcados){
     const v=parseFloat(_fornPrecos[iid]);
-    if(!(v>0)){const it=db.itens.find(i=>i.id===iid);const inp=document.querySelector(`.fvinc-row[data-item="${iid}"] .fvinc-preco`);if(inp){inp.classList.add('campo-erro');inp.focus()}return toast('⚠️ Informe o valor de "'+(it?it.nome:'item')+'" neste fornecedor.')}
+    if(!(v>0)){const it=db.itens.find(i=>i.id===iid);const inp=fq(`.fvinc-row[data-item="${iid}"] .fvinc-preco`);if(inp){inp.classList.add('campo-erro');inp.focus()}return toast('⚠️ Informe o valor de "'+(it?it.nome:'item')+'" neste fornecedor.')}
     precos[iid]=Math.round(v*100)/100;
   }
   const campos={nome};
@@ -3147,7 +3202,7 @@ function excluirSelecionadas(tipo){
    A tela só é redesenhada quando é seguro (sem modal aberto, sem formulário de compra/produção
    aberto e sem campo em edição); caso contrário a atualização espera e é aplicada logo depois. */
 const TABELAS_TEMPO_REAL=['vendas','venda_itens','compras','compra_itens','estoque_bau','ajustes_caixa','itens','produtos','receitas','receita_insumos',
-  'fornecedores','fornecedor_itens','parcerias','parceria_faixas','taxas_deslocamento','categorias_itens','profiles','configuracoes','solicitacoes_senha'];
+  'fornecedores','fornecedor_itens','parcerias','parceria_faixas','taxas_deslocamento','categorias_itens','profiles','configuracoes','solicitacoes_senha','avisos'];
 let _rtCanal=null,_rtTimer=null,_rtPendente=false,_rtCarregando=false;
 function iniciarTempoReal(){
   if(_rtCanal||!sb.channel)return;
@@ -3162,6 +3217,7 @@ async function sincronizarAgora(){
   _rtCarregando=true;
   try{await carregarTudo();aplicarIdentidadeVisual()}catch(e){console.warn('[Best Buds] falha ao sincronizar',e);_rtCarregando=false;return}
   _rtCarregando=false;
+  atualizarSeloAvisos();mostrarAvisosPendentes();
   if(podeRedesenhar())render();else _rtPendente=true;
 }
 function podeRedesenhar(){
@@ -3294,6 +3350,89 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('mousedown',e=>{if(_comboPop&&!_comboPop.contains(e.target)&&e.target!==_comboInp)comboFechar()});
 document.addEventListener('scroll',e=>{if(_comboPop&&!_comboPop.contains(e.target))comboFechar()},true);
 window.addEventListener('resize',comboFechar);
+
+
+/* ================= AVISOS PARA TODOS =================
+   Gerente, Diretor ou Sócio publica um aviso (título + mensagem). Ele aparece como pop-up na tela de
+   todo mundo que está logado (tempo real) ou assim que a pessoa entrar. Cada pessoa vê o pop-up uma vez
+   (fica registrado em avisos_vistos). Depois de 24 horas o aviso some da tela e o banco o apaga de vez. */
+const AVISO_TITULO_MAX=80,AVISO_MSG_MAX=1000;
+function avisosAtivos(){const agora=Date.now();return (db.avisos||[]).filter(a=>new Date(a.expira_em).getTime()>agora)}
+function avisosNaoVistos(){return avisosAtivos().filter(a=>!db.avisos_vistos.has(a.id)).sort((a,b)=>new Date(a.criado_em)-new Date(b.criado_em))}
+function tempoRestante(a){const ms=new Date(a.expira_em).getTime()-Date.now();if(ms<=0)return 'expirado';const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);return h?`some em ${h}h${m?String(m).padStart(2,'0'):''}`:`some em ${m} min`}
+function atualizarSeloAvisos(){
+  const el=document.getElementById('avisos-selo');if(!el||!db)return;
+  const n=avisosNaoVistos().length;el.textContent=n;el.style.display=n?'':'none';
+  const b=document.getElementById('btn-avisos');if(b)b.title=n?n+' aviso(s) novo(s)':'Avisos';
+}
+let _avisoAtual=null;
+function mostrarAvisosPendentes(){
+  if(!db||!session||!document.body.classList.contains('logado'))return;
+  const bg=document.getElementById('aviso-bg');if(!bg)return;
+  if(bg.classList.contains('open'))return;
+  const a=avisosNaoVistos()[0];if(!a)return;
+  _avisoAtual=a.id;
+  document.getElementById('aviso-box').innerHTML=`<div class="aviso-topo">📢 Aviso</div>
+    <h3 class="aviso-titulo">${esc(a.titulo)}</h3>
+    <div class="aviso-msg">${esc(a.mensagem)}</div>
+    <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
+    <div class="modal-actions"><button class="btn btn-primary" id="btn-aviso-ok" onclick="marcarAvisoVisto()">Entendi</button></div>`;
+  bg.classList.add('open');
+  setTimeout(()=>{const b=document.getElementById('btn-aviso-ok');if(b)b.focus()},50);
+}
+async function marcarAvisoVisto(){
+  const id=_avisoAtual;document.getElementById('aviso-bg').classList.remove('open');_avisoAtual=null;
+  if(!id)return;
+  db.avisos_vistos.add(id);atualizarSeloAvisos();
+  const{error}=await sb.from('avisos_vistos').insert({aviso_id:id,usuario_id:session.usuario_id});
+  if(error&&!/duplicate|23505/i.test(error.message+' '+(error.code||'')))console.warn('[Best Buds] falha ao marcar aviso como visto',error);
+  setTimeout(mostrarAvisosPendentes,250);
+}
+function modalAvisos(){
+  const ger=isGerente(),lista=avisosAtivos();
+  openModal(`<h3>📢 Avisos</h3>
+  ${ger?`<div class="aviso-form">
+    <div class="field"><label>Título</label><input id="av-titulo" maxlength="${AVISO_TITULO_MAX}" placeholder="Ex.: Reunião hoje às 20h"></div>
+    <div class="field"><label>Mensagem</label><textarea id="av-msg" rows="4" maxlength="${AVISO_MSG_MAX}" placeholder="Escreva o aviso para toda a equipe"></textarea></div>
+    <p class="muted" style="font-size:12px;margin:-4px 0 10px">Aparece como pop-up na tela de todos e é apagado automaticamente depois de 24 horas.</p>
+    <button class="btn btn-primary" id="btn-publicar-aviso" onclick="publicarAviso()">Publicar para todos</button>
+  </div>`:''}
+  <div class="section-title" style="margin-top:${ger?'18px':'4px'}">Avisos das últimas 24 horas</div>
+  <div class="aviso-lista">${lista.length?lista.map(a=>`<div class="aviso-item">
+      <div class="aviso-item-top"><b>${esc(a.titulo)}</b>${ger?`<button class="iconbtn" title="Apagar agora" onclick="apagarAviso('${a.id}')">🗑️</button>`:''}</div>
+      <div class="aviso-msg">${esc(a.mensagem)}</div>
+      <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
+    </div>`).join(''):'<p class="muted" style="font-size:13px">Nenhum aviso nas últimas 24 horas.</p>'}</div>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button></div>`);
+  // quem abre a lista já viu todos os avisos ativos
+  const novos=avisosNaoVistos();
+  if(novos.length){novos.forEach(a=>db.avisos_vistos.add(a.id));atualizarSeloAvisos();
+    sb.from('avisos_vistos').upsert(novos.map(a=>({aviso_id:a.id,usuario_id:session.usuario_id})),{onConflict:'aviso_id,usuario_id',ignoreDuplicates:true}).then(({error})=>{if(error)console.warn('[Best Buds] falha ao marcar avisos',error)})}
+}
+async function publicarAviso(){
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem publicar avisos.');
+  const titulo=document.getElementById('av-titulo').value.trim(),mensagem=document.getElementById('av-msg').value.trim();
+  if(!titulo)return toast('⚠️ Informe o título do aviso.');
+  if(!mensagem)return toast('⚠️ Escreva a mensagem do aviso.');
+  const btn=document.getElementById('btn-publicar-aviso');btn.disabled=true;
+  const{data,error}=await sb.from('avisos').insert({titulo:titulo.slice(0,AVISO_TITULO_MAX),mensagem:mensagem.slice(0,AVISO_MSG_MAX),criado_por:session.usuario_id,criado_por_nome:sessionUser().nome}).select().single();
+  btn.disabled=false;
+  if(error)return toast('⚠️ Não foi possível publicar: '+error.message);
+  db.avisos.unshift(data);db.avisos_vistos.add(data.id);
+  sb.from('avisos_vistos').insert({aviso_id:data.id,usuario_id:session.usuario_id}).then(()=>{});
+  reg('Aviso publicado',titulo);toast('✅ Aviso publicado para todos.');modalAvisos();
+}
+function apagarAviso(id){
+  if(!isGerente())return;
+  const a=(db.avisos||[]).find(x=>x.id===id);if(!a)return;
+  confirmar('Apagar aviso','O aviso "'+a.titulo+'" sai da tela de todos agora. Confirmar?',async()=>{
+    const{error}=await sb.from('avisos').delete().eq('id',id);
+    if(error)return toast('⚠️ Erro ao apagar: '+error.message);
+    db.avisos=db.avisos.filter(x=>x.id!==id);reg('Aviso apagado',a.titulo);atualizarSeloAvisos();modalAvisos();
+  });
+}
+// avisos vencidos somem da tela mesmo sem nenhuma alteração no banco
+setInterval(()=>{if(!db||!db.avisos)return;const antes=db.avisos.length;db.avisos=avisosAtivos();if(db.avisos.length!==antes)atualizarSeloAvisos()},60000);
 
 /* ================= INIT ================= */
 document.getElementById('login-olho').innerHTML=OLHO_ABERTO;
