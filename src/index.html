@@ -417,7 +417,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.14.0';
+const VERSAO='v4.14.1';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -2470,16 +2470,17 @@ async function salvarFornecedor(id){
   const remover=atuais.filter(x=>!marcados.includes(x.item_id)).map(x=>x.id);
   // novos vínculos e vínculos com valor alterado vão numa chamada só (upsert pelo par fornecedor+item)
   const gravar=marcados.filter(itemId=>{const a=atuais.find(x=>x.item_id===itemId);return !a||Number(a.preco_unitario)!==precos[itemId]}).map(item_id=>({fornecedor_id:fid,item_id,preco_unitario:precos[item_id]}));
-  if(remover.length){
-    const{error}=await sb.from('fornecedor_itens').delete().in('id',remover);
-    if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao remover vínculos: '+error.message);
-    db.fornecedor_itens=db.fornecedor_itens.filter(x=>!remover.includes(x.id));
-  }
+  // grava primeiro (novos e valores alterados) e só depois remove os desmarcados: se a gravação falhar, nenhum vínculo é perdido
   if(gravar.length){
     const{data,error}=await sb.from('fornecedor_itens').upsert(gravar,{onConflict:'fornecedor_id,item_id'}).select();
     if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao gravar itens e valores: '+error.message);
     data.forEach(d=>{const v={...d,preco_unitario:Number(d.preco_unitario)};const i=db.fornecedor_itens.findIndex(x=>x.fornecedor_id===d.fornecedor_id&&x.item_id===d.item_id);if(i>=0)db.fornecedor_itens[i]=v;else db.fornecedor_itens.push(v)});
     reg('Valores do fornecedor atualizados',nome+' — '+gravar.length+' item(ns)');
+  }
+  if(remover.length){
+    const{error}=await sb.from('fornecedor_itens').delete().in('id',remover);
+    if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao remover vínculos: '+error.message);
+    db.fornecedor_itens=db.fornecedor_itens.filter(x=>!remover.includes(x.id));
   }
   if(_fornAtalho){const cb=_fornAtalho;_fornAtalho=null;closeModal2();cb(db.fornecedores.find(x=>x.id===fid));return}
   closeModal();render();
