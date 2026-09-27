@@ -152,6 +152,8 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .nav-item:hover{color:var(--text);background:rgba(var(--purple-rgb),.08)}
 .nav-item.active{color:var(--green);background:rgba(var(--green-rgb),.08);border:1px solid rgba(var(--green-rgb),.25)}
 .nav-item .ic{font-size:18px;width:22px;text-align:center}
+.nav-selo{margin-left:auto;font-size:11px;font-weight:800;color:var(--warning);background:rgba(var(--warning-rgb),.14);border:1px solid var(--warning-border);border-radius:999px;padding:1px 7px;line-height:1.4}
+#bottom-nav .nav-selo{margin-left:0;font-size:9px;padding:0 5px}
 #bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:rgba(var(--surface-rgb),.97);border-top:1px solid var(--border);z-index:50}
 #bottom-nav .bn-inner{display:flex;height:100%}
 #bottom-nav .nav-item{flex-direction:column;gap:2px;justify-content:center;font-size:9px;padding:4px;border-radius:0;flex:1}
@@ -216,7 +218,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .btn-exp:hover{background:#34344A}.btn-exp.aberto:hover{background:var(--purple-hover)}
 .btn-exp{display:inline-flex}.btn-exp:not(.aberto){transform:none}
 tr.linha-pai.aberta td{border-bottom-color:transparent}
-tr.linha-revertida td:not(:last-child){opacity:.5}
+tr.linha-inativa td:not(:has(button,input,.btn-exp)){opacity:.5}
 tr.sublinha td{background:rgba(var(--purple-rgb),.06);font-size:13px;border-bottom:1px dashed var(--border)}
 tr.sublinha td:first-child{position:relative}
 tr.sublinha .sub-guia{position:absolute;left:16px;top:0;bottom:0;border-left:2px solid var(--purple)}
@@ -241,7 +243,23 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .lf-slider{display:flex;align-items:center;gap:10px}
 .lf-slider input[type=range]{flex:1;padding:0;border:none;background:none;accent-color:var(--purple)}
 .lf-slider b{min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.aviso-bg{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:16px}
+.aviso-bg.open{display:flex}
+.aviso-box{background:var(--surface);border:1px solid var(--warning-border);border-radius:16px;max-width:520px;width:100%;padding:22px 22px 18px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.aviso-topo{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--warning)}
+.aviso-titulo{margin:6px 0 10px;font-size:20px}
+.aviso-msg{white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.5}
+.aviso-meta{margin-top:12px;font-size:12px;color:var(--muted)}
+.aviso-lista{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto}
+.aviso-item{border:1px solid var(--border);border-radius:10px;padding:12px}
+.aviso-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.aviso-form textarea{width:100%;resize:vertical;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font:inherit}
+#btn-avisos{position:relative;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:15px;line-height:1}
+.avisos-selo{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--warning);color:#1a1300;font-size:11px;font-weight:800;line-height:18px;text-align:center}
 .alert-banner{background:rgba(var(--danger-rgb),.08);border:1px solid var(--danger);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
+.alert-banner.aviso-pedido-senha{background:rgba(var(--warning-rgb),.10);border-color:var(--warning-border);color:var(--text)}
+tr.linha-pedido-senha td{background:rgba(var(--warning-rgb),.10)}
+tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-border)}
 .thumb{height:30px;width:30px;object-fit:cover;border-radius:6px;vertical-align:middle}
 /* ===== RESPONSIVO ===== */
 @media (max-width:767px){
@@ -256,9 +274,17 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
   #bottom-nav{display:none!important}
 }
 /* Formulário de compra (duas seções) */
-.cmp-row{display:grid;grid-template-columns:2fr 1.6fr .7fr .9fr .9fr 34px;gap:6px;align-items:center;margin-bottom:8px;padding:3px;border-radius:10px;border:1px solid transparent}
+.cmp-row{display:grid;grid-template-columns:2fr 1.7fr .7fr 1fr .9fr 104px 34px;gap:6px;align-items:center;margin-bottom:8px;padding:3px;border-radius:10px;border:1px solid transparent}
 .cmp-head{margin-bottom:4px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.cmp-head span:nth-child(4),.cmp-head span:nth-child(5){text-align:right}
+
+.cmp-card{max-width:1180px}
+.cmp-tabela{border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:6px;background:rgba(0,0,0,.12)}
+.cp-preco-fixo{display:flex;align-items:center;gap:6px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden}
+.cp-preco-fixo b{color:var(--text);font-weight:600}
+.cp-tipo-tag{display:inline-block;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.cp-tipo-tag.auto{background:rgba(var(--info-rgb,59,130,246),.16);color:#9EC1FF;border:1px solid rgba(var(--info-rgb,59,130,246),.35)}
+.cp-tipo-tag.manual{background:rgba(var(--green-rgb),.12);color:var(--green);border:1px solid rgba(var(--green-rgb),.35)}
+.cmp-total .btn{margin-left:8px}
 #cfg-body td:last-child{white-space:nowrap}
 .cmp-val{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
 .cmp-sub{color:var(--text);font-weight:700}
@@ -268,10 +294,13 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .cmp-total b{color:var(--text)}
 .cmp-total .op{color:var(--muted);font-weight:700}
 .cmp-total .tot b{color:var(--green);font-size:16px}
-.modal.modal-larga{max-width:980px}
+.modal.modal-larga{max-width:1180px}
 @media(max-width:700px){
   .cmp-row{grid-template-columns:1fr 1fr;padding:8px;border-color:var(--border)}
-  .cmp-row>.nc-nome,.cmp-row>.nc-forn,.cmp-row>.ssel-btn{grid-column:span 2}
+  .cmp-row{grid-template-columns:1fr 1fr 34px;grid-template-areas:"item item del" "forn forn forn" "qtd preco preco" "sub tipo tipo"}
+  .cmp-row>.cp-item{grid-area:item}.cmp-row>.cp-forn-cel{grid-area:forn}.cmp-row>.cp-qtd{grid-area:qtd}.cmp-row>.cp-preco-cel{grid-area:preco}
+  .cmp-row>.cp-sub-cel{grid-area:sub}.cmp-row>.cp-tipo{grid-area:tipo;justify-self:end}.cmp-row>.btn-del-linha{grid-area:del}
+  .cmp-tabela{padding:8px}
   .cmp-row>.btn-del-linha{justify-self:end}
   .cmp-head{display:none}
 }
@@ -296,14 +325,22 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .ssel-op.sel{color:var(--green);font-weight:700}
 .ssel-grp{padding:8px 12px 4px;font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:800;letter-spacing:.4px}
 .ssel-vazio{padding:10px 12px;color:var(--muted);font-size:12px}
+.ssel-sub{color:var(--muted);font-size:11px;margin-left:6px}
 .ssel-add{display:block;width:100%;text-align:left;padding:10px 12px;background:rgba(var(--green-rgb),.08);color:var(--green);font-weight:700;font-size:13px;border-top:1px solid var(--border)}
 /* Lista suspensa pesquisável com múltipla escolha */
 .msel{position:relative}
 .msel-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.fvinc{margin-bottom:8px}
+.fvinc-head,.fvinc-row{display:grid;grid-template-columns:1fr 150px 34px;gap:8px;align-items:center}
+.fvinc-head{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.fvinc-row{padding:4px 0;border-bottom:1px dashed var(--border)}
+.fvinc-nome{font-size:13px}
+.campo-erro{border-color:var(--danger)!important;background:rgba(var(--danger-rgb),.08)!important}
 .msel-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(var(--purple-rgb),.15);border:1px solid var(--purple);color:var(--purple-light);border-radius:14px;padding:3px 6px 3px 10px;font-size:12px}
 .msel-chip button{background:none;color:inherit;font-size:13px;line-height:1;padding:0 2px}
 .msel-list{margin-top:4px;max-height:220px;overflow:auto;background:var(--input-bg);border:1px solid var(--border);border-radius:8px}
 .msel-opt{display:flex!important;align-items:center;gap:8px;padding:8px 10px;margin:0!important;font-size:13px!important;font-weight:400!important;color:var(--text)!important;text-transform:none!important;cursor:pointer}
+.msel-opt.oculto{display:none!important}
 .msel-opt:hover{background:rgba(var(--purple-rgb),.1)}
 .msel-opt input{width:auto}
 .msel-opt .tag{margin-left:auto}
@@ -342,6 +379,7 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
   <span id="h-nome-loja" style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="BEST BUDS">BEST BUDS</span>
   <div class="who"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
   <span class="vselo" id="h-versao">v4.8.0</span>
+  <button id="btn-avisos" title="Avisos" onclick="modalAvisos()">📢<span id="avisos-selo" class="avisos-selo" style="display:none"></span></button>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -363,6 +401,8 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
   <div class="modal" id="modal2-box"></div>
 </div>
 
+<!-- ============ AVISO (pop-up para todos) ============ -->
+<div id="aviso-bg" class="aviso-bg"><div class="aviso-box" id="aviso-box"></div></div>
 <!-- ============ CONFIRM CUSTOM ============ -->
 <div class="modal-bg" id="confirm-bg">
   <div class="modal" style="max-width:400px">
@@ -377,7 +417,7 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.9.1';
+const VERSAO='v4.15.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -423,8 +463,12 @@ let db=null, session=null;
 /* Carrega tudo que o perfil logado enxerga (RLS decide o que volta) e monta o mesmo formato
    que as telas já esperam (db.produtos, db.itens, db.vendas com itens embutidos, etc.) */
 async function carregarTudo(){
+  const avisosP=Promise.all([
+    sb.from('avisos').select('*').order('criado_em',{ascending:false}),
+    sb.from('avisos_vistos').select('aviso_id')
+  ]).catch(e=>[{data:[],error:e},{data:[],error:e}]);
   const[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,
-    taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha,cfgPrivada]=await Promise.all([
+    taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha]=await Promise.all([
     sb.from('profiles').select('*').order('criado_em'),
     sb.from('produtos').select('*').order('ordem'),
     sb.from('itens').select('*').order('ordem',{nullsFirst:false}).order('nome'),
@@ -441,12 +485,11 @@ async function carregarTudo(){
     sb.from('estoque_bau').select('*').order('data',{ascending:false}),
     sb.from('configuracoes').select('*').eq('id',1).single(),
     sb.from('ajustes_caixa').select('*').order('data',{ascending:false}),
-    sb.from('fornecedor_itens').select('*'),
+    sb.from('fornecedor_itens').select('*').order('criado_em',{ascending:true}),
     sb.from('categorias_itens').select('*').order('ordem').order('nome'),
-    sb.from('solicitacoes_senha').select('*').eq('status','pendente').order('criado_em'),
-    sb.from('config_privada').select('*').eq('id',1).maybeSingle()
+    sb.from('solicitacoes_senha').select('*').eq('status','pendente').order('criado_em')
   ]);
-  for(const r of[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha,cfgPrivada])
+  for(const r of[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha])
     if(r.error)throw r.error;
 
   const porReceita={};
@@ -468,16 +511,19 @@ async function carregarTudo(){
 
   const parceriasArr=(parcerias.data||[]).map(p=>({...p,faixas:porParceria[p.id]||[]}));
   const cfg=config.data||{};
+  const[avisosR,vistosR]=await avisosP;
+  if(avisosR.error)console.warn('[Best Buds] avisos indisponíveis',avisosR.error);
   db={
     usuarios:(perfis.data||[]),
     produtos:(produtos.data||[]).map(p=>({...p,preco:Number(p.preco),imagem:p.imagem_url})),
-    itens:(itens.data||[]).map(i=>({...i,preco_unitario:Number(i.preco_unitario),qtd_minima:Number(i.qtd_minima)})),
+    itens:(itens.data||[]).map(i=>({...i,qtd_minima:Number(i.qtd_minima)})),
     receitas:(receitas.data||[]).map(r=>({...r,insumos:porReceita[r.id]||[]})),
     fornecedores:(fornecedores.data||[]),
-    fornecedor_itens:(fornItens.data||[]),
+    fornecedor_itens:(fornItens.data||[]).map(x=>({...x,preco_unitario:x.preco_unitario==null?null:Number(x.preco_unitario)})),
     categorias:(categorias.data||[]),
     pedidos_senha:(pedidosSenha.data||[]),
-    senha_padrao_reset:(cfgPrivada.data&&cfgPrivada.data.senha_padrao_reset)||'',
+    avisos:avisosR.error?[]:(avisosR.data||[]),
+    avisos_vistos:new Set(vistosR.error?[]:(vistosR.data||[]).map(v=>v.aviso_id)),
     parcerias:parceriasArr,
     descontos:parceriasArr,
     taxas_deslocamento:(taxas.data||[]).map(t=>({...t,valor:Number(t.valor)})),
@@ -530,7 +576,7 @@ function alternarSenhaLogin(){
 function modalRedefinirSenha(){
   const u=(document.getElementById('login-email').value||'').trim();
   openModal(`<h3>Redefinir senha</h3>
-  <p class="muted" style="margin-bottom:14px">Informe seu usuário. Um Gerente, Diretor ou Sócio vai aprovar o pedido; depois disso sua senha volta para a senha padrão e você cria uma nova no primeiro acesso.</p>
+  <p class="muted" style="margin-bottom:14px">Informe seu usuário. Um Gerente, Diretor ou Sócio vai definir uma senha nova para a sua conta e passar para você. No primeiro acesso você cria a sua própria senha.</p>
   <div class="field"><label>Usuário</label><input id="rs-usuario" autocapitalize="none" value="${esc(u)}" placeholder="Digite seu usuário"></div>
   <p id="rs-msg" style="font-size:13px;display:none"></p>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
@@ -544,7 +590,7 @@ async function enviarPedidoSenha(){
   const{error}=await sb.rpc('solicitar_redefinicao_senha',{p_usuario:u});
   btn.disabled=false;
   if(error){msg.style.color='var(--danger)';msg.textContent='Não foi possível enviar o pedido: '+error.message;msg.style.display='block';return}
-  msg.style.color='var(--green)';msg.textContent='Pedido enviado. Assim que for aprovado, entre com a senha padrão (peça-a a quem aprovou).';msg.style.display='block';
+  msg.style.color='var(--green)';msg.textContent='Pedido enviado. Aguarde um Gerente, Diretor ou Sócio te passar a senha nova; até lá sua senha atual continua valendo.';msg.style.display='block';
   btn.style.display='none';
 }
 
@@ -590,12 +636,16 @@ let moduloAtual='pdv';
 let pdvState={cupom:[],parceriaId:null,taxaId:null,auxiliares:[]};
 let cfgTabAtual='usuarios';
 
+/* Pedidos de nova senha pendentes aparecem como 🔑N ao lado de "Configurações" no menu */
+function selosMenu(m){const n=m.id==='config'?(db.pedidos_senha||[]).length:0;return n?`<span class="nav-selo" title="${n} pedido(s) de nova senha">🔑${n}</span>`:''}
 function buildNav(){
+  if(!sessionUser())return;
   const mods=MODULOS.filter(m=>m.perfis.includes(sessionUser().perfil));
-  document.getElementById('sidebar-nav').innerHTML=mods.map(m=>
-    `<button class="nav-item ${m.id===moduloAtual?'active':''}" onclick="go('${m.id}')"><span class="ic">${m.ic}</span>${m.nome}</button>`).join('');
-  document.getElementById('bn-inner').innerHTML=mods.map(m=>
-    `<button class="nav-item ${m.id===moduloAtual?'active':''}" onclick="go('${m.id}')"><span class="ic">${m.ic}</span>${m.nome.split(' ')[0]}</button>`).join('');
+  const sb_=document.getElementById('sidebar-nav'),bn=document.getElementById('bn-inner');
+  if(sb_)sb_.innerHTML=mods.map(m=>
+    `<button class="nav-item ${m.id===moduloAtual?'active':''}" onclick="go('${m.id}')"><span class="ic">${m.ic}</span>${m.nome}${selosMenu(m)}</button>`).join('');
+  if(bn)bn.innerHTML=mods.map(m=>
+    `<button class="nav-item ${m.id===moduloAtual?'active':''}" onclick="go('${m.id}')"><span class="ic">${m.ic}</span>${m.nome.split(' ')[0]}${selosMenu(m)}</button>`).join('');
 }
 function go(mod){
   moduloAtual=mod;
@@ -616,11 +666,12 @@ function startApp(){
   bp.className='badge '+(['gerente','socio','diretor'].includes(u.perfil)?u.perfil:'vendedor');
   document.getElementById('h-versao').textContent=VERSAO;
   aplicarIdentidadeVisual();
-  buildNav();render();
+  buildNav();render();atualizarSeloAvisos();setTimeout(mostrarAvisosPendentes,400);
 }
 function render(){
   const c=document.getElementById('main-content');
   if(!c)return;
+  buildNav();
   try{
     if(moduloAtual==='pdv')renderPDV(c);
     else if(moduloAtual==='bau')renderBau(c);
@@ -636,7 +687,7 @@ function render(){
 function openModal(html){const mb=document.getElementById('modal-box');mb.classList.remove('modal-larga');mb.innerHTML=html;document.getElementById('modal-bg').classList.add('open')}
 function closeModal(){document.getElementById('modal-bg').classList.remove('open')}
 function openModal2(html){document.getElementById('modal2-box').innerHTML=html;document.getElementById('modal2-bg').classList.add('open')}
-function closeModal2(){document.getElementById('modal2-bg').classList.remove('open')}
+function closeModal2(){document.getElementById('modal2-bg').classList.remove('open');document.getElementById('modal2-box').innerHTML=''}
 function closeConfirm(){document.getElementById('confirm-bg').classList.remove('open')}
 function confirmar(titulo,msg,cb){
   document.getElementById('confirm-title').textContent=titulo;
@@ -888,14 +939,14 @@ function renderBau(c){
     ${paginaBau.rows.map(g=>{
       const ent=m=>m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada';
       const rev=m=>m.status==='revertida',tagRev='<span class="tag r" style="margin-left:6px">Revertida</span>';
-      const linhaMov=(m,sub,ultima)=>`<tr class="${sub?'sublinha'+(ultima?' ultima':''):''}${rev(m)?' linha-revertida':''}">${sub?'<td class="td-exp"><span class="sub-guia"></span></td>'+(podeExcluirLinhas()?'<td></td>':''):tdExpandir('',0)+tdSelIds('bau',[m.id])}<td>${sub?'<span class="sub-seta">↳</span> ':''}${dataHoraBR(m.data)}</td><td>${esc(m.usuario_nome||'—')}</td><td>${esc(m.item_nome||'—')}</td>
+      const linhaMov=(m,sub,ultima)=>`<tr class="${sub?'sublinha'+(ultima?' ultima':''):''}${rev(m)?' linha-inativa':''}">${sub?'<td class="td-exp"><span class="sub-guia"></span></td>'+(podeExcluirLinhas()?'<td></td>':''):tdExpandir('',0)+tdSelIds('bau',[m.id])}<td>${sub?'<span class="sub-seta">↳</span> ':''}${dataHoraBR(m.data)}</td><td>${esc(m.usuario_nome||'—')}</td><td>${esc(m.item_nome||'—')}</td>
         <td><span class="tag ${ent(m)?'g':'r'}">${MOV_LABEL[m.tipo_movimento]||m.tipo_movimento}</span>${!sub&&rev(m)?tagRev:''}</td>
         <td class="${ent(m)?'mov-in':'mov-out'}">${ent(m)?'+':'−'}${m.quantidade}</td>
         <td>${m.saldo_resultante}</td><td style="color:var(--muted)">${esc(m.origem||'—')}</td>${isGerente()?`<td>${sub?'':acoesBau(m.operacao_id||('m:'+m.id),rev(m))}</td>`:''}</tr>`;
       if(!g.grupo)return linhaMov(g.movs[0],false);
       const aberto=expandidos.has(g.chave);
       const grev=g.movs.every(rev);
-      return `<tr class="linha-pai ${aberto?'aberta':''}${grev?' linha-revertida':''}">${tdExpandir(g.chave,g.filhos.length)}${tdSelIds('bau',g.ids)}<td>${dataHoraBR(g.data)}</td><td>${esc(g.usuario)}</td><td>${esc(g.resumoItens)}</td>
+      return `<tr class="linha-pai ${aberto?'aberta':''}${grev?' linha-inativa':''}">${tdExpandir(g.chave,g.filhos.length)}${tdSelIds('bau',g.ids)}<td>${dataHoraBR(g.data)}</td><td>${esc(g.usuario)}</td><td>${esc(g.resumoItens)}</td>
         <td><span class="tag">${esc(g.rotulo)}</span>${grev?tagRev:''}</td><td style="color:var(--muted)">${g.movs.length} mov.</td><td style="color:var(--muted)">—</td><td style="color:var(--muted)">${esc(g.origem)}</td>${isGerente()?`<td>${acoesBau(g.chave,grev)}</td>`:''}</tr>`+
         (aberto?g.filhos.map((m,n)=>linhaMov(m,true,n===g.filhos.length-1)).join(''):'');
     }).join('')||`<tr><td colspan="${isGerente()?10:9}" class="empty">Nenhuma movimentação registrada.</td></tr>`}
@@ -947,7 +998,7 @@ function reverterLancamentoBau(chave){
   const ms=movsDoLancamentoBau(chave).filter(m=>m.status!=='revertida');if(!ms.length)return;
   const neg=saldoNegativoAoReverter(ms);
   if(neg.length)return toast('⚠️ Não é possível reverter: o saldo ficaria negativo em '+neg.join(', ')+'. Reverta antes as produções/saídas que usaram esse estoque.');
-  confirmar('Reverter lançamento do Baú',(ms.length>1?'As '+ms.length+' movimentações deste lançamento':'A movimentação')+' deixarão de contar no saldo (continuam no livro como revertidas). Confirmar?',async()=>{
+  confirmar('Reverter lançamento do Baú',(ms.length>1?'As '+ms.length+' movimentações deste lançamento deixarão de contar no saldo (continuam no livro como revertidas).':'A movimentação deixará de contar no saldo (continua no livro como revertida).')+' Confirmar?',async()=>{
     if(!await reverterMovsBau(ms))return;
     reg('Lançamento do Baú revertido',chave+' — '+ms.length+' movimentação(ões)');render();toast('✅ Lançamento revertido.');
   });
@@ -1226,94 +1277,135 @@ async function confirmarProducao(rid){
   reg('Produção executada',`${r.nome} — ID ${producaoId} — quantidade ${q}`);closeModal();toast('✅ Produção executada.');render();
 }
 
-/* ================= COMPRAS (ABA PRÓPRIA) ================= */
-/* Formulário de compra com duas seções independentes (ambas opcionais, ao menos uma linha no total):
-   • Insumos — item e fornecedor escolhidos só entre cadastrados; preço vem do cadastro; dá entrada no Baú.
-   • Itens não controlados — tudo digitado; só registro financeiro.
+/* ================= COMPRAS ================= */
+/* Lista única de itens da compra. Cada linha vira, sozinha, um de dois tipos:
+   • Automático — o item digitado/escolhido existe no cadastro (categoria comprável). O fornecedor é escolhido entre os
+     vinculados ao item e o valor unitário vem desse vínculo (Configurações › Fornecedores), travado. Dá entrada no Baú.
+   • Manual — item que não está no cadastro. Fornecedor e valor unitário são digitados. Só registro financeiro.
    O mesmo formulário serve a Nova compra (prefixo "c") e à edição no Histórico Financeiro (prefixo "ec"). */
+function precoFornItem(fid,itemId){const v=db.fornecedor_itens.find(x=>x.fornecedor_id===fid&&x.item_id===itemId);return v&&v.preco_unitario!=null?Number(v.preco_unitario):null}
+function itemCompravelPorNome(nome){const n=sselNorm(String(nome||'').trim());return n?itensCompraveis().find(i=>sselNorm(i.nome)===n)||null:null}
 function fornOptionsHTML(itemId,selId){
-  const ativos=db.fornecedores.filter(f=>f.status==='ativo'||f.id===selId).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
-  const vinc=itemId?fornecedoresDoItem(itemId).map(f=>f.id):[];
-  const op=f=>`<option value="${f.id}" ${f.id===selId?'selected':''}>${esc(f.nome)}</option>`;
-  const a=ativos.filter(f=>vinc.includes(f.id)),b=ativos.filter(f=>!vinc.includes(f.id));
-  return `<option value="" disabled hidden ${selId?'':'selected'}>Selecione o fornecedor...</option>`+
-    (a.length?`<optgroup label="Vinculados a este item">${a.map(op).join('')}</optgroup>`+(b.length?`<optgroup label="Outros fornecedores">${b.map(op).join('')}</optgroup>`:''):b.map(op).join(''));
+  const lista=[...fornecedoresDoItem(itemId)];
+  if(selId&&!lista.some(f=>f.id===selId)){const f=db.fornecedores.find(x=>x.id===selId);if(f)lista.push(f)}
+  lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  return `<option value="" disabled hidden ${selId?'':'selected'}>${lista.length?'Selecione o fornecedor...':'Nenhum fornecedor vinculado'}</option>`+
+    lista.map(f=>{const pr=precoFornItem(f.id,itemId);return`<option value="${f.id}" ${f.id===selId?'selected':''}>${esc(f.nome)}${pr!=null?' · '+fmt(pr):''}</option>`}).join('');
 }
-function linhaInsumo(p,ci){
-  ci=ci||{};
-  const disp=itensCompraveis();
-  if(ci.item_id&&!disp.some(i=>i.id===ci.item_id)){const it=db.itens.find(i=>i.id===ci.item_id);if(it)disp.unshift(it)}
-  const preco=ci.preco_unitario!=null?ci.preco_unitario:'';
-  return`<div class="cmp-row" data-ins data-preco="${preco}" oninput="this.classList.remove('linha-erro')" onchange="this.classList.remove('linha-erro')">
-    <select class="ins-item" onchange="aoTrocarInsumo(this,'${p}')"><option value="" disabled hidden ${ci.item_id?'':'selected'}>Selecione um insumo...</option>${disp.map(i=>`<option value="${i.id}" data-preco="${i.preco_unitario||0}" ${ci.item_id===i.id?'selected':''}>${esc(i.nome)} (${esc(i.unidade_medida)})</option>`).join('')}</select>
-    <select class="ins-forn" data-ssel-extra="fornSselExtra" onchange="recalcCompra('${p}')">${fornOptionsHTML(ci.item_id,ci.fornecedor_id)}</select>
-    <input class="ins-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="recalcCompra('${p}')">
-    <span class="cmp-val ins-preco" title="Valor unitário do cadastro">${preco!==''?fmt(preco):'—'}</span>
-    <span class="cmp-val cmp-sub">—</span>
-    <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('.cmp-row').remove();recalcCompra('${p}')">✕</button></div>`;
+const TIPO_COMPRA={auto:['Automático','Item do cadastro: preço do fornecedor e entrada no Baú'],manual:['Manual','Item não cadastrado: fornecedor e valor digitados, só registro financeiro']};
+function tagTipoCompra(auto,vazio){if(vazio)return '';const t=TIPO_COMPRA[auto?'auto':'manual'];return`<span class="cp-tipo-tag ${auto?'auto':'manual'}" title="${t[1]}">${t[0]}</span>`}
+function celFornCompra(p,itemId,fornId,fornNome){
+  return itemId?`<select class="cp-forn" data-ssel-extra="fornSselExtra" onchange="aoTrocarFornCompra(this,'${p}')">${fornOptionsHTML(itemId,fornId)}</select>`
+    :`<input class="cp-forn-txt" data-combo="fornecedores" autocomplete="off" placeholder="Fornecedor" value="${esc(fornNome||'')}">`;
 }
-function linhaNC(p,ci){
+function celPrecoCompra(p,itemId,preco){
+  return itemId?`<span class="cp-preco-fixo" title="Valor do fornecedor para este item (Configurações › Fornecedores)">🔒 <b>${preco!==''&&preco!=null?fmt(preco):'—'}</b></span>`
+    :`<input class="cp-preco" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${preco??''}" oninput="aoEditarValorCompra(this,'preco','${p}')">`;
+}
+/* Subtotal: Automático = travado (quantidade × valor do fornecedor); Manual = digitável.
+   Manual: quantidade + valor unitário → calcula o subtotal; quantidade + subtotal → calcula o valor unitário. */
+function celSubCompra(p,itemId,sub){
+  return itemId?`<span class="cp-preco-fixo cp-sub-fixo" title="Quantidade × valor do fornecedor">🔒 <b>—</b></span>`
+    :`<input class="cp-sub" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${sub??''}" oninput="aoEditarValorCompra(this,'sub','${p}')">`;
+}
+const arred2=v=>Math.round(v*100)/100;
+function aoEditarValorCompra(inp,campo,p){
+  const r=inp.closest('.cmp-row');
+  if(!r.dataset.item){
+    const q=parseFloat(r.querySelector('.cp-qtd').value),pe=r.querySelector('.cp-preco'),se=r.querySelector('.cp-sub');
+    if(campo==='preco'||campo==='sub')r.dataset.base=campo;           // o último campo de valor digitado manda
+    const base=r.dataset.base||'preco';
+    if(q>0){
+      if(base==='sub'){const sv=parseFloat(se.value);if(sv>0)pe.value=arred2(sv/q)}
+      else{const pv=parseFloat(pe.value);if(pv>0)se.value=arred2(pv*q)}
+    }
+  }
+  recalcCompra(p);
+}
+function linhaCompra(p,ci){
   ci=ci||{};
-  return`<div class="cmp-row" data-nc oninput="this.classList.remove('linha-erro')">
-    <input class="nc-nome" placeholder="Item" value="${esc(ci.nome||'')}">
-    <input class="nc-forn" list="${p}-forn-dl" autocomplete="off" placeholder="Fornecedor" value="${esc(ci.fornecedor_nome||'')}">
-    <input class="nc-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="recalcCompra('${p}')">
-    <input class="nc-preco" type="number" min="0.01" step="0.01" placeholder="Valor unit." value="${ci.preco_unitario??''}" oninput="recalcCompra('${p}')">
-    <span class="cmp-val cmp-sub">—</span>
+  const it=ci.item_id?db.itens.find(i=>i.id===ci.item_id):null;
+  let forn=ci.fornecedor_id||'',preco=ci.preco_unitario;
+  if(it&&!forn){const v=fornecedoresDoItem(it.id);if(v.length===1)forn=v[0].id}
+  if(it&&preco==null&&forn)preco=precoFornItem(forn,it.id);
+  return`<div class="cmp-row" data-cmp data-item="${it?it.id:''}" data-preco="${it&&preco!=null?preco:''}" oninput="this.classList.remove('linha-erro')" onchange="this.classList.remove('linha-erro')">
+    <input class="cp-item" data-combo="itens" autocomplete="off" placeholder="Item (digite ou escolha)" value="${esc(it?it.nome:(ci.nome||''))}" oninput="aoDigitarItemCompra(this,'${p}')" onblur="nomeCanonicoItem(this)">
+    <div class="cp-forn-cel">${celFornCompra(p,it&&it.id,forn,ci.fornecedor_nome)}</div>
+    <input class="cp-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="aoEditarValorCompra(this,'qtd','${p}')">
+    <div class="cp-preco-cel">${celPrecoCompra(p,it&&it.id,it?preco:ci.preco_unitario)}</div>
+    <div class="cp-sub-cel">${celSubCompra(p,it&&it.id,!it&&ci.quantidade>0&&ci.preco_unitario>0?arred2(ci.quantidade*ci.preco_unitario):'')}</div>
+    <span class="cp-tipo">${tagTipoCompra(!!it,!it&&!ci.nome)}</span>
     <button class="iconbtn btn-del-linha" title="Remover linha" onclick="this.closest('.cmp-row').remove();recalcCompra('${p}')">✕</button></div>`;
 }
 function formCompraHTML(p,k){
   const its=(k&&k.itens)||[];
-  const ins=its.filter(i=>i.item_id),nc=its.filter(i=>!i.item_id);
-  const cab=`<div class="cmp-row cmp-head"><span>${'%s'}</span><span>Fornecedor</span><span>Qtd</span><span>Valor unit.</span><span>Subtotal</span><span></span></div>`;
   return`
-    <div class="section-title" style="margin-top:6px">📦 Insumos <span class="cmp-hint">opcional — dá entrada no Baú</span></div>
-    ${cab.replace('%s','Insumo')}
-    <div id="${p}-ins">${ins.map(i=>linhaInsumo(p,i)).join('')}</div>
-    <button class="btn btn-ghost btn-sm" onclick="addLinhaCompra('${p}','ins')">+ Adicionar insumo</button>
-    <div class="section-title" style="margin-top:18px">🧾 Itens não controlados <span class="cmp-hint">opcional — não dá entrada no Baú</span></div>
-    ${cab.replace('%s','Item')}
-    <div id="${p}-nc">${nc.map(i=>linhaNC(p,i)).join('')}</div>
-    <button class="btn btn-ghost btn-sm" onclick="addLinhaCompra('${p}','nc')">+ Adicionar item não controlado</button>
-    <datalist id="${p}-forn-dl">${db.fornecedores.filter(f=>f.status==='ativo').map(f=>`<option value="${esc(f.nome)}">`).join('')}</datalist>
+    <div class="cmp-tabela">
+      <div class="cmp-row cmp-head"><span>Item</span><span>Fornecedor</span><span>Qtd</span><span>Valor unit.</span><span>Subtotal</span><span>Tipo</span><span></span></div>
+      <div id="${p}-linhas">${(its.length?its:(k?[]:[{}])).map(i=>linhaCompra(p,i)).join('')}</div>
+      <button class="btn btn-ghost btn-sm" onclick="addLinhaCompra('${p}')">+ Adicionar linha</button>
+    </div>
     <div class="cmp-total" id="${p}-total"></div>
     <p id="${p}-err" style="color:var(--danger);font-size:13px;display:none;margin-top:10px"></p>`;
 }
-function addLinhaCompra(p,sec){
-  const d=document.createElement('div');d.innerHTML=sec==='ins'?linhaInsumo(p):linhaNC(p);
-  document.getElementById(p+'-'+sec).appendChild(d.firstElementChild);recalcCompra(p);
+function addLinhaCompra(p,ci){
+  const d=document.createElement('div');d.innerHTML=linhaCompra(p,ci);
+  const r=d.firstElementChild;document.getElementById(p+'-linhas').appendChild(r);recalcCompra(p);
+  const inp=r.querySelector('.cp-item');if(inp&&!ci)inp.focus();
+  return r;
 }
-/* Troca de insumo: preço do cadastro + fornecedores vinculados no topo; 1 vinculado → já selecionado */
-function aoTrocarInsumo(sel,p){
-  const linha=sel.closest('.cmp-row'),opt=sel.options[sel.selectedIndex];
-  const preco=opt?parseFloat(opt.getAttribute('data-preco')||'0'):0;
-  linha.dataset.preco=preco;linha.querySelector('.ins-preco').textContent=fmt(preco);
-  const fs=linha.querySelector('.ins-forn'),vinc=fornecedoresDoItem(sel.value);
-  const atual=fs.value;
-  fs.innerHTML=fornOptionsHTML(sel.value,atual||(vinc.length===1?vinc[0].id:''));
-  fs.value=atual||(vinc.length===1?vinc[0].id:'');
+/* Ao digitar/escolher o item: se bater com um item do cadastro, a linha vira Automático; senão, Manual. */
+function aoDigitarItemCompra(inp,p){
+  const r=inp.closest('.cmp-row'),it=itemCompravelPorNome(inp.value),novo=it?it.id:'';
+  r.querySelector('.cp-tipo').innerHTML=tagTipoCompra(!!it,!inp.value.trim());
+  if(r.dataset.item===novo)return recalcCompra(p);
+  // guarda o que foi digitado na linha Manual, para voltar a mostrar se ela deixar de ser Automático
+  const ft=r.querySelector('.cp-forn-txt'),pt=r.querySelector('.cp-preco'),st=r.querySelector('.cp-sub');
+  if(ft)r.dataset.fornTxt=ft.value;if(pt)r.dataset.precoTxt=pt.value;if(st)r.dataset.subTxt=st.value;
+  const fornTxt=r.dataset.fornTxt||'',precoTxt=r.dataset.precoTxt||'',subTxt=r.dataset.subTxt||'';
+  r.dataset.item=novo;
+  let forn='',preco='';
+  if(it){const v=fornecedoresDoItem(it.id);if(v.length===1){forn=v[0].id;const pr=precoFornItem(forn,it.id);preco=pr!=null?pr:''}}
+  r.dataset.preco=preco;
+  r.querySelector('.cp-forn-cel').innerHTML=celFornCompra(p,novo,forn,fornTxt);
+  r.querySelector('.cp-preco-cel').innerHTML=celPrecoCompra(p,novo,it?preco:precoTxt);
+  r.querySelector('.cp-sub-cel').innerHTML=celSubCompra(p,novo,subTxt);
   recalcCompra(p);
 }
-/* Lê as duas seções. Linha incompleta é destacada e bloqueia o registro. */
+/* Item do cadastro digitado com outra grafia ("pacote b") fica com o nome do cadastro ao sair do campo */
+function nomeCanonicoItem(inp){const r=inp.closest('.cmp-row');const it=r&&r.dataset.item&&db.itens.find(i=>i.id===r.dataset.item);if(it&&inp.value!==it.nome)inp.value=it.nome}
+/* Fornecedor escolhido → valor unitário do vínculo fornecedor ↔ item */
+function aoTrocarFornCompra(sel,p){
+  const r=sel.closest('.cmp-row'),pr=precoFornItem(sel.value,r.dataset.item);
+  r.dataset.preco=pr!=null?pr:'';
+  r.querySelector('.cp-preco-cel').innerHTML=celPrecoCompra(p,r.dataset.item,r.dataset.preco);
+  recalcCompra(p);
+}
+/* Lê a lista e separa Automático (ins, entra no Baú) de Manual (nc). Linha incompleta é destacada e bloqueia o registro. */
 function lerFormCompra(p){
   const erros=[],ins=[],nc=[];
-  document.querySelectorAll(`#${p}-ins [data-ins]`).forEach(r=>{
-    const item_id=r.querySelector('.ins-item').value,fornecedor_id=r.querySelector('.ins-forn').value;
-    const quantidade=parseFloat(r.querySelector('.ins-qtd').value),preco_unitario=parseFloat(r.dataset.preco);
-    const it=db.itens.find(i=>i.id===item_id),f=db.fornecedores.find(x=>x.id===fornecedor_id);
-    const falta=[!it&&'insumo',!f&&'fornecedor cadastrado',!(quantidade>0)&&'quantidade'].filter(Boolean);
+  document.querySelectorAll(`#${p}-linhas [data-cmp]`).forEach((r,n)=>{
+    const quantidade=parseFloat(r.querySelector('.cp-qtd').value);
+    const nomeDig=r.querySelector('.cp-item').value.trim();
+    let falta,linha;
+    if(r.dataset.item){
+      const it=db.itens.find(i=>i.id===r.dataset.item),f=db.fornecedores.find(x=>x.id===(r.querySelector('.cp-forn')||{}).value);
+      const preco_unitario=parseFloat(r.dataset.preco);
+      falta=[!f&&'fornecedor',!(quantidade>0)&&'quantidade',f&&!(preco_unitario>0)&&'valor do fornecedor para este item'].filter(Boolean);
+      linha={item_id:it.id,nome:it.nome,quantidade,preco_unitario:preco_unitario||0,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:'',_it:it};
+      ins.push(linha);
+    }else{
+      const fn=(r.querySelector('.cp-forn-txt')||{}).value.trim();
+      let preco_unitario=parseFloat((r.querySelector('.cp-preco')||{}).value);
+      const subDig=parseFloat((r.querySelector('.cp-sub')||{}).value);
+      if(!(preco_unitario>0)&&subDig>0&&quantidade>0)preco_unitario=arred2(subDig/quantidade);
+      falta=[!nomeDig&&'item',!fn&&'fornecedor',!(quantidade>0)&&'quantidade',!(preco_unitario>0)&&'valor unitário ou subtotal'].filter(Boolean);
+      const f=db.fornecedores.find(x=>sselNorm(x.nome)===sselNorm(fn));
+      linha={item_id:null,nome:nomeDig,quantidade,preco_unitario,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:fn};
+      nc.push(linha);
+    }
     r.classList.toggle('linha-erro',falta.length>0);
-    if(falta.length)erros.push(`Insumos — ${it?'"'+it.nome+'"':'linha '+(ins.length+1)}: falta ${falta.join(', ')}.`);
-    ins.push({item_id,nome:it?it.nome:'?',quantidade,preco_unitario:preco_unitario||0,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:'',_it:it});
-  });
-  document.querySelectorAll(`#${p}-nc [data-nc]`).forEach(r=>{
-    const nome=r.querySelector('.nc-nome').value.trim(),fn=r.querySelector('.nc-forn').value.trim();
-    const quantidade=parseFloat(r.querySelector('.nc-qtd').value),preco_unitario=parseFloat(r.querySelector('.nc-preco').value);
-    const falta=[!nome&&'item',!fn&&'fornecedor',!(quantidade>0)&&'quantidade',!(preco_unitario>0)&&'valor unitário'].filter(Boolean);
-    r.classList.toggle('linha-erro',falta.length>0);
-    if(falta.length)erros.push(`Itens não controlados — ${nome?'"'+nome+'"':'linha '+(nc.length+1)}: falta ${falta.join(', ')}.`);
-    const f=db.fornecedores.find(x=>x.nome.toLowerCase()===fn.toLowerCase());
-    nc.push({item_id:null,nome,quantidade,preco_unitario,fornecedor_id:f?f.id:null,fornecedor_nome:f?f.nome:fn});
+    if(falta.length)erros.push(`Linha ${n+1}${linha.nome?' ("'+linha.nome+'")':''}: falta ${falta.join(', ')}.`);
   });
   const sub=l=>(l.quantidade>0&&l.preco_unitario>0)?l.quantidade*l.preco_unitario:0;
   const totIns=ins.reduce((s,l)=>s+sub(l),0),totNc=nc.reduce((s,l)=>s+sub(l),0);
@@ -1321,17 +1413,17 @@ function lerFormCompra(p){
 }
 function recalcCompra(p){
   const box=document.getElementById(p+'-total');if(!box)return;
-  document.querySelectorAll(`#${p}-ins .cmp-row, #${p}-nc .cmp-row`).forEach(r=>{
-    const q=parseFloat((r.querySelector('.ins-qtd,.nc-qtd')||{}).value);
-    const pu=r.hasAttribute('data-ins')?parseFloat(r.dataset.preco):parseFloat(r.querySelector('.nc-preco').value);
-    r.querySelector('.cmp-sub').textContent=(q>0&&pu>0)?fmt(q*pu):'—';
+  document.querySelectorAll(`#${p}-linhas .cmp-row`).forEach(r=>{
+    if(!r.dataset.item)return; // Manual: subtotal é digitável (calculado em aoEditarValorCompra)
+    const q=parseFloat(r.querySelector('.cp-qtd').value),pu=parseFloat(r.dataset.preco);
+    const b=r.querySelector('.cp-sub-fixo b');if(b)b.textContent=(q>0&&pu>0)?fmt(q*pu):'—';
   });
   const f=lerFormCompraSilencioso(p);
-  box.innerHTML=`<span>Insumos <b>${fmt(f.totIns)}</b></span><span class="op">+</span><span>Itens não controlados <b>${fmt(f.totNc)}</b></span><span class="op">=</span><span class="tot">Total <b>${fmt(f.total)}</b></span>`;
+  box.innerHTML=`<span>Insumos: <b>${fmt(f.totIns)}</b></span><span class="op">+</span><span>Itens não controlados: <b>${fmt(f.totNc)}</b></span><span class="op">=</span><span class="tot">Total: <b>${fmt(f.total)}</b></span>${p==='c'?'<button class="btn btn-primary" onclick="salvarCompra()">Registrar compra</button>':''}`;
 }
 /* Mesmo cálculo sem marcar erros (usado enquanto o usuário digita) */
 function lerFormCompraSilencioso(p){
-  const marcadas=[...document.querySelectorAll(`#${p}-ins .cmp-row, #${p}-nc .cmp-row`)].map(r=>[r,r.classList.contains('linha-erro')]);
+  const marcadas=[...document.querySelectorAll(`#${p}-linhas .cmp-row`)].map(r=>[r,r.classList.contains('linha-erro')]);
   const f=lerFormCompra(p);marcadas.forEach(([r,m])=>r.classList.toggle('linha-erro',m));return f;
 }
 /* Cabeçalho da compra: 1 fornecedor → ele; vários → nomes unidos por " + " */
@@ -1344,32 +1436,34 @@ function fornecedorCabecalho(linhas){
 function validarFormCompra(p){
   const f=lerFormCompra(p),e=document.getElementById(p+'-err');
   e.style.display='none';
-  if(!f.ins.length&&!f.nc.length){e.textContent='Adicione pelo menos uma linha em Insumos ou em Itens não controlados.';e.style.display='block';return null}
+  if(!f.ins.length&&!f.nc.length){e.textContent='Adicione pelo menos um item na compra.';e.style.display='block';return null}
   if(f.erros.length){
-    e.innerHTML=f.erros.map(esc).join('<br>')+(f.ins.some(l=>!l.fornecedor_id)?`<br><span style="color:var(--muted)">${isGerente()?'Fornecedor ainda não cadastrado? Pesquise o nome na lista do fornecedor e use "+ Cadastrar fornecedor".':'Insumos só aceitam fornecedores cadastrados — peça a um Gerente para cadastrar o fornecedor.'}</span>`:'');
+    e.innerHTML=f.erros.map(esc).join('<br>')+(f.ins.some(l=>!l.fornecedor_id)?`<br><span style="color:var(--muted)">${isGerente()?'Item sem fornecedor vinculado? Abra a lista do fornecedor e use "+ Vincular fornecedor" (informe o valor do item nesse fornecedor).':'Itens do cadastro só aceitam fornecedores vinculados a eles — peça a um Gerente para vincular o fornecedor e o valor.'}</span>`:'');
     e.style.display='block';
-    const r=document.querySelector(`#${p}-ins .linha-erro, #${p}-nc .linha-erro`);if(r)r.scrollIntoView({block:'center',behavior:'smooth'});
+    const r=document.querySelector(`#${p}-linhas .linha-erro`);if(r)r.scrollIntoView({block:'center',behavior:'smooth'});
     return null;
   }
   return f;
 }
-/* Atalho "+ Cadastrar fornecedor" dentro da lista do fornecedor (só para quem pode cadastrar) */
+/* Atalho na lista do fornecedor: vincular um fornecedor existente ao item ou cadastrar um novo (com o valor do item) */
 function fornSselExtra(sel,q){
-  if(!isGerente())return q?`<div class="ssel-vazio">Fornecedor não cadastrado. Insumos só aceitam fornecedores cadastrados — peça a um Gerente para cadastrá-lo.</div>`:'';
-  return`<button type="button" class="ssel-add" onclick="cadastrarFornecedorAtalho(${esc(JSON.stringify(q))})">+ Cadastrar fornecedor${q?' “'+esc(q)+'”':''}</button>`;
+  if(!isGerente())return `<div class="ssel-vazio">${q?'Fornecedor não vinculado a este item. ':''}Peça a um Gerente para vincular fornecedores e valores a este item.</div>`;
+  const existe=q&&db.fornecedores.find(f=>sselNorm(f.nome)===sselNorm(q));
+  return`<button type="button" class="ssel-add" onclick="cadastrarFornecedorAtalho(${esc(JSON.stringify(q))})">${existe?'+ Vincular “'+esc(existe.nome)+'” a este item':'+ Vincular fornecedor'+(q?' “'+esc(q)+'”':'')}</button>`;
 }
 function cadastrarFornecedorAtalho(nome){
   const sel=_sselAberto;sselFechar();if(!sel)return;
-  const linha=sel.closest('.cmp-row'),itemId=linha.querySelector('.ins-item').value;
-  const p=linha.parentElement.id.replace(/-ins$/,'');
-  modalFornecedor(null,{nome,itemId,onSaved:f=>{
+  const linha=sel.closest('.cmp-row'),itemId=linha.dataset.item;
+  const p=linha.parentElement.id.replace(/-linhas$/,'');
+  const existe=nome&&db.fornecedores.find(f=>sselNorm(f.nome)===sselNorm(nome));
+  modalFornecedor(existe?existe.id:null,{nome,itemId,onSaved:f=>{
     if(!f)return;
-    document.querySelectorAll(`#${p}-ins [data-ins]`).forEach(r=>{
-      const fs=r.querySelector('.ins-forn'),v=r===linha?f.id:fs.value;
-      fs.innerHTML=fornOptionsHTML(r.querySelector('.ins-item').value,v);fs.value=v;
+    document.querySelectorAll(`#${p}-linhas [data-cmp]`).forEach(r=>{
+      if(r.dataset.item!==itemId)return;
+      const fs=r.querySelector('.cp-forn'),v=r===linha?f.id:fs.value;
+      fs.innerHTML=fornOptionsHTML(itemId,v);fs.value=v;aoTrocarFornCompra(fs,p);
     });
-    const dl=document.getElementById(p+'-forn-dl');if(dl)dl.innerHTML=db.fornecedores.filter(x=>x.status==='ativo').map(x=>`<option value="${esc(x.nome)}">`).join('');
-    linha.classList.remove('linha-erro');recalcCompra(p);toast('✅ Fornecedor "'+f.nome+'" cadastrado e selecionado.');
+    linha.classList.remove('linha-erro');recalcCompra(p);toast('✅ Fornecedor "'+f.nome+'" vinculado e selecionado.');
   }});
 }
 /* Resumo minimalista antes de registrar */
@@ -1440,18 +1534,15 @@ function telaProducao(){
 function fecharTelaBau(){bauTela=null;render()}
 function telaCompraHTML(c){
  c.innerHTML=`
-  <h2 class="page-title">🚚 Nova compra</h2>
+  <h2 class="page-title">🚚 Registrar compra</h2>
   <p class="page-sub">Registro de despesa e entrada de insumos no Baú.</p>
   <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">← Voltar ao Baú</button>
-  <div class="card" style="max-width:980px">
+  <div class="card cmp-card">
     <div class="row2">
       <div class="field"><label>Data</label><input id="c-data" type="date" value="${todayISO()}"></div>
       <div class="field"><label>Observação (opcional)</label><input id="c-desc"></div>
     </div>
     ${formCompraHTML('c')}
-    <div style="margin-top:16px;display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="salvarCompra()">Registrar compra</button>
-    </div>
   </div>`;
  recalcCompra('c');
 }
@@ -1600,8 +1691,8 @@ function renderFinanceiro(c){
   </div>
   <div class="table-wrap"><table>
     <tr><th class="td-exp"></th>${thSelTodos('financeiro',paginaFin.rows.map(g=>g.p))}${COLS_FIN.filter(c=>vis.includes(c.key)).map(c=>thCol('financeiro',c.key,c.label)).join('')}${ger?'<th>Ações</th>':''}</tr>
-    ${paginaFin.rows.map(g=>{const r=g.p,aberto=expandidos.has(r.id);return `<tr class="${g.filhos.length?'linha-pai':''} ${aberto?'aberta':''}">${tdExpandir(r.id,g.filhos.length)}${tdSel('financeiro',r.id)}${vis.map(k=>cell(k,r)).join('')}${ger?`<td style="white-space:nowrap">${acoesFin(r)}</td>`:''}</tr>`+
-      (aberto?g.filhos.map((f,n)=>`<tr class="sublinha ${n===g.filhos.length-1?'ultima':''}"><td class="td-exp"><span class="sub-guia"></span></td>${podeExcluirLinhas()?'<td></td>':''}${vis.map((k,ci)=>ci===0?cell(k,f).replace('<td>','<td><span class="sub-seta">↳</span> '):cell(k,f)).join('')}${ger?'<td></td>':''}</tr>`).join(''):'')}).join('')||`<tr><td colspan="${vis.length+(ger?3:2)}" class="empty">Nenhum lançamento no filtro atual.</td></tr>`}
+    ${paginaFin.rows.map(g=>{const r=g.p,aberto=expandidos.has(r.id);const ina=r.status==='revertida'?' linha-inativa':'';return `<tr class="${g.filhos.length?'linha-pai':''} ${aberto?'aberta':''}${ina}">${tdExpandir(r.id,g.filhos.length)}${tdSel('financeiro',r.id)}${vis.map(k=>cell(k,r)).join('')}${ger?`<td style="white-space:nowrap">${acoesFin(r)}</td>`:''}</tr>`+
+      (aberto?g.filhos.map((f,n)=>`<tr class="sublinha ${n===g.filhos.length-1?'ultima':''}${ina}"><td class="td-exp"><span class="sub-guia"></span></td>${podeExcluirLinhas()?'<td></td>':''}${vis.map((k,ci)=>ci===0?cell(k,f).replace('<td>','<td><span class="sub-seta">↳</span> '):cell(k,f)).join('')}${ger?'<td></td>':''}</tr>`).join(''):'')}).join('')||`<tr><td colspan="${vis.length+(ger?3:2)}" class="empty">Nenhum lançamento no filtro atual.</td></tr>`}
   </table></div>${paginacao('financeiro',paginaFin)}`;
 }
 /* Ajuste manual de caixa (Gerente+): entrada/saída direta, sem venda ou compra por trás */
@@ -1764,7 +1855,7 @@ function editCompraFin(id){
 async function salvarEdicaoCompraFin(id){
  const k=db.compras.find(x=>x.id===id);if(!k)return;
  const desc=document.getElementById('ec-desc').value.trim();
- const semLinhas=!document.querySelector('#ec-ins .cmp-row, #ec-nc .cmp-row');
+ const semLinhas=!document.querySelector('#ec-linhas .cmp-row');
  let patch,linhas=null;
  if(semLinhas&&!(k.itens||[]).length){patch={descricao:desc}} // compra antiga só com valor total
  else{
@@ -1789,8 +1880,7 @@ async function salvarEdicaoCompraFin(id){
 
 /* ================= CONFIGURAÇÕES ================= */
 function renderConfig(c){
-  const nPed=(db.pedidos_senha||[]).length;
-  const tabs=[['usuarios','Usuários'+(nPed?' 🔑'+nPed:'')],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['logo','Identidade Visual']];
+  const tabs=[['usuarios','Usuários'],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['logo','Identidade Visual']];
   c.innerHTML=`<h2 class="page-title">Configurações</h2><p class="page-sub">Centro de parametrização — exclusivo do perfil Gerente.</p>
   <div class="cfg-tabs">${tabs.map(t=>`<button class="cfg-tab ${cfgTabAtual===t[0]?'active':''}" onclick="cfgTabAtual='${t[0]}';render()">${t[1]}</button>`).join('')}</div>
   <div id="cfg-body"></div>`;
@@ -1808,72 +1898,45 @@ function renderConfig(c){
 /* Perfil com mais acesso primeiro (Sócio > Diretor > Gerente > Vendedor), depois nome A→Z */
 function usuariosOrdenados(){return [...db.usuarios].sort((a,b)=>(PERFIL_NIVEL[b.perfil]||0)-(PERFIL_NIVEL[a.perfil]||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}))}
 function cfgUsuarios(b){
-  const T='cfg_usuarios',F=tabelaFiltravel(T,usuariosOrdenados,{nome:u=>u.nome,usuario:u=>u.usuario||'—',perfil:u=>PERFIL_LABEL[u.perfil]||u.perfil,status:u=>u.status,data:u=>u.criado_em});
-  b.innerHTML=`${painelPedidosSenha()}<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  const T='cfg_usuarios',F=tabelaFiltravel(T,usuariosOrdenados,{nome:u=>u.nome,usuario:u=>u.usuario||'—',perfil:u=>PERFIL_LABEL[u.perfil]||u.perfil,status:u=>u.status,primeiro_acesso:u=>primeiroAcessoFeito(u)?'Feito':'Pendente',data:u=>u.criado_em});
+  b.innerHTML=`${avisoPedidosSenha()}<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">👥 Usuários</div>
     <button class="btn btn-purple btn-sm" onclick="modalUsuario()">+ Novo usuário</button></div>
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Sócio gerencia todos os perfis, incluindo outros Sócios. <b>Diretor</b> tem as mesmas permissões do Sócio, exceto que não pode alterar, ativar/inativar, excluir ou promover ninguém ao perfil <b>Sócio</b>. Gerentes podem cadastrar vendedores. Ninguém altera o próprio perfil. Deve existir sempre ao menos um sócio ativo.</p>
   ${F.barra}<div class="table-wrap"><table>
-  <tr>${thCol(T,'nome','Nome')}${thCol(T,'usuario','Usuário')}${thCol(T,'perfil','Perfil')}${thCol(T,'status','Status')}${thCol(T,'data','Criado em')}<th>Ações</th></tr>
+  <tr>${thCol(T,'nome','Nome')}${thCol(T,'usuario','Usuário')}${thCol(T,'perfil','Perfil')}${thCol(T,'status','Status')}${thCol(T,'primeiro_acesso','Primeiro acesso')}${thCol(T,'data','Criado em')}<th>Ações</th></tr>
   ${F.rows.map(u=>{
     const sociosAtivos=db.usuarios.filter(x=>x.perfil==='socio'&&x.status==='ativo').length;
     const ehUltimoSocio=u.perfil==='socio'&&u.status==='ativo'&&sociosAtivos<=1;
-    return`<tr>
-    <td><b>${esc(u.nome)}</b>${u.id===session.usuario_id?' <span class="tag">você</span>':''}</td>
+    const ped=pedidoSenhaDe(u.id),podeU=podeGerenciarUsuario(u)&&u.id!==session.usuario_id;
+    return`<tr class="${ped?'linha-pedido-senha':''}${u.status!=='ativo'?' linha-inativa':''}">
+    <td><b>${esc(u.nome)}</b>${u.id===session.usuario_id?' <span class="tag">você</span>':''}${ped?`<br><span class="tag y" title="Pedido feito na tela de login">🔑 pediu nova senha · ${dataHoraBR(ped.criado_em)}</span>`:''}</td>
     <td style="color:var(--muted)">${esc(u.usuario||'—')}</td>
     <td><span class="badge ${u.perfil}">${PERFIL_LABEL[u.perfil]||u.perfil}</span></td>
     <td><span class="badge ${u.status==='ativo'?'ativo':'inativo'}">${u.status}</span></td>
+    <td>${primeiroAcessoFeito(u)?`<span class="tag g" title="${u.ultimo_login?'Último acesso: '+dataHoraBR(u.ultimo_login):'Já criou a própria senha'}">✅ Feito</span>`:`<span class="tag y" title="Ainda não entrou para criar a própria senha">⏳ Pendente</span>`}</td>
     <td style="color:var(--muted)">${dataHoraBR(u.criado_em)}</td>
-    <td><button class="iconbtn" onclick="modalUsuario('${u.id}')">✏️</button>
+    <td><button class="iconbtn" title="${ped&&podeU?'Editar e definir a senha nova':'Editar'}" onclick="modalUsuario('${u.id}')">✏️</button>${ped&&podeU?`<button class="iconbtn" title="Dispensar o pedido (a senha continua a mesma)" onclick="dispensarPedidoSenha('${ped.id}')">✕</button>`:''}
       ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)?`<button class="iconbtn" title="${u.status==='ativo'?'Inativar':'Ativar'}" onclick="toggleStatusUsuario('${u.id}')">${u.status==='ativo'?'⏸️':'▶️'}</button>`:''}
       ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)&&isSocioOuDiretor()&&u.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirUsuario('${u.id}')">🗑️</button>`:''}
       ${ehUltimoSocio?'<span class="tag y" title="Deve existir ao menos um sócio ativo">🔒 último sócio</span>':''}</td>
-  </tr>`}).join('')||linhaSemResultado(6,T)}</table></div>`;
+  </tr>`}).join('')||linhaSemResultado(7,T)}</table></div>`;
 }
-/* ---- Pedidos de redefinição de senha (feitos na tela de login) ---- */
-function painelPedidosSenha(){
-  const ps=db.pedidos_senha||[],temSenha=!!db.senha_padrao_reset,edita=isSocioOuDiretor();
-  return `<div class="card" style="margin-bottom:18px;${ps.length?'border-color:var(--warning-border)':''}">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-      <div class="section-title" style="margin:0">🔑 Pedidos de redefinição de senha ${ps.length?`<span class="tag y">${ps.length} pendente(s)</span>`:''}</div>
-      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)">Senha padrão: <b style="color:${temSenha?'var(--green)':'var(--danger)'}">${temSenha?'definida':'não definida'}</b>
-        ${edita?`<button class="btn btn-ghost btn-sm" onclick="modalSenhaPadrao()">${temSenha?'Alterar':'Definir'}</button>`:''}</div>
-    </div>
-    ${ps.length?`<div class="table-wrap" style="margin-top:12px"><table><tr><th>Usuário</th><th>Nome</th><th>Perfil</th><th>Pedido em</th><th>Ações</th></tr>
-      ${ps.map(x=>{const u=db.usuarios.find(y=>y.id===x.usuario_id);const pode=u&&podeGerenciarUsuario(u)&&u.id!==session.usuario_id;return`<tr>
-        <td><b>${esc(x.usuario)}</b></td><td>${esc(u?u.nome:'—')}</td><td>${u?`<span class="badge ${u.perfil}">${PERFIL_LABEL[u.perfil]}</span>`:'—'}</td>
-        <td style="color:var(--muted)">${dataHoraBR(x.criado_em)}</td>
-        <td>${pode?`<button class="btn btn-primary btn-sm" onclick="aprovarPedidoSenha('${x.id}')">Aprovar</button> <button class="btn btn-ghost btn-sm" onclick="recusarPedidoSenha('${x.id}')">Recusar</button>`:'<span class="muted" style="font-size:12px">sem permissão para este perfil</span>'}</td></tr>`}).join('')}</table></div>`
-    :'<p class="muted" style="font-size:12px;margin-top:8px">Nenhum pedido pendente. Pedidos feitos em "Redefinir senha", na tela de login, aparecem aqui.</p>'}
-  </div>`;
+/* ---- Pedidos de nova senha (feitos na tela de login) ----
+   Não existe senha padrão: quem esqueceu pede na tela de login, o pedido destaca a linha da pessoa em Usuários
+   e alguém com permissão edita o usuário (✏️) e define uma senha nova. A pessoa troca no primeiro acesso. */
+/* Primeiro acesso feito = a pessoa já entrou e criou a própria senha (sem troca obrigatória pendente).
+   Depois que alguém define uma senha nova para ela, volta a ficar pendente até ela entrar e trocar. */
+function primeiroAcessoFeito(u){return !u.troca_senha_obrigatoria}
+function pedidoSenhaDe(uid){return (db.pedidos_senha||[]).find(p=>p.usuario_id===uid)}
+function avisoPedidosSenha(){
+  const n=(db.pedidos_senha||[]).length;if(!n)return '';
+  return `<div class="alert-banner aviso-pedido-senha" style="margin-bottom:14px">🔑 <b>${n} pedido(s) de nova senha.</b> A linha da pessoa está destacada abaixo: toque em ✏️, digite uma senha nova, salve e passe a senha para ela. No primeiro acesso ela cria a própria senha.</div>`;
 }
-function modalSenhaPadrao(){
-  if(!isSocioOuDiretor())return;
-  openModal(`<h3>Senha padrão de redefinição</h3>
-  <p class="muted" style="margin-bottom:14px">Ao aprovar um pedido, a senha do usuário volta para esta senha e ele é obrigado a criar uma nova no primeiro acesso. Ela fica guardada no banco (visível só para Gerente ou acima), nunca no código do site.</p>
-  <div class="field"><label>Senha padrão (mínimo 6 caracteres)</label><input id="sp-senha" type="text" autocomplete="off" value="${esc(db.senha_padrao_reset)}"></div>
-  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-purple" onclick="salvarSenhaPadrao()">Salvar</button></div>`);
-}
-async function salvarSenhaPadrao(){
-  const v=document.getElementById('sp-senha').value;
-  if(v.length<6)return toast('⚠️ A senha padrão deve ter no mínimo 6 caracteres.');
-  const{data,error}=await sb.from('config_privada').update({senha_padrao_reset:v,atualizado_em:nowISO()}).eq('id',1).select();
-  if(error||!data||!data.length)return toast('⚠️ Não foi possível salvar: '+(error?error.message:'sem permissão.'));
-  db.senha_padrao_reset=v;reg('Senha padrão de redefinição alterada','');closeModal();render();toast('✅ Senha padrão salva.');
-}
-function aprovarPedidoSenha(pid){
-  const x=db.pedidos_senha.find(p=>p.id===pid);if(!x)return;
-  if(!db.senha_padrao_reset)return toast(isSocioOuDiretor()?'⚠️ Defina a senha padrão antes de aprovar.':'⚠️ A senha padrão ainda não foi definida. Peça a um Sócio ou Diretor.');
-  confirmar('Aprovar redefinição','A senha de "'+x.usuario+'" voltará para a senha padrão e ele deverá criar uma nova no primeiro acesso. Confirmar?',async()=>{
-    try{await chamarAdminUsers({action:'reset_password',targetUserId:x.usuario_id,senha:db.senha_padrao_reset})}catch(e){return toast('⚠️ Não foi possível redefinir: '+e.message)}
-    await resolverPedidoSenha(x,'aprovada');
-    reg('Redefinição de senha aprovada',x.usuario);toast('✅ Senha de "'+x.usuario+'" redefinida para a senha padrão.');
-  });
-}
-function recusarPedidoSenha(pid){
-  const x=db.pedidos_senha.find(p=>p.id===pid);if(!x)return;
-  confirmar('Recusar pedido','O pedido de "'+x.usuario+'" será recusado e a senha continua a mesma. Confirmar?',async()=>{
-    await resolverPedidoSenha(x,'recusada');reg('Redefinição de senha recusada',x.usuario);
+function dispensarPedidoSenha(pid){
+  const x=(db.pedidos_senha||[]).find(p=>p.id===pid);if(!x)return;
+  confirmar('Dispensar pedido','O pedido de "'+x.usuario+'" sai da lista e a senha continua a mesma. Confirmar?',async()=>{
+    await resolverPedidoSenha(x,'recusada');reg('Pedido de nova senha dispensado',x.usuario);
   });
 }
 async function resolverPedidoSenha(x,status){
@@ -1898,7 +1961,9 @@ function modalUsuario(id){
   const alvoEhSocio=u&&u.perfil==='socio';
   // ninguém altera o próprio perfil; só o Sócio mexe no perfil de um Sócio ou promove alguém a Sócio; Diretor altera o resto
   const podePerfil=u&&u.id!==session.usuario_id&&!ehUltimoSocio&&(isSocio()||(isDiretor()&&!alvoEhSocio));
+  const ped=u?pedidoSenhaDe(u.id):null;
   openModal(`<h3>${u?'Editar usuário':'Novo usuário'}</h3>
+  ${ped?`<div class="alert-banner aviso-pedido-senha" style="margin-bottom:14px">🔑 <b>${esc(u.nome)}</b> pediu nova senha em ${dataHoraBR(ped.criado_em)}. Digite uma senha nova abaixo, salve e passe para a pessoa. No primeiro acesso ela cria a própria senha.</div>`:''}
   <div class="field"><label>Nome</label><input id="u-nome" value="${u?esc(u.nome):''}"></div>
   <div class="row2">
     <div class="field"><label>Nome de usuário (login)</label><input id="u-usuario" value="${u?esc(u.usuario||''):''}" placeholder="ex.: joao.silva"></div>
@@ -1909,7 +1974,7 @@ function modalUsuario(id){
       <option value="socio" ${u&&u.perfil==='socio'?'selected':''} ${isSocio()?'':'disabled'}>Sócio</option></select>
       ${podePerfil?'':`<small style="color:var(--muted);font-size:11px">${ehUltimoSocio?'Último sócio ativo — perfil travado':u&&u.id===session.usuario_id?'Você não pode alterar o próprio perfil':alvoEhSocio?'Somente o Sócio altera o perfil de outro Sócio':'Somente Sócio ou Diretor altera perfis'}</small>`}</div>
   </div>
-  <div class="field"><label>Senha ${u?'(deixe vazio p/ manter)':'(mín. 6 caracteres)'}</label><input id="u-senha" type="password"></div>
+  <div class="field"><label>${ped?'Senha nova (mín. 6 caracteres)':u?'Senha (deixe vazio p/ manter)':'Senha inicial (mín. 6 caracteres)'}</label><input id="u-senha" type="text" autocomplete="off" autocapitalize="none" spellcheck="false"><small style="color:var(--muted);font-size:11px">Passe esta senha só para a própria pessoa. No primeiro acesso ela é obrigada a criar outra.</small></div>
   <p id="u-err" style="color:var(--danger);font-size:13px;display:none"></p>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarUsuario('${id||''}')">Salvar</button></div>`);
@@ -1955,6 +2020,10 @@ async function salvarUsuario(id){
     if(error)return fail('Erro ao salvar: '+error.message);
     if(senha){
       try{await chamarAdminUsers({action:'reset_password',targetUserId:id,senha})}catch(err){return fail('Usuário salvo, mas a senha não foi redefinida: '+err.message)}
+      u.troca_senha_obrigatoria=true;
+      // senha nova definida: o pedido pendente dessa pessoa está atendido
+      for(const x of (db.pedidos_senha||[]).filter(p=>p.usuario_id===id))await resolverPedidoSenha(x,'aprovada');
+      reg('Senha redefinida',nome);
     }
     u.nome=nome;u.usuario=usuario;u.perfil=perfil;
     reg('Usuário editado',nome+' ('+(PERFIL_LABEL[perfil]||perfil)+')');
@@ -2010,7 +2079,7 @@ function cfgProdutos(b){
   </div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Imagem</th><th>Ordem</th>${thCol(T,'nome','Produto')}${thCol(T,'preco','Preço')}${thCol(T,'rateio','Rateio')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
-  ${F.rows.map(p=>`<tr>
+  ${F.rows.map(p=>`<tr class="${p.status!=='ativo'?'linha-inativa':''}">
     <td>${p.imagem?`<img class="thumb" src="${imgSrc(p.imagem)}">`:'🌿'}</td>
     ${setasOrdem('moverProduto',p.id)}<td><b>${esc(p.nome)}</b></td>
     <td class="money">${fmt(p.preco)}</td><td><span class="tag">${esc(p.rateio)}</span></td>
@@ -2109,19 +2178,18 @@ function excluirProduto(id){
 /* ---- Cadastro Central de Itens (preço unitário, qtd mínima, inativar/excluir) ---- */
 function cfgItens(b){
   const sn=v=>v?'Sim':'Não';
-  const T='cfg_itens',F=tabelaFiltravel(T,itensOrdenados,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,preco:i=>fmt(i.preco_unitario),qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
+  const T='cfg_itens',F=tabelaFiltravel(T,itensOrdenados,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
   const TC='cfg_categorias',FC=tabelaFiltravel(TC,()=>ordenarPorOrdem([...db.categorias]),{nome:c=>c.nome,estoque:c=>sn(c.controla_estoque),compravel:c=>sn(c.compravel&&c.controla_estoque),receitas:c=>sn(c.aparece_receitas),itens:c=>String(db.itens.filter(i=>i.categoria===c.codigo).length),data:c=>c.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">📦 Cadastro Central de Itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalItem()">+ Novo item</button></div>
   ${F.barra}<div class="table-wrap"><table>
-  <tr><th>Ordem</th>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'preco','Preço unitário')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
-  ${F.rows.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr>
+  <tr><th>Ordem</th>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  ${F.rows.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr class="${i.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverItem',i.id)}
     <td><b>${esc(i.nome)}</b>${alerta?' <span class="tag r">⚠️ no mínimo</span>':''}</td>
     <td><span class="tag">${catNome(i.categoria)}</span></td>
     <td style="color:var(--muted)">${esc(i.unidade_medida)}</td>
-    <td class="money">${fmt(i.preco_unitario)}</td>
     <td>${i.qtd_minima||0}</td>
     <td>${!controlaEstoque(i.categoria)?'<span style="color:var(--muted)">n/a</span>':s}</td>
     <td><span class="badge ${i.status==='ativo'?'ativo':'inativo'}">${i.status}</span></td>
@@ -2129,7 +2197,7 @@ function cfgItens(b){
     <td><button class="iconbtn" onclick="modalItem('${i.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleItem('${i.id}')">${i.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()&&i.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')||linhaSemResultado(10,T)}</table></div>
+  </tr>`}).join('')||linhaSemResultado(9,T)}</table></div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
     <div class="section-title" style="margin:0">🏷️ Categorias de itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalCategoria()">+ Nova categoria</button></div>
@@ -2196,12 +2264,12 @@ function modalItem(id){
   const it=id?db.itens.find(x=>x.id===id):null;
   openModal(`<h3>${it?'Editar item':'Novo item'}</h3>
   <div class="field"><label>Nome</label><input id="i-nome" value="${it?esc(it.nome):''}"></div>
-  <div class="row3">
+  <div class="row2">
     <div class="field"><label>Categoria</label><select id="i-cat">
       ${it?'':'<option value="" disabled hidden selected>Selecione a categoria...</option>'}${db.categorias.map(c=>`<option value="${esc(c.codigo)}" ${it&&it.categoria===c.codigo?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></div>
     <div class="field"><label>Unidade</label><input id="i-un" value="${it?esc(it.unidade_medida):'un'}"></div>
-    <div class="field"><label>Preço unitário ($)</label><input id="i-custo" type="number" min="0" step="0.01" value="${it?it.preco_unitario:0}"></div>
   </div>
+  <p class="muted" style="font-size:12px;margin:-4px 0 12px">O valor de compra fica no cadastro de cada fornecedor (Configurações › Fornecedores), porque cada fornecedor tem o seu preço.</p>
   <div class="field" style="max-width:220px"><label>Qtd mínima de estoque (alerta no Baú)</label><input id="i-min" type="number" min="0" step="0.01" value="${it?it.qtd_minima:0}"></div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarItem('${id||''}')">Salvar</button></div>`);
@@ -2210,11 +2278,10 @@ async function salvarItem(id){
   const nome=document.getElementById('i-nome').value.trim();
   const cat=document.getElementById('i-cat').value;
   const un=document.getElementById('i-un').value.trim()||'un';
-  const custo=parseFloat(document.getElementById('i-custo').value)||0;
   const min=parseFloat(document.getElementById('i-min').value)||0;
   if(!nome)return toast('⚠️ Informe o nome do item.');
   if(!cat)return toast('⚠️ Selecione a categoria do item.');
-  const campos={nome,categoria:cat,unidade_medida:un,preco_unitario:custo,qtd_minima:min};
+  const campos={nome,categoria:cat,unidade_medida:un,qtd_minima:min};
   if(id){
     const{error}=await sb.from('itens').update(campos).eq('id',id);
     if(error)return toast('⚠️ Erro ao salvar: '+error.message);
@@ -2223,7 +2290,7 @@ async function salvarItem(id){
     campos.ordem=Math.max(0,...db.itens.map(x=>x.ordem||0))+1;
     const{data,error}=await sb.from('itens').insert(campos).select().single();
     if(error)return toast('⚠️ Erro ao salvar: '+error.message);
-    db.itens.push({...data,preco_unitario:Number(data.preco_unitario),qtd_minima:Number(data.qtd_minima)});reg('Item criado',nome);
+    db.itens.push({...data,qtd_minima:Number(data.qtd_minima)});reg('Item criado',nome);
   }
   closeModal();render();
 }
@@ -2283,7 +2350,7 @@ function cfgReceitas(b){
     const cons=(r.insumos||[]).filter(x=>x.papel==='consumo');
     const prd=(r.insumos||[]).filter(x=>x.papel==='produzido');
     const nm=id=>{const it=db.itens.find(i=>i.id===id);return it?it.nome:'?'};
-    return`<tr>
+    return`<tr class="${r.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverReceita',r.id)}<td><b>${esc(r.nome)}</b></td>
     <td style="color:var(--muted);font-size:12px">${cons.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'—'}</td>
     <td style="color:var(--muted);font-size:12px">${prd.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'}</td>
@@ -2314,12 +2381,12 @@ function cfgFornecedores(b){
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🚚 Fornecedores</div>
     <button class="btn btn-purple btn-sm" onclick="modalFornecedor()">+ Novo fornecedor</button></div>
-  <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Vincule cada fornecedor às Matérias-Primas e aos Insumos Auxiliares que ele fornece. Na compra, o campo fornecedor de cada linha sugere os fornecedores vinculados àquele item.</p>
+  <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Vincule cada fornecedor aos itens que ele fornece e informe o valor de cada item nesse fornecedor. Na compra, ao escolher o fornecedor de um item, o valor unitário vem daqui.</p>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Nome')}${thCol(T,'itens','Itens fornecidos')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
-  ${F.rows.map(f=>{const its=itensDoFornecedor(f.id);return`<tr>
+  ${F.rows.map(f=>{const its=itensDoFornecedor(f.id);return`<tr class="${f.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverFornecedor',f.id)}<td><b>${esc(f.nome)}</b></td>
-    <td style="color:var(--muted);font-size:12px">${its.length?its.map(i=>esc(i.nome)).join(', '):'—'}</td>
+    <td style="color:var(--muted);font-size:12px">${its.length?its.map(i=>{const pr=precoFornItem(f.id,i.id);return esc(i.nome)+` <b style="color:var(--text)">${pr!=null?fmt(pr):'—'}</b>`}).join(' · '):'—'}</td>
     <td><span class="badge ${f.status==='ativo'?'ativo':'inativo'}">${f.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(f.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalFornecedor('${f.id}')">✏️</button>
@@ -2331,42 +2398,70 @@ let _fornAtalho=null;
 function modalFornecedor(id,opts){
   opts=opts||{};
   const f=id?db.fornecedores.find(x=>x.id===id):null;
-  const vinculados=new Set(f?itensDoFornecedor(f.id).map(i=>i.id):[]);
+  // vínculos na ordem em que foram criados (fornecedor_itens vem ordenado por criado_em)
+  const idsCompraveis=new Set(f?itensDoFornecedor(f.id).map(i=>i.id):[]);
+  const vinculados=new Set(f?db.fornecedor_itens.filter(x=>x.fornecedor_id===f.id&&idsCompraveis.has(x.item_id)).map(x=>x.item_id):[]);
   if(opts.itemId)vinculados.add(opts.itemId);
   const itens=db.itens.filter(i=>catCompravel(i.categoria)&&(i.status==='ativo'||vinculados.has(i.id)))
     .sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   _fornAtalho=opts.onSaved||null;
+  // ordem das linhas = ordem em que os itens foram colocados (vínculos já existentes primeiro, cada item novo no fim)
+  _fornOrdem=[...vinculados];
+  _fornPrecos={};vinculados.forEach(iid=>{const pr=f?precoFornItem(f.id,iid):null;_fornPrecos[iid]=pr!=null&&pr>0?pr:''});
   (opts.onSaved?openModal2:openModal)(`<h3>${f?'Editar fornecedor':'Novo fornecedor'}</h3>
   <div class="field"><label>Razão social / Nome fantasia</label><input id="f-nome" value="${f?esc(f.nome):esc(opts.nome||'')}"></div>
-  <div class="field"><label>Itens fornecidos (categorias que podem ser compradas)</label>
+  <div class="field"><label>Itens fornecidos e valor de cada um neste fornecedor</label>
     <div class="msel" id="f-msel">
-      <div class="msel-chips" id="f-chips"></div>
+      <div class="fvinc" id="f-chips"></div>
       <input id="f-busca" autocomplete="off" placeholder="🔍 Pesquisar itens…" onfocus="mselAbrir(true)" oninput="mselFiltrar(this.value)">
       <div class="msel-list" id="f-itens" style="display:none">${itens.map(i=>`<label class="msel-opt" data-nome="${esc(i.nome.toLowerCase())}"><input type="checkbox" value="${i.id}" data-label="${esc(i.nome)}" ${vinculados.has(i.id)?'checked':''} onchange="mselChips()"> ${esc(i.nome)}<span class="tag">${esc(catNome(i.categoria))}</span></label>`).join('')}<div class="msel-vazio" id="f-vazio" style="display:${itens.length?'none':'block'}">${itens.length?'Nenhum item encontrado.':'Nenhum item de categoria comprável cadastrado.'}</div></div>
     </div></div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModalFornecedor()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarFornecedor('${id||''}')">Salvar</button></div>`);
+  _fornRoot=document.getElementById(opts.onSaved?'modal2-box':'modal-box');
   mselChips();
+  if(opts.itemId){const inp=fq(`.fvinc-row[data-item="${opts.itemId}"] .fvinc-preco`);if(inp)setTimeout(()=>inp.focus(),60)}
 }
 function fecharModalFornecedor(){if(_fornAtalho){_fornAtalho=null;closeModal2()}else closeModal()}
-function mselAbrir(abrir){const l=document.getElementById('f-itens');if(l)l.style.display=abrir?'block':'none'}
+/* Tudo do cadastro de fornecedor é procurado dentro da janela aberta (_fornRoot): assim uma janela antiga
+   (ex.: o atalho da compra) nunca interfere na atual. */
+let _fornRoot=null;
+function fq(sel){return _fornRoot?_fornRoot.querySelector(sel):null}
+function fqa(sel){return _fornRoot?[..._fornRoot.querySelectorAll(sel)]:[]}
+function mselAbrir(abrir){const l=fq('#f-itens');if(l)l.style.display=abrir?'block':'none'}
 function mselFiltrar(q){
-  q=q.trim().toLowerCase();let vis=0;
-  document.querySelectorAll('#f-itens .msel-opt').forEach(o=>{const ok=!q||o.dataset.nome.includes(q);o.style.display=ok?'':'none';if(ok)vis++});
-  const v=document.getElementById('f-vazio');if(v)v.style.display=vis?'none':'block';
+  q=sselNorm(q.trim());let vis=0;
+  fqa('#f-itens .msel-opt').forEach(o=>{const ok=!q||sselNorm(o.dataset.nome).includes(q);o.classList.toggle('oculto',!ok);if(ok)vis++});
+  const v=fq('#f-vazio');if(v)v.style.display=vis?'none':'block';
   mselAbrir(true);
 }
+/* Itens vinculados ao fornecedor: uma linha por item com o valor dele neste fornecedor (obrigatório) */
+let _fornPrecos={},_fornOrdem=[];
 function mselChips(){
-  const box=document.getElementById('f-chips');if(!box)return;
-  box.innerHTML=[...document.querySelectorAll('#f-itens input:checked')].map(c=>`<span class="msel-chip">${esc(c.dataset.label)}<button type="button" title="Remover" onclick="mselDesmarcar('${c.value}')">×</button></span>`).join('');
+  const box=fq('#f-chips');if(!box)return;
+  const marcados=fqa('#f-itens input:checked');
+  const ids=marcados.map(c=>c.value);
+  _fornOrdem=_fornOrdem.filter(id=>ids.includes(id));             // desmarcados saem
+  ids.forEach(id=>{if(!_fornOrdem.includes(id))_fornOrdem.push(id)}); // recém-marcados entram no fim
+  const marc=_fornOrdem.map(id=>marcados.find(c=>c.value===id));
+  box.innerHTML=marc.length?`<div class="fvinc-head"><span>Item</span><span>Valor unitário</span><span></span></div>`+marc.map(c=>{const it=db.itens.find(i=>i.id===c.value);return`<div class="fvinc-row" data-item="${c.value}">
+    <span class="fvinc-nome">${esc(c.dataset.label)}${it?` <span class="muted">(${esc(it.unidade_medida)})</span>`:''}</span>
+    <input class="fvinc-preco" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${_fornPrecos[c.value]??''}" oninput="_fornPrecos['${c.value}']=this.value;this.classList.remove('campo-erro')">
+    <button type="button" class="iconbtn" title="Remover item" onclick="mselDesmarcar('${c.value}')">✕</button></div>`}).join(''):'<p class="muted" style="font-size:12px;margin:0 0 6px">Nenhum item vinculado. Pesquise abaixo e marque os itens que este fornecedor vende.</p>';
 }
-function mselDesmarcar(itemId){const c=document.querySelector(`#f-itens input[value="${itemId}"]`);if(c){c.checked=false;mselChips()}}
-document.addEventListener('mousedown',e=>{const m=document.getElementById('f-msel');if(m&&!m.contains(e.target))mselAbrir(false)});
+function mselDesmarcar(itemId){const c=fq(`#f-itens input[value="${itemId}"]`);if(c){c.checked=false;mselChips()}}
+document.addEventListener('mousedown',e=>{const m=fq('#f-msel');if(m&&!m.contains(e.target))mselAbrir(false)});
 async function salvarFornecedor(id){
-  const nome=document.getElementById('f-nome').value.trim();
+  const nome=fq('#f-nome').value.trim();
   if(!nome)return toast('⚠️ Informe o nome do fornecedor.');
   if(db.fornecedores.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.id!==id))return toast('⚠️ Já existe um fornecedor com esse nome.');
-  const marcados=[...document.querySelectorAll('#f-itens input:checked')].map(c=>c.value);
+  const marcados=fqa('#f-itens input:checked').map(c=>c.value);
+  const precos={};
+  for(const iid of marcados){
+    const v=parseFloat(_fornPrecos[iid]);
+    if(!(v>0)){const it=db.itens.find(i=>i.id===iid);const inp=fq(`.fvinc-row[data-item="${iid}"] .fvinc-preco`);if(inp){inp.classList.add('campo-erro');inp.focus()}return toast('⚠️ Informe o valor de "'+(it?it.nome:'item')+'" neste fornecedor.')}
+    precos[iid]=Math.round(v*100)/100;
+  }
   const campos={nome};
   let fid=id;
   if(id){
@@ -2381,16 +2476,19 @@ async function salvarFornecedor(id){
   // sincroniza vínculos com Matérias-Primas
   const atuais=db.fornecedor_itens.filter(x=>x.fornecedor_id===fid);
   const remover=atuais.filter(x=>!marcados.includes(x.item_id)).map(x=>x.id);
-  const adicionar=marcados.filter(itemId=>!atuais.some(x=>x.item_id===itemId)).map(item_id=>({fornecedor_id:fid,item_id}));
+  // novos vínculos e vínculos com valor alterado vão numa chamada só (upsert pelo par fornecedor+item)
+  const gravar=marcados.filter(itemId=>{const a=atuais.find(x=>x.item_id===itemId);return !a||Number(a.preco_unitario)!==precos[itemId]}).map(item_id=>({fornecedor_id:fid,item_id,preco_unitario:precos[item_id]}));
+  // grava primeiro (novos e valores alterados) e só depois remove os desmarcados: se a gravação falhar, nenhum vínculo é perdido
+  if(gravar.length){
+    const{data,error}=await sb.from('fornecedor_itens').upsert(gravar,{onConflict:'fornecedor_id,item_id'}).select();
+    if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao gravar itens e valores: '+error.message);
+    data.forEach(d=>{const v={...d,preco_unitario:Number(d.preco_unitario)};const i=db.fornecedor_itens.findIndex(x=>x.fornecedor_id===d.fornecedor_id&&x.item_id===d.item_id);if(i>=0)db.fornecedor_itens[i]=v;else db.fornecedor_itens.push(v)});
+    reg('Valores do fornecedor atualizados',nome+' — '+gravar.length+' item(ns)');
+  }
   if(remover.length){
     const{error}=await sb.from('fornecedor_itens').delete().in('id',remover);
     if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao remover vínculos: '+error.message);
     db.fornecedor_itens=db.fornecedor_itens.filter(x=>!remover.includes(x.id));
-  }
-  if(adicionar.length){
-    const{data,error}=await sb.from('fornecedor_itens').insert(adicionar).select();
-    if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao vincular itens: '+error.message);
-    db.fornecedor_itens.push(...data);
   }
   if(_fornAtalho){const cb=_fornAtalho;_fornAtalho=null;closeModal2();cb(db.fornecedores.find(x=>x.id===fid));return}
   closeModal();render();
@@ -2411,7 +2509,7 @@ function cfgDescontos(b){
     <button class="btn btn-purple btn-sm" onclick="modalDescontos()">+ Novo desconto</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Nome')}${thCol(T,'tipo','Tipo')}${thCol(T,'desconto','Desconto')}${thCol(T,'status','Status')}<th>Ações</th></tr>
-  ${F.rows.map(p=>`<tr>
+  ${F.rows.map(p=>`<tr class="${p.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverDesconto',p.id)}<td><b>${esc(p.nome)}</b></td>
     <td><span class="tag">${p.tipo==='fixa'?'Fixa':'Escalonada'}</span></td>
     <td style="font-size:12px">${esc(descontoResumo(p))}</td>
@@ -2509,7 +2607,7 @@ function cfgDeslocamento(b){
   </div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Localidade')}${thCol(T,'valor','Valor')}${thCol(T,'status','Status')}<th>Ações</th></tr>
-  ${F.rows.map(t=>`<tr>
+  ${F.rows.map(t=>`<tr class="${t.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverTaxa',t.id)}<td><b>${esc(t.nome)}</b></td><td class="money">${fmt(t.valor)}</td>
     <td><span class="badge ${t.status==='ativo'?'ativo':'inativo'}">${t.status}</span></td>
     <td><button class="iconbtn" onclick="modalTaxa('${t.id}')">✏️</button>
@@ -2836,18 +2934,25 @@ function exportarRegistros(tipo){
  if(tipo==='bau'){heads=['Módulo','Data/hora','Usuário','Item','Tipo','Quantidade','Saldo resultante','Origem','Status','ID'];rows=aplicarFiltros(db.estoque_bau.map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''})),'bau').map(m=>['Baú',dataHoraBR(m.data),m.usuario_nome||'',m.item_nome,MOV_LABEL[m.tipo_movimento]||m.tipo_movimento,m.quantidade,m.saldo_resultante||0,m.origem||'',m.status==='revertida'?'Revertida':'Ativa',m.operacao_id||''])}
  const csv=[heads.join(';')].concat(rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')));const blob=new Blob(['\ufeff'+csv.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bestbuds-'+tipo+'-'+todayISO()+'.csv';a.click();URL.revokeObjectURL(a.href);reg('Registros exportados (CSV)',tipo+' — '+rows.length+' linha(s)');toast('✅ CSV exportado: '+rows.length+' linha(s).')
 }
+/* Recalcula o saldo resultante de um item (ignorando revertidos). A tela recalcula na hora;
+   o banco atualiza tudo numa única chamada (recalcular_saldos_bau), para não gastar uma requisição por linha
+   (o limite de requisições barraria históricos grandes). Sem a função no banco, cai no modo antigo, linha a linha. */
 async function recalcularSaldosItem(itemId){
   let saldo=0;
-  const movs=db.estoque_bau.filter(m=>m.item_id===itemId&&m.status!=='revertida').sort((a,b)=>new Date(a.data).getTime()-new Date(b.data).getTime());
+  const movs=db.estoque_bau.filter(m=>m.item_id===itemId&&m.status!=='revertida').sort((a,b)=>(new Date(a.data).getTime()-new Date(b.data).getTime())||String(a.id).localeCompare(String(b.id)));
   const atualizacoes=[];
   movs.forEach(m=>{
     saldo+=(m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada'?m.quantidade:-m.quantidade);
     if(m.saldo_resultante!==saldo){atualizacoes.push({id:m.id,saldo_resultante:saldo})}
     m.saldo_resultante=saldo;
   });
+  if(!atualizacoes.length)return;
+  const{error}=await sb.rpc('recalcular_saldos_bau',{p_item:itemId});
+  if(!error)return;
+  if(!/recalcular_saldos_bau|PGRST202|function/i.test((error.code||'')+' '+(error.message||''))){console.warn('[Best Buds] falha ao recalcular saldo',error);return}
   for(const a of atualizacoes){
-    const{error}=await sb.from('estoque_bau').update({saldo_resultante:a.saldo_resultante}).eq('id',a.id);
-    if(error)console.warn('[Best Buds] falha ao recalcular saldo',error);
+    const{error:e2}=await sb.from('estoque_bau').update({saldo_resultante:a.saldo_resultante}).eq('id',a.id);
+    if(e2)console.warn('[Best Buds] falha ao recalcular saldo',e2);
   }
 }
 async function excluirMovimentoBau(id){
@@ -2894,7 +2999,7 @@ const NUMERICOS={
  bau:{quantidade:{get:r=>r.quantidade},saldo_resultante:{get:r=>r.saldo_resultante}},
  financeiro:{entrada:{get:r=>r.tipo==='venda'?r.entrada:null,moeda:1},repasse:{get:r=>r.tipo==='venda'||r.tipo==='auxiliar'?r.repasse:null,moeda:1},valor:{get:r=>r.valor,moeda:1}},
  cfg_produtos:{preco:{get:p=>p.preco,moeda:1}},
- cfg_itens:{preco:{get:i=>i.preco_unitario,moeda:1},qtd_minima:{get:i=>i.qtd_minima||0},saldo:{get:i=>controlaEstoque(i.categoria)?saldoItem(i.id):null}},
+ cfg_itens:{qtd_minima:{get:i=>i.qtd_minima||0},saldo:{get:i=>controlaEstoque(i.categoria)?saldoItem(i.id):null}},
  cfg_categorias:{itens:{get:c=>db.itens.filter(i=>i.categoria===c.codigo).length}},
  cfg_deslocamento:{valor:{get:t=>t.valor,moeda:1}}
 };
@@ -3106,7 +3211,7 @@ function excluirSelecionadas(tipo){
    A tela só é redesenhada quando é seguro (sem modal aberto, sem formulário de compra/produção
    aberto e sem campo em edição); caso contrário a atualização espera e é aplicada logo depois. */
 const TABELAS_TEMPO_REAL=['vendas','venda_itens','compras','compra_itens','estoque_bau','ajustes_caixa','itens','produtos','receitas','receita_insumos',
-  'fornecedores','fornecedor_itens','parcerias','parceria_faixas','taxas_deslocamento','categorias_itens','profiles','configuracoes','solicitacoes_senha'];
+  'fornecedores','fornecedor_itens','parcerias','parceria_faixas','taxas_deslocamento','categorias_itens','profiles','configuracoes','solicitacoes_senha','avisos'];
 let _rtCanal=null,_rtTimer=null,_rtPendente=false,_rtCarregando=false;
 function iniciarTempoReal(){
   if(_rtCanal||!sb.channel)return;
@@ -3121,6 +3226,7 @@ async function sincronizarAgora(){
   _rtCarregando=true;
   try{await carregarTudo();aplicarIdentidadeVisual()}catch(e){console.warn('[Best Buds] falha ao sincronizar',e);_rtCarregando=false;return}
   _rtCarregando=false;
+  atualizarSeloAvisos();mostrarAvisosPendentes();
   if(podeRedesenhar())render();else _rtPendente=true;
 }
 function podeRedesenhar(){
@@ -3135,10 +3241,9 @@ function podeRedesenhar(){
 /* ================= LISTA SUSPENSA PESQUISÁVEL (todos os <select>) =================
    Cada <select> ganha um botão com lista + busca. O <select> original continua no DOM (oculto) e segue
    sendo a fonte do valor, então todo onchange/value existente funciona igual.
-   Adaptação por campo: busca aparece com mais de 6 opções; optgroup vira título de grupo;
+   Toda lista tem o campo de pesquisa; optgroup vira título de grupo;
    opção vazia "hidden" vira placeholder; data-ssel-extra="fn" acrescenta um rodapé (ex.: cadastrar fornecedor);
    data-nosearch desliga o recurso num select específico. */
-const SSEL_MIN_BUSCA=6;
 let _sselAberto=null,_sselPop=null;
 function sselNorm(t){return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
 (function(){const P=HTMLSelectElement.prototype;['value','selectedIndex'].forEach(k=>{const d=Object.getOwnPropertyDescriptor(P,k);Object.defineProperty(P,k,{configurable:true,enumerable:d.enumerable,get(){return d.get.call(this)},set(v){d.set.call(this,v);if(this._ssel)this._ssel.sync()}})})})();
@@ -3171,7 +3276,7 @@ function sselAbrir(sel){
   const visiveis=itens.filter(x=>x.grp||!(x.o.hidden||(x.o.disabled&&x.o.value==='')));
   const nOps=visiveis.filter(x=>x.o).length;
   const extraFn=sel.dataset.sselExtra&&window[sel.dataset.sselExtra];
-  const comBusca=nOps>SSEL_MIN_BUSCA||!!extraFn;
+  const comBusca=true; // mesmo filtro em todas as listas suspensas
   pop.innerHTML=`${comBusca?'<input class="ssel-q" placeholder="🔍 Pesquisar..." autocomplete="off">':''}<div class="ssel-ops"></div><div class="ssel-extra"></div>`;
   const q=pop.querySelector('.ssel-q'),ops=pop.querySelector('.ssel-ops'),extra=pop.querySelector('.ssel-extra');
   let hl=-1,lista=[];
@@ -3202,6 +3307,141 @@ window.addEventListener('resize',sselFechar);
 document.addEventListener('scroll',e=>{if(_sselPop&&!_sselPop.contains(e.target))sselFechar()},true);
 new MutationObserver(ms=>{ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.tagName==='SELECT')sselAplicar(n);else n.querySelectorAll&&n.querySelectorAll('select').forEach(sselAplicar)}));if(_sselAberto&&!_sselAberto.isConnected)sselFechar()}).observe(document.documentElement,{childList:true,subtree:true});
 document.querySelectorAll('select').forEach(sselAplicar);
+
+
+/* ================= CAMPO COM LISTA SUSPENSA QUE ACEITA TEXTO LIVRE =================
+   <input data-combo="itens|fornecedores">: digitar filtra a lista (mesmo visual e filtro das listas suspensas),
+   mas o valor digitado é aceito mesmo fora da lista (ex.: item não cadastrado na compra). */
+const COMBO_FONTES={
+  itens:()=>itensCompraveis().map(i=>({v:i.nome,sub:catNome(i.categoria)})),
+  fornecedores:()=>db.fornecedores.filter(f=>f.status==='ativo').sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(f=>({v:f.nome}))
+};
+const COMBO_FORA={itens:'não está no cadastro — a linha fica como item Manual (não entra no Baú).',fornecedores:'não está cadastrado — será registrado como fornecedor avulso.'};
+let _comboInp=null,_comboPop=null,_comboHl=-1,_comboLista=[];
+function comboFechar(){if(_comboPop){_comboPop.remove();_comboPop=null}_comboInp=null}
+function comboDesenhar(){
+  const inp=_comboInp;if(!inp||!_comboPop)return;
+  const fonte=COMBO_FONTES[inp.dataset.combo];const t=sselNorm(inp.value.trim());
+  _comboLista=(fonte?fonte():[]).filter(o=>!t||sselNorm(o.v).includes(t));
+  const exato=_comboLista.some(o=>sselNorm(o.v)===t);
+  if(_comboHl>=_comboLista.length)_comboHl=_comboLista.length-1;
+  _comboPop.querySelector('.ssel-ops').innerHTML=_comboLista.map((o,i)=>`<div class="ssel-op ${sselNorm(o.v)===t?'sel':''} ${i===_comboHl?'hl':''}" data-i="${i}">${esc(o.v)}${o.sub?` <span class="ssel-sub">${esc(o.sub)}</span>`:''}</div>`).join('')||(t?'':`<div class="ssel-vazio">Nenhuma opção cadastrada.</div>`);
+  _comboPop.querySelector('.ssel-extra').innerHTML=t&&!exato?`<div class="ssel-vazio">“${esc(inp.value.trim())}” ${COMBO_FORA[inp.dataset.combo]||''}</div>`:'';
+}
+function comboAbrir(inp){
+  sselFechar();if(_comboInp!==inp)comboFechar();
+  if(!_comboPop){
+    _comboInp=inp;_comboHl=-1;
+    const pop=document.createElement('div');pop.className='ssel-pop combo-pop';pop.innerHTML='<div class="ssel-ops"></div><div class="ssel-extra"></div>';_comboPop=pop;
+    pop.addEventListener('mousedown',e=>{e.preventDefault();const d=e.target.closest('.ssel-op');if(d)comboEscolher(+d.dataset.i)});
+    document.body.appendChild(pop);
+  }
+  const r=inp.getBoundingClientRect(),w=Math.max(r.width,260);
+  _comboPop.style.width=w+'px';_comboPop.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+'px';
+  _comboPop.style.top='';_comboPop.style.bottom='';
+  if(window.innerHeight-r.bottom<300&&r.top>window.innerHeight-r.bottom)_comboPop.style.bottom=(window.innerHeight-r.top+4)+'px';else _comboPop.style.top=(r.bottom+4)+'px';
+  comboDesenhar();
+}
+function comboEscolher(i){
+  const inp=_comboInp,o=_comboLista[i];if(!inp||!o)return;
+  inp.value=o.v;comboFechar();inp.dispatchEvent(new Event('input',{bubbles:true}));
+}
+document.addEventListener('focusin',e=>{const inp=e.target.closest&&e.target.closest('input[data-combo]');if(inp)comboAbrir(inp);else if(_comboPop&&!_comboPop.contains(e.target))comboFechar()});
+document.addEventListener('input',e=>{if(e.target===_comboInp){_comboHl=e.target.value.trim()?0:-1;comboDesenhar()}},true);
+document.addEventListener('keydown',e=>{
+  if(!_comboInp||e.target!==_comboInp)return;
+  const n=_comboLista.length;
+  if(e.key==='ArrowDown'){e.preventDefault();if(n){_comboHl=(_comboHl+1)%n;comboDesenhar()}}
+  else if(e.key==='ArrowUp'){e.preventDefault();if(n){_comboHl=(_comboHl-1+n)%n;comboDesenhar()}}
+  else if(e.key==='Enter'){if(_comboHl>=0&&n){e.preventDefault();comboEscolher(_comboHl)}else comboFechar()}
+  else if(e.key==='Escape'||e.key==='Tab')comboFechar();
+});
+document.addEventListener('mousedown',e=>{if(_comboPop&&!_comboPop.contains(e.target)&&e.target!==_comboInp)comboFechar()});
+document.addEventListener('scroll',e=>{if(_comboPop&&!_comboPop.contains(e.target))comboFechar()},true);
+window.addEventListener('resize',comboFechar);
+
+
+/* ================= AVISOS PARA TODOS =================
+   Gerente, Diretor ou Sócio publica um aviso (título + mensagem). Ele aparece como pop-up na tela de
+   todo mundo que está logado (tempo real) ou assim que a pessoa entrar. Cada pessoa vê o pop-up uma vez
+   (fica registrado em avisos_vistos). Depois de 24 horas o aviso some da tela e o banco o apaga de vez. */
+const AVISO_TITULO_MAX=80,AVISO_MSG_MAX=1000;
+function avisosAtivos(){const agora=Date.now();return (db.avisos||[]).filter(a=>new Date(a.expira_em).getTime()>agora)}
+function avisosNaoVistos(){return avisosAtivos().filter(a=>!db.avisos_vistos.has(a.id)).sort((a,b)=>new Date(a.criado_em)-new Date(b.criado_em))}
+function tempoRestante(a){const ms=new Date(a.expira_em).getTime()-Date.now();if(ms<=0)return 'expirado';const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);return h?`some em ${h}h${m?String(m).padStart(2,'0'):''}`:`some em ${m} min`}
+function atualizarSeloAvisos(){
+  const el=document.getElementById('avisos-selo');if(!el||!db)return;
+  const n=avisosNaoVistos().length;el.textContent=n;el.style.display=n?'':'none';
+  const b=document.getElementById('btn-avisos');if(b)b.title=n?n+' aviso(s) novo(s)':'Avisos';
+}
+let _avisoAtual=null;
+function mostrarAvisosPendentes(){
+  if(!db||!session||!document.body.classList.contains('logado'))return;
+  const bg=document.getElementById('aviso-bg');if(!bg)return;
+  if(bg.classList.contains('open'))return;
+  const a=avisosNaoVistos()[0];if(!a)return;
+  _avisoAtual=a.id;
+  document.getElementById('aviso-box').innerHTML=`<div class="aviso-topo">📢 Aviso</div>
+    <h3 class="aviso-titulo">${esc(a.titulo)}</h3>
+    <div class="aviso-msg">${esc(a.mensagem)}</div>
+    <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
+    <div class="modal-actions"><button class="btn btn-primary" id="btn-aviso-ok" onclick="marcarAvisoVisto()">Entendi</button></div>`;
+  bg.classList.add('open');
+  setTimeout(()=>{const b=document.getElementById('btn-aviso-ok');if(b)b.focus()},50);
+}
+async function marcarAvisoVisto(){
+  const id=_avisoAtual;document.getElementById('aviso-bg').classList.remove('open');_avisoAtual=null;
+  if(!id)return;
+  db.avisos_vistos.add(id);atualizarSeloAvisos();
+  const{error}=await sb.from('avisos_vistos').insert({aviso_id:id,usuario_id:session.usuario_id});
+  if(error&&!/duplicate|23505/i.test(error.message+' '+(error.code||'')))console.warn('[Best Buds] falha ao marcar aviso como visto',error);
+  setTimeout(mostrarAvisosPendentes,250);
+}
+function modalAvisos(){
+  const ger=isGerente(),lista=avisosAtivos();
+  openModal(`<h3>📢 Avisos</h3>
+  ${ger?`<div class="aviso-form">
+    <div class="field"><label>Título</label><input id="av-titulo" maxlength="${AVISO_TITULO_MAX}" placeholder="Ex.: Reunião hoje às 20h"></div>
+    <div class="field"><label>Mensagem</label><textarea id="av-msg" rows="4" maxlength="${AVISO_MSG_MAX}" placeholder="Escreva o aviso para toda a equipe"></textarea></div>
+    <p class="muted" style="font-size:12px;margin:-4px 0 10px">Aparece como pop-up na tela de todos e é apagado automaticamente depois de 24 horas.</p>
+    <button class="btn btn-primary" id="btn-publicar-aviso" onclick="publicarAviso()">Publicar para todos</button>
+  </div>`:''}
+  <div class="section-title" style="margin-top:${ger?'18px':'4px'}">Avisos das últimas 24 horas</div>
+  <div class="aviso-lista">${lista.length?lista.map(a=>`<div class="aviso-item">
+      <div class="aviso-item-top"><b>${esc(a.titulo)}</b>${ger?`<button class="iconbtn" title="Apagar agora" onclick="apagarAviso('${a.id}')">🗑️</button>`:''}</div>
+      <div class="aviso-msg">${esc(a.mensagem)}</div>
+      <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
+    </div>`).join(''):'<p class="muted" style="font-size:13px">Nenhum aviso nas últimas 24 horas.</p>'}</div>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button></div>`);
+  // quem abre a lista já viu todos os avisos ativos
+  const novos=avisosNaoVistos();
+  if(novos.length){novos.forEach(a=>db.avisos_vistos.add(a.id));atualizarSeloAvisos();
+    sb.from('avisos_vistos').upsert(novos.map(a=>({aviso_id:a.id,usuario_id:session.usuario_id})),{onConflict:'aviso_id,usuario_id',ignoreDuplicates:true}).then(({error})=>{if(error)console.warn('[Best Buds] falha ao marcar avisos',error)})}
+}
+async function publicarAviso(){
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem publicar avisos.');
+  const titulo=document.getElementById('av-titulo').value.trim(),mensagem=document.getElementById('av-msg').value.trim();
+  if(!titulo)return toast('⚠️ Informe o título do aviso.');
+  if(!mensagem)return toast('⚠️ Escreva a mensagem do aviso.');
+  const btn=document.getElementById('btn-publicar-aviso');btn.disabled=true;
+  const{data,error}=await sb.from('avisos').insert({titulo:titulo.slice(0,AVISO_TITULO_MAX),mensagem:mensagem.slice(0,AVISO_MSG_MAX),criado_por:session.usuario_id,criado_por_nome:sessionUser().nome}).select().single();
+  btn.disabled=false;
+  if(error)return toast('⚠️ Não foi possível publicar: '+error.message);
+  db.avisos.unshift(data);db.avisos_vistos.add(data.id);
+  sb.from('avisos_vistos').insert({aviso_id:data.id,usuario_id:session.usuario_id}).then(()=>{});
+  reg('Aviso publicado',titulo);toast('✅ Aviso publicado para todos.');modalAvisos();
+}
+function apagarAviso(id){
+  if(!isGerente())return;
+  const a=(db.avisos||[]).find(x=>x.id===id);if(!a)return;
+  confirmar('Apagar aviso','O aviso "'+a.titulo+'" sai da tela de todos agora. Confirmar?',async()=>{
+    const{error}=await sb.from('avisos').delete().eq('id',id);
+    if(error)return toast('⚠️ Erro ao apagar: '+error.message);
+    db.avisos=db.avisos.filter(x=>x.id!==id);reg('Aviso apagado',a.titulo);atualizarSeloAvisos();modalAvisos();
+  });
+}
+// avisos vencidos somem da tela mesmo sem nenhuma alteração no banco
+setInterval(()=>{if(!db||!db.avisos)return;const antes=db.avisos.length;db.avisos=avisosAtivos();if(db.avisos.length!==antes)atualizarSeloAvisos()},60000);
 
 /* ================= INIT ================= */
 document.getElementById('login-olho').innerHTML=OLHO_ABERTO;
