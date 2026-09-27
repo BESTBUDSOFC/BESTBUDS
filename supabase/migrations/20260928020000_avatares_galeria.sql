@@ -1,6 +1,7 @@
 -- Galeria de avatares com imagens (no lugar dos avatares de emoji).
 -- - Cada avatar é uma imagem no Storage (midia/avatares/), com nome e coleção (ex.: "Toy Story", "Star Wars").
--- - Todos veem a galeria; Gerente, Diretor ou Sócio cadastra, edita e apaga.
+-- - Todos veem a galeria; Gerente, Diretor ou Sócio tem controle total: cadastra, edita, apaga, renomeia
+--   ou apaga coleções inteiras e define a ordem (coluna ordem: a coleção aparece na posição do seu 1º avatar).
 -- - Apagar um avatar devolve às iniciais quem o estava usando.
 -- - profiles.avatar passa a aceitar só imagem da galeria (os avatares de emoji saíram).
 
@@ -8,6 +9,7 @@ create table if not exists public.avatares (
   id          uuid primary key default gen_random_uuid(),
   nome        text not null check (char_length(nome) between 1 and 60),
   colecao     text not null default 'Destaques' check (char_length(colecao) between 1 and 40),
+  ordem       integer not null default 0,
   url         text not null unique check (url ~ '^https://[a-z0-9]+\.supabase\.co/storage/v1/object/public/midia/avatares/[A-Za-z0-9._-]+$'),
   criado_por  uuid default auth.uid() references public.profiles(id) on delete set null,
   criado_em   timestamptz not null default now()

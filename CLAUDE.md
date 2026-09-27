@@ -61,5 +61,11 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - "Membros da equipe" lista os usuários ativos, divididos em On-line e Off-line. A presença vem do Supabase Realtime (canal `presenca`, chave = id do usuário), sem gravar no banco. Só aparece no menu lateral (telas a partir de 768 px).
 - Rodapé do menu: avatar, nome e ícone do cargo (👑 Sócio, 🎩 Diretor, 🧭 Gerente, 🛒 Vendedor). O ⋮ abre "Escolher avatar" e "Sair".
 - `profiles.avatar`: vazio = iniciais em cor suave fixa por pessoa; senão, a URL de uma imagem da galeria. Cada pessoa troca o próprio avatar.
-- Galeria de avatares (tabela `avatares`: nome, coleção, url em `midia/avatares/`): círculos grandes agrupados por coleção. Todos escolhem; Gerente ou acima adiciona várias imagens de uma vez (recortadas em quadrado e reduzidas para 320 px no navegador), renomeia, muda de coleção e apaga. Apagar um avatar devolve às iniciais quem o usava (trigger `avatares_ao_apagar`).
+- Galeria de avatares (tabela `avatares`: nome, coleção, ordem, url em `midia/avatares/`): círculos grandes agrupados por coleção. Todos escolhem.
+- Gerente ou acima tem controle total, no botão "⚙️ Gerenciar galeria":
+  - adiciona várias imagens de uma vez (recortadas em quadrado e reduzidas para 320 px no navegador);
+  - renomeia, muda de coleção, apaga e ordena avatares (← →);
+  - renomeia, apaga e ordena coleções inteiras (↑ ↓).
+- A coleção aparece na posição do seu primeiro avatar. Reordenar grava tudo numa chamada só (upsert).
+- Apagar um avatar ou uma coleção devolve às iniciais quem o usava (trigger `avatares_ao_apagar`).
 - Não há imagens de personagens embutidas no código: a galeria é preenchida pela loja, que responde pelo direito de uso das imagens.

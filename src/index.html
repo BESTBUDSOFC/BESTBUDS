@@ -180,8 +180,13 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .avg-topo h3{margin:0 0 2px}
 .avg-topo .acoes{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .av.xg{width:64px;height:64px;font-size:22px}
-.avg-tit{font-size:17px;font-weight:800;color:var(--text);margin:18px 0 12px}
+.avg-tit{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;color:var(--text);margin:18px 0 12px}
+.avg-col-acoes{display:flex;gap:4px;margin-left:6px}
+.avg-col-acoes .iconbtn,.avg-acoes .iconbtn{width:28px;height:26px;font-size:13px;font-weight:800;color:var(--text);background:var(--input-bg);border:1px solid var(--border);border-radius:7px;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.avg-col-acoes .iconbtn:not(:disabled):hover,.avg-acoes .iconbtn:not(:disabled):hover{border-color:var(--purple)}
+.iconbtn:disabled{opacity:.3;cursor:default}
 .avg-linha{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:18px 16px}
+.avg-linha.gm{grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:20px 12px}
 .avg-cel{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
 .avg-op{width:100%;max-width:120px;aspect-ratio:1;border-radius:50%;padding:0;overflow:hidden;background:#23232c;border:none;box-shadow:0 0 0 0 transparent;transition:transform .15s ease,box-shadow .15s ease}
 .avg-op img{width:100%;height:100%;object-fit:cover;display:block}
@@ -196,7 +201,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .avn-item{display:flex;align-items:center;gap:10px}
 .avn-item img{width:48px;height:48px;border-radius:50%;object-fit:cover;flex:none;background:#23232c}
 .avn-item input{flex:1}
-@media(max-width:600px){.avg-linha{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:14px 10px}.avg-cel .ok{right:4px}}
+@media(max-width:600px){.avg-linha.gm{grid-template-columns:repeat(auto-fill,minmax(128px,1fr))}.avg-linha{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:14px 10px}.avg-cel .ok{right:4px}}
 @media(min-width:768px){#app-header .who{display:none}}
 .nav-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:var(--muted);font-weight:600;font-size:14px;background:transparent;width:100%;text-align:left}
 .nav-item:hover{color:var(--text);background:rgba(var(--purple-rgb),.08)}
@@ -478,7 +483,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.17.1';
+const VERSAO='v4.17.2';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -3538,10 +3543,13 @@ function abrirMenuPerfil(btn){
 document.addEventListener('mousedown',e=>{const m=document.querySelector('.eq-menu');if(m&&!m.contains(e.target)&&!e.target.closest('#eq-mais'))fecharMenuPerfil()});
 /* ---- Galeria de avatares (tabela avatares) ----
    Imagens com nome e coleção (ex.: "Toy Story", "Star Wars"), mostradas em círculos grandes por coleção.
-   Todos escolhem o próprio avatar; Gerente ou acima adiciona (várias de uma vez), renomeia, muda de coleção e apaga.
+   Todos escolhem o próprio avatar. Gerente ou acima tem controle total: adiciona (várias de uma vez), renomeia,
+   muda de coleção, apaga, ordena (← → no avatar, ↑ ↓ na coleção) e renomeia ou apaga coleções inteiras.
+   Ordem: coluna ordem; a coleção aparece na posição do seu 1º avatar. Reordenar grava tudo numa chamada só (upsert).
    Na hora de enviar, o site recorta a imagem em quadrado pelo centro e reduz para 320 px. */
 const AVATAR_LADO=320;
-function colecoesAvatares(){const m=new Map();(db.avatares||[]).forEach(a=>{if(!m.has(a.colecao))m.set(a.colecao,[]);m.get(a.colecao).push(a)});return [...m.entries()]}
+function avataresOrdenados(){return [...(db.avatares||[])].sort((a,b)=>(a.ordem||0)-(b.ordem||0)||String(a.criado_em).localeCompare(String(b.criado_em)))}
+function colecoesAvatares(){const m=new Map();avataresOrdenados().forEach(a=>{if(!m.has(a.colecao))m.set(a.colecao,[]);m.get(a.colecao).push(a)});return [...m.entries()]}
 async function recortarQuadrado(file,lado){
   try{
     const bmp=await createImageBitmap(file),q=Math.min(bmp.width,bmp.height),l=Math.min(lado,q);
@@ -3556,16 +3564,19 @@ let _avGerenciar=false;
 function modalAvatar(){
   const u=sessionUser();if(!u)return;
   const ger=isGerente(),atual=u.avatar||'',cols=colecoesAvatares(),gm=ger&&_avGerenciar;
-  const cel=a=>`<div class="avg-cel">
+  const cel=(a,i,n)=>`<div class="avg-cel">
       <button type="button" class="avg-op ${atual===a.url?'sel':''}" data-av="${esc(a.url)}" title="${esc(a.nome)}" aria-label="${esc(a.nome)}" onclick="salvarAvatar(this.dataset.av)"><img src="${esc(a.url)}" alt="" loading="lazy"></button>
       ${atual===a.url?'<span class="ok">✓</span>':''}
-      ${gm?`<span class="avg-nome" title="${esc(a.nome)}">${esc(a.nome)}</span><div class="avg-acoes"><button class="iconbtn" title="Editar nome e coleção" onclick="modalEditarAvatar('${a.id}')">✏️</button><button class="iconbtn" title="Apagar da galeria" onclick="apagarAvatarGaleria('${a.id}')">🗑️</button></div>`:''}
+      ${gm?`<span class="avg-nome" title="${esc(a.nome)}">${esc(a.nome)}</span><div class="avg-acoes"><button class="iconbtn" title="Mover para a esquerda" ${i?'':'disabled'} onclick="moverAvatar('${a.id}',-1)">←</button><button class="iconbtn" title="Editar nome e coleção" onclick="modalEditarAvatar('${a.id}')">✏️</button><button class="iconbtn" title="Apagar da galeria" onclick="apagarAvatarGaleria('${a.id}')">🗑️</button><button class="iconbtn" title="Mover para a direita" ${i<n-1?'':'disabled'} onclick="moverAvatar('${a.id}',1)">→</button></div>`:''}
     </div>`;
   openModal(`<div class="avg-topo">${avatarHTML(u,'xg')}<div><h3>Escolher avatar</h3><div class="muted" style="font-size:12px">Aparece no menu lateral e na lista de membros da equipe.</div></div>
       <div class="acoes">${atual?'<button class="btn btn-ghost btn-sm" onclick="salvarAvatar(\'\')">Usar iniciais</button>':''}
       ${ger?`<button class="btn btn-ghost btn-sm" id="btn-av-gerenciar" onclick="_avGerenciar=!_avGerenciar;modalAvatar()">${gm?'✓ Concluir':'⚙️ Gerenciar galeria'}</button>`:''}
       ${gm?'<button class="btn btn-primary btn-sm" onclick="modalAdicionarAvatares()">＋ Adicionar imagens</button>':''}</div></div>
-    ${cols.length?cols.map(([c,lista])=>`<div class="avg-tit">${esc(c)}</div><div class="avg-linha">${lista.map(cel).join('')}</div>`).join('')
+    ${cols.length?cols.map(([c,lista],k)=>`<div class="avg-tit">${esc(c)}${gm?`<span class="avg-col-acoes">
+        <button class="iconbtn" title="Subir coleção" ${k?'':'disabled'} onclick="moverColecaoAvatar(${esc(JSON.stringify(c))},-1)">↑</button><button class="iconbtn" title="Descer coleção" ${k<cols.length-1?'':'disabled'} onclick="moverColecaoAvatar(${esc(JSON.stringify(c))},1)">↓</button>
+        <button class="iconbtn" title="Renomear coleção" onclick="modalRenomearColecao(${esc(JSON.stringify(c))})">✏️</button><button class="iconbtn" title="Apagar coleção inteira" onclick="apagarColecaoAvatar(${esc(JSON.stringify(c))})">🗑️</button></span>`:''}</div>
+      <div class="avg-linha ${gm?'gm':''}">${lista.map((a,i)=>cel(a,i,lista.length)).join('')}</div>`).join('')
       :`<div class="avg-vazio">A galeria ainda não tem avatares.${ger?' Clique em ⚙️ Gerenciar galeria › ＋ Adicionar imagens.':' Peça a um Gerente para adicionar.'}</div>`}
     <div class="modal-actions"><button class="btn btn-ghost" onclick="_avGerenciar=false;closeModal()">Fechar</button></div>`);
   document.getElementById('modal-box').classList.add('modal-avatar');
@@ -3583,7 +3594,7 @@ function nomeDoArquivo(n){const t=String(n||'').replace(/\.[^.]+$/,'').replace(/
 function modalAdicionarAvatares(){
   if(!isGerente())return;
   _avNovos=[];
-  const ult=(db.avatares||[]).length?db.avatares[db.avatares.length-1].colecao:'Destaques';
+  const ult=(db.avatares||[]).length?[...db.avatares].sort((a,b)=>String(a.criado_em).localeCompare(String(b.criado_em))).pop().colecao:'Destaques';
   openModal2(`<h3>＋ Adicionar avatares</h3>
     <div class="field"><label>Coleção</label><input id="avn-col" data-combo="colecoes" autocomplete="off" maxlength="40" placeholder="Ex.: Toy Story" value="${esc(ult)}"></div>
     <label class="btn btn-ghost btn-sm aviso-img-btn">🖼️ Escolher imagens<input type="file" id="avn-arq" multiple accept="image/png,image/jpeg,image/webp" hidden onchange="escolherAvataresNovos(this)"></label>
@@ -3614,10 +3625,12 @@ async function salvarAvataresNovos(){
   let urls;
   try{urls=await Promise.all(_avNovos.map(async x=>uploadImagem(await recortarQuadrado(x.file,AVATAR_LADO),'avatares')))}
   catch(err){btn.disabled=false;btn.textContent='Salvar na galeria';return toast('⚠️ Erro ao enviar as imagens: '+(err.message||err))}
-  const linhas=_avNovos.map((x,i)=>({nome:x.nome.trim().slice(0,60),colecao,url:urls[i]}));
+  const base=Math.max(0,...(db.avatares||[]).map(a=>a.ordem||0));
+  const linhas=_avNovos.map((x,i)=>({nome:x.nome.trim().slice(0,60),colecao,url:urls[i],ordem:base+i+1}));
   const{data,error}=await sb.from('avatares').insert(linhas).select();
   if(error){sb.storage.from('midia').remove(urls.map(u=>'avatares/'+u.split('/').pop())).then(()=>{});btn.disabled=false;btn.textContent='Salvar na galeria';return toast('⚠️ Não foi possível salvar: '+error.message)}
   db.avatares=[...(db.avatares||[]),...(data||[])];_avNovos=[];
+  await regravarOrdemAvatares(avataresOrdenados());   // avatar novo entra no fim da própria coleção
   reg('Avatares adicionados',colecao+' — '+linhas.length);closeModal2();modalAvatar();toast('✅ '+linhas.length+' avatar(es) na galeria.');
 }
 function modalEditarAvatar(id){
@@ -3632,9 +3645,63 @@ async function salvarEdicaoAvatar(id){
   const a=(db.avatares||[]).find(x=>x.id===id);if(!a)return;
   const nome=document.getElementById('ave-nome').value.trim().slice(0,60),colecao=document.getElementById('ave-col').value.trim().slice(0,40);
   if(!nome||!colecao)return toast('⚠️ Informe o nome e a coleção.');
+  const mudouColecao=a.colecao!==colecao;
   const{error}=await sb.from('avatares').update({nome,colecao}).eq('id',id);
   if(error)return toast('⚠️ Erro ao salvar: '+error.message);
-  Object.assign(a,{nome,colecao});closeModal2();modalAvatar();
+  Object.assign(a,{nome,colecao});closeModal2();
+  if(mudouColecao){a.ordem=Math.max(0,...db.avatares.filter(x=>x.colecao===colecao&&x!==a).map(x=>x.ordem||0),a.ordem-.5)+.5;await regravarOrdemAvatares(avataresOrdenados())}
+  modalAvatar();
+}
+/* Regrava a ordem de toda a galeria (coleções em bloco, na ordem dada) numa chamada só */
+async function regravarOrdemAvatares(lista){
+  const blocos=new Map();lista.forEach(a=>{if(!blocos.has(a.colecao))blocos.set(a.colecao,[]);blocos.get(a.colecao).push(a)});
+  const nova=[...blocos.values()].flat(),mud=nova.map((a,i)=>({a,o:i+1})).filter(x=>x.a.ordem!==x.o);
+  if(!mud.length)return true;
+  const{error}=await sb.from('avatares').upsert(mud.map(({a,o})=>({id:a.id,nome:a.nome,colecao:a.colecao,url:a.url,ordem:o})),{onConflict:'id'});
+  if(error){toast('⚠️ Erro ao reordenar: '+error.message);return false}
+  mud.forEach(({a,o})=>a.ordem=o);return true;
+}
+async function moverAvatar(id,dir){
+  if(!isGerente())return;
+  const l=avataresOrdenados(),i=l.findIndex(a=>a.id===id);if(i<0)return;
+  const irmaos=l.filter(a=>a.colecao===l[i].colecao),k=irmaos.indexOf(l[i]),j=k+dir;if(j<0||j>=irmaos.length)return;
+  const outro=irmaos[j],io=l.indexOf(outro);[l[i],l[io]]=[l[io],l[i]];
+  if(await regravarOrdemAvatares(l))modalAvatar();
+}
+async function moverColecaoAvatar(c,dir){
+  if(!isGerente())return;
+  const cols=colecoesAvatares(),k=cols.findIndex(([n])=>n===c),j=k+dir;if(k<0||j<0||j>=cols.length)return;
+  [cols[k],cols[j]]=[cols[j],cols[k]];
+  if(await regravarOrdemAvatares(cols.flatMap(([,l])=>l)))modalAvatar();
+}
+function modalRenomearColecao(c){
+  if(!isGerente())return;
+  openModal2(`<h3>Renomear coleção</h3>
+    <div class="field"><label>Nome da coleção</label><input id="avc-nome" maxlength="40" value="${esc(c)}"></div>
+    <p class="muted" style="font-size:12px">Se já existir uma coleção com esse nome, as duas viram uma só.</p>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal2()">Cancelar</button><button class="btn btn-primary" onclick="renomearColecaoAvatar(${esc(JSON.stringify(c))})">Salvar</button></div>`);
+}
+async function renomearColecaoAvatar(c){
+  const novo=document.getElementById('avc-nome').value.trim().slice(0,40);
+  if(!novo)return toast('⚠️ Informe o nome da coleção.');
+  if(novo===c)return closeModal2();
+  const{error}=await sb.from('avatares').update({colecao:novo}).eq('colecao',c);
+  if(error)return toast('⚠️ Erro ao renomear: '+error.message);
+  (db.avatares||[]).forEach(a=>{if(a.colecao===c)a.colecao=novo});
+  reg('Coleção de avatares renomeada',c+' → '+novo);closeModal2();
+  await regravarOrdemAvatares(avataresOrdenados());modalAvatar();
+}
+function apagarColecaoAvatar(c){
+  if(!isGerente())return;
+  const lista=(db.avatares||[]).filter(a=>a.colecao===c),urls=new Set(lista.map(a=>a.url));
+  const emUso=(db.usuarios||[]).filter(u=>urls.has(u.avatar));
+  confirmar('Apagar coleção','A coleção "'+c+'" e os '+lista.length+' avatar(es) dela saem da galeria'+(emUso.length?'; '+emUso.length+' pessoa(s) que usam algum deles voltam para as iniciais':'')+'. Confirmar?',async()=>{
+    const{error}=await sb.from('avatares').delete().eq('colecao',c);
+    if(error)return toast('⚠️ Erro ao apagar: '+error.message);
+    sb.storage.from('midia').remove(lista.map(a=>'avatares/'+a.url.split('/').pop())).then(()=>{});
+    db.avatares=db.avatares.filter(a=>a.colecao!==c);emUso.forEach(u=>u.avatar=null);
+    reg('Coleção de avatares apagada',c+' — '+lista.length);renderPerfilRodape();renderEquipe();modalAvatar();
+  });
 }
 function apagarAvatarGaleria(id){
   const a=(db.avatares||[]).find(x=>x.id===id);if(!a||!isGerente())return;
