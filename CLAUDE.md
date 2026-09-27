@@ -56,16 +56,9 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - O banco define o autor e a validade de 24 horas (trigger). Depois disso o aviso some da tela e o pg_cron o apaga de vez (a cada 10 minutos).
 - As janelas de cadastro usadas por atalho abrem na segunda camada (`modal2`), que é esvaziada ao fechar. As funções do cadastro de fornecedor procuram elementos só dentro da janela aberta.
 
-## Menu lateral: equipe e avatar
+## Menu lateral e topo
 
-- "Membros da equipe" lista os usuários ativos, divididos em On-line e Off-line. A presença vem do Supabase Realtime (canal `presenca`, chave = id do usuário), sem gravar no banco. Só aparece no menu lateral (telas a partir de 768 px).
-- Rodapé do menu: avatar, nome e ícone do cargo (👑 Sócio, 🎩 Diretor, 🧭 Gerente, 🛒 Vendedor). O ⋮ abre "Escolher avatar" e "Sair".
-- `profiles.avatar`: vazio = iniciais em cor suave fixa por pessoa; senão, a URL de uma imagem da galeria. Cada pessoa troca o próprio avatar.
-- Galeria de avatares (tabela `avatares`: nome, coleção, ordem, url em `midia/avatares/`): círculos grandes agrupados por coleção. Todos escolhem.
-- Gerente ou acima tem controle total, no botão "⚙️ Gerenciar galeria":
-  - adiciona várias imagens de uma vez (recortadas em quadrado e reduzidas para 320 px no navegador);
-  - renomeia, muda de coleção, apaga e ordena avatares (← →);
-  - renomeia, apaga e ordena coleções inteiras (↑ ↓).
-- A coleção aparece na posição do seu primeiro avatar. Reordenar grava tudo numa chamada só (upsert).
-- Apagar um avatar ou uma coleção devolve às iniciais quem o usava (trigger `avatares_ao_apagar`).
-- Não há imagens de personagens embutidas no código: a galeria é preenchida pela loja, que responde pelo direito de uso das imagens.
+- Topo: logo, nome da loja com a tipografia da tela de login (1ª parte cheia, última palavra vazada) e a versão ao lado. Não há "Sair" no topo no computador; no celular (sem menu lateral) o "Sair" e o selo do perfil continuam no topo.
+- Menu lateral, abaixo dos módulos: "On-line" e "Off-line" com a contagem, recolhidos por padrão; clicar abre ou fecha a lista. Cada pessoa aparece com o nome e, abaixo, o selo do perfil (o mesmo da aba Usuários). Presença pelo Supabase Realtime (canal `presenca`, chave = id do usuário), sem gravar no banco.
+- Rodapé do menu: nome, selo do perfil e o botão "Sair".
+- Não há avatares (removidos na v4.17.3).
