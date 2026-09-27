@@ -55,3 +55,9 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Imagens de avisos vencidos são apagadas pelo site (1 listagem + 1 remoção) quando alguém publica ou apaga um aviso.
 - O banco define o autor e a validade de 24 horas (trigger). Depois disso o aviso some da tela e o pg_cron o apaga de vez (a cada 10 minutos).
 - As janelas de cadastro usadas por atalho abrem na segunda camada (`modal2`), que é esvaziada ao fechar. As funções do cadastro de fornecedor procuram elementos só dentro da janela aberta.
+
+## Menu lateral: equipe e avatar
+
+- "Membros da equipe" lista os usuários ativos, divididos em On-line e Off-line. A presença vem do Supabase Realtime (canal `presenca`, chave = id do usuário), sem gravar no banco. Só aparece no menu lateral (telas a partir de 768 px).
+- Rodapé do menu: avatar, nome e ícone do cargo (👑 Sócio, 🎩 Diretor, 🧭 Gerente, 🛒 Vendedor). O ⋮ abre "Escolher avatar" e "Sair".
+- `profiles.avatar`: vazio = iniciais em cor suave fixa por pessoa; `e:<chave>` = avatar pronto do catálogo `AVATARES` (emoji, sem imagens de personagens); URL de `midia/avatares/` = imagem enviada por Gerente ou acima para o catálogo "Da loja". Cada pessoa troca o próprio avatar.
