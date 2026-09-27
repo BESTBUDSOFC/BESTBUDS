@@ -242,6 +242,9 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .lf-slider input[type=range]{flex:1;padding:0;border:none;background:none;accent-color:var(--purple)}
 .lf-slider b{min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
 .alert-banner{background:rgba(var(--danger-rgb),.08);border:1px solid var(--danger);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
+.alert-banner.aviso-pedido-senha{background:rgba(var(--warning-rgb),.10);border-color:var(--warning-border);color:var(--text)}
+tr.linha-pedido-senha td{background:rgba(var(--warning-rgb),.10)}
+tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-border)}
 .thumb{height:30px;width:30px;object-fit:cover;border-radius:6px;vertical-align:middle}
 /* ===== RESPONSIVO ===== */
 @media (max-width:767px){
@@ -377,7 +380,7 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.9.2';
+const VERSAO='v4.10.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -424,7 +427,7 @@ let db=null, session=null;
    que as telas já esperam (db.produtos, db.itens, db.vendas com itens embutidos, etc.) */
 async function carregarTudo(){
   const[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,
-    taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha,cfgPrivada]=await Promise.all([
+    taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha]=await Promise.all([
     sb.from('profiles').select('*').order('criado_em'),
     sb.from('produtos').select('*').order('ordem'),
     sb.from('itens').select('*').order('ordem',{nullsFirst:false}).order('nome'),
@@ -443,10 +446,9 @@ async function carregarTudo(){
     sb.from('ajustes_caixa').select('*').order('data',{ascending:false}),
     sb.from('fornecedor_itens').select('*'),
     sb.from('categorias_itens').select('*').order('ordem').order('nome'),
-    sb.from('solicitacoes_senha').select('*').eq('status','pendente').order('criado_em'),
-    sb.from('config_privada').select('*').eq('id',1).maybeSingle()
+    sb.from('solicitacoes_senha').select('*').eq('status','pendente').order('criado_em')
   ]);
-  for(const r of[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha,cfgPrivada])
+  for(const r of[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha])
     if(r.error)throw r.error;
 
   const porReceita={};
@@ -477,7 +479,6 @@ async function carregarTudo(){
     fornecedor_itens:(fornItens.data||[]),
     categorias:(categorias.data||[]),
     pedidos_senha:(pedidosSenha.data||[]),
-    senha_padrao_reset:(cfgPrivada.data&&cfgPrivada.data.senha_padrao_reset)||'',
     parcerias:parceriasArr,
     descontos:parceriasArr,
     taxas_deslocamento:(taxas.data||[]).map(t=>({...t,valor:Number(t.valor)})),
@@ -530,7 +531,7 @@ function alternarSenhaLogin(){
 function modalRedefinirSenha(){
   const u=(document.getElementById('login-email').value||'').trim();
   openModal(`<h3>Redefinir senha</h3>
-  <p class="muted" style="margin-bottom:14px">Informe seu usuário. Um Gerente, Diretor ou Sócio vai aprovar o pedido; depois disso sua senha volta para a senha padrão e você cria uma nova no primeiro acesso.</p>
+  <p class="muted" style="margin-bottom:14px">Informe seu usuário. Um Gerente, Diretor ou Sócio vai definir uma senha nova para a sua conta e passar para você. No primeiro acesso você cria a sua própria senha.</p>
   <div class="field"><label>Usuário</label><input id="rs-usuario" autocapitalize="none" value="${esc(u)}" placeholder="Digite seu usuário"></div>
   <p id="rs-msg" style="font-size:13px;display:none"></p>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
@@ -544,7 +545,7 @@ async function enviarPedidoSenha(){
   const{error}=await sb.rpc('solicitar_redefinicao_senha',{p_usuario:u});
   btn.disabled=false;
   if(error){msg.style.color='var(--danger)';msg.textContent='Não foi possível enviar o pedido: '+error.message;msg.style.display='block';return}
-  msg.style.color='var(--green)';msg.textContent='Pedido enviado. Assim que for aprovado, entre com a senha padrão (peça-a a quem aprovou).';msg.style.display='block';
+  msg.style.color='var(--green)';msg.textContent='Pedido enviado. Aguarde um Gerente, Diretor ou Sócio te passar a senha nova; até lá sua senha atual continua valendo.';msg.style.display='block';
   btn.style.display='none';
 }
 
@@ -1809,7 +1810,7 @@ function renderConfig(c){
 function usuariosOrdenados(){return [...db.usuarios].sort((a,b)=>(PERFIL_NIVEL[b.perfil]||0)-(PERFIL_NIVEL[a.perfil]||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}))}
 function cfgUsuarios(b){
   const T='cfg_usuarios',F=tabelaFiltravel(T,usuariosOrdenados,{nome:u=>u.nome,usuario:u=>u.usuario||'—',perfil:u=>PERFIL_LABEL[u.perfil]||u.perfil,status:u=>u.status,data:u=>u.criado_em});
-  b.innerHTML=`${painelPedidosSenha()}<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  b.innerHTML=`${avisoPedidosSenha()}<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">👥 Usuários</div>
     <button class="btn btn-purple btn-sm" onclick="modalUsuario()">+ Novo usuário</button></div>
   <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Sócio gerencia todos os perfis, incluindo outros Sócios. <b>Diretor</b> tem as mesmas permissões do Sócio, exceto que não pode alterar, ativar/inativar, excluir ou promover ninguém ao perfil <b>Sócio</b>. Gerentes podem cadastrar vendedores. Ninguém altera o próprio perfil. Deve existir sempre ao menos um sócio ativo.</p>
@@ -1818,62 +1819,31 @@ function cfgUsuarios(b){
   ${F.rows.map(u=>{
     const sociosAtivos=db.usuarios.filter(x=>x.perfil==='socio'&&x.status==='ativo').length;
     const ehUltimoSocio=u.perfil==='socio'&&u.status==='ativo'&&sociosAtivos<=1;
-    return`<tr>
-    <td><b>${esc(u.nome)}</b>${u.id===session.usuario_id?' <span class="tag">você</span>':''}</td>
+    const ped=pedidoSenhaDe(u.id),podeU=podeGerenciarUsuario(u)&&u.id!==session.usuario_id;
+    return`<tr class="${ped?'linha-pedido-senha':''}">
+    <td><b>${esc(u.nome)}</b>${u.id===session.usuario_id?' <span class="tag">você</span>':''}${ped?`<br><span class="tag y" title="Pedido feito na tela de login">🔑 pediu nova senha · ${dataHoraBR(ped.criado_em)}</span>`:''}</td>
     <td style="color:var(--muted)">${esc(u.usuario||'—')}</td>
     <td><span class="badge ${u.perfil}">${PERFIL_LABEL[u.perfil]||u.perfil}</span></td>
     <td><span class="badge ${u.status==='ativo'?'ativo':'inativo'}">${u.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(u.criado_em)}</td>
-    <td><button class="iconbtn" onclick="modalUsuario('${u.id}')">✏️</button>
+    <td><button class="iconbtn" title="${ped&&podeU?'Editar e definir a senha nova':'Editar'}" onclick="modalUsuario('${u.id}')">✏️</button>${ped&&podeU?`<button class="iconbtn" title="Dispensar o pedido (a senha continua a mesma)" onclick="dispensarPedidoSenha('${ped.id}')">✕</button>`:''}
       ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)?`<button class="iconbtn" title="${u.status==='ativo'?'Inativar':'Ativar'}" onclick="toggleStatusUsuario('${u.id}')">${u.status==='ativo'?'⏸️':'▶️'}</button>`:''}
       ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)&&isSocioOuDiretor()&&u.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirUsuario('${u.id}')">🗑️</button>`:''}
       ${ehUltimoSocio?'<span class="tag y" title="Deve existir ao menos um sócio ativo">🔒 último sócio</span>':''}</td>
   </tr>`}).join('')||linhaSemResultado(6,T)}</table></div>`;
 }
-/* ---- Pedidos de redefinição de senha (feitos na tela de login) ---- */
-function painelPedidosSenha(){
-  const ps=db.pedidos_senha||[],temSenha=!!db.senha_padrao_reset,edita=isSocioOuDiretor();
-  return `<div class="card" style="margin-bottom:18px;${ps.length?'border-color:var(--warning-border)':''}">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-      <div class="section-title" style="margin:0">🔑 Pedidos de redefinição de senha ${ps.length?`<span class="tag y">${ps.length} pendente(s)</span>`:''}</div>
-      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)">Senha padrão: <b style="color:${temSenha?'var(--green)':'var(--danger)'}">${temSenha?'definida':'não definida'}</b>
-        ${edita?`<button class="btn btn-ghost btn-sm" onclick="modalSenhaPadrao()">${temSenha?'Alterar':'Definir'}</button>`:''}</div>
-    </div>
-    ${ps.length?`<div class="table-wrap" style="margin-top:12px"><table><tr><th>Usuário</th><th>Nome</th><th>Perfil</th><th>Pedido em</th><th>Ações</th></tr>
-      ${ps.map(x=>{const u=db.usuarios.find(y=>y.id===x.usuario_id);const pode=u&&podeGerenciarUsuario(u)&&u.id!==session.usuario_id;return`<tr>
-        <td><b>${esc(x.usuario)}</b></td><td>${esc(u?u.nome:'—')}</td><td>${u?`<span class="badge ${u.perfil}">${PERFIL_LABEL[u.perfil]}</span>`:'—'}</td>
-        <td style="color:var(--muted)">${dataHoraBR(x.criado_em)}</td>
-        <td>${pode?`<button class="btn btn-primary btn-sm" onclick="aprovarPedidoSenha('${x.id}')">Aprovar</button> <button class="btn btn-ghost btn-sm" onclick="recusarPedidoSenha('${x.id}')">Recusar</button>`:'<span class="muted" style="font-size:12px">sem permissão para este perfil</span>'}</td></tr>`}).join('')}</table></div>`
-    :'<p class="muted" style="font-size:12px;margin-top:8px">Nenhum pedido pendente. Pedidos feitos em "Redefinir senha", na tela de login, aparecem aqui.</p>'}
-  </div>`;
+/* ---- Pedidos de nova senha (feitos na tela de login) ----
+   Não existe senha padrão: quem esqueceu pede na tela de login, o pedido destaca a linha da pessoa em Usuários
+   e alguém com permissão edita o usuário (✏️) e define uma senha nova. A pessoa troca no primeiro acesso. */
+function pedidoSenhaDe(uid){return (db.pedidos_senha||[]).find(p=>p.usuario_id===uid)}
+function avisoPedidosSenha(){
+  const n=(db.pedidos_senha||[]).length;if(!n)return '';
+  return `<div class="alert-banner aviso-pedido-senha" style="margin-bottom:14px">🔑 <b>${n} pedido(s) de nova senha.</b> A linha da pessoa está destacada abaixo: toque em ✏️, digite uma senha nova, salve e passe a senha para ela. No primeiro acesso ela cria a própria senha.</div>`;
 }
-function modalSenhaPadrao(){
-  if(!isSocioOuDiretor())return;
-  openModal(`<h3>Senha padrão de redefinição</h3>
-  <p class="muted" style="margin-bottom:14px">Ao aprovar um pedido, a senha do usuário volta para esta senha e ele é obrigado a criar uma nova no primeiro acesso. Ela fica guardada no banco (visível só para Gerente ou acima), nunca no código do site.</p>
-  <div class="field"><label>Senha padrão (mínimo 6 caracteres)</label><input id="sp-senha" type="text" autocomplete="off" value="${esc(db.senha_padrao_reset)}"></div>
-  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-purple" onclick="salvarSenhaPadrao()">Salvar</button></div>`);
-}
-async function salvarSenhaPadrao(){
-  const v=document.getElementById('sp-senha').value;
-  if(v.length<6)return toast('⚠️ A senha padrão deve ter no mínimo 6 caracteres.');
-  const{data,error}=await sb.from('config_privada').update({senha_padrao_reset:v,atualizado_em:nowISO()}).eq('id',1).select();
-  if(error||!data||!data.length)return toast('⚠️ Não foi possível salvar: '+(error?error.message:'sem permissão.'));
-  db.senha_padrao_reset=v;reg('Senha padrão de redefinição alterada','');closeModal();render();toast('✅ Senha padrão salva.');
-}
-function aprovarPedidoSenha(pid){
-  const x=db.pedidos_senha.find(p=>p.id===pid);if(!x)return;
-  if(!db.senha_padrao_reset)return toast(isSocioOuDiretor()?'⚠️ Defina a senha padrão antes de aprovar.':'⚠️ A senha padrão ainda não foi definida. Peça a um Sócio ou Diretor.');
-  confirmar('Aprovar redefinição','A senha de "'+x.usuario+'" voltará para a senha padrão e ele deverá criar uma nova no primeiro acesso. Confirmar?',async()=>{
-    try{await chamarAdminUsers({action:'reset_password',targetUserId:x.usuario_id,senha:db.senha_padrao_reset})}catch(e){return toast('⚠️ Não foi possível redefinir: '+e.message)}
-    await resolverPedidoSenha(x,'aprovada');
-    reg('Redefinição de senha aprovada',x.usuario);toast('✅ Senha de "'+x.usuario+'" redefinida para a senha padrão.');
-  });
-}
-function recusarPedidoSenha(pid){
-  const x=db.pedidos_senha.find(p=>p.id===pid);if(!x)return;
-  confirmar('Recusar pedido','O pedido de "'+x.usuario+'" será recusado e a senha continua a mesma. Confirmar?',async()=>{
-    await resolverPedidoSenha(x,'recusada');reg('Redefinição de senha recusada',x.usuario);
+function dispensarPedidoSenha(pid){
+  const x=(db.pedidos_senha||[]).find(p=>p.id===pid);if(!x)return;
+  confirmar('Dispensar pedido','O pedido de "'+x.usuario+'" sai da lista e a senha continua a mesma. Confirmar?',async()=>{
+    await resolverPedidoSenha(x,'recusada');reg('Pedido de nova senha dispensado',x.usuario);
   });
 }
 async function resolverPedidoSenha(x,status){
@@ -1898,7 +1868,9 @@ function modalUsuario(id){
   const alvoEhSocio=u&&u.perfil==='socio';
   // ninguém altera o próprio perfil; só o Sócio mexe no perfil de um Sócio ou promove alguém a Sócio; Diretor altera o resto
   const podePerfil=u&&u.id!==session.usuario_id&&!ehUltimoSocio&&(isSocio()||(isDiretor()&&!alvoEhSocio));
+  const ped=u?pedidoSenhaDe(u.id):null;
   openModal(`<h3>${u?'Editar usuário':'Novo usuário'}</h3>
+  ${ped?`<div class="alert-banner aviso-pedido-senha" style="margin-bottom:14px">🔑 <b>${esc(u.nome)}</b> pediu nova senha em ${dataHoraBR(ped.criado_em)}. Digite uma senha nova abaixo, salve e passe para a pessoa. No primeiro acesso ela cria a própria senha.</div>`:''}
   <div class="field"><label>Nome</label><input id="u-nome" value="${u?esc(u.nome):''}"></div>
   <div class="row2">
     <div class="field"><label>Nome de usuário (login)</label><input id="u-usuario" value="${u?esc(u.usuario||''):''}" placeholder="ex.: joao.silva"></div>
@@ -1909,7 +1881,7 @@ function modalUsuario(id){
       <option value="socio" ${u&&u.perfil==='socio'?'selected':''} ${isSocio()?'':'disabled'}>Sócio</option></select>
       ${podePerfil?'':`<small style="color:var(--muted);font-size:11px">${ehUltimoSocio?'Último sócio ativo — perfil travado':u&&u.id===session.usuario_id?'Você não pode alterar o próprio perfil':alvoEhSocio?'Somente o Sócio altera o perfil de outro Sócio':'Somente Sócio ou Diretor altera perfis'}</small>`}</div>
   </div>
-  <div class="field"><label>Senha ${u?'(deixe vazio p/ manter)':'(mín. 6 caracteres)'}</label><input id="u-senha" type="password"></div>
+  <div class="field"><label>${ped?'Senha nova (mín. 6 caracteres)':u?'Senha (deixe vazio p/ manter)':'Senha inicial (mín. 6 caracteres)'}</label><input id="u-senha" type="text" autocomplete="off" autocapitalize="none" spellcheck="false"><small style="color:var(--muted);font-size:11px">Passe esta senha só para a própria pessoa. No primeiro acesso ela é obrigada a criar outra.</small></div>
   <p id="u-err" style="color:var(--danger);font-size:13px;display:none"></p>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarUsuario('${id||''}')">Salvar</button></div>`);
@@ -1955,6 +1927,10 @@ async function salvarUsuario(id){
     if(error)return fail('Erro ao salvar: '+error.message);
     if(senha){
       try{await chamarAdminUsers({action:'reset_password',targetUserId:id,senha})}catch(err){return fail('Usuário salvo, mas a senha não foi redefinida: '+err.message)}
+      u.troca_senha_obrigatoria=true;
+      // senha nova definida: o pedido pendente dessa pessoa está atendido
+      for(const x of (db.pedidos_senha||[]).filter(p=>p.usuario_id===id))await resolverPedidoSenha(x,'aprovada');
+      reg('Senha redefinida',nome);
     }
     u.nome=nome;u.usuario=usuario;u.perfil=perfil;
     reg('Usuário editado',nome+' ('+(PERFIL_LABEL[perfil]||perfil)+')');
