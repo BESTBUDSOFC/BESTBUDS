@@ -461,7 +461,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.17.4';
+const VERSAO='v4.18.0';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -759,6 +759,9 @@ function fatorRateio(prod){
   if(prod.rateio==='100% Loja')return 0;
   return (db.aliquota_global||0)/100;
 }
+/* No jogo não existem centavos: descontos e repasse são arredondados para o inteiro mais próximo (metade sobe).
+   O 1e-9 evita que 4,4999999… (erro de ponto flutuante) desça em vez de subir. */
+const inteiroMaisProximo=v=>Math.round((Number(v)||0)+1e-9);
 function calcCupom(){
   const itens=pdvState.cupom.map(l=>({prod:db.produtos.find(p=>p.id===l.prodId),qtd:l.qtd})).filter(x=>x.prod&&x.qtd>0);
   const qtdItens=itens.reduce((s,x)=>s+x.qtd,0);
@@ -766,10 +769,12 @@ function calcCupom(){
   const taxa=db.taxas_deslocamento.find(t=>t.id===pdvState.taxaId)||null;
   const pct=descontoFaixa(parceria,qtdItens);
   const subtotal=itens.reduce((s,x)=>s+x.qtd*x.prod.preco,0);
-  const desconto=subtotal*pct/100;
+  const desconto=Math.min(subtotal,inteiroMaisProximo(subtotal*pct/100));   // 5% de 90 = 4,50 → $5
   const taxaValor=taxa?taxa.valor:0;
   const total=Math.max(0,subtotal-desconto+taxaValor);
-  const cota=itens.reduce((s,x)=>s+(x.qtd*x.prod.preco)*(1-pct/100)*fatorRateio(x.prod),0)+(taxaValor*(db.aliquota_taxa_deslocamento||0)/100);
+  // o repasse parte do valor já com o desconto arredondado (o mesmo desconto que o cliente paga) e também vai para inteiro
+  const fatorLiquido=subtotal>0?(subtotal-desconto)/subtotal:0;
+  const cota=inteiroMaisProximo(itens.reduce((s,x)=>s+(x.qtd*x.prod.preco)*fatorLiquido*fatorRateio(x.prod),0)+(taxaValor*(db.aliquota_taxa_deslocamento||0)/100));
   const loja=total-cota;
   return {itens,qtdItens,parceria,taxa,pct,subtotal,desconto,taxaValor,total,cota,loja};
 }
@@ -1728,7 +1733,7 @@ function linhasFinanceiro(){
   rp.aux.forEach((a,k)=>rows.push({id:'aux:'+v.id+':'+k,pai:'venda:'+v.id,tipo:'auxiliar',operacao_id:v.operacao_id||'',data:v.data,usuario_nome:a.nome||'?',tipo_label:'Auxiliar',itens:'—',desconto:'—',deslocamento:'—',descricao:'Referente ao auxílio na venda de '+(v.usuario_nome||'—'),entrada:null,repasse:a.valor,valor:null,status:v.status,v}))});
  db.compras.filter(k=>k.status!=='excluida').forEach(k=>{rows.push({id:'compra:'+k.id,tipo:'compra',operacao_id:k.operacao_id||'',data:k.data,usuario_nome:k.usuario_nome||'',tipo_label:'Compra',itens:(k.itens||[]).map(i=>{const it=db.itens.find(x=>x.id===i.item_id);const nome=i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?');const q=i.qtd??i.quantidade;return (q??'?')+'× '+nome+(i.fornecedor_nome&&i.fornecedor_nome!==k.fornecedor_nome?' ('+i.fornecedor_nome+')':'')}).join(', ')||'—',desconto:'—',deslocamento:'—',descricao:k.descricao||'—',entrada:0,repasse:0,valor:-(k.valor_total||0),status:k.status,k});
   if((k.itens||[]).length>1)(k.itens||[]).forEach((i,n)=>{const it=db.itens.find(x=>x.id===i.item_id);const q=Number(i.qtd??i.quantidade)||0;rows.push({id:'citem:'+k.id+':'+n,pai:'compra:'+k.id,tipo:'compra_item',operacao_id:k.operacao_id||'',data:k.data,usuario_nome:i.fornecedor_nome||k.fornecedor_nome||'',tipo_label:i.item_id?'Insumo':'Não controlado',itens:q+'× '+(i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?')),desconto:'—',deslocamento:'—',descricao:(i.item_id?'Entrada no Baú':'Sem entrada no Baú')+' · '+fmt(Number(i.preco_unitario)||0)+'/un',entrada:null,repasse:null,valor:-(q*(Number(i.preco_unitario)||0)),status:k.status,k})})});
- (db.ajustes_caixa||[]).forEach(a=>rows.push({id:'ajuste:'+a.id,tipo:'ajuste',operacao_id:'',data:a.data,usuario_nome:a.usuario_nome||'',tipo_label:'Ajuste de Caixa ('+(a.tipo==='entrada'?'+':'−')+')',itens:'—',desconto:'—',deslocamento:'—',descricao:a.motivo||'—',entrada:0,repasse:0,valor:a.tipo==='entrada'?a.valor:-a.valor,status:a.status||'ativa',a}));
+ (db.ajustes_caixa||[]).forEach(a=>rows.push({id:'ajuste:'+a.id,tipo:'ajuste',operacao_id:'',data:a.data,usuario_nome:a.usuario_nome||'',tipo_label:'Ajuste de Caixa ('+(a.tipo==='entrada'?'+':'−')+')',itens:'—',desconto:'—',deslocamento:'—',descricao:a.motivo||'—',entrada:a.tipo==='entrada'?a.valor:0,repasse:0,valor:a.tipo==='entrada'?a.valor:-a.valor,status:a.status||'ativa',a}));
  return rows;
 }
 function caixaAtualValor(){return db.vendas.filter(v=>v.status==='ativa').reduce((s,v)=>s+(v.receita_loja||0),0)-db.compras.filter(k=>k.status==='ativa').reduce((s,k)=>s+(k.valor_total||0),0)+(db.ajustes_caixa||[]).filter(a=>(a.status||'ativa')==='ativa').reduce((s,a)=>s+(a.tipo==='entrada'?a.valor:-a.valor),0)}
@@ -1743,8 +1748,9 @@ function renderFinanceiro(c){
  const grupos=agruparLinhas(todas,rows,r=>r.pai).sort((a,b)=>new Date(b.p.data).getTime()-new Date(a.p.data).getTime());
  const paginaFin=pagina(grupos,'financeiro');
  const ativas=rows.filter(r=>r.status==='ativa');
- const entradas=ativas.filter(r=>r.tipo==='venda').reduce((s,r)=>s+r.entrada,0);
- const saidas=ativas.filter(r=>r.tipo==='compra').reduce((s,r)=>s+(-r.valor),0);
+ // Entradas: receita da loja nas vendas + ajustes de caixa (+ Entrada). Saídas: compras + ajustes de caixa (− Saída).
+ const entradas=ativas.filter(r=>r.tipo==='venda'||(r.tipo==='ajuste'&&r.a.tipo==='entrada')).reduce((s,r)=>s+r.entrada,0);
+ const saidas=ativas.filter(r=>r.tipo==='compra'||(r.tipo==='ajuste'&&r.a.tipo!=='entrada')).reduce((s,r)=>s+(-r.valor),0);
  const repasse=ativas.filter(r=>r.tipo==='venda'||r.tipo==='auxiliar').reduce((s,r)=>s+r.repasse,0);
  const volBruto=ativas.filter(r=>r.tipo==='venda').reduce((s,r)=>s+r.valor,0);
  const caixaAtual=caixaAtualValor();
@@ -1758,7 +1764,7 @@ function renderFinanceiro(c){
   if(key==='desconto')return `<td>${esc(r.desconto)}</td>`;
   if(key==='deslocamento')return `<td>${esc(r.deslocamento)}</td>`;
   if(key==='descricao')return `<td style="color:var(--muted)">${esc(r.descricao)}</td>`;
-  if(key==='entrada')return `<td class="money" style="color:var(--info)">${r.tipo==='venda'?fmt(r.entrada):'—'}</td>`;
+  if(key==='entrada')return `<td class="money" style="color:var(--info)">${r.tipo==='venda'||(r.tipo==='ajuste'&&r.entrada>0)?fmt(r.entrada):'—'}</td>`;
   if(key==='repasse')return `<td style="color:var(--purple)">${r.tipo==='venda'||r.tipo==='auxiliar'?fmt(r.repasse):'—'}</td>`;
   if(key==='valor')return r.valor==null?'<td style="color:var(--muted)">—</td>':r.valor>=0?`<td class="money">${fmt(r.valor)}</td>`:`<td class="money-neg">−${fmt(-r.valor)}</td>`;
   if(key==='status')return `<td><span class="tag ${r.status==='ativa'?'g':'r'}">${r.status}</span></td>`;
