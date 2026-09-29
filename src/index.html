@@ -461,7 +461,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.18.0';
+const VERSAO='v4.18.1';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -999,7 +999,7 @@ function renderBau(c){
       const aberto=expandidos.has(g.chave);
       const grev=g.movs.every(rev);
       return `<tr class="linha-pai ${aberto?'aberta':''}${grev?' linha-inativa':''}">${tdExpandir(g.chave,g.filhos.length)}${tdSelIds('bau',g.ids)}<td>${dataHoraBR(g.data)}</td><td>${esc(g.usuario)}</td><td>${esc(g.resumoItens)}</td>
-        <td><span class="tag">${esc(g.rotulo)}</span>${grev?tagRev:''}</td><td style="color:var(--muted)">${g.movs.length} mov.</td><td style="color:var(--muted)">—</td><td style="color:var(--muted)">${esc(g.origem)}</td>${isGerente()?`<td>${acoesBau(g.chave,grev)}</td>`:''}</tr>`+
+        <td><span class="tag ${g.rotulo==='Compra'?'g':''}">${esc(g.rotulo)}</span>${grev?tagRev:''}</td><td style="color:var(--muted)">${g.movs.length} mov.</td><td style="color:var(--muted)">—</td><td style="color:var(--muted)">${esc(g.origem)}</td>${isGerente()?`<td>${acoesBau(g.chave,grev)}</td>`:''}</tr>`+
         (aberto?g.filhos.map((m,n)=>linhaMov(m,true,n===g.filhos.length-1)).join(''):'');
     }).join('')||`<tr><td colspan="${isGerente()?10:9}" class="empty">Nenhuma movimentação registrada.</td></tr>`}
   </table></div>${paginacao('bau',paginaBau)}`;
