@@ -1,0 +1,1487 @@
+<title>Consultoria Ambiental</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#EDF1F0; --surface:#FFFFFF; --surface-2:#F5F8F7; --line:#D6DFDD; --line-2:#E6ECEA;
+  --ink:#0F2528; --ink-2:#465C60; --muted:#768A8D;
+  --brand:#0A3A3F; --brand-2:#0E4A50; --brand-ink:#E3F1EE; --brand-mute:#8FB5B0;
+  --accent:#0D7A72; --accent-ink:#FFFFFF; --accent-soft:#DCEFEB;
+  --ok:#1E9A55; --warn:#E09C12; --crit:#D1403A; --renov:#3768D2; --none:#C7D1CF;
+  --ok-soft:#E1F3E8; --warn-soft:#FBF0D6; --crit-soft:#FAE3E1; --renov-soft:#E2EAFA;
+  --shadow:0 1px 2px rgba(15,37,40,.06),0 10px 30px rgba(15,37,40,.10);
+  --radius:10px;
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --f-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0B1315; --surface:#111C1F; --surface-2:#162326; --line:#243538; --line-2:#1B2A2D;
+    --ink:#E2ECEA; --ink-2:#A7BAB8; --muted:#7D9193;
+    --brand:#07201F; --brand-2:#0B2C2C; --brand-ink:#DCEBE8; --brand-mute:#6F9791;
+    --accent:#2BB0A3; --accent-ink:#03201D; --accent-soft:#12383A;
+    --ok:#2DB36A; --warn:#EDB02E; --crit:#E6584F; --renov:#5C8DF0; --none:#3A4B4E;
+    --ok-soft:#133526; --warn-soft:#3A2F12; --crit-soft:#3E1C1A; --renov-soft:#18284A;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0B1315; --surface:#111C1F; --surface-2:#162326; --line:#243538; --line-2:#1B2A2D;
+  --ink:#E2ECEA; --ink-2:#A7BAB8; --muted:#7D9193;
+  --brand:#07201F; --brand-2:#0B2C2C; --brand-ink:#DCEBE8; --brand-mute:#6F9791;
+  --accent:#2BB0A3; --accent-ink:#03201D; --accent-soft:#12383A;
+  --ok:#2DB36A; --warn:#EDB02E; --crit:#E6584F; --renov:#5C8DF0; --none:#3A4B4E;
+  --ok-soft:#133526; --warn-soft:#3A2F12; --crit-soft:#3E1C1A; --renov-soft:#18284A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.45);
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-ui);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- topo ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--brand);color:var(--brand-ink);border-bottom:1px solid rgba(255,255,255,.06)}
+.top-in{display:flex;align-items:center;gap:18px;padding:0 20px;height:58px;max-width:1500px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{flex:none}
+.brand-name{font-family:var(--f-display);font-weight:800;font-size:17px;letter-spacing:.2px;line-height:1.05;white-space:nowrap}
+.brand-name small{display:block;font:500 10.5px/1.2 var(--f-ui);letter-spacing:1.4px;text-transform:uppercase;color:var(--brand-mute)}
+.tabs{display:flex;gap:2px;margin-left:12px;height:100%}
+.tab{background:none;border:0;color:var(--brand-mute);padding:0 14px;height:100%;font-weight:600;font-size:13.5px;border-bottom:3px solid transparent;display:flex;align-items:center;gap:8px}
+.tab:hover{color:var(--brand-ink)}
+.tab[aria-selected="true"]{color:#fff;border-bottom-color:var(--accent)}
+.tab .cnt{font:600 11px/1 var(--f-mono);background:var(--crit);color:#fff;border-radius:9px;padding:3px 6px}
+.top-r{margin-left:auto;display:flex;align-items:center;gap:10px}
+.icon-btn{position:relative;width:38px;height:38px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--brand-ink);display:grid;place-items:center}
+.icon-btn:hover{background:rgba(255,255,255,.1)}
+.badge{position:absolute;top:-5px;right:-6px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--crit);color:#fff;font:600 11px/19px var(--f-mono);text-align:center;box-shadow:0 0 0 2px var(--brand)}
+.me{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--brand-mute)}
+.me img{width:28px;height:28px;border-radius:50%}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1500px;margin:0 auto;padding-inline:20px;padding-block:18px 60px}
+.view[hidden]{display:none!important}
+.h-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.h1{font:700 22px/1.15 var(--f-display);margin:0;text-wrap:balance}
+.sub{color:var(--ink-2);margin:4px 0 0;font-size:13.5px}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:13px;color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.07)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--crit)}
+.btn.sm{height:30px;padding:0 10px;font-size:12.5px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- aviso de exemplo / banco ---------- */
+.note{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-radius:9px;background:var(--renov-soft);color:var(--ink);font-size:13px;margin-bottom:14px;border:1px solid color-mix(in srgb,var(--renov) 30%,transparent)}
+.note b{font-weight:600}
+.note .btn{margin-left:auto}
+
+/* ---------- KPIs ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.kpi{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px 12px 16px;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--k,var(--none))}
+.kpi:hover{border-color:var(--k,var(--accent))}
+.kpi[aria-pressed="true"]{border-color:var(--k);box-shadow:0 0 0 2px color-mix(in srgb,var(--k) 35%,transparent)}
+.kpi .kl{font-size:12px;color:var(--ink-2);font-weight:500;display:flex;align-items:center;gap:6px}
+.kpi .kv{font:600 28px/1.1 var(--f-ui);color:var(--ink)}
+.kpi .kd{font-size:11.5px;color:var(--muted)}
+
+/* ---------- filtros ---------- */
+.filters{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld > label,.lbl{font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.in{height:36px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:0 10px;min-width:0;width:100%}
+textarea.in{height:auto;min-height:70px;padding:8px 10px;resize:vertical}
+.in:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.f-search{flex:1 1 240px}
+.f-sel{flex:0 1 190px}
+.chks{display:flex;gap:6px;flex-wrap:wrap}
+.chk{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 11px;border:1px solid var(--line);border-radius:18px;font-size:12.5px;font-weight:500;cursor:pointer;user-select:none;background:var(--surface)}
+.chk input{position:absolute;opacity:0;pointer-events:none}
+.chk:has(input:checked){background:var(--surface-2);border-color:var(--ink-2)}
+.chk:has(input:not(:checked)){opacity:.55}
+.chk:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin:0 0 10px 2px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+
+/* ---------- sinaleiro ---------- */
+.dot{--c:var(--none);display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--c);color:#fff;font:700 10px/1 var(--f-ui);flex:none;vertical-align:middle}
+.dot.lg{width:20px;height:20px;font-size:11.5px}
+.dot.ok{--c:var(--ok)} .dot.warn{--c:var(--warn)} .dot.crit{--c:var(--crit)} .dot.renov{--c:var(--renov)}
+.dot.none{--c:var(--none);color:transparent}
+.dot.crit{box-shadow:0 0 0 0 color-mix(in srgb,var(--crit) 60%,transparent);animation:pulse 2.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--crit) 55%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.dot.crit{animation:none}}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px 3px 4px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--ink)}
+.chip.ok{background:var(--ok-soft)} .chip.warn{background:var(--warn-soft)} .chip.crit{background:var(--crit-soft)} .chip.renov{background:var(--renov-soft)}
+.chip .dot{width:15px;height:15px;font-size:9.5px}
+
+/* ---------- tabelas ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:var(--brand-2);color:var(--brand-ink);font-weight:600;font-size:13px}
+.card-h .muted{color:var(--brand-mute);font-weight:500}
+.tscroll{overflow-x:auto}
+table.t{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.t th{position:sticky;top:0;background:var(--surface-2);text-align:left;font:600 10.5px/1.25 var(--f-ui);letter-spacing:.7px;text-transform:uppercase;color:var(--ink-2);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.t th.c,.t td.c{text-align:center}
+.t th.r,.t td.r{text-align:right}
+.t th button{all:unset;cursor:pointer}
+.t th button:hover{color:var(--ink)}
+.t td{padding:8px 10px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+.t tbody tr{cursor:pointer}
+.t tbody tr:hover td{background:color-mix(in srgb,var(--accent-soft) 45%,var(--surface))}
+.t tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--surface-2) 60%,var(--surface))}
+.t tbody tr:nth-child(even):hover td{background:color-mix(in srgb,var(--accent-soft) 45%,var(--surface))}
+.t .sticky{position:sticky;left:0;z-index:1;background:var(--surface)}
+.t th.sticky{z-index:3;background:var(--surface-2)}
+.t tr.sev-crit td:first-child{box-shadow:inset 3px 0 0 var(--crit)}
+.t tr.sev-warn td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+.cli-n{font-weight:600;color:var(--ink)}
+.t td.sticky{min-width:220px;max-width:330px}
+.t th.c{white-space:normal;min-width:62px}
+.t td.docn{min-width:210px}
+.cli-s{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.dot-btn{all:unset;display:inline-grid;place-items:center;width:30px;height:30px;border-radius:8px;cursor:pointer}
+.dot-btn:hover{background:var(--surface-2)}
+.dot-btn:focus-visible{outline:2px solid var(--accent)}
+.bar{display:flex;gap:2px;height:12px;min-width:110px;border-radius:6px;overflow:hidden;background:var(--line-2)}
+.bar i{display:block;height:100%}
+.bar i.ok{background:var(--ok)} .bar i.warn{background:var(--warn)} .bar i.crit{background:var(--crit)} .bar i.renov{background:var(--renov)}
+.when{display:flex;flex-direction:column;gap:1px;white-space:nowrap}
+.when b{font-weight:600;font-size:12.5px}
+.when span{font-size:11.5px;color:var(--muted)}
+.meter{position:relative;height:5px;border-radius:3px;background:var(--line-2);width:120px;overflow:hidden;margin-top:4px}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--c,var(--ok))}
+.cond-mini{display:flex;gap:3px;align-items:center;flex-wrap:wrap}
+.cond-mini .dot{width:11px;height:11px;font-size:0}
+.empty{padding:40px 20px;text-align:center;color:var(--ink-2)}
+.empty b{display:block;font:700 16px/1.3 var(--f-display);color:var(--ink);margin-bottom:6px}
+.row-actions{display:flex;gap:6px;justify-content:flex-end}
+.tfoot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;font-size:12px;color:var(--muted);border-top:1px solid var(--line-2)}
+
+/* ---------- gráfico de meses ---------- */
+.months{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px 8px;margin-bottom:12px}
+.months-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.months-h b{font:700 14px/1.2 var(--f-display)}
+.months-h span{font-size:12px;color:var(--muted)}
+.mchart{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:118px}
+.mcol{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;border-radius:6px;padding-top:4px}
+.mcol:hover{background:var(--surface-2)}
+.mcol:focus-visible{outline:2px solid var(--accent)}
+.mcol[aria-pressed="true"]{background:var(--accent-soft)}
+.mcol .v{font:600 11px/1 var(--f-mono);color:var(--ink-2)}
+.mcol .b{width:min(22px,70%);border-radius:4px 4px 0 0;background:var(--accent);min-height:2px}
+.mcol.has-crit .b{background:linear-gradient(to top,var(--accent) 0 100%)}
+.mcol .m{font-size:11px;color:var(--muted);text-transform:capitalize;border-top:1px solid var(--line);width:100%;text-align:center;padding-top:4px}
+
+/* ---------- segmentado ---------- */
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:6px;font-weight:600;font-size:13px;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--brand-2);color:#fff}
+
+/* ---------- gaveta / modal ---------- */
+.scrim{position:fixed;inset:0;background:rgba(6,20,22,.45);z-index:50;display:flex;justify-content:flex-end}
+.scrim[hidden]{display:none}
+.drawer{width:min(760px,100%);height:100%;background:var(--bg);box-shadow:var(--shadow);display:flex;flex-direction:column;animation:slide .18s ease-out}
+@keyframes slide{from{transform:translateX(24px);opacity:.6}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.drawer,.modal{animation:none}}
+.drawer-h{background:var(--brand);color:var(--brand-ink);padding:16px 20px;padding-top:calc(16px + env(safe-area-inset-top,0px));display:flex;gap:12px;align-items:flex-start}
+.drawer-h h2{margin:0;font:700 19px/1.2 var(--f-display)}
+.drawer-h .meta{font-size:12.5px;color:var(--brand-mute);margin-top:4px;display:flex;gap:6px 14px;flex-wrap:wrap}
+.drawer-h .x{margin-left:auto}
+.drawer-b{overflow:auto;padding:16px 20px 40px;display:flex;flex-direction:column;gap:14px;flex:1}
+.drawer-b > *{flex-shrink:0}
+.x{width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:transparent;color:inherit;display:grid;place-items:center;flex:none}
+.contact{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;font-size:13px}
+.contact .sel{user-select:all;font-family:var(--f-mono)}
+.cat-block{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.cat-h{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line-2);font:700 12px/1.2 var(--f-ui);letter-spacing:.6px;text-transform:uppercase;color:var(--ink-2)}
+.doc-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px 12px;padding:11px 12px;border-bottom:1px solid var(--line-2);align-items:start}
+.doc-row:last-child{border-bottom:0}
+.doc-t{font-weight:600}
+.doc-s{font-size:12px;color:var(--ink-2);margin-top:2px;display:flex;gap:4px 12px;flex-wrap:wrap}
+.conds{grid-column:2 / -1;display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.cond{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;background:var(--surface-2);border-radius:8px;padding:7px 9px}
+.cond p{margin:0;flex:1;min-width:0}
+.cond small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.modal-scrim{position:fixed;inset:0;background:rgba(6,20,22,.5);z-index:60;display:grid;place-items:center;padding:16px}
+.modal-scrim[hidden]{display:none}
+.modal{width:min(720px,100%);max-height:calc(100% - 20px);overflow:auto;background:var(--surface);border-radius:14px;box-shadow:var(--shadow);animation:pop .15s ease-out}
+.modal.sm{width:min(460px,100%)}
+@keyframes pop{from{transform:scale(.98);opacity:.6}to{transform:none;opacity:1}}
+.modal-h{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line-2);position:sticky;top:0;background:var(--surface);z-index:2}
+.modal-h h3{margin:0;font:700 17px/1.2 var(--f-display)}
+.modal-h .x{margin-left:auto;border-color:var(--line);color:var(--ink-2)}
+.modal-b{padding:16px 20px;display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.modal-b > .fld{grid-column:span 3}
+.modal-b > .fld.s2{grid-column:span 2}
+.modal-b > .fld.s6{grid-column:1 / -1}
+.modal-b .hint{font-size:11.5px;color:var(--muted)}
+.modal-f{display:flex;gap:8px;justify-content:flex-end;padding:12px 20px 16px;border-top:1px solid var(--line-2);position:sticky;bottom:0;background:var(--surface)}
+.modal-f .left{margin-right:auto}
+.sec-t{grid-column:1 / -1;font:700 12px/1.2 var(--f-ui);letter-spacing:.6px;text-transform:uppercase;color:var(--ink-2);padding-top:6px;border-top:1px solid var(--line-2);margin-top:4px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cond-ed{grid-column:1 / -1;display:flex;flex-direction:column;gap:8px}
+.cond-ed .ce{display:grid;grid-template-columns:1fr 150px 140px 110px 34px;gap:8px;align-items:end;background:var(--surface-2);border-radius:9px;padding:9px}
+.cond-ed .ce .x{border-color:var(--line);color:var(--crit);height:36px;width:34px}
+.calc{grid-column:1 / -1;font-size:12.5px;background:var(--surface-2);border-radius:8px;padding:9px 11px;color:var(--ink-2)}
+.calc b{color:var(--ink)}
+.err{grid-column:1 / -1;color:var(--crit);font-size:12.5px;font-weight:600}
+
+/* ---------- painel de alertas ---------- */
+.pop{position:fixed;top:calc(62px + env(safe-area-inset-top,0px));right:16px;width:min(430px,calc(100% - 32px));max-height:min(70vh,640px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);z-index:40}
+.pop-h{padding:12px 14px;border-bottom:1px solid var(--line-2);display:flex;justify-content:space-between;align-items:center;font:700 14px/1.2 var(--f-display);position:sticky;top:0;background:var(--surface)}
+.al{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line-2);cursor:pointer;align-items:flex-start}
+.al:hover{background:var(--surface-2)}
+.al p{margin:0;font-size:13px;font-weight:600}
+.al small{display:block;color:var(--ink-2);font-size:12px;font-weight:400;margin-top:1px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:9px;font-weight:600;font-size:13px;z-index:90;box-shadow:var(--shadow)}
+.tip{position:fixed;z-index:95;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;border-radius:8px;padding:8px 10px;max-width:320px;box-shadow:var(--shadow);line-height:1.4}
+.tip b{font-weight:600}
+.tip .tl{display:flex;gap:6px;align-items:center;margin-top:3px}
+.tip .tl i{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+
+/* ---------- configurações ---------- */
+.cfg-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:14px;align-items:start}
+.cfg-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.cfg-card h3{margin:0 0 4px;font:700 15px/1.2 var(--f-display)}
+.cfg-card p{margin:0 0 10px;color:var(--ink-2);font-size:13px}
+.t input.in{height:30px;padding:0 8px}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.tag.demo{background:var(--renov-soft);color:var(--renov)}
+
+@media (max-width:900px){
+  .tabs{position:fixed;left:0;right:0;bottom:0;height:auto;background:var(--brand);margin:0;padding:4px 6px calc(4px + env(safe-area-inset-bottom,0px));justify-content:space-around;border-top:1px solid rgba(255,255,255,.08);z-index:35}
+  .tab{flex-direction:column;gap:2px;padding:6px 4px;font-size:11px;border-bottom:0;border-top:3px solid transparent}
+  .tab[aria-selected="true"]{border-top-color:var(--accent)}
+  .wrap{padding-inline:16px;padding-bottom:96px}
+  .me span{display:none}
+  .cfg-grid{grid-template-columns:1fr}
+  .modal-b > .fld,.modal-b > .fld.s2{grid-column:1 / -1}
+  .cond-ed .ce{grid-template-columns:1fr 1fr}
+  .cond-ed .ce .fld:first-child{grid-column:1 / -1}
+  .f-sel{flex:1 1 150px}
+  .top-in{padding:0 16px}
+}
+@media (max-width:520px){ .brand-name small{display:none} .kpi .kv{font-size:24px} #kpi-cli .kpi:first-child{grid-column:1 / -1} }
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0D7A72"/><path d="M9 22c0-8 6-13 15-13-1 9-6 15-13 15" fill="none" stroke="#E3F1EE" stroke-width="2.2" stroke-linecap="round"/><path d="M9 24c3-5 6-8 10-10" fill="none" stroke="#E3F1EE" stroke-width="2.2" stroke-linecap="round"/></svg>
+      <div class="brand-name">Consultoria Ambiental<small>Controle de documentos</small></div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Seções">
+      <button class="tab" role="tab" id="tab-clientes" data-view="clientes" aria-selected="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.8a3.3 3.3 0 0 1 0 6.4M18 14.8c2 .7 3.2 2.4 3.6 5.2"/></svg>Clientes</button>
+      <button class="tab" role="tab" id="tab-documentos" data-view="documentos" aria-selected="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5M8.5 13h7M8.5 17h5"/></svg>Documentos <span class="cnt" id="tab-cnt" hidden></span></button>
+      <button class="tab" role="tab" id="tab-config" data-view="config" aria-selected="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Configurações</button>
+    </nav>
+    <div class="top-r">
+      <button class="icon-btn" id="bell" aria-label="Alertas" aria-expanded="false">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg>
+        <span class="badge" id="bell-n" hidden></span>
+      </button>
+      <div class="me" id="me" hidden><img alt="" id="me-img"><span id="me-name"></span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="note" id="note" hidden></div>
+
+  <!-- ================= CLIENTES ================= -->
+  <section class="view" id="v-clientes" role="tabpanel" aria-labelledby="tab-clientes">
+    <div class="h-row">
+      <div>
+        <h1 class="h1">Clientes</h1>
+        <p class="sub">Cada bolinha resume os documentos do cliente naquela área. Clique no nome para ver tudo.</p>
+      </div>
+      <div class="btns"><button class="btn" id="exp-cli" hidden>Exportar planilha</button><button class="btn pri" id="novo-cli" data-w>+ Novo cliente</button></div>
+    </div>
+    <div class="kpis" id="kpi-cli"></div>
+    <div class="filters">
+      <div class="fld f-search"><label for="fc-q">Cliente, CPF/CNPJ ou município</label><input class="in" id="fc-q" type="search" placeholder="Pesquisar…" autocomplete="off"></div>
+      <div class="fld f-sel"><label for="fc-resp">Responsável</label><select class="in" id="fc-resp"></select></div>
+      <div class="fld f-sel"><label for="fc-cat">Área</label><select class="in" id="fc-cat"></select></div>
+      <div class="fld"><span class="lbl">Mostrar clientes</span>
+        <div class="chks" id="fc-st">
+          <label class="chk"><input type="checkbox" value="ok" checked><span class="dot ok">✓</span>Em dia</label>
+          <label class="chk"><input type="checkbox" value="renov" checked><span class="dot renov">↻</span>Em renovação</label>
+          <label class="chk"><input type="checkbox" value="warn" checked><span class="dot warn">!</span>A vencer</label>
+          <label class="chk"><input type="checkbox" value="crit" checked><span class="dot crit">✕</span>Vencido/atrasado</label>
+        </div>
+      </div>
+    </div>
+    <div class="legend" aria-hidden="true">
+      <span><i class="dot ok">✓</i>Em dia</span><span><i class="dot warn">!</i>Vence em breve</span><span><i class="dot crit">✕</i>Vencido ou atrasado</span><span><i class="dot renov">↻</i>Renovação protocolada / em processo</span><span><i class="dot none"></i>Sem documento na área</span>
+    </div>
+    <div class="card">
+      <div class="card-h"><span id="cli-count">—</span><span class="muted" id="cli-sub"></span></div>
+      <div class="tscroll"><table class="t" id="t-cli"></table></div>
+    </div>
+  </section>
+
+  <!-- ================= DOCUMENTOS ================= -->
+  <section class="view" id="v-documentos" role="tabpanel" aria-labelledby="tab-documentos" hidden>
+    <div class="h-row">
+      <div>
+        <h1 class="h1">Documentos e condicionantes</h1>
+        <p class="sub">Ordenado pelo que precisa de ação primeiro. Os cartões filtram a lista.</p>
+      </div>
+      <div class="btns">
+        <div class="seg" role="group" aria-label="Ver">
+          <button id="seg-doc" aria-pressed="true">Documentos</button>
+          <button id="seg-cond" aria-pressed="false">Condicionantes</button>
+        </div>
+        <button class="btn" id="exp-doc" hidden>Exportar planilha</button>
+        <button class="btn pri" id="novo-doc" data-w>+ Novo documento</button>
+      </div>
+    </div>
+    <div class="kpis" id="kpi-doc"></div>
+    <div class="months" id="months"></div>
+    <div class="filters">
+      <div class="fld f-search"><label for="fd-q">Pesquisar</label><input class="in" id="fd-q" type="search" placeholder="Cliente, nº, órgão, imóvel…" autocomplete="off"></div>
+      <div class="fld f-sel"><label for="fd-cat">Área</label><select class="in" id="fd-cat"></select></div>
+      <div class="fld f-sel"><label for="fd-org">Órgão</label><select class="in" id="fd-org"></select></div>
+      <div class="fld f-sel"><label for="fd-resp">Responsável</label><select class="in" id="fd-resp"></select></div>
+      <div class="fld"><span class="lbl">Situação</span>
+        <div class="chks" id="fd-st">
+          <label class="chk"><input type="checkbox" value="crit" checked><span class="dot crit">✕</span>Vencido/atrasado</label>
+          <label class="chk"><input type="checkbox" value="warn" checked><span class="dot warn">!</span>A vencer</label>
+          <label class="chk"><input type="checkbox" value="renov" checked><span class="dot renov">↻</span>Em renovação</label>
+          <label class="chk"><input type="checkbox" value="ok" checked><span class="dot ok">✓</span>Em dia</label>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><span id="doc-count">—</span><button class="btn sm ghost" id="fd-clear" style="color:inherit;border-color:rgba(255,255,255,.25)" hidden>Limpar filtros</button></div>
+      <div class="tscroll"><table class="t" id="t-doc"></table></div>
+    </div>
+  </section>
+
+  <!-- ================= CONFIGURAÇÕES ================= -->
+  <section class="view" id="v-config" role="tabpanel" aria-labelledby="tab-config" hidden>
+    <div class="h-row"><div><h1 class="h1">Configurações</h1><p class="sub">Tipos de documento, prazos de aviso e equipe.</p></div></div>
+    <div class="cfg-grid">
+      <div class="cfg-card">
+        <h3>Tipos de documento</h3>
+        <p>Os prazos servem de sugestão ao cadastrar. A data que vale é sempre a impressa no documento.</p>
+        <div class="tscroll"><table class="t" id="t-tipos"></table></div>
+        <div class="btns" style="margin-top:10px"><button class="btn" id="add-tipo" data-w>+ Tipo de documento</button><button class="btn pri" id="save-tipos" data-w>Salvar tipos</button></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="cfg-card">
+          <h3>Equipe responsável</h3>
+          <p>Um nome por linha. Aparece no filtro “Responsável” e no cadastro do cliente.</p>
+          <textarea class="in" id="cfg-equipe" rows="5"></textarea>
+          <div class="btns" style="margin-top:10px"><button class="btn pri" id="save-equipe" data-w>Salvar equipe</button></div>
+        </div>
+        <div class="cfg-card">
+          <h3>Como o sinaleiro decide</h3>
+          <p style="margin:0">
+            <span class="chip crit"><span class="dot crit">✕</span>Vermelho</span> documento vencido, prazo de renovação perdido ou condicionante atrasada.<br><br>
+            <span class="chip warn"><span class="dot warn">!</span>Amarelo</span> entrou na janela de aviso do tipo (ex.: LO avisa 60 dias antes do limite para protocolar a renovação).<br><br>
+            <span class="chip renov"><span class="dot renov">↻</span>Azul</span> renovação protocolada ou processo aguardando o órgão. Protocolo feito até 120 dias antes do vencimento mantém a licença prorrogada (LC 140/2011, art. 14, § 4º).<br><br>
+            <span class="chip ok"><span class="dot ok">✓</span>Verde</span> tudo em dia.
+          </p>
+        </div>
+        <div class="cfg-card" id="demo-card" hidden>
+          <h3>Dados de exemplo</h3>
+          <p>Os clientes marcados como exemplo servem só para testar. Remova antes de cadastrar os clientes reais.</p>
+          <button class="btn danger" id="del-demo" data-w>Remover dados de exemplo</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- gaveta do cliente -->
+<div class="scrim" id="drawer" hidden><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title" id="drawer-in"></aside></div>
+<!-- modal -->
+<div class="modal-scrim" id="modal" hidden><div class="modal" role="dialog" aria-modal="true" id="modal-in"></div></div>
+<div class="pop" id="alerts" hidden></div>
+<div class="toast" id="toast" hidden></div>
+<div class="tip" id="tip" hidden></div>
+<script>
+'use strict';
+/* ================= utilidades ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const toISO = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseISO = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const hoje = () => toISO(new Date());
+const addDias = (iso, n) => { const d = parseISO(iso); d.setDate(d.getDate() + n); return toISO(d); };
+const addMeses = (iso, n) => {
+  const d = parseISO(iso), dia = d.getDate();
+  d.setDate(1); d.setMonth(d.getMonth() + n);
+  d.setDate(Math.min(dia, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+  return toISO(d);
+};
+const diffDias = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 864e5);
+const fmt = iso => iso ? iso.split('-').reverse().join('/') : '—';
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const novoId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const soDigitos = s => String(s || '').replace(/\D/g, '');
+const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+function rel(dias) {
+  if (dias == null) return '';
+  if (dias === 0) return 'hoje';
+  if (dias === 1) return 'amanhã';
+  if (dias === -1) return 'ontem';
+  const a = Math.abs(dias);
+  const t = a >= 730 ? Math.floor(a / 365) + ' anos' : a >= 60 ? Math.round(a / 30.4) + ' meses' : a + ' dias';
+  return dias > 0 ? 'em ' + t : 'há ' + t;
+}
+function relCurto(dias) {
+  if (dias == null) return '';
+  if (dias === 0) return 'vence hoje';
+  return dias > 0 ? 'faltam ' + rel(dias).replace('em ', '') : 'venceu ' + rel(dias);
+}
+
+/* ================= cadastros padrão ================= */
+const CATS = [
+  { id: 'motosserra', nome: 'Motosserra', curto: 'Motosserra' },
+  { id: 'licenciamento', nome: 'Licenciamento ambiental', curto: 'Licenciamento' },
+  { id: 'car', nome: 'CAR e imóvel rural', curto: 'CAR' },
+  { id: 'agua', nome: 'Poços e outorgas', curto: 'Poços / água' },
+  { id: 'florestal', nome: 'Florestal', curto: 'Florestal' },
+  { id: 'outros', nome: 'Outros', curto: 'Outros' },
+];
+const catNome = id => (CATS.find(c => c.id === id) || CATS[CATS.length - 1]).nome;
+const TIPOS_PADRAO = [
+  { id: 'lpu', cat: 'motosserra', nome: 'Licença de Porte e Uso de Motosserra (LPU)', orgao: 'IBAMA', meses: 24, renovar: 0, alerta: 60 },
+  { id: 'lp', cat: 'licenciamento', nome: 'Licença Prévia (LP)', orgao: '', meses: 60, renovar: 120, alerta: 60 },
+  { id: 'li', cat: 'licenciamento', nome: 'Licença de Instalação (LI)', orgao: '', meses: 72, renovar: 120, alerta: 60 },
+  { id: 'lo', cat: 'licenciamento', nome: 'Licença de Operação (LO)', orgao: '', meses: 48, renovar: 120, alerta: 60 },
+  { id: 'las', cat: 'licenciamento', nome: 'Licença Ambiental Simplificada (LAS)', orgao: '', meses: 60, renovar: 120, alerta: 60 },
+  { id: 'loc', cat: 'licenciamento', nome: 'Licença de Operação Corretiva (LOC)', orgao: '', meses: 48, renovar: 120, alerta: 60 },
+  { id: 'dispensa', cat: 'licenciamento', nome: 'Dispensa de licenciamento', orgao: '', meses: 0, renovar: 0, alerta: 60 },
+  { id: 'car', cat: 'car', nome: 'CAR — Recibo de inscrição', orgao: 'SICAR', meses: 0, renovar: 0, alerta: 30, semVenc: true },
+  { id: 'pra', cat: 'car', nome: 'PRA — Termo de compromisso', orgao: '', meses: 0, renovar: 0, alerta: 30, semVenc: true },
+  { id: 'ccir', cat: 'car', nome: 'CCIR (INCRA)', orgao: 'INCRA', meses: 12, renovar: 0, alerta: 30 },
+  { id: 'outorga', cat: 'agua', nome: 'Outorga de uso — poço tubular', orgao: '', meses: 60, renovar: 0, alerta: 120 },
+  { id: 'insignif', cat: 'agua', nome: 'Certidão de uso insignificante', orgao: '', meses: 36, renovar: 0, alerta: 90 },
+  { id: 'perfur', cat: 'agua', nome: 'Autorização de perfuração de poço', orgao: '', meses: 12, renovar: 0, alerta: 30 },
+  { id: 'asv', cat: 'florestal', nome: 'Autorização de Supressão de Vegetação (ASV)', orgao: '', meses: 12, renovar: 0, alerta: 60 },
+  { id: 'ctf', cat: 'outros', nome: 'CTF/APP — Certificado de Regularidade', orgao: 'IBAMA', meses: 3, renovar: 0, alerta: 15 },
+  { id: 'outro', cat: 'outros', nome: 'Outro documento', orgao: '', meses: 0, renovar: 0, alerta: 60 },
+];
+const PERIODOS = [
+  { v: 'unica', t: 'Prazo único', m: 0 },
+  { v: 'm1', t: 'Mensal', m: 1 },
+  { v: 'm3', t: 'Trimestral', m: 3 },
+  { v: 'm6', t: 'Semestral', m: 6 },
+  { v: 'm12', t: 'Anual', m: 12 },
+  { v: 'm24', t: 'A cada 2 anos', m: 24 },
+  { v: 'continua', t: 'Contínua (sem prazo)', m: 0 },
+];
+const perDe = c => c.modo === 'continua' ? 'continua' : c.modo === 'periodica' ? 'm' + (c.periodoMeses || 12) : 'unica';
+const perNome = c => (PERIODOS.find(p => p.v === perDe(c)) || PERIODOS[0]).t;
+
+/* ================= estado ================= */
+const S = {
+  clientes: new Map(), documentos: new Map(),
+  cfg: { tipos: TIPOS_PADRAO, equipe: [] },
+  view: 'clientes', docMode: 'doc',
+  fc: { q: '', resp: '', cat: '', st: new Set(['ok', 'renov', 'warn', 'crit']) },
+  fd: { q: '', cat: '', org: '', resp: '', st: new Set(['ok', 'renov', 'warn', 'crit']), kpi: '', mes: '' },
+  sortCli: 'sev',
+  db: null, user: null, downloads: null, meId: null,
+  canWrite: true, semBanco: false, carregado: { cli: false, doc: false },
+};
+const tipoDe = d => S.cfg.tipos.find(t => t.id === d.tipoId) || TIPOS_PADRAO.find(t => t.id === d.tipoId) || { id: 'outro', cat: d.categoria || 'outros', nome: d.tipoNome || 'Documento', renovar: 0, alerta: 60 };
+const nomeDoc = d => d.tipoNome || tipoDe(d).nome;
+
+/* ================= sinaleiro: regras ================= */
+const SEV = { inativo: -1, none: 0, ok: 1, renov: 2, warn: 3, crit: 4 };
+const worst = (a, b) => (SEV[b] > SEV[a] ? b : a);
+const GLIFO = { ok: '✓', warn: '!', crit: '✕', renov: '↻', none: '', inativo: '' };
+const ROTULO = { ok: 'Em dia', warn: 'A vencer', crit: 'Vencido / atrasado', renov: 'Em renovação', none: 'Sem documento', inativo: 'Inativo' };
+const dot = (n, lg) => `<span class="dot ${n}${lg ? ' lg' : ''}" aria-label="${ROTULO[n]}">${GLIFO[n]}</span>`;
+const chip = (n, txt) => `<span class="chip ${n}">${dot(n)}${esc(txt)}</span>`;
+
+function stDoc(d, h = hoje()) {
+  if (d.situacao === 'substituido') return { n: 'inativo', txt: 'Substituído pela renovação' };
+  if (d.situacao === 'arquivado') return { n: 'inativo', txt: 'Arquivado' };
+  if (d.situacao === 'processo') return { n: 'renov', txt: 'Em processo no órgão', det: d.processoProtocolo ? 'Protocolo nº ' + d.processoProtocolo + (d.processoData ? ' de ' + fmt(d.processoData) : '') : 'Aguardando emissão pelo órgão.' };
+  if (!d.vencimento) return { n: 'ok', txt: 'Sem vencimento', det: 'Documento sem data de validade.' };
+  const dias = diffDias(h, d.vencimento);
+  const renov = +d.renovarDias || 0;
+  const limite = renov ? addDias(d.vencimento, -renov) : d.vencimento;
+  const diasLim = diffDias(h, limite);
+  const alerta = d.alertaDias == null ? 60 : +d.alertaDias;
+  const base = { dias, limite, diasLim, renov };
+  if (d.renovData) {
+    const noPrazo = !renov || d.renovData <= limite;
+    const prot = `Renovação protocolada em ${fmt(d.renovData)}${d.renovProtocolo ? ' (nº ' + d.renovProtocolo + ')' : ''}`;
+    if (dias < 0) return noPrazo
+      ? { ...base, n: 'renov', txt: 'Prorrogada até decisão do órgão', det: prot + ', dentro do prazo. A validade fica prorrogada até a decisão do órgão.' }
+      : { ...base, n: 'crit', txt: 'Vencida', det: prot + ', fora do prazo de ' + renov + ' dias. Não há prorrogação automática.' };
+    return noPrazo
+      ? { ...base, n: 'renov', txt: 'Renovação protocolada', det: prot + '.' }
+      : { ...base, n: 'warn', txt: 'Renovação protocolada fora do prazo', det: prot + '. O prazo era ' + fmt(limite) + '. Se o órgão não decidir até ' + fmt(d.vencimento) + ', o documento vence.' };
+  }
+  if (dias < 0) return { ...base, n: 'crit', txt: 'Vencido ' + rel(dias), det: 'Venceu em ' + fmt(d.vencimento) + '.' };
+  if (renov && diasLim < 0) return { ...base, n: 'crit', txt: 'Prazo de renovação perdido', det: `A renovação precisava ser protocolada até ${fmt(limite)} (${renov} dias antes do vencimento). O documento ainda vale até ${fmt(d.vencimento)}.` };
+  if (diasLim <= alerta) return renov
+    ? { ...base, n: 'warn', txt: 'Protocolar renovação até ' + fmt(limite), det: `Faltam ${diasLim} dias para o limite do protocolo. Vence em ${fmt(d.vencimento)}.` }
+    : { ...base, n: 'warn', txt: 'Vence ' + rel(dias), det: 'Vence em ' + fmt(d.vencimento) + '.' };
+  return { ...base, n: 'ok', txt: 'Válido', det: 'Vence em ' + fmt(d.vencimento) + (renov ? '. Protocolar a renovação até ' + fmt(limite) : '') + '.' };
+}
+
+function stCond(c, dSt, h = hoje()) {
+  if (dSt.n === 'inativo') return { n: 'inativo', txt: 'Documento inativo' };
+  if (c.modo === 'continua') return { n: 'ok', txt: 'Contínua', det: 'Manter em cumprimento' };
+  const ult = (c.cumprimentos || [])[(c.cumprimentos || []).length - 1];
+  if (c.modo !== 'periodica' && c.concluida) return { n: 'ok', txt: 'Cumprida', det: ult ? 'Cumprida em ' + fmt(ult.data) + (ult.protocolo ? ' · nº ' + ult.protocolo : '') : '', feita: true };
+  if (!c.prazo) return { n: 'none', txt: 'Sem prazo definido' };
+  const dias = diffDias(h, c.prazo), alerta = c.alertaDias == null ? 30 : +c.alertaDias;
+  const extra = ult ? ' · última entrega ' + fmt(ult.data) : '';
+  if (dias < 0) return { n: 'crit', txt: 'Atrasada ' + rel(dias).replace('há ', 'há '), det: 'Prazo era ' + fmt(c.prazo) + extra, dias };
+  if (dias <= alerta) return { n: 'warn', txt: 'Vence ' + rel(dias), det: 'Prazo ' + fmt(c.prazo) + extra, dias };
+  return { n: 'ok', txt: 'Prazo ' + fmt(c.prazo), det: rel(dias) + extra, dias };
+}
+
+/* Consolida tudo uma vez por desenho da tela */
+function analisar() {
+  const h = hoje(), docs = [], conds = [], porCli = new Map();
+  for (const c of S.clientes.values()) porCli.set(c.id, { cli: c, n: 'none', cats: {}, catDocs: {}, docs: [], hist: [], condN: 'none', conds: [], cnt: { ok: 0, warn: 0, crit: 0, renov: 0 }, prox: null });
+  for (const d of S.documentos.values()) {
+    const a = porCli.get(d.clienteId);
+    if (!a) continue;
+    const st = stDoc(d, h), tipo = tipoDe(d), cat = d.categoria || tipo.cat || 'outros';
+    const cs = (d.condicionantes || []).map((c, i) => ({ c, i, d, cli: a.cli, st: stCond(c, st, h) }));
+    let n = st.n;
+    for (const x of cs) if (x.st.n !== 'inativo') n = worst(n, x.st.n);
+    const row = { d, cli: a.cli, st, cs, n, tipo, cat };
+    if (st.n === 'inativo') { a.hist.push(row); continue; }
+    docs.push(row); a.docs.push(row); conds.push(...cs); a.conds.push(...cs);
+    a.cats[cat] = worst(a.cats[cat] || 'none', st.n);
+    (a.catDocs[cat] = a.catDocs[cat] || []).push(row);
+    if (a.cnt[st.n] != null) a.cnt[st.n]++;
+    for (const x of cs) a.condN = worst(a.condN, x.st.n);
+    a.n = worst(a.n, n);
+    const alvo = st.n !== 'renov' && d.vencimento && !d.renovData ? (st.limite || d.vencimento) : null;
+    if (alvo && (!a.prox || alvo < a.prox.data)) a.prox = { data: alvo, txt: (st.renov ? 'Protocolar ' : '') + nomeDoc(d), n: st.n };
+    for (const x of cs) if (x.c.prazo && !x.st.feita && x.c.modo !== 'continua' && (!a.prox || x.c.prazo < a.prox.data)) a.prox = { data: x.c.prazo, txt: 'Condicionante: ' + x.c.texto, n: x.st.n };
+  }
+  return { h, docs, conds, porCli };
+}
+
+/* ================= dados de exemplo (só para testar; marcados como demo) ================= */
+function gerarExemplo(h) {
+  const p = n => String(n).padStart(2, '0');
+  const iso = d => `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  const T = n => { const [y, m, d] = h.split('-').map(Number); return iso(new Date(y, m - 1, d + n)); };
+  const cli = (id, nome, tipo, doc, municipio, responsavel, telefone) => ({ id, nome, tipo, doc, municipio, uf: 'MG', responsavel, telefone, email: '', obs: '', ativo: true, demo: true });
+  const clientes = [
+    cli('ex-c01', 'Fazenda Santa Luzia Agropecuária Ltda', 'PJ', '12.418.305/0001-60', 'Iturama', 'Ana Paula', '(34) 99812-4410'),
+    cli('ex-c02', 'José Carlos Ribeiro', 'PF', '318.604.226-15', 'Campina Verde', 'Ricardo', '(34) 99107-3382'),
+    cli('ex-c03', 'Cerâmica Vale Verde Ltda', 'PJ', '08.733.912/0001-04', 'Frutal', 'Ana Paula', '(34) 3421-7710'),
+    cli('ex-c04', 'Laticínios Serra Azul Ltda', 'PJ', '21.556.087/0001-39', 'Prata', 'Juliana', '(34) 99655-0921'),
+    cli('ex-c05', 'Posto Estrela do Cerrado Ltda', 'PJ', '33.120.448/0001-75', 'Uberaba', 'Ricardo', '(34) 3312-4488'),
+    cli('ex-c06', 'Maria Aparecida Souza', 'PF', '402.771.389-60', 'Campo Florido', 'Juliana', '(34) 99730-1156'),
+    cli('ex-c07', 'Serraria Irmãos Teixeira Ltda', 'PJ', '15.902.664/0001-80', 'Ituiutaba', 'Ana Paula', '(34) 99901-2237'),
+    cli('ex-c08', 'Granja Bom Jesus Avicultura Ltda', 'PJ', '27.845.310/0001-52', 'Limeira do Oeste', 'Ricardo', '(34) 99214-6603'),
+    cli('ex-c09', 'Antônio Fernandes — Sítio Recanto das Águas', 'PF', '267.019.554-30', 'Carneirinho', 'Juliana', '(34) 99876-5541'),
+    cli('ex-c10', 'Madeireira Nova Esperança Ltda', 'PJ', '19.367.221/0001-13', 'São Francisco de Sales', 'Ricardo', '(34) 3438-1290'),
+  ];
+  const TN = { lpu: ['Licença de Porte e Uso de Motosserra (LPU)', 'motosserra'], lo: ['Licença de Operação (LO)', 'licenciamento'], las: ['Licença Ambiental Simplificada (LAS)', 'licenciamento'],
+    car: ['CAR — Recibo de inscrição', 'car'], pra: ['PRA — Termo de compromisso', 'car'], outorga: ['Outorga de uso — poço tubular', 'agua'], insignif: ['Certidão de uso insignificante', 'agua'],
+    perfur: ['Autorização de perfuração de poço', 'agua'], asv: ['Autorização de Supressão de Vegetação (ASV)', 'florestal'], ctf: ['CTF/APP — Certificado de Regularidade', 'outros'] };
+  let k = 0;
+  const cond = (texto, modo, prazoDias, meses) => ({ id: 'ex-k' + (++k), texto, modo, periodoMeses: meses || null, prazo: modo === 'continua' ? null : T(prazoDias), alertaDias: 30, cumprimentos: [] });
+  const doc = (id, clienteId, tipoId, o) => ({ id, clienteId, tipoId, tipoNome: TN[tipoId][0], categoria: TN[tipoId][1], numero: '', orgao: '', local: '', situacao: 'vigente',
+    emissao: null, vencimento: null, renovarDias: 0, alertaDias: 60, obs: '', condicionantes: [], demo: true, ...o });
+  const documentos = [
+    doc('ex-d01', 'ex-c01', 'lo', { numero: 'LO 1187/2022', orgao: 'SEMAD', local: 'Fazenda Santa Luzia — confinamento bovino', emissao: T(-1380), vencimento: T(80), renovarDias: 120,
+      condicionantes: [cond('Enviar relatório de monitoramento de efluentes líquidos', 'periodica', 20, 6), cond('Manter a lagoa de tratamento em funcionamento e sem transbordo', 'continua')] }),
+    doc('ex-d02', 'ex-c01', 'car', { numero: 'MG-3134400-8F21.A0C5', orgao: 'SICAR', local: 'Fazenda Santa Luzia — 612 ha', emissao: T(-2100), alertaDias: 30,
+      condicionantes: [cond('Responder a notificação de pendência da análise do CAR', 'unica', 12)] }),
+    doc('ex-d03', 'ex-c01', 'outorga', { numero: 'Portaria 2024/0917', orgao: 'IGAM', local: 'Poço tubular 1 — sede', emissao: T(-925), vencimento: T(900), alertaDias: 120,
+      condicionantes: [cond('Enviar as leituras anuais do hidrômetro', 'periodica', 45, 12)] }),
+    doc('ex-d04', 'ex-c01', 'lpu', { numero: 'LPU 5.871.204', orgao: 'IBAMA', local: 'Motosserra Stihl MS 382 · série 1813-440', emissao: T(-330), vencimento: T(400) }),
+    doc('ex-d05', 'ex-c01', 'lpu', { numero: 'LPU 4.102.771', orgao: 'IBAMA', local: 'Motosserra Stihl MS 382 · série 1813-440', emissao: T(-1060), vencimento: T(-330), situacao: 'substituido', substituidoPor: 'ex-d04' }),
+    doc('ex-d06', 'ex-c02', 'lpu', { numero: 'LPU 5.204.930', orgao: 'IBAMA', local: 'Motosserra Husqvarna 365 · série 2019-3310', emissao: T(-742), vencimento: T(-12) }),
+    doc('ex-d07', 'ex-c02', 'car', { numero: 'MG-3111606-44C0.9B12', orgao: 'SICAR', local: 'Sítio Boa Esperança — 48 ha', emissao: T(-1600), alertaDias: 30 }),
+    doc('ex-d08', 'ex-c02', 'insignif', { numero: 'Certidão 88213/2023', orgao: 'IGAM', local: 'Cisterna — captação em nascente', emissao: T(-1060), vencimento: T(35), alertaDias: 90 }),
+    doc('ex-d09', 'ex-c03', 'lo', { numero: 'LO 0442/2024', orgao: 'SEMAD', local: 'Fábrica de telhas e tijolos', emissao: T(-1160), vencimento: T(300), renovarDias: 120,
+      condicionantes: [cond('Apresentar inventário anual de resíduos sólidos', 'periodica', -15, 12), cond('Automonitoramento de emissões atmosféricas dos fornos', 'periodica', 70, 6)] }),
+    doc('ex-d10', 'ex-c03', 'asv', { numero: 'AIA 1502/2025', orgao: 'IEF', local: 'Área de extração de argila — 3,2 ha', emissao: T(-315), vencimento: T(50) }),
+    doc('ex-d11', 'ex-c04', 'lo', { numero: 'LO 0913/2020', orgao: 'SEMAD', local: 'Indústria de laticínios', emissao: T(-2100), vencimento: T(95), renovarDias: 120, renovData: T(-30), renovProtocolo: 'PA 12877/2026',
+      condicionantes: [cond('Relatório trimestral da estação de tratamento de efluentes', 'periodica', 40, 3)] }),
+    doc('ex-d12', 'ex-c04', 'outorga', { numero: 'Portaria 2023/1142', orgao: 'IGAM', local: 'Poço tubular 2 — indústria', emissao: T(-1125), vencimento: T(700), alertaDias: 120,
+      condicionantes: [cond('Análise de potabilidade da água do poço', 'periodica', 5, 6)] }),
+    doc('ex-d13', 'ex-c04', 'ctf', { numero: 'CR 7.330.118', orgao: 'IBAMA', local: 'CTF/APP da indústria', emissao: T(-80), vencimento: T(10), alertaDias: 15 }),
+    doc('ex-d14', 'ex-c05', 'lo', { numero: 'LO 0178/2025', orgao: 'SEMAD', local: 'Posto revendedor de combustíveis', emissao: T(-420), vencimento: T(1500), renovarDias: 120,
+      condicionantes: [cond('Teste de estanqueidade dos tanques', 'periodica', 200, 12), cond('Monitoramento de águas subterrâneas (poços de monitoramento)', 'periodica', 100, 6)] }),
+    doc('ex-d15', 'ex-c06', 'car', { numero: 'MG-3111002-1D7E.55A0', orgao: 'SICAR', local: 'Fazenda Três Barras — 95 ha', emissao: T(-1900), alertaDias: 30 }),
+    doc('ex-d16', 'ex-c06', 'pra', { numero: 'TC PRA 0311/2024', orgao: 'SEMAD', local: 'Fazenda Três Barras — APP do córrego', emissao: T(-760), alertaDias: 30,
+      condicionantes: [cond('Recompor a APP do córrego com plantio de 1.200 mudas nativas', 'unica', 150), cond('Enviar relatório anual de acompanhamento do PRA', 'periodica', -40, 12)] }),
+    doc('ex-d17', 'ex-c07', 'lpu', { numero: 'LPU 5.660.018', orgao: 'IBAMA', local: 'Motosserra Stihl MS 660 · série 2020-0117', emissao: T(-705), vencimento: T(25) }),
+    doc('ex-d18', 'ex-c07', 'lpu', { numero: 'LPU 5.912.447', orgao: 'IBAMA', local: 'Motosserra Husqvarna 372 XP · série 2021-0457', emissao: T(-90), vencimento: T(640) }),
+    doc('ex-d19', 'ex-c07', 'lo', { numero: 'LO 0620/2020', orgao: 'SEMAD', local: 'Serraria e pátio de toras', emissao: T(-2250), vencimento: T(-60), renovarDias: 120, renovData: T(-200), renovProtocolo: 'PA 07144/2026' }),
+    doc('ex-d20', 'ex-c07', 'ctf', { numero: 'CR 7.118.905', orgao: 'IBAMA', local: 'CTF/APP da serraria', emissao: T(-95), vencimento: T(-3), alertaDias: 15 }),
+    doc('ex-d21', 'ex-c08', 'las', { numero: '', orgao: 'SEMAD', local: 'Galpões de frango de corte — ampliação', situacao: 'processo', processoProtocolo: 'PA 03456/2026', processoData: T(-48), emissao: null, renovarDias: 120 }),
+    doc('ex-d22', 'ex-c08', 'outorga', { numero: 'Portaria 2021/0388', orgao: 'IGAM', local: 'Poço tubular — granja', emissao: T(-1715), vencimento: T(110), alertaDias: 120 }),
+    doc('ex-d23', 'ex-c08', 'car', { numero: 'MG-3138625-7A10.C3D4', orgao: 'SICAR', local: 'Granja Bom Jesus — 32 ha', emissao: T(-1500), alertaDias: 30 }),
+    doc('ex-d24', 'ex-c09', 'perfur', { numero: 'AP 2210/2026', orgao: 'IGAM', local: 'Poço tubular a perfurar — sede do sítio', emissao: T(-165), vencimento: T(200), alertaDias: 30 }),
+    doc('ex-d25', 'ex-c09', 'car', { numero: 'MG-3114550-02BB.91E7', orgao: 'SICAR', local: 'Sítio Recanto das Águas — 21 ha', emissao: T(-1300), alertaDias: 30 }),
+    doc('ex-d26', 'ex-c10', 'lo', { numero: 'LO 0335/2025', orgao: 'SEMAD', local: 'Madeireira — beneficiamento', emissao: T(-460), vencimento: T(1000), renovarDias: 120,
+      condicionantes: [cond('Manter o controle de entrada e saída de madeira com DOF', 'continua'), cond('Enviar relatório anual de movimentação de produtos florestais', 'periodica', 120, 12)] }),
+    doc('ex-d27', 'ex-c10', 'lpu', { numero: 'LPU 5.740.332', orgao: 'IBAMA', local: 'Motosserra Stihl MS 382 · série 1911-208', emissao: T(-230), vencimento: T(500) }),
+  ];
+  return { clientes, documentos };
+}
+
+/* ================= desenho ================= */
+let A = analisar(), rafPend = false, drawerCli = null;
+function render() {
+  if (rafPend) return;
+  rafPend = true;
+  requestAnimationFrame(() => { rafPend = false; desenhar(); });
+}
+function desenhar() {
+  A = analisar();
+  desenharTopo();
+  desenharNota();
+  if (S.view === 'clientes') desenharClientes();
+  if (S.view === 'documentos') desenharDocumentos();
+  if (S.view === 'config' && !S.cfgSujo) desenharConfig();
+  if (drawerCli && !$('#drawer').hidden) desenharDrawer(drawerCli);
+  if (!$('#alerts').hidden) desenharAlertas();
+  $$('[data-w]').forEach(b => { b.hidden = !S.canWrite; });
+}
+const trunc = (s, n) => (s = String(s || '')).length > n ? s.slice(0, n - 1) + '…' : s;
+function opts(sel, lista, atual, todos = 'Todos') {
+  const html = `<option value="">${todos}</option>` + lista.map(([v, t]) => `<option value="${esc(v)}"${v === atual ? ' selected' : ''}>${esc(t)}</option>`).join('');
+  if (sel.dataset.h !== html) { sel.innerHTML = html; sel.dataset.h = html; }
+  sel.value = atual || '';
+}
+const responsaveis = () => [...new Set([...S.cfg.equipe, ...[...S.clientes.values()].map(c => c.responsavel)].filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+const pendentes = () => {
+  const itens = [];
+  for (const r of A.docs) if (r.st.n === 'crit' || r.st.n === 'warn') itens.push({ n: r.st.n, data: r.st.limite || r.d.vencimento || '', t: r.cli.nome + ' — ' + nomeDoc(r.d), s: r.st.txt, doc: r.d.id });
+  for (const x of A.conds) if (x.st.n === 'crit' || x.st.n === 'warn') itens.push({ n: x.st.n, data: x.c.prazo || '', t: x.cli.nome + ' — ' + trunc(x.c.texto, 70), s: 'Condicionante · ' + x.st.txt + ' · ' + nomeDoc(x.d), doc: x.d.id });
+  return itens.sort((a, b) => SEV[b.n] - SEV[a.n] || a.data.localeCompare(b.data));
+};
+
+function desenharTopo() {
+  const p = pendentes(), crit = p.filter(i => i.n === 'crit').length;
+  const b = $('#bell-n'); b.hidden = !p.length; b.textContent = p.length > 99 ? '99+' : p.length;
+  b.style.background = crit ? 'var(--crit)' : 'var(--warn)';
+  $('#bell').setAttribute('aria-label', `Alertas: ${crit} críticos, ${p.length - crit} avisos`);
+  const t = $('#tab-cnt'); t.hidden = !crit; t.textContent = crit;
+}
+function desenharNota() {
+  const n = $('#note');
+  const temDemo = [...S.clientes.values()].some(c => c.demo);
+  $('#demo-card').hidden = !temDemo || !S.canWrite;
+  if (S.semBanco) {
+    n.hidden = false;
+    n.innerHTML = '<b>Prévia sem banco de dados.</b> O que você cadastrar nesta janela não fica salvo. Abra o link do app no claude.ai para usar com a equipe.';
+  } else if (temDemo && S.canWrite) {
+    n.hidden = false;
+    n.innerHTML = '<span class="tag demo">Exemplo</span><span>Os clientes com esta etiqueta são dados de teste. Quando for cadastrar os clientes reais, remova-os.</span><button class="btn sm" data-act="del-demo">Remover exemplos</button>';
+  } else n.hidden = true;
+}
+
+/* ---------- aba Clientes ---------- */
+function barra(cnt) {
+  const ks = ['ok', 'renov', 'warn', 'crit'].filter(k => cnt[k]);
+  if (!ks.length) return '<div class="bar" role="img" aria-label="Sem documentos"></div>';
+  const t = ks.map(k => `${cnt[k]} ${ROTULO[k].toLowerCase()}`).join(' · ');
+  return `<div class="bar" role="img" aria-label="${esc(t)}" data-tip="bar" data-t="${esc(t)}">${ks.map(k => `<i class="${k}" style="flex:${cnt[k]} 1 0"></i>`).join('')}</div>`;
+}
+function desenharClientes() {
+  const f = S.fc, qd = soDigitos(f.q), q = norm(f.q);
+  opts($('#fc-resp'), responsaveis().map(r => [r, r]), f.resp);
+  opts($('#fc-cat'), CATS.map(c => [c.id, c.nome]), f.cat, 'Todas');
+  const todos = [...A.porCli.values()].filter(a => a.cli.ativo !== false);
+  const k = { crit: 0, warn: 0, renov: 0, ok: 0 };
+  for (const a of todos) k[a.n === 'none' ? 'ok' : a.n]++;
+  const ativo = id => id === 'all' ? f.st.size === 4 : (f.st.size === 1 && f.st.has(id));
+  const kp = [
+    ['all', 'Clientes ativos', todos.length, 'var(--accent)', 'na carteira'],
+    ['crit', 'Com vencido ou atrasado', k.crit, 'var(--crit)', 'precisam de ação agora'],
+    ['warn', 'Com prazo chegando', k.warn, 'var(--warn)', 'dentro da janela de aviso'],
+    ['renov', 'Em renovação', k.renov, 'var(--renov)', 'aguardando o órgão'],
+    ['ok', 'Tudo em dia', k.ok, 'var(--ok)', 'sem pendências'],
+  ];
+  $('#kpi-cli').innerHTML = kp.map(([id, l, v, c, d]) => `<button class="kpi" data-kc="${id}" style="--k:${c}" aria-pressed="${ativo(id)}"><span class="kl">${id !== 'all' ? dot(id) : ''}${l}</span><span class="kv">${v}</span><span class="kd">${d}</span></button>`).join('');
+  $$('#fc-st input').forEach(i => { i.checked = f.st.has(i.value); });
+
+  let rows = todos.filter(a => {
+    if (!f.st.has(a.n === 'none' ? 'ok' : a.n)) return false;
+    if (f.resp && a.cli.responsavel !== f.resp) return false;
+    if (f.cat && !a.catDocs[f.cat]) return false;
+    if (q && !norm([a.cli.nome, a.cli.doc, a.cli.municipio, a.cli.uf].join(' ')).includes(q) && !(qd.length >= 3 && soDigitos(a.cli.doc).includes(qd))) return false;
+    return true;
+  });
+  const cmpNome = (a, b) => a.cli.nome.localeCompare(b.cli.nome, 'pt-BR');
+  const cmpProx = (a, b) => (a.prox ? a.prox.data : '9999').localeCompare(b.prox ? b.prox.data : '9999');
+  const ord = {
+    sev: (a, b) => SEV[b.n] - SEV[a.n] || cmpProx(a, b) || cmpNome(a, b),
+    nome: cmpNome, prox: (a, b) => cmpProx(a, b) || cmpNome(a, b),
+    docs: (a, b) => b.docs.length - a.docs.length || cmpNome(a, b),
+  };
+  rows.sort(ord[S.sortCli] || ord.sev);
+  const nDocs = todos.reduce((s, a) => s + a.docs.length, 0);
+  $('#cli-count').textContent = `${rows.length} de ${todos.length} clientes`;
+  $('#cli-sub').textContent = `${nDocs} documentos ativos · atualizado ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  const sb = (k, t) => `<button data-sort="${k}" aria-label="Ordenar por ${t}">${t}${S.sortCli === k ? ' ▾' : ''}</button>`;
+  const head = `<thead><tr><th class="sticky">${sb('nome', 'Cliente')}</th><th>Responsável</th><th class="c">${sb('docs', 'Docs')}</th>${CATS.map(c => `<th class="c">${c.curto}</th>`).join('')}<th class="c">Condicio&shy;nantes</th><th>${sb('sev', 'Situação')}</th><th>${sb('prox', 'Próximo prazo')}</th></tr></thead>`;
+  if (!todos.length) {
+    $('#t-cli').innerHTML = head + `<tbody><tr><td colspan="${CATS.length + 6}"><div class="empty"><b>Nenhum cliente cadastrado</b>${S.canWrite ? 'Comece pelo botão “+ Novo cliente”.' : 'Quando a equipe cadastrar, os clientes aparecem aqui.'}</div></td></tr></tbody>`;
+    return;
+  }
+  if (!rows.length) {
+    $('#t-cli').innerHTML = head + `<tbody><tr><td colspan="${CATS.length + 6}"><div class="empty"><b>Nenhum cliente com esses filtros</b><button class="btn" data-act="limpa-cli">Limpar filtros</button></div></td></tr></tbody>`;
+    return;
+  }
+  $('#t-cli').innerHTML = head + '<tbody>' + rows.map(a => {
+    const c = a.cli, id = esc(c.id), loc = [c.municipio, c.uf].filter(Boolean).join('/');
+    const px = a.prox ? `<div class="when"><b class="mono">${fmt(a.prox.data)}</b><span>${rel(diffDias(A.h, a.prox.data))} · ${esc(trunc(a.prox.txt, 34))}</span></div>` : '<span class="muted">—</span>';
+    return `<tr data-cli="${id}" class="sev-${a.n}">
+      <td class="sticky"><div class="cli-n">${esc(c.nome)} ${c.demo ? '<span class="tag demo">Exemplo</span>' : ''}</div><div class="cli-s">${esc(c.doc || '')}${c.doc && loc ? ' · ' : ''}${esc(loc)}</div></td>
+      <td>${c.responsavel ? esc(c.responsavel) : '<span class="muted">—</span>'}</td>
+      <td class="c mono">${a.docs.length}</td>
+      ${CATS.map(ct => { const n = a.cats[ct.id] || 'none'; return `<td class="c"><button class="dot-btn" data-tip="cat" data-cli="${id}" data-cat="${ct.id}" aria-label="${esc(ct.nome)}: ${ROTULO[n]}">${dot(n)}</button></td>`; }).join('')}
+      <td class="c"><button class="dot-btn" data-tip="cond" data-cli="${id}" aria-label="Condicionantes: ${ROTULO[a.condN]}">${dot(a.condN)}</button></td>
+      <td>${barra(a.cnt)}</td>
+      <td>${px}</td></tr>`;
+  }).join('') + '</tbody>';
+}
+
+/* ---------- aba Documentos ---------- */
+const alvoDoc = r => (r.st.n === 'renov' || !r.d.vencimento) ? null : (r.st.limite || r.d.vencimento);
+function ocorrencias(c, ini, fim) {
+  if (!c.prazo || c.modo === 'continua' || (c.modo !== 'periodica' && c.concluida)) return [];
+  const out = []; let p = c.prazo, guard = 0;
+  while (p <= fim && guard++ < 60) {
+    if (p >= ini) out.push(p);
+    if (c.modo !== 'periodica') break;
+    p = addMeses(p, c.periodoMeses || 12);
+  }
+  return out;
+}
+const DOC_KPI = {
+  crit: r => r.st.n === 'crit', warn: r => r.st.n === 'warn', renov: r => r.st.n === 'renov', ok: r => r.st.n === 'ok',
+};
+function filtroBase(cli, d, cat) {
+  const f = S.fd;
+  if (f.cat && cat !== f.cat) return false;
+  if (f.org && (d.orgao || '') !== f.org) return false;
+  if (f.resp && cli.responsavel !== f.resp) return false;
+  if (f.q) {
+    const q = norm(f.q);
+    if (!norm([cli.nome, cli.doc, cli.municipio, nomeDoc(d), d.numero, d.orgao, d.local].join(' ')).includes(q)) return false;
+  }
+  return true;
+}
+function mesFim(key) { const [y, m] = key.split('-').map(Number); return toISO(new Date(y, m, 0)); }
+function desenharDocumentos() {
+  const f = S.fd, modo = S.docMode;
+  $('#seg-doc').setAttribute('aria-pressed', modo === 'doc');
+  $('#seg-cond').setAttribute('aria-pressed', modo === 'cond');
+  opts($('#fd-cat'), CATS.map(c => [c.id, c.nome]), f.cat, 'Todas');
+  opts($('#fd-org'), [...new Set(A.docs.map(r => r.d.orgao).filter(Boolean))].sort().map(o => [o, o]), f.org);
+  opts($('#fd-resp'), responsaveis().map(r => [r, r]), f.resp);
+  $$('#fd-st input').forEach(i => { i.checked = f.st.has(i.value); });
+
+  const cs = A.conds.filter(x => x.st.n !== 'inativo');
+  const kd = {
+    crit: A.docs.filter(DOC_KPI.crit).length, warn: A.docs.filter(DOC_KPI.warn).length,
+    renov: A.docs.filter(DOC_KPI.renov).length, ok: A.docs.filter(DOC_KPI.ok).length,
+    ccrit: cs.filter(x => x.st.n === 'crit').length, cwarn: cs.filter(x => x.st.n === 'warn').length,
+  };
+  const kp = [
+    ['crit', 'Documentos vencidos', kd.crit, 'var(--crit)', 'ou com prazo de renovação perdido', 'doc'],
+    ['warn', 'Documentos a vencer', kd.warn, 'var(--warn)', 'dentro da janela de aviso', 'doc'],
+    ['renov', 'Em renovação', kd.renov, 'var(--renov)', 'protocolados, aguardando o órgão', 'doc'],
+    ['ccrit', 'Condicionantes atrasadas', kd.ccrit, 'var(--crit)', 'prazo passou sem entrega', 'cond'],
+    ['cwarn', 'Condicionantes a vencer', kd.cwarn, 'var(--warn)', 'prazo dentro do aviso', 'cond'],
+    ['ok', 'Documentos em dia', kd.ok, 'var(--ok)', `de ${A.docs.length} ativos`, 'doc'],
+  ];
+  $('#kpi-doc').innerHTML = kp.map(([id, l, v, c, d, m]) => { const n = id.replace(/^c(?=crit|warn)/, ''); return `<button class="kpi" data-kd="${id}" data-m="${m}" style="--k:${c}" aria-pressed="${f.kpi === id}"><span class="kl">${dot(n)}${l}</span><span class="kv">${v}</span><span class="kd">${d}</span></button>`; }).join('');
+
+  /* prazos por mês */
+  const base = parseISO(A.h); base.setDate(1);
+  const cols = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(base.getFullYear(), base.getMonth() + i, 1);
+    cols.push({ key: `${d.getFullYear()}-${pad(d.getMonth() + 1)}`, lab: MESES[d.getMonth()] + (i === 0 || d.getMonth() === 0 ? '/' + String(d.getFullYear()).slice(2) : ''), docs: 0, conds: 0 });
+  }
+  const ini = A.h, fim = mesFim(cols[11].key), idx = new Map(cols.map((c, i) => [c.key, i]));
+  for (const r of A.docs) { const a = alvoDoc(r); if (a && a >= ini && a <= fim && filtroBase(r.cli, r.d, r.cat)) cols[idx.get(a.slice(0, 7))].docs++; }
+  for (const x of cs) { if (!filtroBase(x.cli, x.d, tipoDe(x.d).cat)) continue; for (const p of ocorrencias(x.c, ini, fim)) cols[idx.get(p.slice(0, 7))].conds++; }
+  const max = Math.max(1, ...cols.map(c => c.docs + c.conds));
+  $('#months').innerHTML = `<div class="months-h"><b>Prazos nos próximos 12 meses</b><span>Documentos a renovar e entregas de condicionantes. Clique num mês para filtrar.</span></div>
+    <div class="mchart">${cols.map(c => { const t = c.docs + c.conds; return `<button class="mcol" data-mes="${c.key}" aria-pressed="${f.mes === c.key}" data-tip="mes" data-t="${esc(c.lab)}: ${c.docs} documento${c.docs === 1 ? '' : 's'} · ${c.conds} condicionante${c.conds === 1 ? '' : 's'}" aria-label="${esc(c.lab)}: ${t} prazos"><span class="v">${t || ''}</span><span class="b" style="height:${t ? Math.max(4, Math.round(t / max * 80)) : 2}px;${t ? '' : 'background:var(--line)'}"></span><span class="m">${c.lab}</span></button>`; }).join('')}</div>`;
+
+  const nf = (f.q || f.cat || f.org || f.resp || f.kpi || f.mes || f.st.size < 4);
+  $('#fd-clear').hidden = !nf;
+  const noMes = f.mes ? [f.mes + '-01', mesFim(f.mes)] : null;
+  if (modo === 'doc') {
+    const rows = A.docs.filter(r => {
+      if (f.kpi && DOC_KPI[f.kpi]) { if (!DOC_KPI[f.kpi](r)) return false; }
+      else if (!f.st.has(r.n === 'none' ? 'ok' : r.n)) return false;
+      if (!filtroBase(r.cli, r.d, r.cat)) return false;
+      if (noMes) { const a = alvoDoc(r); const hit = (a && a >= noMes[0] && a <= noMes[1]) || r.cs.some(x => ocorrencias(x.c, noMes[0], noMes[1]).length); if (!hit) return false; }
+      return true;
+    }).sort((a, b) => SEV[b.n] - SEV[a.n] || (alvoDoc(a) || '9999').localeCompare(alvoDoc(b) || '9999') || a.cli.nome.localeCompare(b.cli.nome, 'pt-BR'));
+    $('#doc-count').textContent = `${rows.length} documento${rows.length === 1 ? '' : 's'}${f.mes ? ' com prazo em ' + cols[idx.get(f.mes)]?.lab : ''}`;
+    const head = '<thead><tr><th class="sticky">Situação</th><th>Cliente</th><th>Documento</th><th>Órgão</th><th>Imóvel / objeto</th><th>Emissão</th><th>Vencimento</th><th>Condicionantes</th></tr></thead>';
+    if (!rows.length) { $('#t-doc').innerHTML = head + `<tbody><tr><td colspan="8"><div class="empty"><b>${A.docs.length ? 'Nada com esses filtros' : 'Nenhum documento cadastrado'}</b>${A.docs.length ? '<button class="btn" data-act="limpa-doc">Limpar filtros</button>' : ''}</div></td></tr></tbody>`; return; }
+    $('#t-doc').innerHTML = head + '<tbody>' + rows.map(r => {
+      const d = r.d, st = r.st;
+      let venc = '<span class="muted">Sem vencimento</span>';
+      if (d.vencimento) {
+        const tot = d.emissao ? Math.max(1, diffDias(d.emissao, d.vencimento)) : 0;
+        const pct = tot ? Math.min(100, Math.max(0, Math.round(diffDias(d.emissao, A.h) / tot * 100))) : 0;
+        venc = `<div class="when"><b class="mono">${fmt(d.vencimento)}</b><span>${relCurto(st.dias)}</span></div>${tot ? `<div class="meter" title="${pct}% da validade já passou"><i style="width:${pct}%;--c:var(--${st.n === 'renov' ? 'renov' : st.n})"></i></div>` : ''}`;
+      }
+      const cc = r.cs.filter(x => x.st.n !== 'inativo');
+      const nC = cc.filter(x => x.st.n === 'crit').length, nW = cc.filter(x => x.st.n === 'warn').length;
+      const condTxt = !cc.length ? '<span class="muted">—</span>' : `<div class="cond-mini">${cc.slice(0, 10).map(x => dot(x.st.n)).join('')}</div><div class="cli-s">${nC ? nC + ' atrasada' + (nC > 1 ? 's' : '') : nW ? nW + ' a vencer' : cc.length + ' em dia'}</div>`;
+      return `<tr data-doc="${esc(d.id)}" class="sev-${r.n}">
+        <td class="sticky">${chip(st.n, st.txt)}</td>
+        <td><div class="cli-n">${esc(r.cli.nome)}</div><div class="cli-s">${esc([r.cli.municipio, r.cli.uf].filter(Boolean).join('/'))}</div></td>
+        <td class="docn"><div style="font-weight:600">${esc(trunc(nomeDoc(d), 46))}</div><div class="cli-s mono">${d.numero ? 'nº ' + esc(d.numero) : ''}</div></td>
+        <td>${esc(d.orgao || '—')}</td>
+        <td>${esc(trunc(d.local || '—', 34))}</td>
+        <td class="mono">${fmt(d.emissao)}</td>
+        <td>${venc}</td>
+        <td data-tip="conds" data-doc="${esc(d.id)}">${condTxt}</td></tr>`;
+    }).join('') + '</tbody>';
+  } else {
+    const rows = cs.filter(x => {
+      const n = x.st.n === 'none' ? 'ok' : x.st.n;
+      if (f.kpi === 'ccrit' && x.st.n !== 'crit') return false;
+      if (f.kpi === 'cwarn' && x.st.n !== 'warn') return false;
+      if (!f.kpi && !f.st.has(n)) return false;
+      if (!filtroBase(x.cli, x.d, tipoDe(x.d).cat)) return false;
+      if (noMes && !ocorrencias(x.c, noMes[0], noMes[1]).length) return false;
+      return true;
+    }).sort((a, b) => SEV[b.st.n] - SEV[a.st.n] || (a.st.feita - b.st.feita) || (a.c.modo === 'continua') - (b.c.modo === 'continua') || (a.c.prazo || '9999').localeCompare(b.c.prazo || '9999'));
+    $('#doc-count').textContent = `${rows.length} condicionante${rows.length === 1 ? '' : 's'}`;
+    const head = '<thead><tr><th class="sticky">Situação</th><th>Cliente</th><th>Documento</th><th>Condicionante</th><th>Frequência</th><th>Prazo</th><th class="r">Ação</th></tr></thead>';
+    if (!rows.length) { $('#t-doc').innerHTML = head + `<tbody><tr><td colspan="7"><div class="empty"><b>${cs.length ? 'Nada com esses filtros' : 'Nenhuma condicionante cadastrada'}</b>${cs.length ? '<button class="btn" data-act="limpa-doc">Limpar filtros</button>' : 'As condicionantes são cadastradas dentro de cada documento.'}</div></td></tr></tbody>`; return; }
+    $('#t-doc').innerHTML = head + '<tbody>' + rows.map(x => {
+      const pode = S.canWrite && !x.st.feita && x.c.modo !== 'continua';
+      return `<tr data-doc="${esc(x.d.id)}" class="sev-${x.st.n}">
+        <td class="sticky">${chip(x.st.n, x.st.txt)}</td>
+        <td><div class="cli-n">${esc(x.cli.nome)}</div></td>
+        <td><div>${esc(trunc(nomeDoc(x.d), 40))}</div><div class="cli-s mono">${x.d.numero ? 'nº ' + esc(x.d.numero) : ''}</div></td>
+        <td style="min-width:260px;max-width:420px">${esc(x.c.texto)}</td>
+        <td>${perNome(x.c)}</td>
+        <td>${x.c.prazo && x.c.modo !== 'continua' ? `<div class="when"><b class="mono">${fmt(x.c.prazo)}</b><span>${x.st.feita ? 'entregue' : rel(diffDias(A.h, x.c.prazo))}</span></div>` : '<span class="muted">—</span>'}</td>
+        <td class="r">${pode ? `<button class="btn sm" data-cumprir="${esc(x.d.id)}:${x.i}">Registrar entrega</button>` : ''}</td></tr>`;
+    }).join('') + '</tbody>';
+  }
+}
+
+/* ---------- Configurações ---------- */
+function desenharConfig() {
+  const ts = S.tiposEd = S.cfgSujo ? S.tiposEd : S.cfg.tipos.map(t => ({ ...t }));
+  const ro = S.canWrite ? '' : ' disabled';
+  $('#t-tipos').innerHTML = `<thead><tr><th>Documento</th><th>Área</th><th>Órgão padrão</th><th class="c">Validade (meses)</th><th class="c">Protocolar renovação (dias antes)</th><th class="c">Avisar (dias antes)</th><th></th></tr></thead><tbody>` +
+    ts.map((t, i) => `<tr data-i="${i}" style="cursor:default">
+      <td style="min-width:240px"><input class="in" id="tp-n-${i}" data-f="nome" value="${esc(t.nome)}"${ro}></td>
+      <td><select class="in" id="tp-c-${i}" data-f="cat"${ro}>${CATS.map(c => `<option value="${c.id}"${c.id === t.cat ? ' selected' : ''}>${esc(c.curto)}</option>`).join('')}</select></td>
+      <td style="min-width:110px"><input class="in" id="tp-o-${i}" data-f="orgao" value="${esc(t.orgao || '')}"${ro}></td>
+      <td class="c"><input class="in mono" id="tp-m-${i}" data-f="meses" type="number" min="0" max="600" style="width:78px" value="${t.meses || 0}"${ro}></td>
+      <td class="c"><input class="in mono" id="tp-r-${i}" data-f="renovar" type="number" min="0" max="720" style="width:78px" value="${t.renovar || 0}"${ro}></td>
+      <td class="c"><input class="in mono" id="tp-a-${i}" data-f="alerta" type="number" min="0" max="720" style="width:78px" value="${t.alerta ?? 60}"${ro}></td>
+      <td>${S.canWrite && !S.documentosUsamTipo(t.id) ? `<button class="btn sm ghost danger" data-deltipo="${i}" aria-label="Remover tipo">✕</button>` : ''}</td></tr>`).join('') + '</tbody>';
+  const eq = $('#cfg-equipe');
+  if (document.activeElement !== eq) eq.value = S.cfg.equipe.join('\n');
+  eq.disabled = !S.canWrite;
+}
+S.documentosUsamTipo = id => [...S.documentos.values()].some(d => d.tipoId === id);
+
+/* ---------- Alertas ---------- */
+function desenharAlertas() {
+  const p = pendentes();
+  $('#alerts').innerHTML = `<div class="pop-h"><span>Alertas (${p.length})</span><button class="btn sm" data-act="ver-docs">Ver lista completa</button></div>` +
+    (p.length ? p.slice(0, 60).map(i => `<div class="al" data-doc="${esc(i.doc)}" tabindex="0" role="button">${dot(i.n)}<div><p>${esc(i.t)}</p><small>${esc(i.s)}</small></div></div>`).join('')
+      : '<div class="empty"><b>Nada pendente</b>Nenhum documento vencido ou perto de vencer.</div>');
+}
+
+/* ---------- Gaveta do cliente ---------- */
+function abrirCliente(id, cat) {
+  drawerCli = id; $('#drawer').hidden = false; document.body.style.overflow = 'hidden';
+  desenharDrawer(id);
+  if (cat) requestAnimationFrame(() => { const el = document.getElementById('cat-' + cat); if (el) el.scrollIntoView({ block: 'start' }); });
+  $('#drawer-in .x')?.focus();
+}
+function fecharDrawer() { drawerCli = null; $('#drawer').hidden = true; document.body.style.overflow = ''; }
+function linhaDoc(r) {
+  const d = r.d;
+  const conds = r.cs.length ? `<div class="conds">${r.cs.map(x => `<div class="cond">${dot(x.st.n === 'inativo' ? 'none' : x.st.n)}<p>${esc(x.c.texto)}<small>${perNome(x.c)} · ${esc(x.st.txt)}${x.st.det ? ' · ' + esc(x.st.det) : ''}</small></p>${S.canWrite && r.st.n !== 'inativo' && !x.st.feita && x.c.modo !== 'continua' ? `<button class="btn sm" data-cumprir="${esc(d.id)}:${x.i}">Registrar entrega</button>` : ''}</div>`).join('')}</div>` : '';
+  return `<div class="doc-row">${dot(r.st.n === 'inativo' ? 'none' : r.st.n, true)}
+    <div><div class="doc-t">${esc(nomeDoc(d))} ${d.numero ? `<span class="mono muted" style="font-weight:400">nº ${esc(d.numero)}</span>` : ''}</div>
+      <div class="doc-s">${[d.orgao, d.local].filter(Boolean).map(s => `<span>${esc(s)}</span>`).join('')}<span>Emissão ${fmt(d.emissao)}</span><span>Vencimento ${d.vencimento ? fmt(d.vencimento) : 'indeterminado'}</span></div>
+      <div class="doc-s"><b style="color:var(--ink)">${esc(r.st.txt)}</b>${r.st.det ? `<span>${esc(r.st.det)}</span>` : ''}</div></div>
+    <button class="btn sm" data-doc="${esc(d.id)}">Abrir</button>${conds}</div>`;
+}
+function desenharDrawer(id) {
+  const a = A.porCli.get(id);
+  if (!a) { fecharDrawer(); return; }
+  const c = a.cli, tel = soDigitos(c.telefone), loc = [c.municipio, c.uf].filter(Boolean).join('/');
+  const wa = tel ? `https://wa.me/${tel.length <= 11 ? '55' + tel : tel}` : '';
+  const blocos = CATS.filter(ct => a.catDocs[ct.id]).map(ct => {
+    const rs = a.catDocs[ct.id].slice().sort((x, y) => SEV[y.n] - SEV[x.n]);
+    return `<div class="cat-block" id="cat-${ct.id}"><div class="cat-h">${dot(a.cats[ct.id])}${esc(ct.nome)}<span class="muted" style="margin-left:auto;font-weight:500;letter-spacing:0;text-transform:none">${rs.length} documento${rs.length > 1 ? 's' : ''}</span></div>${rs.map(linhaDoc).join('')}</div>`;
+  }).join('');
+  $('#drawer-in').innerHTML = `<div class="drawer-h"><div style="min-width:0"><h2 id="dr-title">${esc(c.nome)} ${c.demo ? '<span class="tag demo">Exemplo</span>' : ''}</h2>
+      <div class="meta">${c.doc ? `<span class="mono">${esc(c.doc)}</span>` : ''}${loc ? `<span>${esc(loc)}</span>` : ''}<span>Responsável: ${esc(c.responsavel || '—')}</span></div></div>
+      <button class="x" data-act="fecha-drawer" aria-label="Fechar">✕</button></div>
+    <div class="drawer-b">
+      <div class="btns">${chip(a.n === 'none' ? 'ok' : a.n, a.n === 'none' ? 'Sem documentos' : ROTULO[a.n])}${['crit', 'warn', 'renov', 'ok'].filter(k => a.cnt[k]).map(k => `<span class="tag">${a.cnt[k]} ${ROTULO[k].toLowerCase()}</span>`).join('')}
+        <span style="margin-left:auto" class="btns">${S.canWrite ? `<button class="btn sm" data-act="edita-cli" data-id="${esc(c.id)}">Editar cliente</button><button class="btn sm pri" data-act="novo-doc-cli" data-id="${esc(c.id)}">+ Documento</button>` : ''}</span></div>
+      ${(c.telefone || c.email) ? `<div class="contact">${c.telefone ? `<span class="muted">Telefone</span><span class="sel">${esc(c.telefone)}</span><button class="btn sm" data-copy="${esc(c.telefone)}">Copiar</button>${wa ? `<a class="btn sm" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}` : ''}${c.email ? `<span class="muted" style="margin-left:8px">E-mail</span><span class="sel">${esc(c.email)}</span>` : ''}</div>` : ''}
+      ${blocos || `<div class="cat-block"><div class="empty"><b>Nenhum documento ativo</b>${S.canWrite ? 'Use “+ Documento” para cadastrar o primeiro.' : ''}</div></div>`}
+      ${a.hist.length ? `<details class="cat-block"><summary class="cat-h" style="cursor:pointer">Histórico · ${a.hist.length} substituído${a.hist.length > 1 ? 's' : ''} ou arquivado${a.hist.length > 1 ? 's' : ''}</summary>${a.hist.map(linhaDoc).join('')}</details>` : ''}
+      ${c.obs ? `<div class="cfg-card"><h3>Observações</h3><p style="margin:0;white-space:pre-wrap">${esc(c.obs)}</p></div>` : ''}
+    </div>`;
+}
+
+/* ================= gravação ================= */
+async function gravar(col, id, dados) {
+  const body = JSON.parse(JSON.stringify(dados));
+  delete body.id;
+  body.atualizadoEm = new Date().toISOString();
+  if (S.meId) body.atualizadoPor = S.meId;
+  const mapa = col === 'clientes' ? S.clientes : S.documentos;
+  if (!S.db) { mapa.set(id, { ...body, id }); render(); return; }
+  try { await S.db.collection(col).doc(id).set(body); }
+  catch (e) { throw traduzErro(e); }
+}
+async function apagar(col, id) {
+  const mapa = col === 'clientes' ? S.clientes : S.documentos;
+  if (!S.db) { mapa.delete(id); render(); return; }
+  try { await S.db.collection(col).doc(id).delete(); } catch (e) { throw traduzErro(e); }
+}
+function traduzErro(e) {
+  const c = e && e.code;
+  if (c === 'invalid_argument') { S.canWrite = false; render(); return new Error('Seu acesso a este app é só de leitura. Peça ao dono para liberar edição.'); }
+  if (c === 'quota_exceeded') return new Error('O banco chegou ao limite de registros. Remova dados antigos ou de exemplo.');
+  if (c === 'resource_exhausted') return new Error('Muitas gravações em pouco tempo. Espere alguns segundos e tente de novo.');
+  return new Error('Não foi possível salvar agora. Verifique a conexão e tente de novo.');
+}
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2800);
+}
+
+/* ================= modal ================= */
+let modalFechar = null;
+function abrirModal(html, { sm = false, onOpen } = {}) {
+  const m = $('#modal-in');
+  m.className = 'modal' + (sm ? ' sm' : '');
+  m.innerHTML = html;
+  $('#modal').hidden = false;
+  onOpen && onOpen(m);
+  const first = m.querySelector('input:not([type=hidden]),select,textarea,button.pri');
+  first && first.focus();
+}
+function fecharModal() { $('#modal').hidden = true; $('#modal-in').innerHTML = ''; modalFechar && modalFechar(); modalFechar = null; }
+const mh = t => `<div class="modal-h"><h3 id="m-title">${t}</h3><button class="x" data-act="fecha-modal" aria-label="Fechar">✕</button></div>`;
+function confirmar(titulo, texto, rotulo, acao) {
+  abrirModal(mh(esc(titulo)) + `<div class="modal-b"><p class="fld s6" style="margin:0">${texto}</p></div><div class="modal-f"><button class="btn" data-act="fecha-modal">Cancelar</button><button class="btn pri" id="m-ok" style="background:var(--crit);border-color:var(--crit)">${esc(rotulo)}</button></div>`, { sm: true });
+  $('#m-ok').onclick = async () => { $('#m-ok').disabled = true; try { await acao(); fecharModal(); } catch (e) { toast(e.message); $('#m-ok').disabled = false; } };
+}
+const val = id => ($('#' + id)?.value ?? '').trim();
+const erro = msg => { const e = $('#m-err'); if (e) { e.textContent = msg; e.hidden = !msg; } };
+
+/* ---------- Cliente ---------- */
+function formCliente(id) {
+  const c = id ? S.clientes.get(id) : { tipo: 'PJ', ativo: true };
+  const resp = responsaveis();
+  abrirModal(mh(id ? 'Editar cliente' : 'Novo cliente') + `<form id="f-cli" class="modal-b" novalidate>
+    <div class="fld s6"><label for="c-nome">Nome ou razão social *</label><input class="in" id="c-nome" value="${esc(c.nome || '')}" maxlength="140" required></div>
+    <div class="fld s2"><label for="c-tipo">Pessoa</label><select class="in" id="c-tipo"><option value="PJ"${c.tipo === 'PJ' ? ' selected' : ''}>Jurídica</option><option value="PF"${c.tipo === 'PF' ? ' selected' : ''}>Física</option></select></div>
+    <div class="fld s2"><label for="c-doc">CPF / CNPJ</label><input class="in mono" id="c-doc" value="${esc(c.doc || '')}" maxlength="20" inputmode="numeric"></div>
+    <div class="fld s2"><label for="c-resp">Responsável</label><input class="in" id="c-resp" list="dl-resp" value="${esc(c.responsavel || '')}" maxlength="60"><datalist id="dl-resp">${resp.map(r => `<option value="${esc(r)}">`).join('')}</datalist></div>
+    <div class="fld"><label for="c-mun">Município</label><input class="in" id="c-mun" value="${esc(c.municipio || '')}" maxlength="60"></div>
+    <div class="fld s2" style="grid-column:span 1"><label for="c-uf">UF</label><input class="in" id="c-uf" value="${esc(c.uf || '')}" maxlength="2" style="text-transform:uppercase"></div>
+    <div class="fld s2"><label for="c-tel">Telefone / WhatsApp</label><input class="in mono" id="c-tel" value="${esc(c.telefone || '')}" maxlength="20" inputmode="tel" placeholder="(34) 99999-0000"></div>
+    <div class="fld s6"><label for="c-email">E-mail</label><input class="in" id="c-email" type="email" value="${esc(c.email || '')}" maxlength="120"></div>
+    <div class="fld s6"><label for="c-obs">Observações</label><textarea class="in" id="c-obs" maxlength="2000">${esc(c.obs || '')}</textarea></div>
+    ${id ? `<label class="fld s6" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="c-ativo"${c.ativo !== false ? ' checked' : ''}> Cliente ativo (desmarque para tirar da lista sem apagar)</label>` : ''}
+    <p class="err" id="m-err" hidden></p></form>
+    <div class="modal-f">${id ? '<button class="btn danger left" data-act="del-cli" data-id="' + esc(id) + '">Excluir cliente</button>' : ''}<button class="btn" data-act="fecha-modal">Cancelar</button><button class="btn pri" id="m-save">Salvar</button></div>`);
+  $('#c-doc').addEventListener('blur', e => { e.target.value = mascaraDoc(e.target.value); });
+  $('#m-save').onclick = async () => {
+    const nome = val('c-nome');
+    if (!nome) return erro('Informe o nome do cliente.');
+    const d = soDigitos(val('c-doc'));
+    if (d && d.length !== 11 && d.length !== 14) return erro('CPF tem 11 dígitos e CNPJ tem 14. Confira o número.');
+    const novo = { ...(id ? S.clientes.get(id) : { criadoEm: new Date().toISOString(), criadoPor: S.meId || null }),
+      nome, tipo: val('c-tipo'), doc: mascaraDoc(val('c-doc')), responsavel: val('c-resp'), municipio: val('c-mun'), uf: val('c-uf').toUpperCase(),
+      telefone: val('c-tel'), email: val('c-email'), obs: val('c-obs'), ativo: id ? $('#c-ativo').checked : true };
+    const cid = id || novoId('c');
+    $('#m-save').disabled = true;
+    try { await gravar('clientes', cid, novo); fecharModal(); toast(id ? 'Cliente atualizado' : 'Cliente cadastrado'); if (!id) abrirCliente(cid); }
+    catch (e) { erro(e.message); $('#m-save').disabled = false; }
+  };
+}
+function mascaraDoc(v) {
+  const d = soDigitos(v);
+  if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  if (d.length === 14) return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  return v.trim();
+}
+
+/* ---------- Documento ---------- */
+function formDoc(id, pre = {}) {
+  const d = id ? JSON.parse(JSON.stringify(S.documentos.get(id))) : { situacao: 'vigente', emissao: hoje(), condicionantes: [], ...pre };
+  const clientes = [...S.clientes.values()].filter(c => c.ativo !== false || c.id === d.clienteId).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  const orgaos = [...new Set([...S.documentos.values()].map(x => x.orgao).concat(S.cfg.tipos.map(t => t.orgao)).filter(Boolean))].sort();
+  const tipoOpts = CATS.map(ct => `<optgroup label="${esc(ct.nome)}">${S.cfg.tipos.filter(t => t.cat === ct.id).map(t => `<option value="${esc(t.id)}"${t.id === d.tipoId ? ' selected' : ''}>${esc(t.nome)}</option>`).join('')}</optgroup>`).join('');
+  const titulo = id ? 'Editar documento' : pre.renovaDe ? 'Registrar documento renovado' : 'Novo documento';
+  abrirModal(mh(titulo) + `<form id="f-doc" class="modal-b" novalidate>
+    ${pre.renovaDe ? `<p class="calc">O documento anterior sai dos alertas e fica no histórico do cliente como <b>substituído</b>.</p>` : ''}
+    <div class="fld"><label for="d-cli">Cliente *</label><select class="in" id="d-cli"><option value="">Escolha…</option>${clientes.map(c => `<option value="${esc(c.id)}"${c.id === d.clienteId ? ' selected' : ''}>${esc(c.nome)}</option>`).join('')}</select></div>
+    <div class="fld"><label for="d-tipo">Tipo de documento *</label><select class="in" id="d-tipo"><option value="">Escolha…</option>${tipoOpts}</select></div>
+    <div class="fld s2"><label for="d-num">Número</label><input class="in mono" id="d-num" value="${esc(d.numero || '')}" maxlength="60"></div>
+    <div class="fld s2"><label for="d-org">Órgão emissor</label><input class="in" id="d-org" list="dl-org" value="${esc(d.orgao || '')}" maxlength="60"><datalist id="dl-org">${orgaos.map(o => `<option value="${esc(o)}">`).join('')}</datalist></div>
+    <div class="fld s2"><label for="d-sit">Situação</label><select class="in" id="d-sit"><option value="vigente"${d.situacao === 'vigente' ? ' selected' : ''}>Emitido (vigente)</option><option value="processo"${d.situacao === 'processo' ? ' selected' : ''}>Em processo no órgão</option>${id ? `<option value="arquivado"${d.situacao === 'arquivado' ? ' selected' : ''}>Arquivado (sai dos alertas)</option>` : ''}${d.situacao === 'substituido' ? '<option value="substituido" selected>Substituído</option>' : ''}</select></div>
+    <div class="fld s6"><label for="d-local">Imóvel, empreendimento ou objeto</label><input class="in" id="d-local" value="${esc(d.local || '')}" maxlength="140" placeholder="Ex.: Fazenda Boa Vista · Poço 1 · Motosserra Stihl MS 382, série 123"></div>
+    <div class="fld s2 g-venc"><label for="d-emi">Emissão</label><input class="in" id="d-emi" type="date" value="${d.emissao || ''}"></div>
+    <div class="fld s2 g-venc"><label for="d-venc">Vencimento</label><input class="in" id="d-venc" type="date" value="${d.vencimento || ''}"></div>
+    <label class="fld s2 g-venc" style="flex-direction:row;align-items:center;gap:8px;padding-top:18px"><input type="checkbox" id="d-semv"${d.situacao !== 'processo' && !d.vencimento && id ? ' checked' : ''}> Sem vencimento</label>
+    <div class="fld s2 g-venc"><label for="d-ren">Protocolar renovação (dias antes)</label><input class="in mono" id="d-ren" type="number" min="0" max="720" value="${d.renovarDias ?? ''}"></div>
+    <div class="fld s2 g-venc"><label for="d-ale">Avisar com (dias)</label><input class="in mono" id="d-ale" type="number" min="0" max="720" value="${d.alertaDias ?? ''}"></div>
+    <div class="fld s2 g-proc"><label for="d-pprot">Nº do protocolo no órgão</label><input class="in mono" id="d-pprot" value="${esc(d.processoProtocolo || '')}" maxlength="60"></div>
+    <div class="fld s2 g-proc"><label for="d-pdata">Data do protocolo</label><input class="in" id="d-pdata" type="date" value="${d.processoData || ''}"></div>
+    <div class="calc" id="d-calc"></div>
+    <div class="sec-t"><span>Condicionantes</span><button type="button" class="btn sm" data-act="add-cond">+ Condicionante</button></div>
+    <div class="cond-ed" id="d-conds"></div>
+    <div class="fld s6"><label for="d-obs">Observações</label><textarea class="in" id="d-obs" maxlength="3000">${esc(d.obs || '')}</textarea></div>
+    <p class="err" id="m-err" hidden></p></form>
+    <div class="modal-f">${id ? `<button class="btn danger left" data-act="del-doc" data-id="${esc(id)}">Excluir</button>` : ''}<button class="btn" data-act="fecha-modal">Cancelar</button><button class="btn pri" id="m-save">Salvar documento</button></div>`);
+
+  let conds = (d.condicionantes || []).map(c => ({ ...c }));
+  let vencManual = !!id;
+  const desenhaConds = () => {
+    $('#d-conds').innerHTML = conds.length ? conds.map((c, i) => `<div class="ce" data-ci="${i}">
+      <div class="fld"><label for="ce-t-${i}">Condicionante</label><input class="in" id="ce-t-${i}" data-cf="texto" value="${esc(c.texto || '')}" maxlength="400" placeholder="Ex.: Enviar relatório de monitoramento de efluentes"></div>
+      <div class="fld"><label for="ce-p-${i}">Frequência</label><select class="in" id="ce-p-${i}" data-cf="per">${PERIODOS.map(p => `<option value="${p.v}"${p.v === perDe(c) ? ' selected' : ''}>${p.t}</option>`).join('')}</select></div>
+      <div class="fld"><label for="ce-d-${i}">${c.modo === 'periodica' ? 'Próxima entrega' : 'Prazo'}</label><input class="in" id="ce-d-${i}" data-cf="prazo" type="date" value="${c.prazo || ''}"${c.modo === 'continua' ? ' disabled' : ''}></div>
+      <div class="fld"><label for="ce-a-${i}">Avisar (dias)</label><input class="in mono" id="ce-a-${i}" data-cf="alerta" type="number" min="0" max="365" value="${c.alertaDias ?? 30}"${c.modo === 'continua' ? ' disabled' : ''}></div>
+      <button type="button" class="x" data-act="del-cond" data-i="${i}" aria-label="Remover condicionante">✕</button></div>`).join('')
+      : '<p class="hint" style="margin:0">Nenhuma condicionante. Cadastre as exigências da licença com prazo, para o sistema avisar antes de cada entrega.</p>';
+  };
+  const lerConds = () => $$('#d-conds .ce').forEach(el => {
+    const c = conds[+el.dataset.ci];
+    c.texto = $('[data-cf=texto]', el).value.trim();
+    const p = PERIODOS.find(x => x.v === $('[data-cf=per]', el).value);
+    c.modo = p.v === 'continua' ? 'continua' : p.m ? 'periodica' : 'unica';
+    c.periodoMeses = p.m || null;
+    c.prazo = c.modo === 'continua' ? null : ($('[data-cf=prazo]', el).value || null);
+    c.alertaDias = +$('[data-cf=alerta]', el).value || 0;
+  });
+  const aplicaTipo = (trocouTipo) => {
+    const t = S.cfg.tipos.find(x => x.id === $('#d-tipo').value);
+    if (!t) return;
+    if (trocouTipo) {
+      $('#d-ren').value = t.renovar || 0; $('#d-ale').value = t.alerta ?? 60;
+      if (t.orgao && !$('#d-org').value) $('#d-org').value = t.orgao;
+      $('#d-semv').checked = !!t.semVenc;
+    }
+    if (!vencManual && t.meses && $('#d-emi').value && !$('#d-semv').checked) $('#d-venc').value = addMeses($('#d-emi').value, t.meses);
+  };
+  const calc = () => {
+    const proc = $('#d-sit').value === 'processo', semv = $('#d-semv').checked;
+    $$('.g-proc').forEach(e => { e.hidden = !proc; });
+    $$('.g-venc').forEach(e => { e.hidden = proc; });
+    $('#d-venc').disabled = semv;
+    const v = $('#d-venc').value, ren = +$('#d-ren').value || 0, ale = $('#d-ale').value === '' ? 60 : +$('#d-ale').value;
+    let h = '';
+    if (proc) h = 'Enquanto estiver em processo, o documento aparece em <b>azul</b>. Quando o órgão emitir, edite e mude a situação para “Emitido”.';
+    else if (semv) h = 'Sem vencimento: o sinaleiro só muda por causa das condicionantes.';
+    else if (v) {
+      const lim = ren ? addDias(v, -ren) : v, aviso = addDias(lim, -ale);
+      h = `${ren ? `Protocolar a renovação até <b>${fmt(lim)}</b> (${ren} dias antes do vencimento). ` : ''}O aviso amarelo começa em <b>${fmt(aviso)}</b>. Fica vermelho ${ren ? 'se o protocolo não for feito até ' + fmt(lim) : 'em ' + fmt(addDias(v, 1))}.`;
+    } else h = 'Informe o vencimento ou marque “Sem vencimento”.';
+    $('#d-calc').innerHTML = h;
+  };
+  desenhaConds(); aplicaTipo(false); calc();
+  const f = $('#f-doc');
+  f.addEventListener('change', e => {
+    if (e.target.id === 'd-tipo') { aplicaTipo(true); }
+    if (e.target.id === 'd-emi') aplicaTipo(false);
+    if (e.target.id === 'd-venc') vencManual = !!e.target.value;
+    if (e.target.dataset.cf === 'per') { lerConds(); desenhaConds(); }
+    calc();
+  });
+  f.addEventListener('input', e => { if (['d-ren', 'd-ale'].includes(e.target.id)) calc(); });
+  f.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    if (b.dataset.act === 'add-cond') { lerConds(); conds.push({ id: novoId('k'), texto: '', modo: 'unica', prazo: null, alertaDias: 30, cumprimentos: [] }); desenhaConds(); $(`#ce-t-${conds.length - 1}`).focus(); }
+    if (b.dataset.act === 'del-cond') { lerConds(); conds.splice(+b.dataset.i, 1); desenhaConds(); }
+  });
+  $('#m-save').onclick = async () => {
+    lerConds();
+    const cli = $('#d-cli').value, tipoId = $('#d-tipo').value, sit = $('#d-sit').value, semv = $('#d-semv').checked;
+    if (!cli) return erro('Escolha o cliente.');
+    if (!tipoId) return erro('Escolha o tipo de documento.');
+    const emi = $('#d-emi').value || null, venc = semv ? null : ($('#d-venc').value || null);
+    if (sit !== 'processo' && !semv && !venc) return erro('Informe o vencimento ou marque “Sem vencimento”.');
+    if (emi && venc && venc <= emi) return erro('O vencimento precisa ser depois da emissão.');
+    const ruim = conds.findIndex(c => !c.texto || (c.modo !== 'continua' && !c.prazo));
+    if (ruim >= 0) return erro(`Condicionante ${ruim + 1}: preencha o texto e o prazo (ou escolha “Contínua”).`);
+    const t = S.cfg.tipos.find(x => x.id === tipoId);
+    const base = id ? S.documentos.get(id) : { criadoEm: new Date().toISOString(), criadoPor: S.meId || null };
+    const doc = { ...base, clienteId: cli, tipoId, tipoNome: t.nome, categoria: t.cat, numero: val('d-num'), orgao: val('d-org'), local: val('d-local'),
+      situacao: sit, emissao: emi, vencimento: sit === 'processo' ? null : venc,
+      renovarDias: +$('#d-ren').value || 0, alertaDias: $('#d-ale').value === '' ? 60 : +$('#d-ale').value,
+      processoProtocolo: sit === 'processo' ? val('d-pprot') : (base.processoProtocolo || ''), processoData: sit === 'processo' ? ($('#d-pdata').value || null) : (base.processoData || null),
+      obs: val('d-obs'), condicionantes: conds.map(c => ({ cumprimentos: [], ...c })) };
+    if (pre.renovaDe) doc.renovaDe = pre.renovaDe;
+    if (S.clientes.get(cli)?.demo) doc.demo = true;
+    const did = id || novoId('d');
+    $('#m-save').disabled = true;
+    try {
+      await gravar('documentos', did, doc);
+      if (pre.renovaDe && S.documentos.get(pre.renovaDe)) await gravar('documentos', pre.renovaDe, { ...S.documentos.get(pre.renovaDe), situacao: 'substituido', substituidoPor: did });
+      fecharModal(); toast(id ? 'Documento atualizado' : 'Documento cadastrado');
+    } catch (e) { erro(e.message); $('#m-save').disabled = false; }
+  };
+}
+
+/* ---------- Detalhe do documento ---------- */
+function verDoc(id) {
+  const d = S.documentos.get(id);
+  if (!d) return;
+  const r = A.docs.find(x => x.d.id === id) || (A.porCli.get(d.clienteId)?.hist || []).find(x => x.d.id === id);
+  if (!r) return;
+  const cli = r.cli, st = r.st, tel = soDigitos(cli.telefone);
+  const msg = mensagemCliente(r);
+  const wa = tel && msg ? `https://wa.me/${tel.length <= 11 ? '55' + tel : tel}?text=${encodeURIComponent(msg)}` : '';
+  const podeRenovar = S.canWrite && d.situacao === 'vigente' && d.vencimento;
+  abrirModal(mh(esc(nomeDoc(d))) + `<div class="modal-b">
+    <div class="fld s6" style="flex-direction:row;gap:10px;align-items:center;flex-wrap:wrap">${chip(st.n === 'inativo' ? 'none' : st.n, st.txt)}<span class="muted">${esc(st.det || '')}</span></div>
+    <div class="fld s2"><span class="lbl">Cliente</span><a href="#" data-act="ir-cli" data-id="${esc(cli.id)}" style="color:var(--accent);font-weight:600">${esc(cli.nome)}</a></div>
+    <div class="fld s2"><span class="lbl">Número</span><span class="mono">${esc(d.numero || '—')}</span></div>
+    <div class="fld s2"><span class="lbl">Órgão</span><span>${esc(d.orgao || '—')}</span></div>
+    <div class="fld s2"><span class="lbl">Emissão</span><span class="mono">${fmt(d.emissao)}</span></div>
+    <div class="fld s2"><span class="lbl">Vencimento</span><span class="mono">${d.vencimento ? fmt(d.vencimento) : (d.situacao === 'processo' ? '—' : 'Indeterminado')}</span></div>
+    <div class="fld s2"><span class="lbl">Renovação</span><span>${d.renovarDias ? 'Protocolar ' + d.renovarDias + ' dias antes' : 'Sem prazo de antecedência'}</span></div>
+    ${d.local ? `<div class="fld s6"><span class="lbl">Imóvel / objeto</span><span>${esc(d.local)}</span></div>` : ''}
+    <div class="sec-t"><span>Condicionantes (${r.cs.length})</span></div>
+    <div class="fld s6" style="gap:6px">${r.cs.length ? r.cs.map(x => `<div class="cond">${dot(x.st.n === 'inativo' ? 'none' : x.st.n)}<p>${esc(x.c.texto)}<small>${perNome(x.c)} · ${esc(x.st.txt)}${x.st.det ? ' · ' + esc(x.st.det) : ''}</small>${(x.c.cumprimentos || []).length ? `<small>Entregas: ${x.c.cumprimentos.slice(-4).map(k => fmt(k.data) + (k.protocolo ? ' (nº ' + esc(k.protocolo) + ')' : '')).join(' · ')}</small>` : ''}</p>${S.canWrite && st.n !== 'inativo' && !x.st.feita && x.c.modo !== 'continua' ? `<button class="btn sm" data-cumprir="${esc(d.id)}:${x.i}">Registrar entrega</button>` : ''}</div>`).join('') : '<span class="muted">Nenhuma condicionante cadastrada.</span>'}</div>
+    ${d.obs ? `<div class="fld s6"><span class="lbl">Observações</span><span style="white-space:pre-wrap">${esc(d.obs)}</span></div>` : ''}
+    ${msg ? `<div class="sec-t"><span>Avisar o cliente</span></div><div class="fld s6"><textarea class="in" id="d-msg" rows="3" readonly>${esc(msg)}</textarea><div class="btns" style="margin-top:6px"><button class="btn sm" data-copy-el="d-msg">Copiar mensagem</button>${wa ? `<a class="btn sm" href="${wa}" target="_blank" rel="noopener">Abrir no WhatsApp</a>` : '<span class="hint">Cadastre o telefone do cliente para abrir no WhatsApp.</span>'}</div></div>` : ''}
+    <p class="hint fld s6" id="d-audit"></p>
+  </div>
+  <div class="modal-f">${S.canWrite ? `<button class="btn left" data-act="edita-doc" data-id="${esc(id)}">Editar</button>${podeRenovar && !d.renovData ? `<button class="btn" data-act="protocolo" data-id="${esc(id)}">Protocolei a renovação</button>` : ''}${podeRenovar ? `<button class="btn pri" data-act="renovado" data-id="${esc(id)}">Chegou a nova via</button>` : ''}` : ''}<button class="btn" data-act="fecha-modal">Fechar</button></div>`);
+  if (S.user && d.atualizadoPor) S.user.profiles([d.atualizadoPor]).then(ps => { const el = $('#d-audit'); if (el) el.textContent = `Última alteração: ${ps[d.atualizadoPor]?.name || 'alguém da equipe'}${d.atualizadoEm ? ' em ' + new Date(d.atualizadoEm).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : ''}.`; });
+}
+function mensagemCliente(r) {
+  const d = r.d, st = r.st, nome = (r.cli.nome || '').split(' ')[0];
+  if (!d.vencimento || !['crit', 'warn'].includes(st.n)) return '';
+  const doc = nomeDoc(d) + (d.numero ? ' nº ' + d.numero : '');
+  if (st.dias < 0) return `Olá, ${nome}! Aqui é da Consultoria Ambiental. A ${doc} venceu em ${fmt(d.vencimento)}. Precisamos regularizar o quanto antes para evitar autuação. Podemos iniciar hoje?`;
+  if (st.renov) return `Olá, ${nome}! Aqui é da Consultoria Ambiental. A ${doc} vence em ${fmt(d.vencimento)} e o pedido de renovação precisa ser protocolado até ${fmt(st.limite)} para a licença continuar valendo durante a análise. Podemos iniciar a renovação?`;
+  return `Olá, ${nome}! Aqui é da Consultoria Ambiental. A ${doc} vence em ${fmt(d.vencimento)}. Podemos iniciar a renovação?`;
+}
+
+/* ---------- Entrega de condicionante ---------- */
+function formCumprir(docId, i) {
+  const d = S.documentos.get(docId); const c = d && d.condicionantes[i];
+  if (!c) return;
+  const prox = c.modo === 'periodica' && c.prazo ? addMeses(c.prazo, c.periodoMeses || 12) : null;
+  abrirModal(mh('Registrar entrega') + `<form class="modal-b" id="f-cump" novalidate>
+    <p class="fld s6" style="margin:0"><b>${esc(c.texto)}</b><span class="muted">${esc(nomeDoc(d))} · ${esc(S.clientes.get(d.clienteId)?.nome || '')} · prazo ${fmt(c.prazo)}</span></p>
+    <div class="fld s2"><label for="k-data">Data da entrega *</label><input class="in" id="k-data" type="date" value="${hoje()}" max="${hoje()}"></div>
+    <div class="fld" style="grid-column:span 4"><label for="k-prot">Nº do protocolo, ofício ou recibo</label><input class="in mono" id="k-prot" maxlength="80"></div>
+    <div class="fld s6"><label for="k-obs">Observação</label><textarea class="in" id="k-obs" maxlength="1000"></textarea></div>
+    <p class="calc">${prox ? `Condicionante ${perNome(c).toLowerCase()}: o próximo prazo passa para <b>${fmt(prox)}</b>.` : 'Condicionante de prazo único: ela fica marcada como <b>cumprida</b>.'}</p>
+    <p class="err" id="m-err" hidden></p></form>
+    <div class="modal-f"><button class="btn" data-act="fecha-modal">Cancelar</button><button class="btn pri" id="m-save">Registrar entrega</button></div>`, { sm: true });
+  $('#m-save').onclick = async () => {
+    const data = $('#k-data').value;
+    if (!data) return erro('Informe a data da entrega.');
+    const novo = JSON.parse(JSON.stringify(S.documentos.get(docId)));
+    const k = novo.condicionantes[i];
+    k.cumprimentos = [...(k.cumprimentos || []), { data, protocolo: val('k-prot'), obs: val('k-obs'), prazoOriginal: k.prazo, por: S.meId || null }].slice(-40);
+    if (k.modo === 'periodica') k.prazo = addMeses(k.prazo, k.periodoMeses || 12); else k.concluida = true;
+    $('#m-save').disabled = true;
+    try { await gravar('documentos', docId, novo); fecharModal(); toast('Entrega registrada'); }
+    catch (e) { erro(e.message); $('#m-save').disabled = false; }
+  };
+}
+
+/* ---------- Protocolo de renovação ---------- */
+function formProtocolo(docId) {
+  const d = S.documentos.get(docId), st = stDoc(d);
+  abrirModal(mh('Protocolei a renovação') + `<form class="modal-b" id="f-prot" novalidate>
+    <p class="fld s6" style="margin:0"><b>${esc(nomeDoc(d))}</b><span class="muted">Vence em ${fmt(d.vencimento)}${st.renov ? ' · protocolar até ' + fmt(st.limite) : ''}</span></p>
+    <div class="fld s2"><label for="p-data">Data do protocolo *</label><input class="in" id="p-data" type="date" value="${hoje()}" max="${hoje()}"></div>
+    <div class="fld" style="grid-column:span 4"><label for="p-num">Nº do protocolo</label><input class="in mono" id="p-num" maxlength="80"></div>
+    <p class="calc" id="p-calc"></p><p class="err" id="m-err" hidden></p></form>
+    <div class="modal-f"><button class="btn" data-act="fecha-modal">Cancelar</button><button class="btn pri" id="m-save">Salvar protocolo</button></div>`, { sm: true });
+  const upd = () => {
+    const v = $('#p-data').value;
+    $('#p-calc').innerHTML = !v ? '' : (!st.renov || v <= st.limite) ? 'Protocolo <b>dentro do prazo</b>: o documento fica azul e, se o órgão demorar, continua valendo até a decisão.' : `Protocolo <b>fora do prazo</b> (limite era ${fmt(st.limite)}). O documento fica amarelo e vence em ${fmt(d.vencimento)} se o órgão não decidir antes.`;
+  };
+  $('#p-data').addEventListener('input', upd); upd();
+  $('#m-save').onclick = async () => {
+    const v = $('#p-data').value; if (!v) return erro('Informe a data do protocolo.');
+    $('#m-save').disabled = true;
+    try { await gravar('documentos', docId, { ...S.documentos.get(docId), renovData: v, renovProtocolo: val('p-num') }); fecharModal(); toast('Protocolo registrado'); }
+    catch (e) { erro(e.message); $('#m-save').disabled = false; }
+  };
+}
+function novaVia(docId) {
+  const d = S.documentos.get(docId);
+  formDoc(null, { clienteId: d.clienteId, tipoId: d.tipoId, orgao: d.orgao, local: d.local, renovarDias: d.renovarDias, alertaDias: d.alertaDias, renovaDe: docId,
+    condicionantes: (d.condicionantes || []).map(c => ({ id: novoId('k'), texto: c.texto, modo: c.modo, periodoMeses: c.periodoMeses, prazo: null, alertaDias: c.alertaDias, cumprimentos: [] })) });
+}
+
+/* ================= ações gerais ================= */
+const pausa = ms => new Promise(r => setTimeout(r, ms));
+async function salvarConfig(patch) {
+  const cfg = { tipos: S.cfg.tipos, equipe: S.cfg.equipe, ...patch };
+  if (!S.db) { S.cfg = cfg; render(); return; }
+  try { await S.db.doc('config/geral').set(cfg); } catch (e) { throw traduzErro(e); }
+}
+function removerDemo() {
+  const docs = [...S.documentos.values()].filter(d => d.demo || S.clientes.get(d.clienteId)?.demo);
+  const clis = [...S.clientes.values()].filter(c => c.demo);
+  confirmar('Remover dados de exemplo', `Serão apagados ${clis.length} clientes de exemplo e ${docs.length} documentos deles. Os cadastros reais não são afetados.`, 'Remover exemplos', async () => {
+    let n = 0; const tot = docs.length + clis.length;
+    for (const d of docs) { await apagar('documentos', d.id); if (++n % 6 === 0) toast(`Removendo… ${n} de ${tot}`); await pausa(30); }
+    for (const c of clis) { await apagar('clientes', c.id); if (++n % 6 === 0) toast(`Removendo… ${n} de ${tot}`); await pausa(30); }
+    toast('Exemplos removidos');
+  });
+}
+function excluirCliente(id) {
+  const c = S.clientes.get(id), docs = [...S.documentos.values()].filter(d => d.clienteId === id);
+  confirmar('Excluir cliente', `Excluir <b>${esc(c.nome)}</b> e ${docs.length} documento${docs.length === 1 ? '' : 's'} dele? Não dá para desfazer. Se o cliente só saiu da carteira, prefira desmarcar “Cliente ativo”.`, 'Excluir', async () => {
+    for (const d of docs) { await apagar('documentos', d.id); await pausa(30); }
+    await apagar('clientes', id); fecharDrawer(); toast('Cliente excluído');
+  });
+}
+function excluirDoc(id) {
+  const d = S.documentos.get(id);
+  confirmar('Excluir documento', `Excluir <b>${esc(nomeDoc(d))}</b>${d.numero ? ' nº ' + esc(d.numero) : ''}? Use só para cadastro errado. Documento renovado sai sozinho dos alertas pelo botão “Chegou a nova via”.`, 'Excluir', async () => { await apagar('documentos', id); toast('Documento excluído'); });
+}
+async function exportar() {
+  if (!S.downloads) return;
+  const L = [];
+  const st = n => ROTULO[n === 'none' ? 'ok' : n];
+  if (S.view === 'clientes') {
+    L.push(['Cliente', 'CPF/CNPJ', 'Município', 'UF', 'Responsável', 'Situação geral', 'Documentos ativos', ...CATS.map(c => c.nome), 'Condicionantes', 'Próximo prazo', 'O que vence', 'Telefone', 'E-mail']);
+    [...A.porCli.values()].filter(a => a.cli.ativo !== false).sort((a, b) => SEV[b.n] - SEV[a.n] || a.cli.nome.localeCompare(b.cli.nome, 'pt-BR')).forEach(a => {
+      const c = a.cli;
+      L.push([c.nome, c.doc, c.municipio, c.uf, c.responsavel, a.n === 'none' ? 'Sem documentos' : st(a.n), a.docs.length, ...CATS.map(ct => a.cats[ct.id] ? st(a.cats[ct.id]) : '—'), a.conds.length ? st(a.condN) : '—', a.prox ? fmt(a.prox.data) : '', a.prox ? a.prox.txt : '', c.telefone, c.email]);
+    });
+  } else if (S.docMode === 'doc') {
+    L.push(['Situação', 'Detalhe', 'Cliente', 'CPF/CNPJ', 'Responsável', 'Área', 'Documento', 'Número', 'Órgão', 'Imóvel/objeto', 'Emissão', 'Vencimento', 'Protocolar renovação até', 'Renovação protocolada em', 'Condicionantes atrasadas', 'Condicionantes a vencer']);
+    A.docs.slice().sort((a, b) => SEV[b.n] - SEV[a.n] || (alvoDoc(a) || '9999').localeCompare(alvoDoc(b) || '9999')).forEach(r => {
+      const d = r.d;
+      L.push([r.st.txt, r.st.det || '', r.cli.nome, r.cli.doc, r.cli.responsavel, catNome(r.cat), nomeDoc(d), d.numero, d.orgao, d.local, fmt(d.emissao), d.vencimento ? fmt(d.vencimento) : 'Sem vencimento', r.st.renov && r.st.limite ? fmt(r.st.limite) : '', d.renovData ? fmt(d.renovData) : '', r.cs.filter(x => x.st.n === 'crit').length, r.cs.filter(x => x.st.n === 'warn').length]);
+    });
+  } else {
+    L.push(['Situação', 'Cliente', 'Documento', 'Número', 'Condicionante', 'Frequência', 'Prazo', 'Última entrega', 'Protocolo da última entrega']);
+    A.conds.filter(x => x.st.n !== 'inativo').sort((a, b) => SEV[b.st.n] - SEV[a.st.n] || (a.c.prazo || '9999').localeCompare(b.c.prazo || '9999')).forEach(x => {
+      const u = (x.c.cumprimentos || []).slice(-1)[0];
+      L.push([x.st.txt, x.cli.nome, nomeDoc(x.d), x.d.numero, x.c.texto, perNome(x.c), x.c.prazo ? fmt(x.c.prazo) : '', u ? fmt(u.data) : '', u ? u.protocolo : '']);
+    });
+  }
+  const csv = '﻿' + L.map(l => l.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(';')).join('\r\n');
+  const nome = S.view === 'clientes' ? 'clientes' : S.docMode === 'doc' ? 'documentos' : 'condicionantes';
+  try { await S.downloads.save({ filename: `${nome}-${hoje()}.csv`, data: csv }); toast('Planilha salva'); }
+  catch (e) { if (e && e.code !== 'declined') toast('Não foi possível gerar a planilha nesta janela.'); }
+}
+async function copiar(txt, el) {
+  try { await navigator.clipboard.writeText(txt); toast('Copiado'); }
+  catch { if (el && el.select) { el.select(); toast('Texto selecionado. Use Ctrl+C para copiar.'); } else toast('Selecione o texto e copie manualmente.'); }
+}
+
+/* ================= tooltip ================= */
+function tipHtml(el) {
+  const k = el.dataset.tip, lin = (n, t) => `<div class="tl"><i style="--c:var(--${n})"></i><span>${t}</span></div>`;
+  if (k === 'bar' || k === 'mes') return esc(el.dataset.t);
+  if (k === 'cat') {
+    const rs = A.porCli.get(el.dataset.cli)?.catDocs[el.dataset.cat] || [];
+    return `<b>${esc(catNome(el.dataset.cat))}</b>` + (rs.length ? rs.map(r => lin(r.st.n, esc(trunc(nomeDoc(r.d), 42)) + ' — ' + esc(r.st.txt))).join('') : '<div>Nenhum documento nesta área</div>');
+  }
+  const cs = k === 'cond' ? (A.porCli.get(el.dataset.cli)?.conds || []) : (A.docs.find(r => r.d.id === el.dataset.doc)?.cs || []);
+  const vis = cs.filter(x => x.st.n !== 'inativo').sort((a, b) => SEV[b.st.n] - SEV[a.st.n]);
+  if (!vis.length) return '<b>Condicionantes</b><div>Nenhuma cadastrada</div>';
+  return `<b>Condicionantes (${vis.length})</b>` + vis.slice(0, 7).map(x => lin(x.st.n === 'none' ? 'none' : x.st.n, esc(trunc(x.c.texto, 48)) + ' — ' + esc(x.st.txt))).join('') + (vis.length > 7 ? `<div>+ ${vis.length - 7} outras</div>` : '');
+}
+function mostraTip(el) {
+  const t = $('#tip'); t.innerHTML = tipHtml(el); t.hidden = false;
+  const r = el.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight;
+  let x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8), y = r.bottom + 8;
+  if (y + h > innerHeight - 8) y = r.top - h - 8;
+  t.style.left = x + 'px'; t.style.top = Math.max(8, y) + 'px';
+}
+const escondeTip = () => { $('#tip').hidden = true; };
+
+/* ================= eventos ================= */
+function trocaView(v) {
+  S.view = v;
+  $$('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.view === v));
+  $$('.view').forEach(s => { s.hidden = s.id !== 'v-' + v; });
+  try { history.replaceState(null, '', '#' + v); } catch { }
+  if (v === 'config') { S.cfgSujo = false; }
+  render(); scrollTo(0, 0);
+}
+function limpaDoc() { Object.assign(S.fd, { q: '', cat: '', org: '', resp: '', kpi: '', mes: '', st: new Set(['ok', 'renov', 'warn', 'crit']) }); $('#fd-q').value = ''; render(); }
+function limpaCli() { Object.assign(S.fc, { q: '', resp: '', cat: '', st: new Set(['ok', 'renov', 'warn', 'crit']) }); $('#fc-q').value = ''; render(); }
+function ligarEventos() {
+  document.addEventListener('click', e => {
+    const t = e.target;
+    const cump = t.closest('[data-cumprir]');
+    if (cump) { e.stopPropagation(); const [d, i] = cump.dataset.cumprir.split(':'); formCumprir(d, +i); return; }
+    const cp = t.closest('[data-copy]'); if (cp) { copiar(cp.dataset.copy); return; }
+    const cpe = t.closest('[data-copy-el]'); if (cpe) { const el = document.getElementById(cpe.dataset.copyEl); copiar(el.value, el); return; }
+    const act = t.closest('[data-act]');
+    if (act) {
+      const id = act.dataset.id;
+      switch (act.dataset.act) {
+        case 'fecha-modal': fecharModal(); break;
+        case 'fecha-drawer': fecharDrawer(); break;
+        case 'del-demo': removerDemo(); break;
+        case 'limpa-cli': limpaCli(); break;
+        case 'limpa-doc': limpaDoc(); break;
+        case 'ver-docs': $('#alerts').hidden = true; S.docMode = 'doc'; trocaView('documentos'); break;
+        case 'edita-cli': formCliente(id); break;
+        case 'novo-doc-cli': formDoc(null, { clienteId: id }); break;
+        case 'del-cli': excluirCliente(id); break;
+        case 'del-doc': excluirDoc(id); break;
+        case 'edita-doc': formDoc(id); break;
+        case 'protocolo': formProtocolo(id); break;
+        case 'renovado': novaVia(id); break;
+        case 'ir-cli': e.preventDefault(); fecharModal(); abrirCliente(id); break;
+      }
+      return;
+    }
+    const tab = t.closest('.tab'); if (tab) { trocaView(tab.dataset.view); return; }
+    const kc = t.closest('[data-kc]');
+    if (kc) { const id = kc.dataset.kc; S.fc.st = (id === 'all' || (S.fc.st.size === 1 && S.fc.st.has(id))) ? new Set(['ok', 'renov', 'warn', 'crit']) : new Set([id]); render(); return; }
+    const kd = t.closest('[data-kd]');
+    if (kd) { const id = kd.dataset.kd; S.fd.kpi = S.fd.kpi === id ? '' : id; S.docMode = kd.dataset.m; if (S.fd.kpi) S.fd.st = new Set(['ok', 'renov', 'warn', 'crit']); render(); return; }
+    const mes = t.closest('[data-mes]'); if (mes) { S.fd.mes = S.fd.mes === mes.dataset.mes ? '' : mes.dataset.mes; render(); return; }
+    const so = t.closest('[data-sort]'); if (so) { e.stopPropagation(); S.sortCli = S.sortCli === so.dataset.sort ? 'sev' : so.dataset.sort; render(); return; }
+    const dtip = t.closest('[data-deltipo]'); if (dtip) { S.tiposEd.splice(+dtip.dataset.deltipo, 1); S.cfgSujo = true; desenharConfig(); return; }
+    const rowC = t.closest('tr[data-cli]');
+    if (rowC) { const db = t.closest('.dot-btn'); abrirCliente(rowC.dataset.cli, db && db.dataset.cat); return; }
+    const docEl = t.closest('[data-doc]');
+    if (docEl) { $('#alerts').hidden = true; verDoc(docEl.dataset.doc); return; }
+    if (t.id === 'drawer') { fecharDrawer(); return; }
+    if (!t.closest('#alerts') && !t.closest('#bell')) $('#alerts').hidden = true;
+  });
+  $('#bell').onclick = e => { e.stopPropagation(); const p = $('#alerts'); p.hidden = !p.hidden; $('#bell').setAttribute('aria-expanded', !p.hidden); if (!p.hidden) desenharAlertas(); };
+  $('#seg-doc').onclick = () => { S.docMode = 'doc'; if (/^c/.test(S.fd.kpi)) S.fd.kpi = ''; render(); };
+  $('#seg-cond').onclick = () => { S.docMode = 'cond'; if (S.fd.kpi && !/^c/.test(S.fd.kpi)) S.fd.kpi = ''; render(); };
+  $('#novo-cli').onclick = () => formCliente();
+  $('#novo-doc').onclick = () => { if (!S.clientes.size) { toast('Cadastre um cliente primeiro'); formCliente(); } else formDoc(null); };
+  $('#exp-cli').onclick = exportar; $('#exp-doc').onclick = exportar;
+  $('#del-demo').onclick = removerDemo;
+  let tq;
+  $('#fc-q').addEventListener('input', e => { clearTimeout(tq); tq = setTimeout(() => { S.fc.q = e.target.value; render(); }, 120); });
+  $('#fd-q').addEventListener('input', e => { clearTimeout(tq); tq = setTimeout(() => { S.fd.q = e.target.value; render(); }, 120); });
+  $('#fc-resp').onchange = e => { S.fc.resp = e.target.value; render(); };
+  $('#fc-cat').onchange = e => { S.fc.cat = e.target.value; render(); };
+  $('#fd-cat').onchange = e => { S.fd.cat = e.target.value; render(); };
+  $('#fd-org').onchange = e => { S.fd.org = e.target.value; render(); };
+  $('#fd-resp').onchange = e => { S.fd.resp = e.target.value; render(); };
+  $('#fc-st').onchange = e => { e.target.checked ? S.fc.st.add(e.target.value) : S.fc.st.delete(e.target.value); render(); };
+  $('#fd-st').onchange = e => { S.fd.kpi = ''; e.target.checked ? S.fd.st.add(e.target.value) : S.fd.st.delete(e.target.value); render(); };
+  $('#fd-clear').onclick = limpaDoc;
+  /* configurações */
+  $('#t-tipos').addEventListener('input', e => {
+    const tr = e.target.closest('tr[data-i]'); if (!tr) return;
+    const t = S.tiposEd[+tr.dataset.i], f = e.target.dataset.f;
+    t[f] = ['meses', 'renovar', 'alerta'].includes(f) ? Math.max(0, +e.target.value || 0) : e.target.value;
+    S.cfgSujo = true;
+  });
+  $('#add-tipo').onclick = () => { S.tiposEd.push({ id: novoId('t'), cat: 'outros', nome: '', orgao: '', meses: 12, renovar: 0, alerta: 60 }); S.cfgSujo = true; desenharConfig(); $('#tp-n-' + (S.tiposEd.length - 1))?.focus(); };
+  $('#save-tipos').onclick = async () => {
+    const ts = S.tiposEd.map(t => ({ ...t, nome: String(t.nome || '').trim(), orgao: String(t.orgao || '').trim() }));
+    if (ts.some(t => !t.nome)) return toast('Dê um nome a todos os tipos de documento.');
+    try { await salvarConfig({ tipos: ts }); S.cfgSujo = false; toast('Tipos salvos'); } catch (e) { toast(e.message); }
+  };
+  $('#save-equipe').onclick = async () => {
+    const eq = [...new Set($('#cfg-equipe').value.split('\n').map(s => s.trim()).filter(Boolean))];
+    try { await salvarConfig({ equipe: eq }); toast('Equipe salva'); } catch (e) { toast(e.message); }
+  };
+  /* tooltip */
+  document.addEventListener('pointerover', e => { const el = e.target.closest('[data-tip]'); if (el) mostraTip(el); });
+  document.addEventListener('pointerout', e => { const el = e.target.closest('[data-tip]'); if (el && !el.contains(e.relatedTarget)) escondeTip(); });
+  document.addEventListener('focusin', e => { const el = e.target.closest('[data-tip]'); if (el) mostraTip(el); else escondeTip(); });
+  addEventListener('scroll', escondeTip, { passive: true });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { if (!$('#modal').hidden) fecharModal(); else if (!$('#drawer').hidden) fecharDrawer(); else $('#alerts').hidden = true; }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.al[data-doc]')) { e.preventDefault(); $('#alerts').hidden = true; verDoc(e.target.dataset.doc); }
+  });
+}
+
+/* ================= início ================= */
+function carregarExemploLocal() {
+  const ex = gerarExemplo(hoje());
+  S.clientes = new Map(ex.clientes.map(c => [c.id, c]));
+  S.documentos = new Map(ex.documentos.map(d => [d.id, d]));
+}
+let resumoFeito = false;
+function aoCarregar() {
+  if (resumoFeito || !S.carregado.cli || !S.carregado.doc) return;
+  resumoFeito = true;
+  let visto = null; try { visto = localStorage.getItem('ca-resumo'); } catch { }
+  const crit = pendentes().filter(i => i.n === 'crit').length;
+  if (crit && visto !== hoje()) { requestAnimationFrame(() => { $('#alerts').hidden = false; $('#bell').setAttribute('aria-expanded', 'true'); desenharAlertas(); }); try { localStorage.setItem('ca-resumo', hoje()); } catch { } }
+}
+async function iniciar() {
+  ligarEventos();
+  const inicial = (location.hash || '').slice(1);
+  if (['clientes', 'documentos', 'config'].includes(inicial)) trocaView(inicial); else render();
+  if (!window.claude || typeof window.claude.use !== 'function') { S.semBanco = true; carregarExemploLocal(); render(); return; }
+  const [db, user, downloads] = await Promise.all(['db', 'user', 'downloads'].map(n => window.claude.use(n).catch(() => null)));
+  S.user = user; S.downloads = downloads;
+  $('#exp-cli').hidden = $('#exp-doc').hidden = !downloads;
+  if (user) {
+    const me = await user.me();
+    S.meId = me.id;
+    if (me.name) { $('#me').hidden = false; $('#me-img').src = me.avatarUrl; $('#me-name').textContent = me.name.split(' ')[0]; }
+    if ((await user.can('data.write')) === false) S.canWrite = false;
+  }
+  if (!db) { S.semBanco = true; carregarExemploLocal(); render(); return; }
+  S.db = db;
+  const falha = e => { if (e && e.code === 'revoked') { S.canWrite = false; render(); } else toast('A conexão com o banco caiu. Recarregue a página.'); };
+  db.collection('clientes').limit(1000).onSnapshot(s => { S.clientes = new Map(s.docs.map(d => [d.id, { ...d.data(), id: d.id }])); S.carregado.cli = true; render(); aoCarregar(); }, falha);
+  db.collection('documentos').limit(1000).onSnapshot(s => { S.documentos = new Map(s.docs.map(d => [d.id, { ...d.data(), id: d.id }])); S.carregado.doc = true; render(); aoCarregar(); }, falha);
+  db.doc('config/geral').onSnapshot(s => {
+    if (s.exists) { const c = s.data(); S.cfg = { tipos: Array.isArray(c.tipos) && c.tipos.length ? c.tipos : TIPOS_PADRAO, equipe: Array.isArray(c.equipe) ? c.equipe : [] }; }
+    render();
+  }, falha);
+  setInterval(render, 30 * 60 * 1000);
+}
+iniciar();
+</script>
