@@ -29,6 +29,7 @@ input:disabled{opacity:.5;cursor:not-allowed}
 label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .money{font-variant-numeric:tabular-nums;font-weight:700;color:var(--green)}
 .money-neg{font-variant-numeric:tabular-nums;font-weight:700;color:var(--danger)}
+.money-total{color:var(--text)}  /* Total/Valor em branco, como o card Volume Vendas Bruto */
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
 .badge.gerente{background:rgba(var(--purple-rgb),.15);color:var(--purple);border:1px solid var(--purple)}
 .badge.vendedor{background:rgba(var(--green-rgb),.12);color:var(--green);border:1px solid var(--green)}
@@ -483,7 +484,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.19.0';
+const VERSAO='v4.19.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -949,7 +950,7 @@ function htmlPendentes(){
       <td class="pend-data">${dataHoraBR(v.data)} ${idadeVenda(v)}</td>
       ${ger?`<td>${esc(v.usuario_nome||'—')}</td>`:''}
       <td class="pend-opc" style="color:var(--muted)">${esc((v.itens||[]).map(i=>i.qtd+'× '+i.nome).join(', '))}</td>
-      <td class="money pend-opc">${fmt(v.total)}</td>
+      <td class="money money-total pend-opc">${fmt(v.total)}</td>
       <td class="pend-opc" style="color:var(--purple)">${fmt(v.cota_funcionario)}${rp.aux.length?`<div class="pend-motivo">${rp.aux.map(a=>'pagar '+esc(a.nome||'?')+' '+fmt(a.valor)).join('<br>')}</div>`:''}</td>
       <td class="money" style="color:var(--green);font-weight:800">${fmt(v.receita_loja)}</td>
       <td>${situacao}</td>
@@ -1976,7 +1977,7 @@ function renderFinanceiro(c){
   if(key==='descricao')return `<td style="color:var(--muted)">${esc(r.descricao)}</td>`;
   if(key==='entrada')return `<td class="money" style="color:var(--info)">${r.tipo==='venda'||(r.tipo==='ajuste'&&r.entrada>0)?fmt(r.entrada):'—'}</td>`;
   if(key==='repasse')return `<td style="color:var(--purple)">${r.tipo==='venda'||r.tipo==='auxiliar'?fmt(r.repasse):'—'}</td>`;
-  if(key==='valor')return r.valor==null?'<td style="color:var(--muted)">—</td>':r.valor>=0?`<td class="money">${fmt(r.valor)}</td>`:`<td class="money-neg">−${fmt(-r.valor)}</td>`;
+  if(key==='valor')return r.valor==null?'<td style="color:var(--muted)">—</td>':r.valor>=0?`<td class="money money-total">${fmt(r.valor)}</td>`:`<td class="money-neg">−${fmt(-r.valor)}</td>`;
   if(key==='status')return `<td><span class="tag ${r.status==='ativa'?'g':r.status==='pendente'?'y':'r'}">${r.status}</span></td>`;
   return '<td></td>';
  };
