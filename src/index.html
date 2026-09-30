@@ -390,6 +390,57 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .msel-opt .tag{margin-left:auto}
 .msel-vazio{padding:10px;color:var(--muted);font-size:12px}
 .pend-card{margin-top:18px}
+.pn-filtros{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:22px}
+.pn-filtros input[type=date]{width:auto;padding:6px 8px}
+.pn-per{color:var(--muted);font-size:12px;margin-left:6px}
+.pn-tile .pn-sub{color:var(--muted);font-size:12px;margin-top:6px}
+.pn-sub .tag{white-space:nowrap}
+.pn-card .pn-barras{max-width:900px}
+.pn-delta{font-size:12px;margin-top:6px;color:var(--muted)}
+.pn-delta.bom{color:var(--green)}.pn-delta.ruim{color:var(--danger-light)}
+.pn-delta span{color:var(--muted)}
+.pn-hero{font-size:30px}
+.pn-tile.pn-destaque{border-color:var(--green)}
+.pn-tile.pn-atencao{border-color:var(--warning-border)}
+.pn-alertas{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.pn-alerta{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;text-align:left;cursor:pointer}
+.pn-alerta.r{border-color:var(--danger)}.pn-alerta.y{border-color:var(--warning-border)}
+.pn-alerta b{font-size:16px;margin-right:4px}
+.pn-alerta:hover{background:var(--input-bg)}
+.pn-ok{color:var(--muted);font-size:13px;padding:8px 0}
+.pn-card{margin-bottom:16px}
+.pn-card-tit{font-weight:700;font-size:14px;margin-bottom:12px}
+.pn-card-tit .muted{font-weight:400;font-size:12px}
+.pn-colunas{width:100%;min-height:240px}
+.pn-colunas svg{display:block}
+.pn-col{fill:#00A843}
+.pn-hit{outline:none;cursor:default}
+.pn-hit.ativo,.pn-hit:focus{fill:rgba(255,255,255,.04)}
+.pn-eixo{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.pn-tip{position:fixed;display:none;flex-direction:column;gap:2px;pointer-events:none;z-index:300;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;box-shadow:0 8px 24px rgba(0,0,0,.5);font-size:12px}
+.pn-tip b{font-size:15px}.pn-tip span{color:var(--muted)}
+.pn-tabela-det{margin-top:8px}.pn-tabela-det summary{cursor:pointer;color:var(--muted);font-size:12px}
+.pn-duas{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pn-duas>.pn-card{min-width:0}
+.pn-barras{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.pn-barra-linha{display:grid;grid-template-columns:minmax(80px,140px) 1fr auto;gap:10px;align-items:center;font-size:13px}
+.pn-barra-nome{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pn-barra-trilho{height:14px;display:block}
+.pn-barra{display:block;height:14px;background:#00A843;border-radius:0 4px 4px 0}
+.pn-barra-valor{font-variant-numeric:tabular-nums;color:var(--text);font-weight:600}
+.pn-tab table{font-size:12px}
+.pn-parados{color:var(--muted);font-size:12px;margin-top:10px}
+.pn-aviso{padding:10px 0;border-bottom:1px solid var(--border)}
+.pn-aviso-t{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}.pn-aviso-t .muted{font-size:11px}
+.pn-meter{height:8px;background:rgba(var(--green-rgb),.15);border-radius:4px;overflow:hidden}
+.pn-meter span{display:block;height:100%;background:#00A843;border-radius:4px}
+.pn-aviso .pn-sub{color:var(--muted);font-size:12px;margin-top:6px}
+.pn-equipe{margin-top:12px;font-size:13px;color:var(--muted)}.pn-equipe b{color:var(--green)}
+.pn-lista{display:flex;flex-direction:column}
+.pn-ativ{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.pn-ativ:last-child{border-bottom:0}
+.pn-ativ-q{color:var(--muted);font-size:11px}
+@media(max-width:900px){.pn-duas{grid-template-columns:1fr}}
 .pend-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .pend-resumo{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .pend-chip{display:flex;flex-direction:column;gap:2px;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:8px 12px;min-width:150px}
@@ -483,7 +534,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.19.0';
+const VERSAO='v4.20.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -562,7 +613,7 @@ let db=null, session=null;
 async function carregarTudo(){
   const avisosP=Promise.all([
     sb.from('avisos').select('*').order('criado_em',{ascending:false}),
-    sb.from('avisos_vistos').select('aviso_id')
+    sb.from('avisos_vistos').select('aviso_id,usuario_id')
   ]).catch(e=>[{data:[],error:e},{data:[],error:e}]);
   const depositosP=sb.from('depositos_caixa').select('*').order('data',{ascending:false}).then(r=>r,e=>({data:[],error:e}));
   const[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,
@@ -623,7 +674,9 @@ async function carregarTudo(){
     categorias:(categorias.data||[]),
     pedidos_senha:(pedidosSenha.data||[]),
     avisos:avisosR.error?[]:(avisosR.data||[]),
-    avisos_vistos:new Set(vistosR.error?[]:(vistosR.data||[]).map(v=>v.aviso_id)),
+    // pop-up: só o que a própria pessoa viu (a gerência também lê os "vistos" de todos, para o Painel)
+    avisos_vistos:new Set(vistosR.error?[]:(vistosR.data||[]).filter(v=>v.usuario_id===session.usuario_id).map(v=>v.aviso_id)),
+    avisos_vistos_todos:vistosR.error?[]:(vistosR.data||[]),
     parcerias:parceriasArr,
     descontos:parceriasArr,
     taxas_deslocamento:(taxas.data||[]).map(t=>({...t,valor:Number(t.valor)})),
@@ -728,6 +781,7 @@ function sessionUser(){return db.usuarios.find(u=>u.id===session?.usuario_id)}
 
 /* ================= NAVEGAÇÃO / ROTEADOR ================= */
 const MODULOS=[
+  {id:'painel',nome:'Painel',ic:'📈',perfis:['socio','diretor','gerente']},
   {id:'pdv',nome:'Caixa de Balcão',ic:'🛒',perfis:['socio','diretor','gerente','vendedor']},
   {id:'bau',nome:'Baú',ic:'📦',perfis:['socio','diretor','gerente','vendedor']},
   {id:'financeiro',nome:'Histórico Financeiro',ic:'📊',perfis:['socio','diretor','gerente','vendedor']},
@@ -764,6 +818,7 @@ function startApp(){
   document.getElementById('app-header').style.display='flex';
   document.getElementById('main-content').style.display='block';
   const u=sessionUser();
+  moduloAtual=isGerente()?'painel':'pdv';   // gerência abre no Painel; vendedor, no Caixa de Balcão
   document.getElementById('h-user').textContent=u.nome;
   const bp=document.getElementById('h-perfil');
   bp.textContent=PERFIL_LABEL[u.perfil]||u.perfil;
@@ -777,7 +832,8 @@ function render(){
   if(!c)return;
   buildNav();
   try{
-    if(moduloAtual==='pdv')renderPDV(c);
+    if(moduloAtual==='painel')renderPainel(c);
+    else if(moduloAtual==='pdv')renderPDV(c);
     else if(moduloAtual==='bau')renderBau(c);
     else if(moduloAtual==='financeiro')renderFinanceiro(c);
     else if(moduloAtual==='config')renderConfig(c);
@@ -906,6 +962,231 @@ function renderPDV(c){
   ${htmlPendentes()}`;
   atualizarValoresAux();
 }
+/* ================= PAINEL (Gerente, Diretor ou Sócio) =================
+   Visão geral: saúde do caixa, alertas, vendas no período, vendedores, produtos, avisos e atividade.
+   Tudo sai dos dados já carregados (db), menos as últimas ações da auditoria (registros), lidas ao abrir.
+   Período sempre em dias de Brasília. Vendas contam pela data da venda; o caixa, pela data em que o
+   dinheiro entrou (venda guardada: guardada_em; compra: data_local; ajuste: data). */
+let painelPer={preset:'7d',de:'',ate:''};
+let _pnReg={em:0,linhas:[],erro:null,carregando:false};
+const PN_PRESETS=[['hoje','Hoje'],['7d','7 dias'],['30d','30 dias'],['mes','Este mês'],['tudo','Tudo'],['pers','Personalizado']];
+/* Aritmética de calendário em 'AAAA-MM-DD' (meio-dia UTC, sem instante real: não sofre com fuso) */
+function pnSomaDias(dia,n){const[a,m,d]=dia.split('-').map(Number);const t=new Date(Date.UTC(a,m-1,d,12)+n*864e5);return t.getUTCFullYear()+'-'+String(t.getUTCMonth()+1).padStart(2,'0')+'-'+String(t.getUTCDate()).padStart(2,'0')}
+function pnDifDias(a,b){const p=s=>{const[x,y,z]=s.split('-').map(Number);return Date.UTC(x,y-1,z)};return Math.round((p(b)-p(a))/864e5)}
+function pnDiaFmt(dia){const[a,m,d]=dia.split('-');return d+'/'+m}
+function pnPrimeiroDia(){const ds=[...db.vendas.map(v=>diaBR(v.data)),...db.compras.map(k=>k.data_local||diaBR(k.data)),...(db.ajustes_caixa||[]).map(a=>diaBR(a.data))].filter(Boolean).sort();return ds[0]||todayISO()}
+function pnPeriodo(){
+  const hoje=todayISO(),p=painelPer.preset;
+  let de=hoje,ate=hoje;
+  if(p==='7d')de=pnSomaDias(hoje,-6);
+  else if(p==='30d')de=pnSomaDias(hoje,-29);
+  else if(p==='mes')de=hoje.slice(0,8)+'01';
+  else if(p==='tudo')de=pnPrimeiroDia();
+  else if(p==='pers'){de=painelPer.de||pnSomaDias(hoje,-6);ate=painelPer.ate||hoje;if(de>ate)[de,ate]=[ate,de]}
+  const n=pnDifDias(de,ate)+1;
+  const ant=p==='tudo'?null:{de:pnSomaDias(de,-n),ate:pnSomaDias(de,-1)};
+  return{de,ate,n,ant};
+}
+const pnNoPer=(dia,per)=>!!dia&&dia>=per.de&&dia<=per.ate;
+const pnVendida=v=>v.status==='ativa'||v.status==='pendente';
+function pnVendasPer(per){return db.vendas.filter(v=>pnVendida(v)&&pnNoPer(diaBR(v.data),per))}
+function pnSomar(vs){
+  const r={n:vs.length,total:0,loja:0,repasse:0,desconto:0,subtotal:0,pendente:0};
+  vs.forEach(v=>{r.total+=v.total||0;r.loja+=v.receita_loja||0;r.repasse+=v.cota_funcionario||0;r.desconto+=v.desconto||0;r.subtotal+=v.subtotal||0;if(v.status==='pendente')r.pendente+=v.receita_loja||0});
+  r.ticket=r.n?r.total/r.n:0;return r;
+}
+/* Caixa no período: entradas e saídas pela data em que o dinheiro entrou ou saiu */
+function pnCaixaPer(per){
+  const ent=db.vendas.filter(v=>v.status==='ativa'&&pnNoPer(diaBR(v.guardada_em||v.data),per)).reduce((s,v)=>s+(v.receita_loja||0),0);
+  const aj=(db.ajustes_caixa||[]).filter(a=>(a.status||'ativa')==='ativa'&&pnNoPer(diaBR(a.data),per));
+  const ajE=aj.filter(a=>a.tipo==='entrada').reduce((s,a)=>s+a.valor,0),ajS=aj.filter(a=>a.tipo!=='entrada').reduce((s,a)=>s+a.valor,0);
+  const comp=db.compras.filter(k=>k.status==='ativa'&&pnNoPer(k.data_local||diaBR(k.data),per)).reduce((s,k)=>s+(k.valor_total||0),0);
+  return{vendas:ent,ajE,ajS,nAj:aj.length,compras:comp,entradas:ent+ajE,saidas:comp+ajS};
+}
+function pnDelta(atual,anterior,bomSubir){
+  if(anterior==null)return '';
+  if(!anterior&&!atual)return `<div class="pn-delta">igual ao período anterior</div>`;
+  if(!anterior)return `<div class="pn-delta">sem base no período anterior</div>`;
+  const pct=Math.round((atual-anterior)/Math.abs(anterior)*100);
+  if(pct===0)return `<div class="pn-delta">igual ao período anterior</div>`;
+  const bom=(pct>0)===(bomSubir!==false);
+  return `<div class="pn-delta ${bom?'bom':'ruim'}">${pct>0?'▲ +':'▼ '}${pct}% <span>vs período anterior</span></div>`;
+}
+function pnTile(rot,valor,extra,cls){return `<div class="sum-card pn-tile ${cls||''}"><div class="sl">${rot}</div><div class="sv">${valor}</div>${extra||''}</div>`}
+/* Agrupa o período em dias (até 62), semanas (até ~1 ano) ou meses */
+function pnBaldes(per){
+  const b=[];
+  if(per.n<=62){for(let i=0;i<per.n;i++){const d=pnSomaDias(per.de,i);b.push({de:d,ate:d,rot:pnDiaFmt(d)})}return{tipo:'dia',b}}
+  if(per.n<=380){for(let d=per.de;d<=per.ate;d=pnSomaDias(d,7)){const a=pnSomaDias(d,6)<per.ate?pnSomaDias(d,6):per.ate;b.push({de:d,ate:a,rot:pnDiaFmt(d)})}return{tipo:'semana',b}}
+  let m=per.de.slice(0,7);
+  while(m<=per.ate.slice(0,7)){const[a,mm]=m.split('-').map(Number);const prox=mm===12?(a+1)+'-01':a+'-'+String(mm+1).padStart(2,'0');b.push({de:m+'-01',ate:pnSomaDias(prox+'-01',-1),rot:String(mm).padStart(2,'0')+'/'+String(a).slice(2)});m=prox}
+  return{tipo:'mês',b};
+}
+function pnEscalaMax(v){if(v<=0)return 1;const e=Math.pow(10,Math.floor(Math.log10(v))),f=v/e;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e}
+function pnCompacto(n){n=Number(n)||0;const a=Math.abs(n);return a>=1e6?'$'+(n/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mi':a>=1e4?'$'+(n/1e3).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mil':'$'+n.toLocaleString('pt-BR',{maximumFractionDigits:0})}
+/* Colunas: receita da loja das vendas feitas em cada dia/semana/mês (desenhado depois de montar a tela, na largura real) */
+function pnDesenharColunas(){
+  const box=document.getElementById('pn-colunas');if(!box||!box._dados)return;
+  const{baldes}=box._dados,W=Math.max(280,box.clientWidth),H=240,pl=64,pr=8,pt=12,pb=28;
+  const max=pnEscalaMax(Math.max(0,...baldes.map(x=>x.valor))),iw=W-pl-pr,ih=H-pt-pb,slot=iw/baldes.length,bw=Math.max(2,Math.min(24,slot*0.62));
+  const y=v=>pt+ih-(v/max)*ih;
+  let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Receita da loja por ${esc(box._dados.tipo)} no período">`;
+  for(let i=0;i<=4;i++){const v=max*i/4,yy=Math.round(y(v))+.5;s+=`<line x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}" stroke="var(--border)" stroke-width="1"/><text x="${pl-8}" y="${yy+4}" text-anchor="end" class="pn-eixo">${pnCompacto(v)}</text>`}
+  const passo=Math.ceil(baldes.length/Math.max(1,Math.floor(iw/56)));
+  baldes.forEach((b,i)=>{
+    const cx=pl+slot*i+slot/2,x=cx-bw/2,h=Math.max(0,(b.valor/max)*ih),yt=pt+ih-h,r=Math.min(4,bw/2,h);
+    if(h>0)s+=`<path class="pn-col" d="M${x},${pt+ih}V${yt+r}Q${x},${yt} ${x+r},${yt}H${x+bw-r}Q${x+bw},${yt} ${x+bw},${yt+r}V${pt+ih}Z"/>`;
+    s+=`<rect class="pn-hit" x="${pl+slot*i}" y="${pt}" width="${slot}" height="${ih}" fill="transparent" tabindex="0" data-i="${i}" aria-label="${esc(b.rot)}: ${esc(fmt(b.valor))}"/>`;
+    if(i%passo===0)s+=`<text x="${cx}" y="${H-8}" text-anchor="middle" class="pn-eixo">${esc(b.rot)}</text>`;
+  });
+  s+=`<line x1="${pl}" x2="${W-pr}" y1="${pt+ih+.5}" y2="${pt+ih+.5}" stroke="var(--muted)" stroke-width="1" opacity=".5"/></svg>`;
+  box.innerHTML=s;
+  const tip=document.getElementById('pn-tip');
+  const mostra=(el,ev)=>{const b=baldes[+el.dataset.i];if(!b||!tip)return;
+    tip.replaceChildren();const v=document.createElement('b');v.textContent=fmt(b.valor);const l=document.createElement('span');l.textContent=(b.de===b.ate?dataBRdia(b.de):dataBRdia(b.de)+' a '+dataBRdia(b.ate))+' · '+b.n+' venda(s)';tip.append(v,l);
+    const r=el.getBoundingClientRect();tip.style.display='flex';tip.style.left=Math.min(window.innerWidth-tip.offsetWidth-8,Math.max(8,r.left+r.width/2-tip.offsetWidth/2))+'px';tip.style.top=Math.max(8,r.top+(y(b.valor)-pt)-tip.offsetHeight-8)+'px';
+    box.querySelectorAll('.pn-hit').forEach(h=>h.classList.toggle('ativo',h===el))};
+  box.querySelectorAll('.pn-hit').forEach(h=>{h.addEventListener('pointerenter',e=>mostra(h,e));h.addEventListener('focus',e=>mostra(h,e))});
+  box.addEventListener('pointerleave',()=>{if(tip)tip.style.display='none';box.querySelectorAll('.pn-hit.ativo').forEach(h=>h.classList.remove('ativo'))});
+}
+function dataBRdia(dia){const[a,m,d]=dia.split('-');return d+'/'+m+'/'+a}
+/* Barras horizontais (HTML): uma série, a mesma cor em todas; o valor fica na ponta */
+function pnBarras(linhas,valorFmt){
+  const max=Math.max(0,...linhas.map(l=>l.valor));
+  return `<div class="pn-barras">${linhas.map(l=>`<div class="pn-barra-linha" title="${esc(l.nome)}: ${esc(valorFmt(l.valor))}"><span class="pn-barra-nome">${esc(l.nome)}</span><span class="pn-barra-trilho"><span class="pn-barra" style="width:${max>0?Math.max(l.valor>0?1.5:0,l.valor/max*100):0}%"></span></span><span class="pn-barra-valor">${esc(valorFmt(l.valor))}</span></div>`).join('')}</div>`;
+}
+function pnVendedores(per){
+  const m={};
+  const pessoa=(id,nome)=>{const k=id||nome||'—';return m[k]=m[k]||{nome:nome||'—',n:0,total:0,loja:0,pendente:0,repasse:0,desconto:0,subtotal:0,aux:0}};
+  pnVendasPer(per).forEach(v=>{
+    const p=pessoa(v.usuario_id,v.usuario_nome),rp=repasseDaVenda(v);
+    p.n++;p.total+=v.total||0;p.subtotal+=v.subtotal||0;p.desconto+=v.desconto||0;p.repasse+=rp.principal;
+    if(v.status==='ativa')p.loja+=v.receita_loja||0;else p.pendente+=v.receita_loja||0;
+    rp.aux.forEach(a=>{const q=pessoa(a.usuario_id,a.nome);q.repasse+=a.valor;q.aux++});
+  });
+  return Object.values(m).sort((a,b)=>b.loja-a.loja||b.total-a.total);
+}
+function pnProdutos(per){
+  const m={};
+  pnVendasPer(per).forEach(v=>(v.itens||[]).forEach(i=>{const k=i.produto_id||i.nome;const p=m[k]=m[k]||{nome:i.nome||'?',qtd:0,valor:0};p.qtd+=Number(i.qtd)||0;p.valor+=(Number(i.qtd)||0)*(Number(i.preco_unit)||0)}));
+  const lista=Object.values(m).sort((a,b)=>b.qtd-a.qtd||b.valor-a.valor);
+  const vendidos=new Set(Object.keys(m));
+  const parados=db.produtos.filter(p=>p.status==='ativo'&&!vendidos.has(p.id)&&!vendidos.has(p.nome)).map(p=>p.nome);
+  return{lista,parados};
+}
+async function pnCarregarRegistros(forcar){
+  if(_pnReg.carregando||(!forcar&&Date.now()-_pnReg.em<30000))return;
+  _pnReg.carregando=true;
+  const{data,error}=await sb.from('registros').select('data,usuario_nome,acao,detalhe').order('data',{ascending:false}).limit(15);
+  _pnReg={em:Date.now(),linhas:data||[],erro:error||null,carregando:false};
+  const el=document.getElementById('pn-atividade');if(el)el.innerHTML=pnHtmlAtividade();
+}
+function pnHtmlAtividade(){
+  if(_pnReg.erro)return `<div class="empty">Não foi possível ler a auditoria.</div>`;
+  if(!_pnReg.em)return `<div class="empty">Carregando…</div>`;
+  if(!_pnReg.linhas.length)return `<div class="empty">Nenhuma ação registrada.</div>`;
+  return `<div class="pn-lista">${_pnReg.linhas.map(r=>`<div class="pn-ativ"><span class="pn-ativ-q">${esc(dataHoraBR(r.data))} · ${esc(r.usuario_nome||'—')}</span><span><b>${esc(r.acao)}</b>${r.detalhe?' — '+esc(r.detalhe):''}</span></div>`).join('')}</div>`;
+}
+function pnAlternar(preset){painelPer.preset=preset;if(preset==='pers'&&!painelPer.de){const p=pnPeriodo();painelPer.de=p.de;painelPer.ate=p.ate}render()}
+function pnDatas(){painelPer.de=document.getElementById('pn-de').value;painelPer.ate=document.getElementById('pn-ate').value;render()}
+function renderPainel(c){
+  if(!isGerente()){moduloAtual='pdv';return renderPDV(c)}
+  const per=pnPeriodo(),ant=per.ant;
+  const vs=pnSomar(pnVendasPer(per)),va=ant?pnSomar(pnVendasPer(ant)):null;
+  const cx=pnCaixaPer(per),cxa=ant?pnCaixaPer(ant):null;
+  const pend=db.vendas.filter(v=>v.status==='pendente');
+  const pendAbertas=pend.filter(v=>v.cancelamento_status!=='pedido');
+  const pendValor=pendAbertas.reduce((s,v)=>s+(v.receita_loja||0),0);
+  const maisAntiga=pendAbertas.slice().sort((a,b)=>new Date(a.data)-new Date(b.data))[0];
+  const velhas=pend.filter(v=>(Date.now()-new Date(v.data).getTime())>=24*36e5);
+  const pedidosCanc=pend.filter(v=>v.cancelamento_status==='pedido');
+  const pedidosSenha=(db.pedidos_senha||[]).length;
+  const vendedores=pnVendedores(per),prods=pnProdutos(per);
+  const eqs=membrosEquipe(),on=eqs.filter(u=>u.id===session.usuario_id||_online.has(u.id));
+  const avisos=avisosAtivos().sort((a,b)=>new Date(b.criado_em)-new Date(a.criado_em));
+  const vistosPor=id=>new Set((db.avisos_vistos_todos||[]).filter(x=>x.aviso_id===id).map(x=>x.usuario_id));
+  const txtPer=per.de===per.ate?dataBRdia(per.de):dataBRdia(per.de)+' a '+dataBRdia(per.ate);
+  const baldes=pnBaldes(per);
+  const vendasPer=pnVendasPer(per);
+  baldes.b.forEach(b=>{const vv=vendasPer.filter(v=>{const d=diaBR(v.data);return d>=b.de&&d<=b.ate});b.valor=vv.reduce((s,v)=>s+(v.receita_loja||0),0);b.n=vv.length});
+  const alertas=[];
+  if(pedidosCanc.length)alertas.push(`<button class="pn-alerta r" onclick="go('pdv')"><b>${pedidosCanc.length}</b> pedido(s) de cancelamento esperando resposta</button>`);
+  if(velhas.length)alertas.push(`<button class="pn-alerta r" onclick="go('pdv')"><b>${velhas.length}</b> venda(s) pendente(s) há 24 h ou mais</button>`);
+  if(pedidosSenha)alertas.push(`<button class="pn-alerta y" onclick="cfgTabAtual='usuarios';go('config')"><b>${pedidosSenha}</b> pedido(s) de nova senha</button>`);
+  if(cx.nAj)alertas.push(`<button class="pn-alerta y" onclick="go('financeiro')"><b>${cx.nAj}</b> ajuste(s) avulso(s) de caixa no período</button>`);
+  c.innerHTML=`
+  <h2 class="page-title">Painel</h2>
+  <p class="page-sub">Visão geral da loja. Vendas contam pela data da venda; o caixa, pela data em que o dinheiro entrou.</p>
+  <div class="pn-filtros">
+    ${PN_PRESETS.map(([k,r])=>`<button class="btn btn-sm ${painelPer.preset===k?'btn-primary':'btn-ghost'}" onclick="pnAlternar('${k}')">${r}</button>`).join('')}
+    ${painelPer.preset==='pers'?`<input type="date" id="pn-de" value="${per.de}" onchange="pnDatas()"><span class="muted">até</span><input type="date" id="pn-ate" value="${per.ate}" onchange="pnDatas()">`:''}
+    <span class="pn-per">${txtPer}${ant?` · comparado com ${pnDifDias(ant.de,ant.ate)===0?dataBRdia(ant.de):dataBRdia(ant.de)+' a '+dataBRdia(ant.ate)}`:''}</span>
+  </div>
+
+  <div class="section-title">💰 Saúde do caixa</div>
+  <div class="sum-grid">
+    ${pnTile('Caixa atual',`<span class="pn-hero">${fmt(caixaAtualValor())}</span>`,`<div class="pn-delta">saldo de hoje, independe do período</div>`,'pn-destaque')}
+    ${pnTile('Entradas no período',fmt(cx.entradas),`<div class="pn-sub">vendas guardadas ${fmt(cx.vendas)}${cx.ajE?` · ajustes ${fmt(cx.ajE)}`:''}</div>`+pnDelta(cx.entradas,cxa&&cxa.entradas,true))}
+    ${pnTile('Saídas no período',fmt(cx.saidas),`<div class="pn-sub">compras ${fmt(cx.compras)}${cx.ajS?` · ajustes ${fmt(cx.ajS)}`:''}</div>`+pnDelta(cx.saidas,cxa&&cxa.saidas,false))}
+    ${pnTile('Dinheiro na mão dos vendedores',fmt(pendValor),`<div class="pn-sub">${pendAbertas.length?`${pendAbertas.length} venda(s) pendente(s)${maisAntiga?' · mais antiga '+idadeVenda(maisAntiga):''}`:'nenhuma venda pendente'}${pedidosCanc.length?` · ${pedidosCanc.length} com pedido de cancelamento, fora do valor`:''}</div>`,pendValor>0?'pn-atencao':'')}
+  </div>
+
+  <div class="section-title">🚨 Alertas</div>
+  <div class="pn-alertas">${alertas.join('')||`<div class="pn-ok">✅ Nada pendente agora.</div>`}</div>
+
+  <div class="section-title">📈 Vendas no período</div>
+  <div class="sum-grid">
+    ${pnTile('Vendas',String(vs.n),pnDelta(vs.n,va&&va.n,true))}
+    ${pnTile('Total vendido',fmt(vs.total),pnDelta(vs.total,va&&va.total,true))}
+    ${pnTile('Receita da loja',fmt(vs.loja),(vs.pendente?`<div class="pn-sub">${fmt(vs.pendente)} ainda não guardado</div>`:'')+pnDelta(vs.loja,va&&va.loja,true))}
+    ${pnTile('Repasse da equipe',fmt(vs.repasse),pnDelta(vs.repasse,va&&va.repasse,true))}
+    ${pnTile('Ticket médio',fmt(vs.ticket),pnDelta(vs.ticket,va&&va.ticket,true))}
+    ${pnTile('Descontos concedidos',fmt(vs.desconto),`<div class="pn-sub">${vs.subtotal?Math.round(vs.desconto/vs.subtotal*1000)/10:0}% do subtotal</div>`+pnDelta(vs.desconto,va&&va.desconto,false))}
+  </div>
+  <div class="card pn-card">
+    <div class="pn-card-tit">Receita da loja por ${baldes.tipo} <span class="muted">· vendas feitas no ${baldes.tipo}, guardadas ou não</span></div>
+    ${vendasPer.length?`<div id="pn-colunas" class="pn-colunas"></div>
+    <details class="pn-tabela-det"><summary>Ver em tabela</summary><div class="table-wrap"><table><tr><th>${baldes.tipo==='dia'?'Dia':'Início'}</th><th>Vendas</th><th>Receita da loja</th></tr>${baldes.b.filter(b=>b.n).map(b=>`<tr><td>${dataBRdia(b.de)}</td><td>${b.n}</td><td class="money">${fmt(b.valor)}</td></tr>`).join('')}</table></div></details>`:`<div class="empty">Nenhuma venda no período.</div>`}
+  </div>
+
+  <div class="card pn-card">
+      <div class="pn-card-tit">🏆 Vendedores <span class="muted">· receita da loja já guardada</span></div>
+      ${vendedores.length?pnBarras(vendedores.filter(p=>p.n).map(p=>({nome:p.nome,valor:p.loja})),fmt)+`
+      <div class="table-wrap pn-tab"><table>
+        <tr><th>Vendedor</th><th>Vendas</th><th>Total vendido</th><th>Receita loja</th><th>Não guardado</th><th>Repasse recebido</th><th>Desconto médio</th></tr>
+        ${vendedores.map(p=>`<tr><td>${esc(p.nome)}${p.aux?` <span class="muted" style="font-size:11px">· ${p.aux} auxílio(s)</span>`:''}</td><td>${p.n}</td><td class="money">${fmt(p.total)}</td><td class="money">${fmt(p.loja)}</td><td>${p.pendente?`<span style="color:var(--warning-light)">${fmt(p.pendente)}</span>`:'—'}</td><td style="color:var(--purple-light)">${fmt(p.repasse)}</td><td>${p.subtotal?Math.round(p.desconto/p.subtotal*1000)/10+'%':'—'}</td></tr>`).join('')}
+      </table></div>`:`<div class="empty">Nenhuma venda no período.</div>`}
+  </div>
+  <div class="pn-duas">
+    <div class="card pn-card">
+      <div class="pn-card-tit">🌿 Produtos <span class="muted">· quantidade vendida</span></div>
+      ${prods.lista.length?pnBarras(prods.lista.map(p=>({nome:p.nome,valor:p.qtd})),n=>n.toLocaleString('pt-BR')+' un')+`
+      <div class="table-wrap pn-tab"><table>
+        <tr><th>Produto</th><th>Qtd</th><th>Vendido</th><th>% do vendido</th></tr>
+        ${(()=>{const tot=prods.lista.reduce((s,p)=>s+p.valor,0);return prods.lista.map(p=>`<tr><td>${esc(p.nome)}</td><td>${p.qtd.toLocaleString('pt-BR')}</td><td class="money">${fmt(p.valor)}</td><td>${tot?Math.round(p.valor/tot*1000)/10:0}%</td></tr>`).join('')})()}
+      </table></div>`:`<div class="empty">Nenhum produto vendido no período.</div>`}
+      ${prods.parados.length?`<p class="pn-parados"><b>Sem venda no período:</b> ${prods.parados.map(esc).join(', ')}</p>`:''}
+    </div>
+    <div class="card pn-card">
+      <div class="pn-card-tit">📢 Avisos e equipe</div>
+      ${avisos.length?avisos.map(a=>{const vistos=vistosPor(a.id),falta=eqs.filter(u=>!vistos.has(u.id));const pct=eqs.length?Math.round((eqs.length-falta.length)/eqs.length*100):0;
+        return `<div class="pn-aviso"><div class="pn-aviso-t"><b>${esc(a.titulo)}</b><span class="muted">por ${esc(a.criado_por_nome||'—')} · some ${esc(dataHoraBR(a.expira_em))}</span></div>
+        <div class="pn-meter" role="img" aria-label="${eqs.length-falta.length} de ${eqs.length} viram"><span style="width:${pct}%"></span></div>
+        <div class="pn-sub">${eqs.length-falta.length} de ${eqs.length} viram${falta.length?` · <span style="color:var(--warning-light)">faltam: ${falta.map(u=>esc(u.nome)).join(', ')}</span>`:' · todos viram'}</div></div>`}).join(''):`<div class="empty" style="padding:12px">Nenhum aviso ativo.</div>`}
+      <div class="pn-equipe"><b>${on.length}</b> de ${eqs.length} on-line agora${on.length?': '+on.map(u=>esc(u.nome)).join(', '):''}</div>
+    </div>
+  </div>
+  <div class="card pn-card">
+    <div class="pn-card-tit">🕘 Últimas ações <span class="muted">· auditoria</span></div>
+    <div id="pn-atividade">${pnHtmlAtividade()}</div>
+  </div>
+  <div id="pn-tip" class="pn-tip" role="tooltip"></div>`;
+  const box=document.getElementById('pn-colunas');if(box){box._dados={baldes:baldes.b,tipo:baldes.tipo};pnDesenharColunas()}
+  pnCarregarRegistros(false);
+}
+let _pnResize=null;
+window.addEventListener('resize',()=>{if(moduloAtual!=='painel')return;clearTimeout(_pnResize);_pnResize=setTimeout(pnDesenharColunas,150)});
+
 /* ================= VENDAS A GUARDAR (pré-registro) =================
    A venda nasce pendente e só entra no caixa quando o dinheiro é guardado. O vendedor fica com o repasse
    (e paga os auxiliares) e guarda a parte da loja. Vendedor vê e guarda só as próprias vendas;
@@ -3729,6 +4010,7 @@ function iniciarPresenca(){
   _presCanal.on('presence',{event:'sync'},()=>{
     const st=_presCanal.presenceState?_presCanal.presenceState():{};
     _online=new Set(Object.keys(st));renderEquipe();
+    if(moduloAtual==='painel'&&podeRedesenhar())render();
   });
   _presCanal.subscribe(status=>{if(status==='SUBSCRIBED')_presCanal.track({usuario_id:eu,desde:new Date().toISOString()})});
 }
