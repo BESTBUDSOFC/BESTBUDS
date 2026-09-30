@@ -34,6 +34,13 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Passou do limite, a resposta é HTTP 429 com a mensagem "Muitas ações em pouco tempo".
 - Não crie laços que façam uma requisição por linha. Agrupe numa chamada só (ex.: `.in('id', ids)` ou uma função rpc, como `recalcular_saldos_bau`).
 
+## Datas e horas
+
+- O site inteiro usa o **horário de Brasília** (`America/Sao_Paulo`), seja qual for o fuso do aparelho. O banco guarda o instante em UTC (isso está certo); o **dia** e a **hora** são sempre calculados com os auxiliares `diaBR`, `horaBR`, `instanteBR`, `todayISO` e `dataHoraBR` (em `src/index.html`).
+- **Nunca** tire o dia de um instante com `toISOString().slice(0,10)` nem com `toTimeString()`: isso dá o dia em UTC, que já é "amanhã" a partir das 21h de Brasília. Foi a causa dos erros de dia da v4.18.2 e anteriores.
+- O filtro de data do Histórico compara o dia de Brasília. A compra sugere o dia de hoje em Brasília e grava o instante com o relógio de Brasília. `compras.data_local` usa por padrão o dia de Brasília.
+- Testes de data rodam em três fusos (`America/Sao_Paulo`, `UTC`, `Asia/Tokyo`).
+
 ## Vendas e caixa
 
 - No jogo não existem centavos. No Caixa de Balcão o desconto é arredondado para o inteiro mais próximo (metade sobe: 5% de $90 = $4,50 → $5). O repasse da equipe também é inteiro e parte do valor já com esse desconto; a loja fica com o resto (total − repasse). Vale para vendas novas; as antigas não mudam.
