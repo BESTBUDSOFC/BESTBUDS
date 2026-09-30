@@ -9,6 +9,19 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 3. Mudança no banco de produção: pedir ok antes, salvar a migração em `supabase/migrations/` e aplicar só na publicação.
 4. Suba `VERSAO` em `src/index.html` a cada entrega.
 
+## Ambientes: teste e produção
+
+- São dois bancos Supabase separados:
+  - **Produção:** `zwnawcnurwbowtdkholm`. Usado pelo deploy de produção da Vercel (`main`).
+  - **Teste:** `btsnlkktyfnrtphgpjbe` (`best-buds-teste`, plano grátis). Usado pelos previews das branches. Nada feito no teste aparece na produção.
+- Quem escolhe o banco é o `src/env.js`, gerado no deploy por `scripts/gerar-env.js` (`buildCommand` do `vercel.json`): `VERCEL_ENV=production` grava `'producao'`; o resto grava `'teste'`. O `env.js` não vai para o git.
+- Travas: sem `env.js`, o site usa o banco de teste, exceto no endereço de produção (`HOSTS_PRODUCAO` em `src/index.html`), que usa sempre a produção. Na Vercel sem `VERCEL_ENV`, o build falha e a produção fica na versão anterior.
+- No teste, o site mostra a moldura laranja e o selo "AMBIENTE DE TESTE", e o título da aba começa com "[TESTE]".
+- Logins do teste: `teste.socio`, `teste.gerente` e `teste.vendedor`.
+- A estrutura inicial do teste está em `supabase/base/estrutura_base.sql`, e os cadastros copiados da produção estão em `supabase/base/cadastros_teste.sql`. A função `admin-users` está em `supabase/functions/admin-users/`.
+- Mudança de banco: aplique primeiro no teste, junto com a branch. Na produção, só depois do "aprovado", com a mesma migração de `supabase/migrations/`.
+- O projeto grátis pausa após 7 dias sem uso. Para reativar, use o painel do Supabase ou `restore_project`.
+
 ## Guia do usuário
 
 - O guia é `docs/Guia_do_Sistema_Best_Buds.pptx`.
