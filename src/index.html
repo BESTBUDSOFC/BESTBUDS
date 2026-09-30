@@ -461,7 +461,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.18.2';
+const VERSAO='v4.18.3';
 const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
 const EMAIL_DOMAIN='bestbuds.internal';
@@ -473,9 +473,26 @@ function nowISO(){return new Date().toISOString()}
 async function nextOpId(){const{data,error}=await sb.rpc('proximo_id_operacao');if(error)throw error;return data}
 function fmt(n){return '$'+Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function todayISO(){return new Date().toISOString().slice(0,10)}
-function dataBR(iso){return (iso||'').slice(0,10).split('-').reverse().join('/')}
-function dataHoraBR(iso){if(!iso)return '—';const d=new Date(iso);if(isNaN(d))return '—';return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+/* ---- Data e hora: o site inteiro usa o horário de Brasília, seja qual for o fuso do aparelho ou do servidor ----
+   O banco guarda o instante em UTC (correto). O erro clássico é tirar o DIA desse instante com toISOString().slice(0,10):
+   isso dá o dia em UTC, que já é "amanhã" a partir das 21h de Brasília. Por isso todo dia, hora e "hoje" passa por aqui. */
+const TZ_BR='America/Sao_Paulo';
+const _fDia=new Intl.DateTimeFormat('en-CA',{timeZone:TZ_BR,year:'numeric',month:'2-digit',day:'2-digit'});
+const _fHora=new Intl.DateTimeFormat('en-GB',{timeZone:TZ_BR,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+const _fParede=new Intl.DateTimeFormat('en-US',{timeZone:TZ_BR,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+function diaBR(v){const d=v instanceof Date?v:new Date(v);return isNaN(d)?'':_fDia.format(d)}          // instante → 'AAAA-MM-DD' em Brasília
+function horaBR(v){const d=v instanceof Date?v:new Date(v);return isNaN(d)?'':_fHora.format(d)}         // instante → 'HH:MM:SS' em Brasília
+/* 'AAAA-MM-DD' + 'HH:MM:SS' no relógio de Brasília → o instante correto (Date) */
+function instanteBR(dia,hora){
+  const alvo=Date.parse(dia+'T'+hora+'Z');                                   // relógio de parede desejado, lido como UTC
+  const parede=x=>{const p=Object.fromEntries(_fParede.formatToParts(new Date(x)).map(o=>[o.type,o.value]));return Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second)};
+  let t=alvo+3*3600e3;                                                        // palpite: Brasília = UTC−3
+  t+=alvo-parede(t);                                                          // ajuste (só muda se o país voltar ao horário de verão)
+  return new Date(t);
+}
+function todayISO(){return diaBR(new Date())}
+function dataBR(iso){return (iso||'').slice(0,10).split('-').reverse().join('/')}                       // só para datas puras 'AAAA-MM-DD'
+function dataHoraBR(iso){if(!iso)return '—';const d=new Date(iso);if(isNaN(d))return '—';return d.toLocaleString('pt-BR',{timeZone:TZ_BR,day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 function toast(msg){
   let t=document.getElementById('toast');
   if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--green);color:var(--text);padding:12px 20px;border-radius:10px;font-weight:600;z-index:200;box-shadow:0 8px 30px rgba(0,0,0,.5);white-space:pre-line;text-align:center;max-width:90vw';document.body.appendChild(t)}
@@ -1583,7 +1600,7 @@ function salvarCompra(){
   if(!data){e.textContent='Informe a data da compra.';e.style.display='block';return}
   const f=validarFormCompra('c');if(!f)return;
   const cab=fornecedorCabecalho([...f.ins,...f.nc]);
-  if(db.compras.some(x=>x.status==='ativa'&&x.fornecedor_nome===cab.fornecedor_nome&&(x.data_local||x.data.slice(0,10))===data&&Math.abs(x.valor_total-f.total)<0.005)){
+  if(db.compras.some(x=>x.status==='ativa'&&x.fornecedor_nome===cab.fornecedor_nome&&(x.data_local||diaBR(x.data))===data&&Math.abs(x.valor_total-f.total)<0.005)){
     e.textContent='Compra duplicada (mesmo fornecedor, data e valor) — verifique antes de registrar.';e.style.display='block';return;
   }
   const desc=document.getElementById('c-desc').value.trim();
@@ -1600,7 +1617,7 @@ async function efetivarCompra(){
   const fail=m=>{closeModal2();const e=document.getElementById('c-err');e.textContent=m;e.style.display='block'};
   let operacaoId;try{operacaoId=await nextOpId()}catch(err){return fail('Erro ao gerar ID da operação: '+(err.message||err))}
   const cabecalho={operacao_id:operacaoId,fornecedor_id:cab.fornecedor_id,fornecedor_nome:cab.fornecedor_nome,
-    data:new Date(data+'T'+new Date().toTimeString().slice(0,8)).toISOString(),data_local:data,
+    data:instanteBR(data,horaBR(new Date())).toISOString(),data_local:data,
     valor_total:f.total,descricao:desc,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,status:'ativa'};
   const{data:kRow,error:e1}=await sb.from('compras').insert(cabecalho).select().single();
   if(e1)return fail('Erro ao registrar compra: '+e1.message);
@@ -3131,7 +3148,7 @@ function colunaFiltrada(tipo,key){const v=regConsulta[tipo].filtros?.[key];retur
 function filtroAtivo(tipo){const f=regConsulta[tipo].filtros||{};return Object.keys(f).some(k=>k==='__de'||k==='__ate'||ehFaixa(f[k])||(Array.isArray(f[k])&&f[k].length))}
 function aplicarFiltros(arr,tipo){
  const f=regConsulta[tipo].filtros||{};const g=GETTERS[tipo]||{};
- return arr.filter(r=>{const d=String(g.data?g.data(r):(r.data??'')).slice(0,10);
+ return arr.filter(r=>{const bruto=String(g.data?g.data(r):(r.data??''));const d=/^\d{4}-\d{2}-\d{2}T/.test(bruto)?diaBR(bruto):bruto.slice(0,10);   // instante → dia de Brasília
   if(f.__de&&d<f.__de)return false;if(f.__ate&&d>f.__ate)return false;
   return Object.keys(f).every(k=>{if(k==='__de'||k==='__ate')return true;
    if(ehFaixa(f[k])){const n=colunaNumerica(tipo,k);if(!n)return true;const v=n.get(r);if(v==null||isNaN(v))return false;return v>=f[k].min-1e-9&&v<=f[k].max+1e-9}
