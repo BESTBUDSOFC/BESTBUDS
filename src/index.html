@@ -29,6 +29,7 @@ input:disabled{opacity:.5;cursor:not-allowed}
 label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .money{font-variant-numeric:tabular-nums;font-weight:700;color:var(--green)}
 .money-neg{font-variant-numeric:tabular-nums;font-weight:700;color:var(--danger)}
+.money-total{color:var(--text)}  /* Total/Valor em branco, como o card Volume Vendas Bruto */
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
 .badge.gerente{background:rgba(var(--purple-rgb),.15);color:var(--purple);border:1px solid var(--purple)}
 .badge.vendedor{background:rgba(var(--green-rgb),.12);color:var(--green);border:1px solid var(--green)}
@@ -389,6 +390,27 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .msel-opt input{width:auto}
 .msel-opt .tag{margin-left:auto}
 .msel-vazio{padding:10px;color:var(--muted);font-size:12px}
+.pend-card{margin-top:18px}
+.pend-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.pend-resumo{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pend-chip{display:flex;flex-direction:column;gap:2px;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:8px 12px;min-width:150px}
+.pend-chip small{color:var(--muted);font-size:11px}
+.pend-motivo{color:var(--muted);font-size:11px;margin-top:3px;max-width:220px;white-space:normal}
+.pend-card td .tag{white-space:nowrap}
+.pend-data{white-space:nowrap}
+@media(max-width:700px){.pend-opc{display:none}.pend-topo .btn{width:100%;justify-content:center}.pend-card th,.pend-card td{padding:8px 6px}.pend-data{white-space:normal}.pend-data .tag{display:inline-block;margin-top:3px}}
+tr.pend-sel td{background:rgba(var(--green-rgb),.06)}
+.pend-lista{max-height:180px;overflow:auto;border:1px solid var(--border);border-radius:8px}
+.pend-lista-linha{display:flex;justify-content:space-between;gap:10px;padding:6px 10px;font-size:13px;border-bottom:1px solid var(--border)}
+.pend-lista-linha:last-child{border-bottom:0}
+.pend-pessoa span{padding-left:10px;color:var(--muted);font-size:13px}
+.pend-destaque{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:14px 0 8px;padding:14px 16px;border:2px solid var(--green);border-radius:12px;background:rgba(var(--green-rgb),.1)}
+.pend-destaque span{font-weight:800;letter-spacing:.06em;font-size:13px}
+.pend-destaque b{font-size:28px;color:var(--green)}
+/* ambiente de teste: moldura laranja e selo no topo (não mexe no layout nem bloqueia cliques) */
+#faixa-teste{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:1000;pointer-events:none;background:#F59E0B;color:#111;font:800 10px/1 system-ui,sans-serif;letter-spacing:.06em;padding:3px 12px 4px;border-radius:0 0 8px 8px;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+@media(max-width:700px){#faixa-teste span{display:none}}
+body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F59E0B;pointer-events:none;z-index:999}
 </style>
 </head>
 <body>
@@ -459,11 +481,26 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.18.3';
-const SUPABASE_URL='https://zwnawcnurwbowtdkholm.supabase.co';
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y';
+const VERSAO='v4.19.1';
+/* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
+   deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
+   menos no endereço de produção, que usa sempre o banco de produção. */
+const BANCOS={
+  producao:{url:'https://zwnawcnurwbowtdkholm.supabase.co',chave:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bmF3Y251cndib3d0ZGtob2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTI0MTksImV4cCI6MjEwNTI2ODQxOX0.C0RtRtEm-Qib71Hy4Ogb5Ft7In6PqfJt1he7usfAE1Y'},
+  teste:{url:'https://btsnlkktyfnrtphgpjbe.supabase.co',chave:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0c25sa2t0eWZucnRwaGdwamJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3NDI5OTcsImV4cCI6MjEwNjMxODk5N30.DNtE09mEryQKxl_PEl-Df9ge974YVyHna0aST8CH6Z0'}
+};
+const HOSTS_PRODUCAO=['best-buds-gamma.vercel.app'];
+const AMBIENTE=HOSTS_PRODUCAO.includes(location.hostname)?'producao':(window.BB_ENV==='producao'?'producao':'teste');
+const SUPABASE_URL=BANCOS[AMBIENTE].url;
+const SUPABASE_ANON_KEY=BANCOS[AMBIENTE].chave;
+if(AMBIENTE==='teste')document.addEventListener('DOMContentLoaded',()=>{
+  const f=document.createElement('div');f.id='faixa-teste';f.innerHTML='AMBIENTE DE TESTE<span> · banco separado, nada aqui vai para a produção</span>';
+  f.title='Este site usa o banco de teste. Vendas, compras e ajustes feitos aqui não aparecem no site oficial.';
+  document.body.appendChild(f);document.body.classList.add('ambiente-teste');
+});
 const EMAIL_DOMAIN='bestbuds.internal';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 try{localStorage.removeItem('bb_manter_conectado')}catch(e){} // preferência da v4.5.0 (removida)
@@ -528,6 +565,7 @@ async function carregarTudo(){
     sb.from('avisos').select('*').order('criado_em',{ascending:false}),
     sb.from('avisos_vistos').select('aviso_id')
   ]).catch(e=>[{data:[],error:e},{data:[],error:e}]);
+  const depositosP=sb.from('depositos_caixa').select('*').order('data',{ascending:false}).then(r=>r,e=>({data:[],error:e}));
   const[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,
     taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha]=await Promise.all([
     sb.from('profiles').select('*').order('criado_em'),
@@ -574,6 +612,8 @@ async function carregarTudo(){
   const cfg=config.data||{};
   const[avisosR,vistosR]=await avisosP;
   if(avisosR.error)console.warn('[Best Buds] avisos indisponíveis',avisosR.error);
+  const depositosR=await depositosP;
+  if(depositosR.error)console.warn('[Best Buds] lotes de depósito indisponíveis',depositosR.error);
   db={
     usuarios:(perfis.data||[]),
     produtos:(produtos.data||[]).map(p=>({...p,preco:Number(p.preco),imagem:p.imagem_url})),
@@ -592,6 +632,7 @@ async function carregarTudo(){
     compras:(compras.data||[]).map(k=>({...k,itens:porCompra[k.id]||[],valor_total:Number(k.valor_total)})),
     estoque_bau:(bau.data||[]).map(m=>({...m,quantidade:Number(m.quantidade),saldo_resultante:Number(m.saldo_resultante)})),
     ajustes_caixa:(ajustesCaixa.data||[]).map(a=>({...a,valor:Number(a.valor)})),
+    depositos:depositosR.error?[]:(depositosR.data||[]).map(d=>({...d,total_vendas:Number(d.total_vendas),repasse:Number(d.repasse),valor_caixa:Number(d.valor_caixa)})),
     aliquota_global:Number(cfg.aliquota_global||50),
     aliquota_taxa_deslocamento:Number(cfg.aliquota_taxa_deslocamento||100),
     identidade_visual:{logotipo:cfg.logotipo_url||null,nome_loja:cfg.nome_loja||'BEST BUDS',cores:cfg.cores||{},...fundoLoginDeCfg(cfg)}
@@ -862,8 +903,154 @@ function renderPDV(c){
         <button class="btn btn-primary" style="width:100%;justify-content:center" ${cup.itens.length?'':'disabled'} onclick="finalizarVenda()">Finalizar venda</button>
       </div>
     </div>
-  </div>`;
+  </div>
+  ${htmlPendentes()}`;
   atualizarValoresAux();
+}
+/* ================= VENDAS A GUARDAR (pré-registro) =================
+   A venda nasce pendente e só entra no caixa quando o dinheiro é guardado. O vendedor fica com o repasse
+   (e paga os auxiliares) e guarda a parte da loja. Vendedor vê e guarda só as próprias vendas;
+   Gerente ou acima vê e guarda as de todos. Cancelar pendente: o vendedor pede, o Gerente ou acima responde. */
+const selPend=new Set();
+function vendasPendentesVisiveis(){
+  const eu=sessionUser();
+  return db.vendas.filter(v=>v.status==='pendente'&&(isGerente()||v.usuario_id===eu.id)).sort((a,b)=>new Date(a.data).getTime()-new Date(b.data).getTime());
+}
+function pendenteSelecionavel(v){return v&&v.status==='pendente'&&v.cancelamento_status!=='pedido'}
+function idadeVenda(v){
+  const h=(Date.now()-new Date(v.data).getTime())/36e5;
+  const txt=h<1?'há '+Math.max(1,Math.round(h*60))+' min':h<24?'há '+Math.floor(h)+' h':'há '+Math.floor(h/24)+' d';
+  return `<span class="tag ${h>=24?'r':'y'}" title="Registrada em ${dataHoraBR(v.data)}">${txt}</span>`;
+}
+function htmlPendentes(){
+  const ger=isGerente(),lista=vendasPendentesVisiveis();
+  [...selPend].forEach(id=>{if(!pendenteSelecionavel(lista.find(v=>v.id===id)))selPend.delete(id)});
+  const selecionaveis=lista.filter(pendenteSelecionavel);
+  const todasMarcadas=selecionaveis.length>0&&selecionaveis.every(v=>selPend.has(v.id));
+  const escolhidas=lista.filter(v=>selPend.has(v.id));
+  const valorSel=escolhidas.reduce((s,v)=>s+(v.receita_loja||0),0);
+  // gerência: quanto dinheiro de venda ainda está na mão de cada vendedor
+  let porVendedor='';
+  if(ger&&lista.length){
+    const m={};lista.filter(v=>v.cancelamento_status!=='pedido').forEach(v=>{const k=v.usuario_nome||'—';(m[k]=m[k]||{n:0,val:0,antiga:v}).n++;m[k].val+=v.receita_loja||0});
+    porVendedor=`<div class="pend-resumo">${Object.entries(m).sort((a,b)=>b[1].val-a[1].val).map(([nome,x])=>`<div class="pend-chip"><b>${esc(nome)}</b><span class="money">${fmt(x.val)}</span><small>${x.n} venda(s) · mais antiga ${idadeVenda(x.antiga)}</small></div>`).join('')}</div>`;
+  }
+  const linha=v=>{
+    const rp=repasseDaVenda(v),pedido=v.cancelamento_status==='pedido',meu=v.usuario_id===sessionUser().id;
+    let acoes='';
+    if(pedido&&ger)acoes=`<button class="btn btn-ghost btn-sm" title="Aprovar o cancelamento" onclick="responderCancelamento('${v.id}',true)">✅ Aprovar</button> <button class="btn btn-ghost btn-sm" title="Recusar o cancelamento" onclick="responderCancelamento('${v.id}',false)">✖ Recusar</button>`;
+    else if(!pedido&&ger)acoes=`<button class="iconbtn" title="Cancelar venda" onclick="reverterFin('venda','venda:${v.id}')">↩️</button>`;
+    else if(!pedido&&meu)acoes=`<button class="btn btn-ghost btn-sm" onclick="modalPedirCancelamento('${v.id}')">Pedir cancelamento</button>`;
+    const situacao=pedido?`<span class="tag r" title="${esc(v.cancelamento_motivo||'')}">Cancelamento pedido</span><div class="pend-motivo">${esc(v.cancelamento_motivo||'')}</div>`
+      :v.cancelamento_status==='recusado'?`<span class="tag y" title="Recusado por ${esc(v.cancelamento_respondido_por_nome||'—')}">Cancelamento recusado</span>`
+      :`<span class="tag y">Pendente</span>`;
+    return `<tr class="${selPend.has(v.id)?'pend-sel':''}">
+      <td><input type="checkbox" style="width:auto" ${pedido?'disabled title="Aguardando resposta do pedido de cancelamento"':''} ${selPend.has(v.id)?'checked':''} onchange="alternarPend('${v.id}',this.checked)"></td>
+      <td>${esc(v.operacao_id||'—')}</td>
+      <td class="pend-data">${dataHoraBR(v.data)} ${idadeVenda(v)}</td>
+      ${ger?`<td>${esc(v.usuario_nome||'—')}</td>`:''}
+      <td class="pend-opc" style="color:var(--muted)">${esc((v.itens||[]).map(i=>i.qtd+'× '+i.nome).join(', '))}</td>
+      <td class="money money-total pend-opc">${fmt(v.total)}</td>
+      <td class="pend-opc" style="color:var(--purple)">${fmt(v.cota_funcionario)}${rp.aux.length?`<div class="pend-motivo">${rp.aux.map(a=>'pagar '+esc(a.nome||'?')+' '+fmt(a.valor)).join('<br>')}</div>`:''}</td>
+      <td class="money" style="color:var(--green);font-weight:800">${fmt(v.receita_loja)}</td>
+      <td>${situacao}</td>
+      <td style="white-space:nowrap">${acoes}</td></tr>`;
+  };
+  return `<div class="card pend-card" id="pend-card">
+    <div class="pend-topo">
+      <div><div class="section-title" style="margin:0">💰 Vendas a guardar no caixa</div>
+      <p class="muted" style="font-size:12px;margin-top:4px">A venda só entra no caixa quando o dinheiro é guardado. Marque as vendas cujo valor você vai guardar agora e confirme.</p></div>
+      <button class="btn btn-primary" ${escolhidas.length?'':'disabled'} onclick="modalGuardarCaixa()">💰 Guardar no caixa${escolhidas.length?` (${escolhidas.length}) · ${fmt(valorSel)}`:''}</button>
+    </div>
+    ${porVendedor}
+    ${lista.length?`<div class="table-wrap"><table>
+      <tr><th><input type="checkbox" style="width:auto" title="Marcar todas" ${todasMarcadas?'checked':''} ${selecionaveis.length?'':'disabled'} onchange="alternarPendTodas(this.checked)"></th><th>ID</th><th>Data/hora</th>${ger?'<th>Vendedor</th>':''}<th class="pend-opc">Itens</th><th class="pend-opc">Total</th><th class="pend-opc">Repasse</th><th>Para o caixa</th><th>Situação</th><th></th></tr>
+      ${lista.map(linha).join('')}
+    </table></div>`:`<div class="empty" style="padding:16px">Nenhuma venda esperando para ser guardada.</div>`}
+  </div>`;
+}
+function redesenharPendentes(){const el=document.getElementById('pend-card');if(!el)return;const d=document.createElement('div');d.innerHTML=htmlPendentes();el.replaceWith(d.firstElementChild)}
+function alternarPend(id,marcado){if(marcado)selPend.add(id);else selPend.delete(id);redesenharPendentes()}
+function alternarPendTodas(marcado){const l=vendasPendentesVisiveis().filter(pendenteSelecionavel);if(marcado)l.forEach(v=>selPend.add(v.id));else selPend.clear();redesenharPendentes()}
+/* Resumo antes de guardar: total vendido, descontos, repasse por pessoa e, em destaque, o valor que vai para o caixa */
+function resumoGuardar(vendas){
+  const r={n:vendas.length,subtotal:0,desconto:0,taxa:0,total:0,repasse:0,caixa:0,pessoas:{}};
+  const soma=(nome,valor,papel)=>{const p=(r.pessoas[nome]=r.pessoas[nome]||{valor:0,papeis:new Set()});p.valor+=valor;p.papeis.add(papel)};
+  vendas.forEach(v=>{
+    r.subtotal+=v.subtotal||0;r.desconto+=v.desconto||0;r.taxa+=v.taxa_valor||0;r.total+=v.total||0;r.repasse+=v.cota_funcionario||0;r.caixa+=v.receita_loja||0;
+    const rp=repasseDaVenda(v);soma(v.usuario_nome||'—',rp.principal,'vendedor');rp.aux.forEach(a=>soma(a.nome||'?',a.valor,'auxiliar'));
+  });
+  return r;
+}
+function modalGuardarCaixa(){
+  const vendas=vendasPendentesVisiveis().filter(v=>selPend.has(v.id)&&pendenteSelecionavel(v));
+  if(!vendas.length)return toast('⚠️ Marque ao menos uma venda.');
+  const r=resumoGuardar(vendas),eu=sessionUser().nome;
+  const auxDe=vendas.flatMap(v=>repasseDaVenda(v).aux.map(a=>({pagador:v.usuario_nome||'—',nome:a.nome||'?',valor:a.valor})));
+  openModal(`<h3>💰 Guardar no caixa</h3>
+  <div class="pend-lista">${vendas.map(v=>`<div class="pend-lista-linha"><span>${esc(v.operacao_id||'—')} · ${dataHoraBR(v.data)}${isGerente()?' · '+esc(v.usuario_nome||'—'):''}</span><span class="money">${fmt(v.receita_loja)}</span></div>`).join('')}</div>
+  <div style="margin-top:12px">
+    <div class="tot-line"><span>Vendas</span><b>${r.n}</b></div>
+    <div class="tot-line"><span>Subtotal</span><b>${fmt(r.subtotal)}</b></div>
+    <div class="tot-line"><span>Descontos</span><b style="color:var(--danger)">−${fmt(r.desconto)}</b></div>
+    <div class="tot-line"><span>Taxas de deslocamento</span><b>+${fmt(r.taxa)}</b></div>
+    <div class="tot-line"><span>Total vendido</span><b>${fmt(r.total)}</b></div>
+    <div class="tot-line"><span>Repasse da equipe (fica fora do caixa)</span><b style="color:var(--purple)">−${fmt(r.repasse)}</b></div>
+    ${Object.entries(r.pessoas).map(([nome,p])=>`<div class="tot-line pend-pessoa"><span>↳ ${esc(nome)}${nome===eu?' (você)':''}${p.papeis.has('auxiliar')&&!p.papeis.has('vendedor')?' · auxiliar':''}</span><b style="color:var(--purple)">${fmt(p.valor)}</b></div>`).join('')}
+  </div>
+  ${auxDe.length?`<p class="muted" style="font-size:12px;margin-top:8px">Pague aos auxiliares: ${auxDe.map(a=>esc(a.pagador)+' → '+esc(a.nome)+' '+fmt(a.valor)).join(' · ')}</p>`:''}
+  <div class="pend-destaque"><span>VALOR PARA O CAIXA</span><b>${fmt(r.caixa)}</b></div>
+  <p class="muted" style="font-size:12px">Confirme só depois de guardar exatamente este valor no caixa do jogo. As vendas entram no caixa do sistema agora, num lote com número próprio.</p>
+  <p id="gc-err" style="color:var(--danger);font-size:13px;display:none"></p>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+  <button class="btn btn-primary" id="gc-ok" onclick="confirmarGuardarCaixa()">Guardei ${fmt(r.caixa)} — confirmar</button></div>`);
+}
+async function confirmarGuardarCaixa(){
+  const vendas=vendasPendentesVisiveis().filter(v=>selPend.has(v.id)&&pendenteSelecionavel(v));
+  if(!vendas.length)return closeModal();
+  const btn=document.getElementById('gc-ok');if(btn)btn.disabled=true;
+  const{data,error}=await sb.rpc('guardar_vendas',{p_ids:vendas.map(v=>v.id)});
+  if(error){const e=document.getElementById('gc-err');if(e){e.textContent='⚠️ '+error.message;e.style.display='block'}if(btn)btn.disabled=false;return}
+  const dep={...data,total_vendas:Number(data.total_vendas),repasse:Number(data.repasse),valor_caixa:Number(data.valor_caixa)};
+  (db.depositos=db.depositos||[]).unshift(dep);
+  vendas.forEach(v=>{v.status='ativa';v.guardada_em=dep.data;v.deposito_id=dep.id});
+  selPend.clear();
+  reg('Vendas guardadas no caixa',`Lote ${dep.operacao_id||'—'} — ${dep.qtd_vendas} venda(s) — ${fmt(dep.valor_caixa)} no caixa`);
+  closeModal();render();
+  toast(`✅ Lote ${dep.operacao_id||''} guardado!\n${dep.qtd_vendas} venda(s) · ${fmt(dep.valor_caixa)} entraram no caixa.`);
+}
+function modalPedirCancelamento(id){
+  const v=db.vendas.find(x=>x.id===id);if(!v)return;
+  openModal(`<h3>Pedir cancelamento da venda ${esc(v.operacao_id||'')}</h3>
+  <p class="muted" style="margin-bottom:12px">${esc((v.itens||[]).map(i=>i.qtd+'× '+i.nome).join(', '))} · ${fmt(v.total)}. Um Gerente, Diretor ou Sócio aprova ou recusa. Enquanto isso a venda não pode ser guardada.</p>
+  <div class="field"><label>Motivo</label><textarea id="pc-motivo" maxlength="300" rows="3" placeholder="ex.: lancei em dobro, cliente desistiu"></textarea></div>
+  <p id="pc-err" style="color:var(--danger);font-size:13px;display:none"></p>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Voltar</button>
+  <button class="btn btn-danger" onclick="pedirCancelamento('${id}')">Pedir cancelamento</button></div>`);
+}
+async function pedirCancelamento(id){
+  const motivo=(document.getElementById('pc-motivo').value||'').trim(),e=document.getElementById('pc-err');
+  if(motivo.length<3){e.textContent='Informe o motivo.';e.style.display='block';return}
+  const{error}=await sb.rpc('pedir_cancelamento_venda',{p_id:id,p_motivo:motivo});
+  if(error){e.textContent='⚠️ '+error.message;e.style.display='block';return}
+  const v=db.vendas.find(x=>x.id===id);
+  if(v)Object.assign(v,{cancelamento_status:'pedido',cancelamento_motivo:motivo,cancelamento_pedido_por_nome:sessionUser().nome,cancelamento_pedido_em:nowISO()});
+  selPend.delete(id);
+  reg('Cancelamento de venda pedido',`ID ${v&&v.operacao_id||'—'} — ${motivo}`);
+  closeModal();render();toast('✅ Pedido enviado. A venda fica parada até a resposta do gerente.');
+}
+function responderCancelamento(id,aprovar){
+  if(!isGerente())return;
+  const v=db.vendas.find(x=>x.id===id);if(!v)return;
+  confirmar(aprovar?'Aprovar cancelamento':'Recusar cancelamento',
+    `Venda ${v.operacao_id||''} de ${v.usuario_nome||'—'} (${fmt(v.total)}). Motivo: ${v.cancelamento_motivo||'—'}. `+(aprovar?'A venda será revertida e não entra no caixa.':'A venda volta a esperar para ser guardada.'),
+    async()=>{
+      const{error}=await sb.rpc('responder_cancelamento_venda',{p_id:id,p_aprovar:aprovar});
+      if(error)return toast('⚠️ '+error.message);
+      Object.assign(v,{status:aprovar?'revertida':'pendente',cancelamento_status:aprovar?'aprovado':'recusado',cancelamento_respondido_por_nome:sessionUser().nome,cancelamento_respondido_em:nowISO()});
+      reg(aprovar?'Cancelamento de venda aprovado':'Cancelamento de venda recusado',`ID ${v.operacao_id||'—'} — ${v.cancelamento_motivo||''}`);
+      render();toast(aprovar?'✅ Venda cancelada.':'✅ Pedido recusado.');
+    });
 }
 /* Vendedor auxiliar: escolhido entre os usuários ativos (menos quem está vendendo e quem já foi escolhido) */
 function opcoesAuxiliar(sel,idx){
@@ -917,7 +1104,7 @@ async function finalizarVenda(){
     subtotal:cup.subtotal,desconto:cup.desconto,pct_desconto:cup.pct,
     total:cup.total,cota_funcionario:cup.cota,receita_loja:cup.loja,
     auxiliares:repartirRepasse(cup.cota,auxs).aux.map(a=>{const u=db.usuarios.find(x=>x.id===a.usuario_id);return{usuario_id:a.usuario_id,nome:u?u.nome:'?',pct:a.pct,valor:a.valor}}),
-    status:'ativa'
+    status:'pendente'
   };
   const{data:vRow,error:e1}=await sb.from('vendas').insert(cabecalho).select().single();
   if(e1)return toast('⚠️ Erro ao registrar venda: '+e1.message);
@@ -928,7 +1115,7 @@ async function finalizarVenda(){
   db.vendas.unshift(v);
   reg('Venda finalizada',`ID ${v.operacao_id||'—'} — ${v.itens.map(i=>i.qtd+'× '+i.nome).join(', ')} — total ${fmt(v.total)}`);
   limparCupom();
-  toast(`✅ Venda registrada!\nTotal: ${fmt(v.total)} · Repasse: ${fmt(v.cota_funcionario)} · Loja: ${fmt(v.receita_loja)}`);
+  toast(`✅ Venda registrada como pendente!\nTotal: ${fmt(v.total)} · Repasse: ${fmt(v.cota_funcionario)}\nGuarde ${fmt(v.receita_loja)} no caixa e confirme em "Vendas a guardar".`);
   render();
 }
 
@@ -1744,10 +1931,17 @@ function repasseDaVenda(v){
   const aux=(v.auxiliares||[]).filter(a=>a&&(a.nome||a.usuario_id)).map(a=>({...a,valor:a.valor!=null&&a.valor!==''?Number(a.valor)||0:Math.round(cota*(parseFloat(a.pct)||0))/100}));
   return{aux,principal:Math.round((cota-aux.reduce((s,a)=>s+a.valor,0))*100)/100};
 }
+/* Venda no Histórico: a data é a do dinheiro guardado no caixa (vendas antigas, sem lote: a data da venda) */
+function descricaoVendaFin(v){
+  if(v.status==='pendente')return v.cancelamento_status==='pedido'?'Cancelamento pedido: '+(v.cancelamento_motivo||'—'):'Aguardando guardar no caixa';
+  if(v.status==='revertida'&&v.cancelamento_status==='aprovado')return 'Cancelada a pedido de '+(v.cancelamento_pedido_por_nome||'—')+': '+(v.cancelamento_motivo||'—');
+  if(v.guardada_em){const d=(db.depositos||[]).find(x=>x.id===v.deposito_id);return 'Venda de '+dataHoraBR(v.data)+' · guardada no caixa'+(d?' no lote '+(d.operacao_id||'—')+' por '+(d.usuario_nome||'—'):'')}
+  return '—';
+}
 function linhasFinanceiro(){
  const rows=[];
- db.vendas.filter(v=>v.status!=='excluida').forEach(v=>{const rp=repasseDaVenda(v);rows.push({id:'venda:'+v.id,tipo:'venda',operacao_id:v.operacao_id||'',data:v.data,usuario_nome:v.usuario_nome||'',tipo_label:'Venda',itens:(v.itens||[]).map(i=>i.qtd+'× '+i.nome).join(', '),desconto:v.parceria_nome||'—',deslocamento:(v.taxa_nome&&v.taxa_valor>0)?v.taxa_nome+' ('+fmt(v.taxa_valor)+')':'—',descricao:'—',entrada:v.receita_loja||0,repasse:rp.principal,valor:v.total||0,status:v.status,v});
-  rp.aux.forEach((a,k)=>rows.push({id:'aux:'+v.id+':'+k,pai:'venda:'+v.id,tipo:'auxiliar',operacao_id:v.operacao_id||'',data:v.data,usuario_nome:a.nome||'?',tipo_label:'Auxiliar',itens:'—',desconto:'—',deslocamento:'—',descricao:'Referente ao auxílio na venda de '+(v.usuario_nome||'—'),entrada:null,repasse:a.valor,valor:null,status:v.status,v}))});
+ db.vendas.filter(v=>v.status!=='excluida').forEach(v=>{const rp=repasseDaVenda(v),dataCaixa=v.guardada_em||v.data;rows.push({id:'venda:'+v.id,tipo:'venda',operacao_id:v.operacao_id||'',data:dataCaixa,usuario_nome:v.usuario_nome||'',tipo_label:'Venda',itens:(v.itens||[]).map(i=>i.qtd+'× '+i.nome).join(', '),desconto:v.parceria_nome||'—',deslocamento:(v.taxa_nome&&v.taxa_valor>0)?v.taxa_nome+' ('+fmt(v.taxa_valor)+')':'—',descricao:descricaoVendaFin(v),entrada:v.receita_loja||0,repasse:rp.principal,valor:v.total||0,status:v.status,v});
+  rp.aux.forEach((a,k)=>rows.push({id:'aux:'+v.id+':'+k,pai:'venda:'+v.id,tipo:'auxiliar',operacao_id:v.operacao_id||'',data:dataCaixa,usuario_nome:a.nome||'?',tipo_label:'Auxiliar',itens:'—',desconto:'—',deslocamento:'—',descricao:'Referente ao auxílio na venda de '+(v.usuario_nome||'—'),entrada:null,repasse:a.valor,valor:null,status:v.status,v}))});
  db.compras.filter(k=>k.status!=='excluida').forEach(k=>{rows.push({id:'compra:'+k.id,tipo:'compra',operacao_id:k.operacao_id||'',data:k.data,usuario_nome:k.usuario_nome||'',tipo_label:'Compra',itens:(k.itens||[]).map(i=>{const it=db.itens.find(x=>x.id===i.item_id);const nome=i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?');const q=i.qtd??i.quantidade;return (q??'?')+'× '+nome+(i.fornecedor_nome&&i.fornecedor_nome!==k.fornecedor_nome?' ('+i.fornecedor_nome+')':'')}).join(', ')||'—',desconto:'—',deslocamento:'—',descricao:k.descricao||'—',entrada:0,repasse:0,valor:-(k.valor_total||0),status:k.status,k});
   if((k.itens||[]).length>1)(k.itens||[]).forEach((i,n)=>{const it=db.itens.find(x=>x.id===i.item_id);const q=Number(i.qtd??i.quantidade)||0;rows.push({id:'citem:'+k.id+':'+n,pai:'compra:'+k.id,tipo:'compra_item',operacao_id:k.operacao_id||'',data:k.data,usuario_nome:i.fornecedor_nome||k.fornecedor_nome||'',tipo_label:i.item_id?'Insumo':'Não controlado',itens:q+'× '+(i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?')),desconto:'—',deslocamento:'—',descricao:(i.item_id?'Entrada no Baú':'Sem entrada no Baú')+' · '+fmt(Number(i.preco_unitario)||0)+'/un',entrada:null,repasse:null,valor:-(q*(Number(i.preco_unitario)||0)),status:k.status,k})})});
  (db.ajustes_caixa||[]).forEach(a=>rows.push({id:'ajuste:'+a.id,tipo:'ajuste',operacao_id:'',data:a.data,usuario_nome:a.usuario_nome||'',tipo_label:'Ajuste ('+(a.tipo==='entrada'?'+':'−')+')',itens:'—',desconto:'—',deslocamento:'—',descricao:a.motivo||'—',entrada:a.tipo==='entrada'?a.valor:0,repasse:0,valor:a.tipo==='entrada'?a.valor:-a.valor,status:a.status||'ativa',a}));
@@ -1756,7 +1950,7 @@ function linhasFinanceiro(){
 function caixaAtualValor(){return db.vendas.filter(v=>v.status==='ativa').reduce((s,v)=>s+(v.receita_loja||0),0)-db.compras.filter(k=>k.status==='ativa').reduce((s,k)=>s+(k.valor_total||0),0)+(db.ajustes_caixa||[]).filter(a=>(a.status||'ativa')==='ativa').reduce((s,a)=>s+(a.tipo==='entrada'?a.valor:-a.valor),0)}
 function acoesFin(r){
   const ajuste=r.tipo==='ajuste',id=ajuste?r.a.id:(r.tipo==='venda'?r.v.id:r.k.id);
-  if(r.status==='ativa')return `<button class="iconbtn" title="Editar" onclick="${ajuste?`modalAjusteCaixa('${r.a.tipo}','${id}')`:r.tipo==='venda'?`editVendaFin('${id}')`:`editCompraFin('${id}')`}">✏️</button><button class="iconbtn" title="Reverter" onclick="reverterFin('${r.tipo}','${r.id}')">↩️</button>`;
+  if(r.status==='ativa'||r.status==='pendente')return `<button class="iconbtn" title="Editar" onclick="${ajuste?`modalAjusteCaixa('${r.a.tipo}','${id}')`:r.tipo==='venda'?`editVendaFin('${id}')`:`editCompraFin('${id}')`}">✏️</button><button class="iconbtn" title="Reverter" onclick="reverterFin('${r.tipo}','${r.id}')">↩️</button>`;
   return isSocioOuDiretor()?`<button class="iconbtn" title="Apagar linha" onclick="apagarFin('${r.tipo}','${r.id}')">🗑️</button>`:'';
 }
 function renderFinanceiro(c){
@@ -1783,13 +1977,13 @@ function renderFinanceiro(c){
   if(key==='descricao')return `<td style="color:var(--muted)">${esc(r.descricao)}</td>`;
   if(key==='entrada')return `<td class="money" style="color:var(--info)">${r.tipo==='venda'||(r.tipo==='ajuste'&&r.entrada>0)?fmt(r.entrada):'—'}</td>`;
   if(key==='repasse')return `<td style="color:var(--purple)">${r.tipo==='venda'||r.tipo==='auxiliar'?fmt(r.repasse):'—'}</td>`;
-  if(key==='valor')return r.valor==null?'<td style="color:var(--muted)">—</td>':r.valor>=0?`<td class="money">${fmt(r.valor)}</td>`:`<td class="money-neg">−${fmt(-r.valor)}</td>`;
-  if(key==='status')return `<td><span class="tag ${r.status==='ativa'?'g':'r'}">${r.status}</span></td>`;
+  if(key==='valor')return r.valor==null?'<td style="color:var(--muted)">—</td>':r.valor>=0?`<td class="money money-total">${fmt(r.valor)}</td>`:`<td class="money-neg">−${fmt(-r.valor)}</td>`;
+  if(key==='status')return `<td><span class="tag ${r.status==='ativa'?'g':r.status==='pendente'?'y':'r'}">${r.status}</span></td>`;
   return '<td></td>';
  };
  c.innerHTML=`
   <h2 class="page-title">Histórico Financeiro</h2>
-  <p class="page-sub">Livro de Registros Comerciais — vendas e compras. O caixa considera todas as entradas e saídas, independente dos filtros.</p>
+  <p class="page-sub">Livro de Registros Comerciais — vendas e compras. O caixa considera todas as entradas e saídas, independente dos filtros. Venda pendente (ainda não guardada no caixa) não entra nos totais; a venda guardada aparece na data em que o dinheiro foi guardado.</p>
   <div class="sum-grid">
     <div class="sum-card"><div class="sl">Caixa atual</div><div class="sv money">${fmt(caixaAtual)}</div>
       ${ger?`<div style="margin-top:10px;display:flex;gap:6px">
@@ -2915,7 +3109,7 @@ function marcaTexto(nome){const p=nome.trim().split(/\s+/),ult=p.pop();return `<
 function nomeLojaAtual(){return (db&&db.identidade_visual&&db.identidade_visual.nome_loja)||'BEST BUDS'}
 function aplicarNomeLoja(){
   const nome=nomeLojaAtual();
-  document.title=nome+' — Sistema de Gestão';
+  document.title=(AMBIENTE==='teste'?'[TESTE] ':'')+nome+' — Sistema de Gestão';
   const partes=nome.trim().split(/\s+/);
   const ultima=partes.pop();
   const h1=document.getElementById('login-nome-loja');
@@ -3026,7 +3220,7 @@ async function salvarNomeLoja(){
 function previaNomeLoja(){
   const inp=document.getElementById('cfg-nome-loja');
   const nome=(inp?.value||'').trim()||'BEST BUDS';
-  document.title=nome+' — Sistema de Gestão';
+  document.title=(AMBIENTE==='teste'?'[TESTE] ':'')+nome+' — Sistema de Gestão';
   const partes=nome.trim().split(/\s+/);const ultima=partes.pop();
   const h1=document.getElementById('login-nome-loja');
   if(h1)h1.innerHTML=(partes.length?esc(partes.join(' '))+' ':'')+'<span>'+esc(ultima||'')+'</span>';
@@ -3257,7 +3451,7 @@ function estadoSelecao(tipo){
   if(tipo!=='financeiro')return{n,excluir:n>0,reverter:false};
   return{n,
     excluir:n>0&&ids.every(id=>statusSelFin(id)==='revertida'),
-    reverter:n>0&&ids.every(id=>statusSelFin(id)==='ativa')};
+    reverter:n>0&&ids.every(id=>['ativa','pendente'].includes(statusSelFin(id)))};
 }
 function botaoExcluirSel(tipo){
   if(!podeExcluirLinhas())return '';
@@ -3276,7 +3470,7 @@ function atualizarBotaoExcluirSel(tipo){
 async function reverterSelecionadas(){
   if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem reverter lançamentos.');
   const ids=[...selExclusao.financeiro];
-  const vendaIds=ids.filter(x=>x.startsWith('venda:')).map(x=>x.replace('venda:','')).filter(id=>{const v=db.vendas.find(x=>x.id===id);return v&&v.status==='ativa'});
+  const vendaIds=ids.filter(x=>x.startsWith('venda:')).map(x=>x.replace('venda:','')).filter(id=>{const v=db.vendas.find(x=>x.id===id);return v&&(v.status==='ativa'||v.status==='pendente')});
   const compraIds=ids.filter(x=>x.startsWith('compra:')).map(x=>x.replace('compra:','')).filter(id=>{const k=db.compras.find(x=>x.id===id);return k&&k.status==='ativa'});
   const ajusteIds=ids.filter(x=>x.startsWith('ajuste:')).map(x=>x.replace('ajuste:','')).filter(id=>{const a=db.ajustes_caixa.find(x=>x.id===id);return a&&(a.status||'ativa')==='ativa'});
   if(!vendaIds.length&&!compraIds.length&&!ajusteIds.length)return toast('ℹ️ Nada selecionado precisa ser revertido — já pode excluir.');
@@ -3344,7 +3538,7 @@ function excluirSelecionadas(tipo){
    A tela só é redesenhada quando é seguro (sem modal aberto, sem formulário de compra/produção
    aberto e sem campo em edição); caso contrário a atualização espera e é aplicada logo depois. */
 const TABELAS_TEMPO_REAL=['vendas','venda_itens','compras','compra_itens','estoque_bau','ajustes_caixa','itens','produtos','receitas','receita_insumos',
-  'fornecedores','fornecedor_itens','parcerias','parceria_faixas','taxas_deslocamento','categorias_itens','profiles','configuracoes','solicitacoes_senha','avisos'];
+  'fornecedores','fornecedor_itens','parcerias','parceria_faixas','taxas_deslocamento','categorias_itens','profiles','configuracoes','solicitacoes_senha','avisos','depositos_caixa'];
 let _rtCanal=null,_rtTimer=null,_rtPendente=false,_rtCarregando=false;
 function iniciarTempoReal(){
   if(_rtCanal||!sb.channel)return;

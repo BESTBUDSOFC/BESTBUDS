@@ -9,6 +9,19 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 3. Mudança no banco de produção: pedir ok antes, salvar a migração em `supabase/migrations/` e aplicar só na publicação.
 4. Suba `VERSAO` em `src/index.html` a cada entrega.
 
+## Ambientes: teste e produção
+
+- São dois bancos Supabase separados:
+  - **Produção:** `zwnawcnurwbowtdkholm`. Usado pelo deploy de produção da Vercel (`main`).
+  - **Teste:** `btsnlkktyfnrtphgpjbe` (`best-buds-teste`, plano grátis). Usado pelos previews das branches. Nada feito no teste aparece na produção.
+- Quem escolhe o banco é o `src/env.js`, gerado no deploy por `scripts/gerar-env.js` (`buildCommand` do `vercel.json`): `VERCEL_ENV=production` grava `'producao'`; o resto grava `'teste'`. O `env.js` não vai para o git.
+- Travas: sem `env.js`, o site usa o banco de teste, exceto no endereço de produção (`HOSTS_PRODUCAO` em `src/index.html`), que usa sempre a produção. Na Vercel sem `VERCEL_ENV`, o build falha e a produção fica na versão anterior.
+- No teste, o site mostra a moldura laranja e o selo "AMBIENTE DE TESTE", e o título da aba começa com "[TESTE]".
+- Logins do teste: `teste.socio`, `teste.gerente` e `teste.vendedor`.
+- A estrutura inicial do teste está em `supabase/base/estrutura_base.sql`, e os cadastros copiados da produção estão em `supabase/base/cadastros_teste.sql`. A função `admin-users` está em `supabase/functions/admin-users/`.
+- Mudança de banco: aplique primeiro no teste, junto com a branch. Na produção, só depois do "aprovado", com a mesma migração de `supabase/migrations/`.
+- O projeto grátis pausa após 7 dias sem uso. Para reativar, use o painel do Supabase ou `restore_project`.
+
 ## Guia do usuário
 
 - O guia é `docs/Guia_do_Sistema_Best_Buds.pptx`.
@@ -44,6 +57,13 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 ## Vendas e caixa
 
 - No jogo não existem centavos. No Caixa de Balcão o desconto é arredondado para o inteiro mais próximo (metade sobe: 5% de $90 = $4,50 → $5). O repasse da equipe também é inteiro e parte do valor já com esse desconto; a loja fica com o resto (total − repasse). Vale para vendas novas; as antigas não mudam.
+- **Pré-registro:** toda venda nova nasce `pendente` (trigger `trg_vendas_nova_pendente`) e não entra no caixa nem nos totais do Histórico.
+  - No Caixa de Balcão, "Vendas a guardar no caixa" lista as pendentes: o vendedor vê só as dele; Gerente ou acima vê todas, com o resumo "dinheiro na mão" por vendedor. Pendente há 24 h ou mais fica em vermelho.
+  - O vendedor marca as vendas e clica em "Guardar no caixa". O resumo mostra total vendido, descontos, repasse por pessoa (e quem paga cada auxiliar) e, em destaque, o **valor para o caixa** (soma de `receita_loja`: o vendedor fica com o repasse e guarda só a parte da loja).
+  - Confirmar chama `guardar_vendas(p_ids)`, uma rpc só: grava o lote em `depositos_caixa` (com `operacao_id`) e as vendas passam a `ativa`, com `guardada_em` e `deposito_id`. Vendedor guarda só as próprias; Gerente ou acima, as de todos.
+  - No Histórico, a venda guardada aparece na data em que foi guardada (`guardada_em`; vendas antigas sem lote usam `data`), com o lote na descrição.
+  - Cancelar pendente: o vendedor pede com motivo (`pedir_cancelamento_venda`); a venda fica travada até um Gerente ou acima aprovar (vira `revertida`) ou recusar (volta a pendente) com `responder_cancelamento_venda`. Gerente ou acima também cancela direto (↩️).
+  - Vendedor não altera `vendas` direto (RLS); tudo passa pelas rpc.
 - No Histórico Financeiro, o ajuste de caixa entra nos cards de cima: "+ Entrada" soma em Entradas e "− Saída" soma em Saídas (ajuste revertido não conta). Na tabela, a coluna Entrada mostra o valor do ajuste de entrada.
 
 ## Livro do Baú
