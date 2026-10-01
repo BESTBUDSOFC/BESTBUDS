@@ -71,6 +71,29 @@ label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-wei
 .btn-primary:hover{background:var(--green-hover)}
 .btn-purple{background:var(--purple);color:var(--white)}
 .btn-purple:hover{background:var(--purple-hover)}
+.prod-topo{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}.prod-topo .btn{margin-left:auto}
+.prod-grid{display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:start}
+.prod-esq{padding:14px;position:sticky;top:12px}.prod-esq #prod-busca{margin-bottom:10px}
+.prod-cat{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:12px 4px 6px}
+.prod-grp:first-child .prod-cat{margin-top:4px}
+.prod-rec{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:8px;background:transparent;border:1px solid transparent;color:var(--text);font-size:14px;text-align:left;cursor:pointer}
+.prod-rec:hover{background:rgba(var(--purple-rgb),.08)}.prod-rec.sel{background:rgba(var(--purple-rgb),.14);border-color:var(--purple)}.prod-rec.off>span:first-child{color:var(--muted)}
+.prod-n{flex:none;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:700;white-space:nowrap}.prod-n.ok{background:rgba(0,204,82,.12);color:#2ee07a}.prod-n.cas{background:rgba(var(--purple-rgb),.18);color:var(--purple-light)}.prod-n.zero{background:#22222c;color:var(--muted)}
+.prod-legenda{display:flex;flex-wrap:wrap;gap:12px;margin:14px 4px 0;font-size:11px;color:var(--muted)}
+.prod-painel{padding:22px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.prod-nome{font-size:20px;font-weight:800}
+.prod-qtd{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.prod-step{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:8px;overflow:hidden}.prod-step button{background:transparent;color:var(--text);padding:7px 13px;font-size:16px;font-weight:700}.prod-step button:disabled{color:var(--muted);opacity:.5}.prod-step input{width:70px;border:none;border-radius:0;text-align:center;padding:7px 4px;background:var(--input-bg)}
+.chip-max{border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;border:1px solid transparent}.chip-max.ok{background:rgba(0,204,82,.12);color:#2ee07a;cursor:pointer}.chip-max.cas{background:rgba(var(--purple-rgb),.18);color:var(--purple-light);cursor:pointer}.chip-max.zero{background:rgba(248,113,113,.12);color:#FCA5A5}
+.chip-max.ok:hover{border-color:var(--green)}.chip-max.cas:hover{border-color:var(--purple)}
+.prod-tab{width:100%;border-collapse:collapse;font-size:14px}.prod-tab th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:6px 8px 6px 0}.prod-tab td{border-top:1px solid var(--border);padding:9px 8px 9px 0}
+.prod-sai{color:var(--warning-light)}.prod-ent{color:var(--green)}.prod-baixo{color:#F87171}
+.prod-cascata{border:1px dashed var(--purple);border-radius:10px;padding:12px}.prod-cas-tit{font-weight:800;color:var(--purple-light);margin-bottom:4px}
+.prod-passo{border-left:3px solid var(--purple);background:rgba(var(--purple-rgb),.06);border-radius:6px;padding:8px 10px;margin-top:8px}.prod-passo.pedida{border-left-color:var(--green);background:rgba(0,204,82,.06)}
+.prod-passo-tag{font-size:11px;color:var(--purple-light)}.prod-passo.pedida .prod-passo-tag{color:var(--green)}.prod-passo-mov{font-size:12px;margin-top:4px}
+.prod-falta{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.35);border-radius:10px;padding:12px;font-size:13px}
+.prod-rodape{display:flex;flex-direction:column;gap:6px}.prod-acao{width:100%;justify-content:center;padding:12px;font-size:14px}
+@media(max-width:900px){.prod-grid{grid-template-columns:1fr}.prod-esq{position:static}}
 .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
 .btn-ghost:hover{color:var(--text);border-color:var(--muted)}
 .btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}
@@ -540,7 +563,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.20.3';
+const VERSAO='v4.21.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -623,6 +646,7 @@ async function carregarTudo(){
     sb.from('avisos').select('*').order('criado_em',{ascending:false}),
     sb.from('avisos_vistos').select('aviso_id,usuario_id')
   ]).catch(e=>[{data:[],error:e},{data:[],error:e}]);
+  const catRecP=sb.from('categorias_receitas').select('*').order('ordem').then(r=>r,e=>({data:[],error:e}));
   const depositosP=sb.from('depositos_caixa').select('*').order('data',{ascending:false}).then(r=>r,e=>({data:[],error:e}));
   const[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,
     taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha]=await Promise.all([
@@ -670,13 +694,15 @@ async function carregarTudo(){
   const cfg=config.data||{};
   const[avisosR,vistosR]=await avisosP;
   if(avisosR.error)console.warn('[Best Buds] avisos indisponíveis',avisosR.error);
-  const depositosR=await depositosP;
+  const depositosR=await depositosP,catRecR=await catRecP;
+  if(catRecR.error)console.warn('[Best Buds] categorias de receitas indisponíveis',catRecR.error);
   if(depositosR.error)console.warn('[Best Buds] lotes de depósito indisponíveis',depositosR.error);
   db={
     usuarios:(perfis.data||[]),
     produtos:(produtos.data||[]).map(p=>({...p,preco:Number(p.preco),imagem:p.imagem_url})),
     itens:(itens.data||[]).map(i=>({...i,qtd_minima:Number(i.qtd_minima)})),
     receitas:(receitas.data||[]).map(r=>({...r,insumos:porReceita[r.id]||[]})),
+    categorias_receitas:catRecR.error?[]:(catRecR.data||[]),
     fornecedores:(fornecedores.data||[]),
     fornecedor_itens:(fornItens.data||[]).map(x=>({...x,preco_unitario:x.preco_unitario==null?null:Number(x.preco_unitario)})),
     categorias:(categorias.data||[]),
@@ -1568,7 +1594,8 @@ function modalReceita(id){
   const itensSel=db.itens.filter(i=>(i.status==='ativo'&&catReceitas(i.categoria))||usados.has(i.id));
   const cons=ins.filter(x=>x.papel==='consumo'),prod=ins.filter(x=>x.papel==='produzido');
   openModal(`<h3>${r?'Editar receita':'Nova receita'}</h3>
-  <div class="field"><label>Nome da receita</label><input id="r-nome" value="${r?esc(r.nome):''}"></div>
+  <div class="row2"><div class="field"><label>Nome da receita</label><input id="r-nome" value="${r?esc(r.nome):''}"></div>
+  <div class="field"><label>Categoria</label><select id="r-cat"><option value="">Sem categoria</option>${catsReceitaOrdenadas().map(c=>`<option value="${c.id}" ${r&&r.categoria_id===c.id?'selected':''}>${esc((c.icone?c.icone+' ':'')+c.nome)}</option>`).join('')}</select></div></div>
   <div class="section-title" style="margin-top:8px;color:var(--warning-light)">⬇️ Bloco 1 — Itens utilizados (insumos consumidos do Baú)</div>
   <div id="r-cons">${cons.map(ri=>linhaReceita(ri,itensSel,'cons')).join('')}</div>
   <button class="btn btn-ghost btn-sm" onclick="addLinhaReceita('cons')">+ Adicionar insumo</button>
@@ -1602,6 +1629,7 @@ function addLinhaReceita(tipo){
 async function salvarReceita(id){
   if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem criar ou editar receitas.');
   const nome=document.getElementById('r-nome').value.trim();
+  const categoria_id=document.getElementById('r-cat')?.value||null;
   const e=document.getElementById('r-err');
   const fail=m=>{e.textContent=m;e.style.display='block'};
   const cons=[...document.querySelectorAll('#r-cons [data-cons]')].map(d=>({
@@ -1617,11 +1645,11 @@ async function salvarReceita(id){
   const todos=[...cons,...prod];
   let receitaId=id,novaOrdem=null;
   if(id){
-    const{error}=await sb.from('receitas').update({nome}).eq('id',id);
+    const{error}=await sb.from('receitas').update({nome,categoria_id}).eq('id',id);
     if(error)return fail('Erro ao salvar: '+error.message);
     await sb.from('receita_insumos').delete().eq('receita_id',id);
   }else{
-    const{data,error}=await sb.from('receitas').insert({nome,ordem:proximaOrdem(db.receitas),criado_por:sessionUser().id}).select().single();
+    const{data,error}=await sb.from('receitas').insert({nome,categoria_id,ordem:proximaOrdem(db.receitas),criado_por:sessionUser().id}).select().single();
     if(error)return fail('Erro ao salvar: '+error.message);
     receitaId=data.id;novaOrdem=data.ordem;
   }
@@ -1629,8 +1657,8 @@ async function salvarReceita(id){
   const{data:insInseridos,error:e2}=await sb.from('receita_insumos').insert(linhas).select();
   if(e2)return fail('Erro ao salvar insumos: '+e2.message);
   const insumosLocal=insInseridos.map(ri=>({item_id:ri.item_id,quantidade:Number(ri.quantidade),papel:ri.tipo==='producao'?'produzido':'consumo',_id:ri.id}));
-  if(id){const i=db.receitas.findIndex(x=>x.id===id);db.receitas[i]={...db.receitas[i],nome,insumos:insumosLocal}}
-  else db.receitas.push({id:receitaId,nome,ordem:novaOrdem,status:'ativo',criado_em:nowISO(),criado_por:sessionUser().id,insumos:insumosLocal});
+  if(id){const i=db.receitas.findIndex(x=>x.id===id);db.receitas[i]={...db.receitas[i],nome,categoria_id,insumos:insumosLocal}}
+  else db.receitas.push({id:receitaId,nome,categoria_id,ordem:novaOrdem,status:'ativo',criado_em:nowISO(),criado_por:sessionUser().id,insumos:insumosLocal});
   reg(id?'Receita editada':'Receita criada',nome);
   closeModal();toast('✅ Receita salva.');render();
 }
@@ -1648,32 +1676,6 @@ function excluirReceita(id){
   if((db.receitas.find(x=>x.id===id)||{}).status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');
   delReceita(id);
 }
-function execProducao(rid){
-  const r=db.receitas.find(x=>x.id===rid);if(!r)return;
-  const cons=(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>({ri:x,it:db.itens.find(i=>i.id===x.item_id)}));
-  const prd=(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>({ri:x,it:db.itens.find(i=>i.id===x.item_id)}));
-  openModal(`<h3>Produzir — ${esc(r.nome)}</h3>
-    <p class="muted" style="margin-bottom:14px">Informe a quantidade inteira a produzir. Nenhum movimento será criado antes da confirmação.</p>
-    <div class="field"><label>Quantidade de lotes/unidades</label><input id="prod-qtd" type="number" min="1" step="1" value="1" oninput="atualizarPreviaProducao('${rid}')"></div>
-    <div id="prod-previa"></div>
-    <p id="prod-err" style="color:var(--danger);font-size:13px;display:none"></p>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="confirmarProducao('${rid}')">Confirmar produção</button></div>`);
-  atualizarPreviaProducao(rid);
-}
-function atualizarPreviaProducao(rid){
-  const r=db.receitas.find(x=>x.id===rid);if(!r)return;
-  const q=Math.max(1,parseInt(document.getElementById('prod-qtd')?.value)||1);
-  const cons=(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>({ri:x,it:db.itens.find(i=>i.id===x.item_id)}));
-  const prd=(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>({ri:x,it:db.itens.find(i=>i.id===x.item_id)}));
-  const falt=cons.filter(x=>x.it&&saldoItem(x.it.id)<x.ri.quantidade*q);
-  const max=falt.length?Math.min(...falt.map(x=>Math.floor(saldoItem(x.it.id)/x.ri.quantidade))):null;
-  const el=document.getElementById('prod-previa');if(!el)return;
-  el.innerHTML=`<div class="card" style="padding:12px;margin-top:10px"><b>Resumo da produção</b>
-    <div style="margin-top:8px;color:var(--warning-light)"><b>⬇️ Insumos consumidos</b>${cons.map(x=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span>−${x.ri.quantidade*q} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div>—</div>'}</div>
-    <div style="margin-top:8px;color:var(--green)"><b>⬆️ Itens produzidos</b>${prd.map(x=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span>+${x.ri.quantidade*q} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div>Produto final — não entra no Baú</div>'}</div>
-    ${falt.length?`<div style="color:var(--danger);margin-top:10px">Saldo insuficiente. Quantidade máxima possível: <b>${Math.max(0,max)}</b>.</div>${blocoCascata(rid,q)}`:''}</div>`;
-}
-
 /* ================= PRODUÇÃO EM CASCATA =================
    Quando faltam insumos, procura receitas ativas que os produzam e monta um plano que começa pela
    primeira receita da cadeia (a mais "de baixo") até chegar à receita pedida. Tudo é simulado sobre
@@ -1682,8 +1684,13 @@ function receitaProdutora(itemId,pilha){
   return [...db.receitas].filter(r=>r.status==='ativo'&&!pilha.includes(r.id)&&(r.insumos||[]).some(x=>x.papel==='produzido'&&x.item_id===itemId&&x.quantidade>0))
     .sort((a,b)=>(a.ordem||99)-(b.ordem||99))[0]||null;
 }
-function planejarCascata(rid,q){
-  const saldo={};db.itens.forEach(i=>{saldo[i.id]=saldoItem(i.id)});
+function saldosBau(){
+  const s={};db.itens.forEach(i=>{s[i.id]=0});
+  db.estoque_bau.forEach(m=>{if(m.status==='revertida')return;s[m.item_id]=(s[m.item_id]||0)+(m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada'?m.quantidade:-m.quantidade)});
+  return s;
+}
+function planejarCascata(rid,q,base){
+  const saldo={...(base||saldosBau())};
   const inicial={...saldo},passos=[];
   const produzir=(r,qtd,pilha)=>{
     const cons=(r.insumos||[]).filter(x=>x.papel==='consumo');
@@ -1708,36 +1715,14 @@ function planejarCascata(rid,q){
   const efeito=db.itens.filter(i=>Math.abs(saldo[i.id]-inicial[i.id])>1e-9).map(i=>({it:i,antes:inicial[i.id],depois:saldo[i.id]}));
   return{passos,faltas,efeito,possivel:!faltas.length,temCascata:passos.length>1};
 }
-function blocoCascata(rid,q){
-  const pl=planejarCascata(rid,q);
-  if(!pl.temCascata)return '';
-  if(!pl.possivel)return `<div style="margin-top:10px;font-size:12px;color:var(--muted)">Nem com produção em cascata é possível: falta${pl.faltas.length>1?'m':''} ${pl.faltas.map(f=>`<b style="color:var(--danger)">${fmtQtd(f.falta)} ${esc(f.it.unidade_medida)} de ${esc(f.it.nome)}</b>`).join(', ')} (compre antes de produzir).</div>`;
-  return `<div style="margin-top:12px;padding:10px;border:1px dashed var(--purple);border-radius:8px">
-    <div style="font-size:13px">É possível produzir em <b>cascata</b>: ${pl.passos.length-1} produção(ões) anterior(es) geram os insumos que faltam.</div>
-    <button class="btn btn-purple btn-sm" style="margin-top:8px" onclick="revisarCascata('${rid}')">🔗 Ver produção em cascata</button></div>`;
-}
 function fmtQtd(n){return Number(n.toFixed(4)).toLocaleString('pt-BR')}
-function revisarCascata(rid){
-  const q=Math.max(1,parseInt(document.getElementById('prod-qtd')?.value)||1);
-  const pl=planejarCascata(rid,q);
-  if(!pl.possivel||!pl.temCascata)return toast('⚠️ A produção em cascata não é possível com o saldo atual.');
-  openModal2(`<h3>🔗 Produção em cascata</h3>
-    <p class="muted" style="font-size:12px;margin-bottom:10px">As produções serão feitas nesta ordem, numa única operação. Confira antes de confirmar.</p>
-    <div class="resumo">${pl.passos.map((p,i)=>`
-      <div class="rs-sec">${i+1}. ${esc(p.r.nome)} × ${p.qtd}${i===pl.passos.length-1?' <span style="color:var(--green)">(pedida)</span>':''}</div>
-      ${p.mov.map(m=>`<div class="rs-l"><span>${esc(m.it.nome)}</span><b style="color:${m.q<0?'var(--warning-light)':'var(--green)'}">${m.q<0?'−':'+'}${fmtQtd(Math.abs(m.q))} ${esc(m.it.unidade_medida)}</b></div>`).join('')||'<div class="rs-l"><span class="muted">Produto final — não movimenta o Baú</span></div>'}`).join('')}
-      <div class="rs-sec" style="margin-top:14px">Saldo no Baú (antes → depois)</div>
-      ${pl.efeito.map(e=>`<div class="rs-l"><span>${esc(e.it.nome)}</span><span>${fmtQtd(e.antes)} → <b>${fmtQtd(e.depois)}</b> ${esc(e.it.unidade_medida)}</span></div>`).join('')}
-    </div>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal2()">Voltar</button>
-    <button class="btn btn-primary" id="btn-conf-cascata" onclick="confirmarCascata('${rid}',${q})">Confirmar produção em cascata</button></div>`);
-}
 async function confirmarCascata(rid,q){
   if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem produzir.');
   const pl=planejarCascata(rid,q);
   if(!pl.possivel)return toast('⚠️ O saldo mudou e a cascata não é mais possível. Revise a produção.');
   const btn=document.getElementById('btn-conf-cascata');if(btn){btn.disabled=true;btn.textContent='Produzindo…'}
-  let opId;try{opId=await nextOpId()}catch(e){if(btn){btn.disabled=false;btn.textContent='Confirmar produção em cascata'}return toast('⚠️ Erro ao gerar ID: '+(e.message||e))}
+  const solta=()=>{if(btn){btn.disabled=false;render()}};
+  let opId;try{opId=await nextOpId()}catch(e){solta();return toast('⚠️ Erro ao gerar ID: '+(e.message||e))}
   const alvo=pl.passos[pl.passos.length-1].r.nome,saldo={},movimentos=[];
   pl.passos.forEach(p=>p.mov.forEach(m=>{
     if(saldo[m.it.id]===undefined)saldo[m.it.id]=saldoItem(m.it.id);
@@ -1748,20 +1733,20 @@ async function confirmarCascata(rid,q){
   }));
   // um único insert: ou grava a cascata inteira, ou nada
   const{data,error}=await sb.from('estoque_bau').insert(movimentos).select();
-  if(error){if(btn){btn.disabled=false;btn.textContent='Confirmar produção em cascata'}return toast('⚠️ Erro ao gravar a produção: '+error.message)}
+  if(error){solta();return toast('⚠️ Erro ao gravar a produção: '+error.message)}
   data.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
   reg('Produção em cascata',`${alvo} × ${q} — ID ${opId} — ${pl.passos.map(p=>p.r.nome+' ×'+p.qtd).join(' → ')}`);
-  closeModal2();closeModal();toast('✅ Produção em cascata executada.');render();
+  prodQtd=1;toast('✅ Produção em cascata executada.');render();
 }
-async function confirmarProducao(rid){
+/* Produção direta (sem cascata): um único insert com as saídas dos insumos e as entradas do que foi produzido. */
+async function produzirDireto(rid,q,falha){
   const r=db.receitas.find(x=>x.id===rid);if(!r)return;
-  const q=parseInt(document.getElementById('prod-qtd').value);
-  const err=document.getElementById('prod-err');
-  if(!Number.isInteger(q)||q<1){err.textContent='Informe uma quantidade inteira mínima de 1.';err.style.display='block';return}
+  falha=falha||(t=>toast('⚠️ '+t));
   const cons=(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>({ri:x,it:db.itens.find(i=>i.id===x.item_id)}));
-  const falt=cons.filter(x=>x.it&&saldoItem(x.it.id)<x.ri.quantidade*q);
-  if(falt.length){err.textContent='Estoque insuficiente. Reduza a quantidade'+(planejarCascata(rid,q).possivel&&planejarCascata(rid,q).temCascata?' ou use a produção em cascata indicada no resumo.':' conforme a sugestão do resumo.');err.style.display='block';return}
-  const producaoId=await nextOpId();
+  if(cons.some(x=>x.it&&controlaEstoque(x.it.categoria)&&saldoItem(x.it.id)<x.ri.quantidade*q))return falha('O saldo mudou e não há insumos suficientes. Revise a quantidade.');
+  const btn=document.getElementById('btn-produzir');if(btn){btn.disabled=true;btn.textContent='Produzindo…'}
+  const solta=()=>{if(btn){btn.disabled=false;render()}};
+  let producaoId;try{producaoId=await nextOpId()}catch(e){solta();return falha('Erro ao gerar ID: '+(e.message||e))}
   const prd=(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>({ri:x,it:db.itens.find(i=>i.id===x.item_id)}));
   const movimentos=[];
   cons.forEach(x=>{
@@ -1773,10 +1758,12 @@ async function confirmarProducao(rid){
     if(!x.it||!controlaEstoque(x.it.categoria))return;
     movimentos.push({operacao_id:producaoId,item_id:x.it.id,tipo_movimento:'entrada_producao',quantidade:x.ri.quantidade*q,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,origem:'produção: '+r.nome,saldo_resultante:saldoItem(x.it.id)+x.ri.quantidade*q});
   });
-  const{data,error}=await sb.from('estoque_bau').insert(movimentos).select();
-  if(error){err.textContent='Erro ao gravar produção: '+error.message;err.style.display='block';return}
-  data.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
-  reg('Produção executada',`${r.nome} — ID ${producaoId} — quantidade ${q}`);closeModal();toast('✅ Produção executada.');render();
+  if(movimentos.length){
+    const{data,error}=await sb.from('estoque_bau').insert(movimentos).select();
+    if(error){solta();return falha('Erro ao gravar produção: '+error.message)}
+    data.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
+  }
+  reg('Produção executada',`${r.nome} — ID ${producaoId} — quantidade ${q}`);prodQtd=1;toast('✅ Produção executada.');render();
 }
 
 /* ================= COMPRAS ================= */
@@ -2096,27 +2083,101 @@ function telaCompraHTML(c){
   </div>`;
  recalcCompra('c');
 }
+/* ---- Tela Produzir: lista de receitas por categoria (à esquerda) + painel da receita escolhida (à direita) ----
+   Número verde = quantas vezes dá para fazer agora, só com o saldo do Baú.
+   Número roxo 🔗 = não dá direto, mas dá com produção em cascata (receitas anteriores geram o que falta). */
+let prodSel=null,prodQtd=1,prodBusca='';
+const PROD_LIMITE=9999;
+function prodConsumos(r){return (r.insumos||[]).filter(x=>x.papel==='consumo').map(ri=>({ri,it:db.itens.find(i=>i.id===ri.item_id)})).filter(x=>x.it&&controlaEstoque(x.it.categoria)&&x.ri.quantidade>0)}
+function prodMaxDireto(r,saldo){
+  const cons=prodConsumos(r);
+  if(!cons.length)return {max:PROD_LIMITE,limite:null};
+  let max=Infinity,limite=null;
+  cons.forEach(x=>{const m=Math.floor((saldo[x.it.id]||0)/x.ri.quantidade+1e-9);if(m<max){max=m;limite=x.it}});
+  return {max:Math.max(0,Math.min(max,PROD_LIMITE)),limite};
+}
+function prodMaxCascata(r,saldo,direto){
+  // maior quantidade possível com cascata: dobra até falhar e depois busca binária
+  const ok=q=>planejarCascata(r.id,q,saldo).possivel;
+  if(direto>=PROD_LIMITE||!ok(direto+1))return direto;
+  let lo=direto+1,hi=null;
+  while(hi===null){const n=Math.min(lo*2,PROD_LIMITE);if(n===lo)return lo;if(ok(n))lo=n;else hi=n}
+  while(hi-lo>1){const m=Math.floor((lo+hi)/2);if(ok(m))lo=m;else hi=m}
+  return lo;
+}
+function prodInfo(r,saldo){const d=prodMaxDireto(r,saldo);return {...d,cascata:prodMaxCascata(r,saldo,d.max)}}
+function prodEscolher(id){prodSel=id;prodQtd=1;render();if(innerWidth<=900)document.getElementById('prod-painel')?.scrollIntoView({behavior:'smooth',block:'start'})}
+function prodSetQtd(v){const n=parseInt(v);prodQtd=Number.isInteger(n)&&n>=1?Math.min(n,PROD_LIMITE):1;render()}
+function prodFiltrar(v){
+  prodBusca=v;
+  const n=sselNorm(v.trim());
+  document.querySelectorAll('#prod-lista .prod-rec').forEach(el=>{el.style.display=!n||sselNorm(el.dataset.nome).includes(n)?'':'none'});
+  document.querySelectorAll('#prod-lista .prod-grp').forEach(g=>{g.style.display=[...g.querySelectorAll('.prod-rec')].some(el=>el.style.display!=='none')?'':'none'});
+}
 function telaProducaoHTML(c){
- const ger=isGerente();
+ const saldo=saldosBau();
  const recs=[...db.receitas].filter(r=>r.status==='ativo').sort((a,b)=>(a.ordem||99)-(b.ordem||99));
+ const info={};recs.forEach(r=>{info[r.id]=prodInfo(r,saldo)});
+ if(!recs.some(r=>r.id===prodSel))prodSel=(recs.find(r=>info[r.id].max>0)||recs.find(r=>info[r.id].cascata>0)||recs[0]||{}).id||null;
+ const grupos=[...catsReceitaOrdenadas().map(cat=>({cat,lista:recs.filter(r=>r.categoria_id===cat.id)})),
+   {cat:null,lista:recs.filter(r=>!catReceita(r.categoria_id))}].filter(g=>g.lista.length);
+ const selo=r=>{const i=info[r.id];
+   if(i.max>0)return `<span class="prod-n ok" title="Dá para fazer agora">${i.max>=PROD_LIMITE?'∞':i.max}</span>`;
+   if(i.cascata>0)return `<span class="prod-n cas" title="Só com produção em cascata">🔗 ${i.cascata>=PROD_LIMITE?'∞':i.cascata}</span>`;
+   return `<span class="prod-n zero" title="Faltam insumos">0</span>`};
+ const lista=grupos.map(g=>`<div class="prod-grp"><div class="prod-cat">${g.cat?rotuloCatReceita(g.cat.id):'Sem categoria'}</div>
+   ${g.lista.map(r=>`<button class="prod-rec${r.id===prodSel?' sel':''}${info[r.id].max>0||info[r.id].cascata>0?'':' off'}" data-nome="${esc(r.nome)}" onclick="prodEscolher('${r.id}')"><span>${esc(r.nome)}</span>${selo(r)}</button>`).join('')}</div>`).join('');
  c.innerHTML=`
-  <h2 class="page-title">🏭 Produzir${ajuda('Selecione uma receita e execute a produção. Fichas em escala reduzida.')}</h2>
-  <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">← Voltar ao Baú</button>
-  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">
-    ${recs.map(r=>{
-      const ins=(r.insumos||[]).filter(x=>x.papel==='consumo').map(ri=>({ri,it:db.itens.find(i=>i.id===ri.item_id)}));
-      const prd=(r.insumos||[]).filter(x=>x.papel==='produzido').map(ri=>({ri,it:db.itens.find(i=>i.id===ri.item_id)}));
-      return`<div class="card" style="padding:14px">
-        <b style="font-size:14px">${esc(r.nome)}</b>
-        <div style="font-size:11px;margin-top:8px">
-          <div style="font-weight:700;margin-bottom:3px;color:var(--warning-light)">⬇️ Consome</div>
-          ${ins.map(x=>`<div style="display:flex;justify-content:space-between;padding:2px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span style="color:var(--muted)">−${x.ri.quantidade} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div class="muted">—</div>'}
-          <div style="font-weight:700;margin:8px 0 3px;color:var(--green)">⬆️ Produz</div>
-          ${prd.map(x=>`<div style="display:flex;justify-content:space-between;padding:2px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span style="color:var(--muted)">+${x.ri.quantidade} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div class="muted">Produto final</div>'}
-        </div>
-        <button class="btn btn-primary btn-sm" style="margin-top:12px;width:100%;justify-content:center" onclick="execProducao('${r.id}')">▶ Produzir</button>
-      </div>`}).join('')||'<div class="empty">Nenhuma receita ativa. Cadastre em Configurações → Receitas.</div>'}
-  </div>`;
+  <div class="prod-topo"><h2 class="page-title" style="margin:0">🏭 Produzir${ajuda('Escolha a receita na lista, ajuste a quantidade e confira o que entra e sai do Baú antes de produzir. O número verde é quantas vezes dá para fazer agora; o roxo 🔗 é quantas dá com produção em cascata (as receitas anteriores geram o que falta). As categorias são cadastradas em Configurações › Receitas.')}</h2>
+  <button class="btn btn-ghost btn-sm" onclick="fecharTelaBau()">← Voltar ao Baú</button></div>
+  ${recs.length?`<div class="prod-grid">
+    <div class="card prod-esq">
+      <input id="prod-busca" type="search" placeholder="🔍 Buscar receita…" value="${esc(prodBusca)}" oninput="prodFiltrar(this.value)" autocomplete="off">
+      <div id="prod-lista">${lista}</div>
+      <div class="prod-legenda"><span><span class="prod-n ok">2</span> dá para fazer agora</span><span><span class="prod-n cas">🔗 2</span> só com cascata</span></div>
+    </div>
+    <div class="card prod-painel" id="prod-painel">${prodPainelHTML(db.receitas.find(r=>r.id===prodSel),info[prodSel],saldo)}</div>
+  </div>`:'<div class="empty">Nenhuma receita ativa. Cadastre em Configurações › Receitas.</div>'}`;
+ if(prodBusca)prodFiltrar(prodBusca);
+}
+function prodPainelHTML(r,i,saldo){
+  if(!r)return '<div class="empty">Escolha uma receita na lista.</div>';
+  const q=prodQtd,cat=catReceita(r.categoria_id);
+  const prd=(r.insumos||[]).filter(x=>x.papel==='produzido').map(ri=>({ri,it:db.itens.find(it=>it.id===ri.item_id)})).filter(x=>x.it);
+  const gera=prd.length?prd.map(x=>`${fmtQtd(x.ri.quantidade)} ${esc(x.it.unidade_medida||'')} de ${esc(x.it.nome)}${controlaEstoque(x.it.categoria)?'':' (não entra no Baú)'}`).join(' + '):'Produto final — não entra no Baú';
+  const fmtMax=n=>n>=PROD_LIMITE?'∞':n;
+  const chips=[
+    i.max>0?`<button class="chip-max ok" onclick="prodSetQtd(${Math.min(i.max,PROD_LIMITE)})" title="Usar o máximo">máximo ${fmtMax(i.max)}</button>`:'',
+    i.cascata>i.max?`<button class="chip-max cas" onclick="prodSetQtd(${i.cascata})" title="Usar o máximo com cascata">🔗 máximo ${fmtMax(i.cascata)} com cascata</button>`:'',
+    !i.max&&!(i.cascata>i.max)?'<span class="chip-max zero">faltam insumos</span>':'',
+    i.limite&&i.max<PROD_LIMITE?`<span class="muted" style="font-size:12px">limite: <b style="color:var(--text)">${esc(i.limite.nome)}</b></span>`:''].join('');
+  const topo=`<div class="prod-cab">${cat?`<div class="prod-cat" style="margin:0 0 2px">${rotuloCatReceita(cat.id)}</div>`:''}
+      <div class="prod-nome">${esc(r.nome)}</div><div class="muted" style="font-size:13px">Cada vez gera: ${gera}</div></div>
+    <div class="prod-qtd"><span class="muted">Quantidade</span>
+      <div class="prod-step"><button onclick="prodSetQtd(${q-1})" ${q<=1?'disabled':''} aria-label="Diminuir">−</button><input id="prod-qtd" type="number" min="1" step="1" value="${q}" onchange="prodSetQtd(this.value)"><button onclick="prodSetQtd(${q+1})" aria-label="Aumentar">+</button></div>
+      ${chips}</div>`;
+  const pl=planejarCascata(r.id,q,saldo);
+  const ger=isGerente();
+  let corpo,botao;
+  if(pl.possivel&&!pl.temCascata){
+    const linhas=pl.efeito.map(e=>{const d=e.depois-e.antes,min=e.it.qtd_minima||0,baixo=min>0&&e.depois<=min;
+      return `<tr><td>${esc(e.it.nome)}</td><td>${fmtQtd(e.antes)}</td><td class="${d<0?'prod-sai':'prod-ent'}">${d<0?'−':'+'}${fmtQtd(Math.abs(d))}</td><td class="${baixo?'prod-baixo':''}">${fmtQtd(e.depois)} ${esc(e.it.unidade_medida||'')}${baixo?` <small>(mín. ${fmtQtd(min)})</small>`:''}</td></tr>`}).join('');
+    corpo=linhas?`<table class="prod-tab"><thead><tr><th>Item</th><th>Tem agora</th><th>Usa / gera</th><th>Fica</th></tr></thead><tbody>${linhas}</tbody></table>`:'<p class="muted">Esta receita não movimenta o Baú.</p>';
+    botao=`<button class="btn btn-primary prod-acao" id="btn-produzir" onclick="produzirDireto('${r.id}',${q})">▶ Produzir ${q} × ${esc(r.nome)}</button>`;
+  }else if(pl.possivel){
+    const n=pl.passos.length;
+    corpo=`<div class="prod-cascata"><div class="prod-cas-tit">🔗 Produção em cascata · ${n} etapas</div>
+      <div class="muted" style="font-size:12px;margin-bottom:8px">Não há insumos para fazer direto. As etapas abaixo são feitas juntas, nesta ordem, numa operação só.</div>
+      ${pl.passos.map((p,k)=>{const ult=k===n-1;return `<div class="prod-passo ${ult?'pedida':'auto'}"><div><b>${k+1}. ${esc(p.r.nome)} × ${p.qtd}</b> <span class="prod-passo-tag">${ult?'pedida':'feita antes, automática'}</span></div>
+        <div class="prod-passo-mov">${p.mov.map(m=>`<span class="${m.q<0?'prod-sai':'prod-ent'}">${m.q<0?'−':'+'}${fmtQtd(Math.abs(m.q))} ${esc(m.it.nome)}</span>`).join(' · ')||'<span class="muted">não movimenta o Baú</span>'}</div></div>`}).join('')}</div>
+      <table class="prod-tab"><thead><tr><th>Item</th><th>Tem agora</th><th>Fica</th></tr></thead><tbody>${pl.efeito.map(e=>{const min=e.it.qtd_minima||0,baixo=min>0&&e.depois<=min;return `<tr><td>${esc(e.it.nome)}</td><td>${fmtQtd(e.antes)}</td><td class="${baixo?'prod-baixo':''}">${fmtQtd(e.depois)} ${esc(e.it.unidade_medida||'')}${baixo?` <small>(mín. ${fmtQtd(min)})</small>`:''}</td></tr>`}).join('')}</tbody></table>`;
+    botao=ger?`<button class="btn btn-purple prod-acao" id="btn-conf-cascata" onclick="confirmarCascata('${r.id}',${q})">🔗 Produzir em cascata · ${n} etapas</button>`
+      :`<button class="btn btn-purple prod-acao" disabled>🔗 Produzir em cascata · ${n} etapas</button><div class="muted" style="font-size:12px;text-align:center">A produção em cascata é feita por Gerente, Diretor ou Sócio. Você pode produzir até ${i.max} direto.</div>`;
+  }else{
+    corpo=`<div class="prod-falta"><b>Não dá para produzir ${q}.</b> Falta${pl.faltas.length>1?'m':''}: ${pl.faltas.map(f=>`<b>${fmtQtd(f.falta)} ${esc(f.it.unidade_medida||'')} de ${esc(f.it.nome)}</b>`).join(', ')}${pl.temCascata?' (já contando a produção em cascata)':''}. ${i.max>0||i.cascata>0?'Reduza a quantidade.':'Compre os insumos antes de produzir.'}</div>`;
+    botao=`<button class="btn btn-ghost prod-acao" disabled>▶ Produzir ${q} × ${esc(r.nome)}</button>`;
+  }
+  return `${topo}${corpo}<p id="prod-err" style="color:var(--danger);font-size:13px;display:none"></p><div class="prod-rodape">${botao}</div>`;
 }
 
 /* ================= HISTÓRICO FINANCEIRO ================= */
@@ -2906,20 +2967,21 @@ function excluirItem(id){
 function cfgReceitas(b){
   const nmIt=id=>{const it=db.itens.find(i=>i.id===id);return it?it.nome:'?'};
   const T='cfg_receitas',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.receitas]),{
-    nome:r=>r.nome,status:r=>r.status,data:r=>r.criado_em,
+    nome:r=>r.nome,status:r=>r.status,data:r=>r.criado_em,categoria:r=>nomeCatReceita(r.categoria_id),
     consome:r=>(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'—',
     produz:r=>(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🏭 Receitas de Produção${ajuda('A ordem definida aqui é a ordem em que as receitas aparecem na tela de produção do Baú.')}</div>
     <button class="btn btn-purple btn-sm" onclick="modalReceita()">+ Nova receita</button></div>
   ${F.barra}<div class="table-wrap"><table>
-  <tr><th>Ordem</th>${thCol(T,'nome','Receita')}${thCol(T,'consome','Consome')}${thCol(T,'produz','Produz')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  <tr><th>Ordem</th>${thCol(T,'nome','Receita')}${thCol(T,'categoria','Categoria')}${thCol(T,'consome','Consome')}${thCol(T,'produz','Produz')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
   ${F.rows.map(r=>{
     const cons=(r.insumos||[]).filter(x=>x.papel==='consumo');
     const prd=(r.insumos||[]).filter(x=>x.papel==='produzido');
     const nm=id=>{const it=db.itens.find(i=>i.id===id);return it?it.nome:'?'};
     return`<tr class="${r.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverReceita',r.id)}<td><b>${esc(r.nome)}</b></td>
+    <td>${r.categoria_id?`<span class="tag">${esc(rotuloCatReceita(r.categoria_id))}</span>`:'<span class="muted">—</span>'}</td>
     <td style="color:var(--muted);font-size:12px">${cons.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'—'}</td>
     <td style="color:var(--muted);font-size:12px">${prd.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'}</td>
     <td><span class="badge ${r.status==='ativo'?'ativo':'inativo'}">${r.status}</span></td>
@@ -2927,7 +2989,64 @@ function cfgReceitas(b){
     <td><button class="iconbtn" onclick="modalReceita('${r.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleReceita('${r.id}')">${r.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()&&r.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirReceita('${r.id}')">🗑️</button>`:''}</td>
-  </tr>`}).join('')||linhaSemResultado(7,T)}</table></div>`;
+  </tr>`}).join('')||linhaSemResultado(8,T)}</table></div>
+  ${htmlCategoriasReceitas()}`;
+}
+/* ---- Categorias de receitas: agrupam as receitas na tela Produzir (na ordem daqui; sem categoria fica por último) ---- */
+function catsReceitaOrdenadas(){return ordenarPorOrdem([...(db.categorias_receitas||[])])}
+function catReceita(id){return (db.categorias_receitas||[]).find(c=>c.id===id)||null}
+function nomeCatReceita(id){const c=catReceita(id);return c?c.nome:'Sem categoria'}
+function rotuloCatReceita(id){const c=catReceita(id);return c?((c.icone?c.icone+' ':'')+c.nome):'Sem categoria'}
+function htmlCategoriasReceitas(){
+  const cats=catsReceitaOrdenadas();
+  return `<div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
+    <div class="section-title" style="margin:0">🗂️ Categorias de receitas${ajuda('Agrupam as receitas na tela Produzir, na ordem definida aqui (ex.: Dichavar, Enrolar). Receita sem categoria aparece no fim, em Sem categoria. Excluir uma categoria deixa as receitas dela sem categoria.')}</div>
+    ${isGerente()?`<button class="btn btn-purple btn-sm" onclick="modalCategoriaReceita()">+ Nova categoria</button>`:''}</div>
+  <div class="table-wrap"><table><tr><th>Ordem</th><th>Ícone</th><th>Categoria</th><th>Receitas</th><th>Ações</th></tr>
+  ${cats.map(c=>`<tr>${setasOrdem('moverCategoriaReceita',c.id)}<td style="font-size:18px">${esc(c.icone||'—')}</td><td><b>${esc(c.nome)}</b></td>
+    <td>${db.receitas.filter(r=>r.categoria_id===c.id).length}</td>
+    <td><button class="iconbtn" title="Editar" onclick="modalCategoriaReceita('${c.id}')">✏️</button>${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir categoria" onclick="excluirCategoriaReceita('${c.id}')">🗑️</button>`:''}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nenhuma categoria. Crie, por exemplo, "Dichavar" e "Enrolar".</td></tr>'}
+  </table></div>`;
+}
+function moverCategoriaReceita(id,dir){return moverNaOrdem('categorias_receitas',db.categorias_receitas,'id',id,dir)}
+function modalCategoriaReceita(id){
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem cadastrar categorias.');
+  const c=id?catReceita(id):null;
+  openModal(`<h3>${c?'Editar categoria de receita':'Nova categoria de receita'}</h3>
+  <div class="row2"><div class="field"><label>Nome</label><input id="cr-nome" maxlength="40" placeholder="ex.: Dichavar" value="${c?esc(c.nome):''}"></div>
+  <div class="field"><label>Ícone (opcional)</label><input id="cr-icone" maxlength="8" placeholder="ex.: 🌿" value="${c?esc(c.icone||''):''}"></div></div>
+  <p id="cr-err" style="color:var(--danger);font-size:13px;display:none"></p>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+  <button class="btn btn-purple" onclick="salvarCategoriaReceita('${id||''}')">Salvar</button></div>`);
+}
+async function salvarCategoriaReceita(id){
+  if(!isGerente())return;
+  const nome=document.getElementById('cr-nome').value.trim(),icone=document.getElementById('cr-icone').value.trim();
+  const e=document.getElementById('cr-err'),fail=m=>{e.textContent=m;e.style.display='block'};
+  if(!nome)return fail('Informe o nome da categoria.');
+  if((db.categorias_receitas||[]).some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.id!==id))return fail('Já existe uma categoria com esse nome.');
+  if(id){
+    const{error}=await sb.from('categorias_receitas').update({nome,icone}).eq('id',id);
+    if(error)return fail('Erro ao salvar: '+error.message);
+    Object.assign(catReceita(id),{nome,icone});reg('Categoria de receita editada',nome);
+  }else{
+    const{data,error}=await sb.from('categorias_receitas').insert({nome,icone,ordem:proximaOrdem(db.categorias_receitas||[])}).select().single();
+    if(error)return fail('Erro ao salvar: '+error.message);
+    (db.categorias_receitas=db.categorias_receitas||[]).push(data);reg('Categoria de receita criada',nome);
+  }
+  closeModal();toast('✅ Categoria salva.');render();
+}
+function excluirCategoriaReceita(id){
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir categorias.');
+  const c=catReceita(id);if(!c)return;
+  const n=db.receitas.filter(r=>r.categoria_id===id).length;
+  confirmar('Excluir categoria','A categoria "'+c.nome+'" será removida'+(n?' e '+n+' receita(s) ficarão sem categoria':'')+'. Confirmar?',async()=>{
+    const{error}=await sb.from('categorias_receitas').delete().eq('id',id);
+    if(error)return toast('⚠️ Erro ao excluir: '+error.message);
+    db.categorias_receitas=db.categorias_receitas.filter(x=>x.id!==id);
+    db.receitas.forEach(r=>{if(r.categoria_id===id)r.categoria_id=null});
+    reg('Categoria de receita excluída',c.nome);render();
+  });
 }
 async function toggleReceita(id){
   const r=db.receitas.find(x=>x.id===id);
@@ -3777,7 +3896,7 @@ function excluirSelecionadas(tipo){
    A tela só é redesenhada quando é seguro (sem modal aberto, sem formulário de compra/produção
    aberto e sem campo em edição); caso contrário a atualização espera e é aplicada logo depois. */
 const TABELAS_TEMPO_REAL=['vendas','venda_itens','compras','compra_itens','estoque_bau','ajustes_caixa','itens','produtos','receitas','receita_insumos',
-  'fornecedores','fornecedor_itens','parcerias','parceria_faixas','taxas_deslocamento','categorias_itens','profiles','configuracoes','solicitacoes_senha','avisos','depositos_caixa'];
+  'fornecedores','fornecedor_itens','parcerias','parceria_faixas','taxas_deslocamento','categorias_itens','profiles','configuracoes','solicitacoes_senha','avisos','depositos_caixa','categorias_receitas'];
 let _rtCanal=null,_rtTimer=null,_rtPendente=false,_rtCarregando=false;
 function iniciarTempoReal(){
   if(_rtCanal||!sb.channel)return;

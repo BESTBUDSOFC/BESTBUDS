@@ -83,6 +83,24 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 - Lançamentos com várias linhas mostram a etiqueta do tipo com cor própria: **Compra** em verde (só tem entradas, como as demais entradas) e **Produção** e **Produção em cascata** em roxo.
 
+## Produção
+
+- Categorias de receitas (`categorias_receitas`, migração `20261001020000_categorias_receitas.sql`) são cadastradas em Configurações › Receitas. Gerente ou acima cria e edita, e Sócio ou Diretor exclui. Excluir uma categoria deixa as receitas dela sem categoria.
+- A tela Produzir (Baú › 🏭 Produzir) tem duas partes:
+  - À esquerda, a busca e as receitas ativas agrupadas por categoria, na ordem das categorias e com "Sem categoria" no fim.
+  - Ao lado de cada receita há um número:
+    - **verde**: quantas dá para fazer agora;
+    - **roxo 🔗**: quantas dá só com produção em cascata;
+    - **cinza 0**: não dá para fazer.
+  - À direita, o painel da receita escolhida. Ele mostra a quantidade (− / +), os atalhos "máximo" e "🔗 máximo com cascata", e o item limitante.
+- No painel:
+  - Com produção direta, aparece a tabela Tem agora / Usa / Fica, com Fica em vermelho no estoque mínimo. O botão verde chama `produzirDireto`.
+  - Com cascata, aparecem as etapas e o antes → depois. O botão roxo (`#btn-conf-cascata`) chama `confirmarCascata`.
+  - Sem insumos nem com cascata, aparece o que falta e o botão fica travado.
+  - Não há janela de confirmação. Nada é gravado até clicar no botão.
+- O vendedor produz direto. A cascata é só para Gerente ou acima: o vendedor vê as etapas, mas o botão fica desativado.
+- Os máximos usam `saldosBau()`, que calcula todos os saldos de uma vez, e `planejarCascata(rid,q,saldo)`. Não chame `saldoItem` item a item dentro de laços da tela.
+
 ## Compras e preços
 
 - O item não tem preço próprio. O valor unitário é do vínculo fornecedor ↔ item (`fornecedor_itens.preco_unitario`), definido em Configurações › Fornecedores e obrigatório para cada item vinculado.
