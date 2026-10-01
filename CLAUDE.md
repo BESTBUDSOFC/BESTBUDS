@@ -86,18 +86,16 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 ## Produção
 
 - Categorias de receitas (`categorias_receitas`, migração `20261001020000_categorias_receitas.sql`) são cadastradas em Configurações › Receitas. Gerente ou acima cria e edita, e Sócio ou Diretor exclui. Excluir uma categoria deixa as receitas dela sem categoria.
-- A tela Produzir (Baú › 🏭 Produzir) tem duas partes:
-  - À esquerda, a busca e as receitas ativas agrupadas por categoria, na ordem das categorias e com "Sem categoria" no fim.
-  - Ao lado de cada receita há um número:
-    - **verde**: quantas dá para fazer agora;
-    - **roxo 🔗**: quantas dá só com produção em cascata;
-    - **cinza 0**: não dá para fazer.
-  - À direita, o painel da receita escolhida. Ele mostra a quantidade (− / +), os atalhos "máximo" e "🔗 máximo com cascata", e o item limitante.
-- No painel:
-  - Com produção direta, aparece a tabela Tem agora / Usa / Fica, com Fica em vermelho no estoque mínimo. O botão verde chama `produzirDireto`.
-  - Com cascata, aparecem as etapas e o antes → depois. O botão roxo (`#btn-conf-cascata`) chama `confirmarCascata`.
-  - Sem insumos nem com cascata, aparece o que falta e o botão fica travado.
-  - Não há janela de confirmação. Nada é gravado até clicar no botão.
+- A tela Produzir (Baú › 🏭 Produzir) mostra **uma linha de produção por variedade** (opção B), montada a partir das receitas ativas (`prodCadeias()`):
+  - A receita final é a que não alimenta nenhuma outra. A etapa anterior é a receita que produz o insumo dela (`receitaProdutora`). Hoje são no máximo 2 etapas (Dichavar → Enrolar), mas o código aceita mais.
+  - Fluxo da linha: caixa do insumo principal (saldo; borda vermelha zerado ou no mínimo) → etapa → caixa do intermediário → etapa → "Vende no Caixa" (ou a caixa do que a última receita gera no Baú).
+  - Variedade = produto ativo cujo nome aparece nas receitas ou itens da linha (foto e nome do produto). Sem produto, o título é o nome da receita final.
+  - Insumos de apoio (categoria Insumo Auxiliar ou usados em mais de uma linha, ex.: Zip Lock, Papel de Seda) ficam numa faixa no topo, não nas linhas.
+  - O botão de cada etapa usa o ícone e o nome da categoria da receita (sem categoria: "▶ nome da receita") e mostra **verde "até N"** (dá para fazer agora), **roxo "🔗 até N"** (só com cascata) ou apagado (faltam insumos).
+- O botão abre a janela (`prodAbrir` → `#prod-painel`, `modal-prod`) com quantidade (− / +), atalhos "máximo" e "🔗 máximo com cascata" e o item limitante:
+  - Produção direta: tabela Tem agora / Usa / Fica (Fica em vermelho no estoque mínimo) e botão verde (`#btn-produzir` → `produzirDireto`).
+  - Cascata: etapas e antes → depois; botão roxo (`#btn-conf-cascata` → `confirmarCascata`).
+  - Sem insumos nem com cascata: mostra o que falta e trava o botão.
 - O vendedor produz direto. A cascata é só para Gerente ou acima: o vendedor vê as etapas, mas o botão fica desativado.
 - Os máximos usam `saldosBau()`, que calcula todos os saldos de uma vez, e `planejarCascata(rid,q,saldo)`. Não chame `saldoItem` item a item dentro de laços da tela.
 
