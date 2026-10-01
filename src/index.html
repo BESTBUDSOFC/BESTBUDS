@@ -441,6 +441,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .pn-ativ{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
 .pn-ativ:last-child{border-bottom:0}
 .pn-ativ-q{color:var(--muted);font-size:11px}
+.pn-pag{display:flex;align-items:center;gap:8px;justify-content:flex-end;margin-top:10px;color:var(--muted);font-size:12px;flex-wrap:wrap}
 @media(max-width:900px){.pn-duas{grid-template-columns:1fr}}
 .pend-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .pend-resumo{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
@@ -535,7 +536,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.20.0';
+const VERSAO='v4.20.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -782,10 +783,10 @@ function sessionUser(){return db.usuarios.find(u=>u.id===session?.usuario_id)}
 
 /* ================= NAVEGAÇÃO / ROTEADOR ================= */
 const MODULOS=[
-  {id:'painel',nome:'Painel',ic:'📈',perfis:['socio','diretor','gerente']},
   {id:'pdv',nome:'Caixa de Balcão',ic:'🛒',perfis:['socio','diretor','gerente','vendedor']},
   {id:'bau',nome:'Baú',ic:'📦',perfis:['socio','diretor','gerente','vendedor']},
   {id:'financeiro',nome:'Histórico Financeiro',ic:'📊',perfis:['socio','diretor','gerente','vendedor']},
+  {id:'painel',nome:'Painel',ic:'📈',perfis:['socio','diretor','gerente']},
   {id:'config',nome:'Configurações',ic:'⚙️',perfis:['socio','diretor','gerente']}
 ];
 let moduloAtual='pdv';
@@ -819,7 +820,7 @@ function startApp(){
   document.getElementById('app-header').style.display='flex';
   document.getElementById('main-content').style.display='block';
   const u=sessionUser();
-  moduloAtual=isGerente()?'painel':'pdv';   // gerência abre no Painel; vendedor, no Caixa de Balcão
+  moduloAtual='pdv';
   document.getElementById('h-user').textContent=u.nome;
   const bp=document.getElementById('h-perfil');
   bp.textContent=PERFIL_LABEL[u.perfil]||u.perfil;
@@ -964,12 +965,12 @@ function renderPDV(c){
   atualizarValoresAux();
 }
 /* ================= PAINEL (Gerente, Diretor ou Sócio) =================
-   Visão geral: saúde do caixa, alertas, vendas no período, vendedores, produtos, avisos e atividade.
+   Visão geral: alertas, receita da loja por dia, vendedores, produtos, avisos e últimas ações (paginadas).
    Tudo sai dos dados já carregados (db), menos as últimas ações da auditoria (registros), lidas ao abrir.
    Período sempre em dias de Brasília. Vendas contam pela data da venda; o caixa, pela data em que o
    dinheiro entrou (venda guardada: guardada_em; compra: data_local; ajuste: data). */
 let painelPer={preset:'7d',de:'',ate:''};
-let _pnReg={em:0,linhas:[],erro:null,carregando:false};
+let _pnReg={em:0,linhas:[],erro:null,carregando:false,page:1,size:10,total:0};
 const PN_PRESETS=[['hoje','Hoje'],['7d','7 dias'],['30d','30 dias'],['mes','Este mês'],['tudo','Tudo'],['pers','Personalizado']];
 /* Aritmética de calendário em 'AAAA-MM-DD' (meio-dia UTC, sem instante real: não sofre com fuso) */
 function pnSomaDias(dia,n){const[a,m,d]=dia.split('-').map(Number);const t=new Date(Date.UTC(a,m-1,d,12)+n*864e5);return t.getUTCFullYear()+'-'+String(t.getUTCMonth()+1).padStart(2,'0')+'-'+String(t.getUTCDate()).padStart(2,'0')}
@@ -985,35 +986,11 @@ function pnPeriodo(){
   else if(p==='tudo')de=pnPrimeiroDia();
   else if(p==='pers'){de=painelPer.de||pnSomaDias(hoje,-6);ate=painelPer.ate||hoje;if(de>ate)[de,ate]=[ate,de]}
   const n=pnDifDias(de,ate)+1;
-  const ant=p==='tudo'?null:{de:pnSomaDias(de,-n),ate:pnSomaDias(de,-1)};
-  return{de,ate,n,ant};
+  return{de,ate,n};
 }
 const pnNoPer=(dia,per)=>!!dia&&dia>=per.de&&dia<=per.ate;
 const pnVendida=v=>v.status==='ativa'||v.status==='pendente';
 function pnVendasPer(per){return db.vendas.filter(v=>pnVendida(v)&&pnNoPer(diaBR(v.data),per))}
-function pnSomar(vs){
-  const r={n:vs.length,total:0,loja:0,repasse:0,desconto:0,subtotal:0,pendente:0};
-  vs.forEach(v=>{r.total+=v.total||0;r.loja+=v.receita_loja||0;r.repasse+=v.cota_funcionario||0;r.desconto+=v.desconto||0;r.subtotal+=v.subtotal||0;if(v.status==='pendente')r.pendente+=v.receita_loja||0});
-  r.ticket=r.n?r.total/r.n:0;return r;
-}
-/* Caixa no período: entradas e saídas pela data em que o dinheiro entrou ou saiu */
-function pnCaixaPer(per){
-  const ent=db.vendas.filter(v=>v.status==='ativa'&&pnNoPer(diaBR(v.guardada_em||v.data),per)).reduce((s,v)=>s+(v.receita_loja||0),0);
-  const aj=(db.ajustes_caixa||[]).filter(a=>(a.status||'ativa')==='ativa'&&pnNoPer(diaBR(a.data),per));
-  const ajE=aj.filter(a=>a.tipo==='entrada').reduce((s,a)=>s+a.valor,0),ajS=aj.filter(a=>a.tipo!=='entrada').reduce((s,a)=>s+a.valor,0);
-  const comp=db.compras.filter(k=>k.status==='ativa'&&pnNoPer(k.data_local||diaBR(k.data),per)).reduce((s,k)=>s+(k.valor_total||0),0);
-  return{vendas:ent,ajE,ajS,nAj:aj.length,compras:comp,entradas:ent+ajE,saidas:comp+ajS};
-}
-function pnDelta(atual,anterior,bomSubir){
-  if(anterior==null)return '';
-  if(!anterior&&!atual)return `<div class="pn-delta">igual ao período anterior</div>`;
-  if(!anterior)return `<div class="pn-delta">sem base no período anterior</div>`;
-  const pct=Math.round((atual-anterior)/Math.abs(anterior)*100);
-  if(pct===0)return `<div class="pn-delta">igual ao período anterior</div>`;
-  const bom=(pct>0)===(bomSubir!==false);
-  return `<div class="pn-delta ${bom?'bom':'ruim'}">${pct>0?'▲ +':'▼ '}${pct}% <span>vs período anterior</span></div>`;
-}
-function pnTile(rot,valor,extra,cls){return `<div class="sum-card pn-tile ${cls||''}"><div class="sl">${rot}</div><div class="sv">${valor}</div>${extra||''}</div>`}
 /* Agrupa o período em dias (até 62), semanas (até ~1 ano) ou meses */
 function pnBaldes(per){
   const b=[];
@@ -1075,77 +1052,66 @@ function pnProdutos(per){
   const parados=db.produtos.filter(p=>p.status==='ativo'&&!vendidos.has(p.id)&&!vendidos.has(p.nome)).map(p=>p.nome);
   return{lista,parados};
 }
+/* Últimas ações: uma página por vez direto do banco (leitura não conta no limite de requisições) */
 async function pnCarregarRegistros(forcar){
   if(_pnReg.carregando||(!forcar&&Date.now()-_pnReg.em<30000))return;
   _pnReg.carregando=true;
-  const{data,error}=await sb.from('registros').select('data,usuario_nome,acao,detalhe').order('data',{ascending:false}).limit(15);
-  _pnReg={em:Date.now(),linhas:data||[],erro:error||null,carregando:false};
+  const ini=(_pnReg.page-1)*_pnReg.size;
+  const{data,error,count}=await sb.from('registros').select('data,usuario_nome,acao,detalhe',{count:'exact'}).order('data',{ascending:false}).range(ini,ini+_pnReg.size-1);
+  Object.assign(_pnReg,{em:Date.now(),linhas:data||[],erro:error||null,carregando:false,total:count??(data||[]).length});
   const el=document.getElementById('pn-atividade');if(el)el.innerHTML=pnHtmlAtividade();
+}
+function pnRegPagina(delta,tam){
+  if(tam){_pnReg.size=tam;_pnReg.page=1}else _pnReg.page=Math.max(1,_pnReg.page+delta);
+  pnCarregarRegistros(true);
 }
 function pnHtmlAtividade(){
   if(_pnReg.erro)return `<div class="empty">Não foi possível ler a auditoria.</div>`;
   if(!_pnReg.em)return `<div class="empty">Carregando…</div>`;
-  if(!_pnReg.linhas.length)return `<div class="empty">Nenhuma ação registrada.</div>`;
-  return `<div class="pn-lista">${_pnReg.linhas.map(r=>`<div class="pn-ativ"><span class="pn-ativ-q">${esc(dataHoraBR(r.data))} · ${esc(r.usuario_nome||'—')}</span><span><b>${esc(r.acao)}</b>${r.detalhe?' — '+esc(r.detalhe):''}</span></div>`).join('')}</div>`;
+  const pags=Math.max(1,Math.ceil(_pnReg.total/_pnReg.size)),ini=(_pnReg.page-1)*_pnReg.size;
+  const lista=_pnReg.linhas.length?`<div class="pn-lista">${_pnReg.linhas.map(r=>`<div class="pn-ativ"><span class="pn-ativ-q">${esc(dataHoraBR(r.data))} · ${esc(r.usuario_nome||'—')}</span><span><b>${esc(r.acao)}</b>${r.detalhe?' — '+esc(r.detalhe):''}</span></div>`).join('')}</div>`:`<div class="empty">Nenhuma ação registrada.</div>`;
+  return lista+`<div class="pn-pag"><span>${_pnReg.total?`${ini+1}–${Math.min(_pnReg.total,ini+_pnReg.linhas.length)} de ${_pnReg.total}`:'0 registros'}</span><select style="width:auto;padding:5px" onchange="pnRegPagina(0,+this.value)">${[10,20,50,100].map(n=>`<option ${_pnReg.size===n?'selected':''}>${n}</option>`).join('')}</select><button class="btn btn-ghost btn-sm" ${_pnReg.page<=1?'disabled':''} onclick="pnRegPagina(-1)">Anterior</button><span>p. ${_pnReg.page}/${pags}</span><button class="btn btn-ghost btn-sm" ${_pnReg.page>=pags?'disabled':''} onclick="pnRegPagina(1)">Próxima</button></div>`;
 }
 function pnAlternar(preset){painelPer.preset=preset;if(preset==='pers'&&!painelPer.de){const p=pnPeriodo();painelPer.de=p.de;painelPer.ate=p.ate}render()}
 function pnDatas(){painelPer.de=document.getElementById('pn-de').value;painelPer.ate=document.getElementById('pn-ate').value;render()}
 function renderPainel(c){
   if(!isGerente()){moduloAtual='pdv';return renderPDV(c)}
-  const per=pnPeriodo(),ant=per.ant;
-  const vs=pnSomar(pnVendasPer(per)),va=ant?pnSomar(pnVendasPer(ant)):null;
-  const cx=pnCaixaPer(per),cxa=ant?pnCaixaPer(ant):null;
+  const per=pnPeriodo();
   const pend=db.vendas.filter(v=>v.status==='pendente');
   const pendAbertas=pend.filter(v=>v.cancelamento_status!=='pedido');
   const pendValor=pendAbertas.reduce((s,v)=>s+(v.receita_loja||0),0);
   const maisAntiga=pendAbertas.slice().sort((a,b)=>new Date(a.data)-new Date(b.data))[0];
-  const velhas=pend.filter(v=>(Date.now()-new Date(v.data).getTime())>=24*36e5);
+  const pendVendedores=new Set(pendAbertas.map(v=>v.usuario_id||v.usuario_nome)).size;
   const pedidosCanc=pend.filter(v=>v.cancelamento_status==='pedido');
   const pedidosSenha=(db.pedidos_senha||[]).length;
+  const estoqueMin=itensComAlerta();
   const vendedores=pnVendedores(per),prods=pnProdutos(per);
-  const eqs=membrosEquipe(),on=eqs.filter(u=>u.id===session.usuario_id||_online.has(u.id));
+  const eqs=membrosEquipe();
   const avisos=avisosAtivos().sort((a,b)=>new Date(b.criado_em)-new Date(a.criado_em));
   const vistosPor=id=>new Set((db.avisos_vistos_todos||[]).filter(x=>x.aviso_id===id).map(x=>x.usuario_id));
   const txtPer=per.de===per.ate?dataBRdia(per.de):dataBRdia(per.de)+' a '+dataBRdia(per.ate);
   const baldes=pnBaldes(per);
   const vendasPer=pnVendasPer(per);
   baldes.b.forEach(b=>{const vv=vendasPer.filter(v=>{const d=diaBR(v.data);return d>=b.de&&d<=b.ate});b.valor=vv.reduce((s,v)=>s+(v.receita_loja||0),0);b.n=vv.length});
+  // alertas: pedidos de cancelamento, pedidos de senha, dinheiro na mão dos vendedores e estoque mínimo
   const alertas=[];
   if(pedidosCanc.length)alertas.push(`<button class="pn-alerta r" onclick="go('pdv')"><b>${pedidosCanc.length}</b> pedido(s) de cancelamento esperando resposta</button>`);
-  if(velhas.length)alertas.push(`<button class="pn-alerta r" onclick="go('pdv')"><b>${velhas.length}</b> venda(s) pendente(s) há 24 h ou mais</button>`);
   if(pedidosSenha)alertas.push(`<button class="pn-alerta y" onclick="cfgTabAtual='usuarios';go('config')"><b>${pedidosSenha}</b> pedido(s) de nova senha</button>`);
-  if(cx.nAj)alertas.push(`<button class="pn-alerta y" onclick="go('financeiro')"><b>${cx.nAj}</b> ajuste(s) avulso(s) de caixa no período</button>`);
+  if(pendAbertas.length)alertas.push(`<button class="pn-alerta ${maisAntiga&&(Date.now()-new Date(maisAntiga.data).getTime())>=24*36e5?'r':'y'}" onclick="go('pdv')"><b>${fmt(pendValor)}</b> na mão de ${pendVendedores} vendedor(es) · ${pendAbertas.length} venda(s) a guardar · mais antiga ${idadeVenda(maisAntiga)}</button>`);
+  if(estoqueMin.length)alertas.push(`<button class="pn-alerta r" onclick="go('bau')"><b>${estoqueMin.length}</b> item(ns) no estoque mínimo: ${estoqueMin.map(i=>esc(i.nome)).join(', ')}</button>`);
   c.innerHTML=`
   <h2 class="page-title">Painel</h2>
-  <p class="page-sub">Visão geral da loja. Vendas contam pela data da venda; o caixa, pela data em que o dinheiro entrou.</p>
-  <div class="pn-filtros">
-    ${PN_PRESETS.map(([k,r])=>`<button class="btn btn-sm ${painelPer.preset===k?'btn-primary':'btn-ghost'}" onclick="pnAlternar('${k}')">${r}</button>`).join('')}
-    ${painelPer.preset==='pers'?`<input type="date" id="pn-de" value="${per.de}" onchange="pnDatas()"><span class="muted">até</span><input type="date" id="pn-ate" value="${per.ate}" onchange="pnDatas()">`:''}
-    <span class="pn-per">${txtPer}${ant?` · comparado com ${pnDifDias(ant.de,ant.ate)===0?dataBRdia(ant.de):dataBRdia(ant.de)+' a '+dataBRdia(ant.ate)}`:''}</span>
-  </div>
-
-  <div class="section-title">💰 Saúde do caixa</div>
-  <div class="sum-grid">
-    ${pnTile('Caixa atual',`<span class="pn-hero">${fmt(caixaAtualValor())}</span>`,`<div class="pn-delta">saldo de hoje, independe do período</div>`,'pn-destaque')}
-    ${pnTile('Entradas no período',fmt(cx.entradas),`<div class="pn-sub">vendas guardadas ${fmt(cx.vendas)}${cx.ajE?` · ajustes ${fmt(cx.ajE)}`:''}</div>`+pnDelta(cx.entradas,cxa&&cxa.entradas,true))}
-    ${pnTile('Saídas no período',fmt(cx.saidas),`<div class="pn-sub">compras ${fmt(cx.compras)}${cx.ajS?` · ajustes ${fmt(cx.ajS)}`:''}</div>`+pnDelta(cx.saidas,cxa&&cxa.saidas,false))}
-    ${pnTile('Dinheiro na mão dos vendedores',fmt(pendValor),`<div class="pn-sub">${pendAbertas.length?`${pendAbertas.length} venda(s) pendente(s)${maisAntiga?' · mais antiga '+idadeVenda(maisAntiga):''}`:'nenhuma venda pendente'}${pedidosCanc.length?` · ${pedidosCanc.length} com pedido de cancelamento, fora do valor`:''}</div>`,pendValor>0?'pn-atencao':'')}
-  </div>
-
+  <p class="page-sub">Visão geral da loja. As vendas contam pela data da venda.</p>
   <div class="section-title">🚨 Alertas</div>
   <div class="pn-alertas">${alertas.join('')||`<div class="pn-ok">✅ Nada pendente agora.</div>`}</div>
 
-  <div class="section-title">📈 Vendas no período</div>
-  <div class="sum-grid">
-    ${pnTile('Vendas',String(vs.n),pnDelta(vs.n,va&&va.n,true))}
-    ${pnTile('Total vendido',fmt(vs.total),pnDelta(vs.total,va&&va.total,true))}
-    ${pnTile('Receita da loja',fmt(vs.loja),(vs.pendente?`<div class="pn-sub">${fmt(vs.pendente)} ainda não guardado</div>`:'')+pnDelta(vs.loja,va&&va.loja,true))}
-    ${pnTile('Repasse da equipe',fmt(vs.repasse),pnDelta(vs.repasse,va&&va.repasse,true))}
-    ${pnTile('Ticket médio',fmt(vs.ticket),pnDelta(vs.ticket,va&&va.ticket,true))}
-    ${pnTile('Descontos concedidos',fmt(vs.desconto),`<div class="pn-sub">${vs.subtotal?Math.round(vs.desconto/vs.subtotal*1000)/10:0}% do subtotal</div>`+pnDelta(vs.desconto,va&&va.desconto,false))}
+  <div class="pn-filtros">
+    ${PN_PRESETS.map(([k,r])=>`<button class="btn btn-sm ${painelPer.preset===k?'btn-primary':'btn-ghost'}" onclick="pnAlternar('${k}')">${r}</button>`).join('')}
+    ${painelPer.preset==='pers'?`<input type="date" id="pn-de" value="${per.de}" onchange="pnDatas()"><span class="muted">até</span><input type="date" id="pn-ate" value="${per.ate}" onchange="pnDatas()">`:''}
+    <span class="pn-per">${txtPer}</span>
   </div>
   <div class="card pn-card">
-    <div class="pn-card-tit">Receita da loja por ${baldes.tipo} <span class="muted">· vendas feitas no ${baldes.tipo}, guardadas ou não</span></div>
+    <div class="pn-card-tit">📈 Receita da loja por ${baldes.tipo} <span class="muted">· vendas feitas no ${baldes.tipo}, guardadas ou não</span></div>
     ${vendasPer.length?`<div id="pn-colunas" class="pn-colunas"></div>
     <details class="pn-tabela-det"><summary>Ver em tabela</summary><div class="table-wrap"><table><tr><th>${baldes.tipo==='dia'?'Dia':'Início'}</th><th>Vendas</th><th>Receita da loja</th></tr>${baldes.b.filter(b=>b.n).map(b=>`<tr><td>${dataBRdia(b.de)}</td><td>${b.n}</td><td class="money">${fmt(b.valor)}</td></tr>`).join('')}</table></div></details>`:`<div class="empty">Nenhuma venda no período.</div>`}
   </div>
@@ -1155,7 +1121,7 @@ function renderPainel(c){
       ${vendedores.length?pnBarras(vendedores.filter(p=>p.n).map(p=>({nome:p.nome,valor:p.loja})),fmt)+`
       <div class="table-wrap pn-tab"><table>
         <tr><th>Vendedor</th><th>Vendas</th><th>Total vendido</th><th>Receita loja</th><th>Não guardado</th><th>Repasse recebido</th><th>Desconto médio</th></tr>
-        ${vendedores.map(p=>`<tr><td>${esc(p.nome)}${p.aux?` <span class="muted" style="font-size:11px">· ${p.aux} auxílio(s)</span>`:''}</td><td>${p.n}</td><td class="money">${fmt(p.total)}</td><td class="money">${fmt(p.loja)}</td><td>${p.pendente?`<span style="color:var(--warning-light)">${fmt(p.pendente)}</span>`:'—'}</td><td style="color:var(--purple-light)">${fmt(p.repasse)}</td><td>${p.subtotal?Math.round(p.desconto/p.subtotal*1000)/10+'%':'—'}</td></tr>`).join('')}
+        ${vendedores.map(p=>`<tr><td>${esc(p.nome)}${p.aux?` <span class="muted" style="font-size:11px">· ${p.aux} auxílio(s)</span>`:''}</td><td>${p.n}</td><td class="money money-total">${fmt(p.total)}</td><td class="money">${fmt(p.loja)}</td><td>${p.pendente?`<span style="color:var(--warning-light)">${fmt(p.pendente)}</span>`:'—'}</td><td style="color:var(--purple-light)">${fmt(p.repasse)}</td><td>${p.subtotal?Math.round(p.desconto/p.subtotal*1000)/10+'%':'—'}</td></tr>`).join('')}
       </table></div>`:`<div class="empty">Nenhuma venda no período.</div>`}
   </div>
   <div class="pn-duas">
@@ -1164,17 +1130,16 @@ function renderPainel(c){
       ${prods.lista.length?pnBarras(prods.lista.map(p=>({nome:p.nome,valor:p.qtd})),n=>n.toLocaleString('pt-BR')+' un')+`
       <div class="table-wrap pn-tab"><table>
         <tr><th>Produto</th><th>Qtd</th><th>Vendido</th><th>% do vendido</th></tr>
-        ${(()=>{const tot=prods.lista.reduce((s,p)=>s+p.valor,0);return prods.lista.map(p=>`<tr><td>${esc(p.nome)}</td><td>${p.qtd.toLocaleString('pt-BR')}</td><td class="money">${fmt(p.valor)}</td><td>${tot?Math.round(p.valor/tot*1000)/10:0}%</td></tr>`).join('')})()}
+        ${(()=>{const tot=prods.lista.reduce((s,p)=>s+p.valor,0);return prods.lista.map(p=>`<tr><td>${esc(p.nome)}</td><td>${p.qtd.toLocaleString('pt-BR')}</td><td class="money money-total">${fmt(p.valor)}</td><td>${tot?Math.round(p.valor/tot*1000)/10:0}%</td></tr>`).join('')})()}
       </table></div>`:`<div class="empty">Nenhum produto vendido no período.</div>`}
       ${prods.parados.length?`<p class="pn-parados"><b>Sem venda no período:</b> ${prods.parados.map(esc).join(', ')}</p>`:''}
     </div>
     <div class="card pn-card">
-      <div class="pn-card-tit">📢 Avisos e equipe</div>
+      <div class="pn-card-tit">📢 Avisos</div>
       ${avisos.length?avisos.map(a=>{const vistos=vistosPor(a.id),falta=eqs.filter(u=>!vistos.has(u.id));const pct=eqs.length?Math.round((eqs.length-falta.length)/eqs.length*100):0;
         return `<div class="pn-aviso"><div class="pn-aviso-t"><b>${esc(a.titulo)}</b><span class="muted">por ${esc(a.criado_por_nome||'—')} · some ${esc(dataHoraBR(a.expira_em))}</span></div>
         <div class="pn-meter" role="img" aria-label="${eqs.length-falta.length} de ${eqs.length} viram"><span style="width:${pct}%"></span></div>
         <div class="pn-sub">${eqs.length-falta.length} de ${eqs.length} viram${falta.length?` · <span style="color:var(--warning-light)">faltam: ${falta.map(u=>esc(u.nome)).join(', ')}</span>`:' · todos viram'}</div></div>`}).join(''):`<div class="empty" style="padding:12px">Nenhum aviso ativo.</div>`}
-      <div class="pn-equipe"><b>${on.length}</b> de ${eqs.length} on-line agora${on.length?': '+on.map(u=>esc(u.nome)).join(', '):''}</div>
     </div>
   </div>
   <div class="card pn-card">
@@ -1449,7 +1414,6 @@ function renderBau(c){
   const itens=itensOrdenados().filter(i=>controlaEstoque(i.categoria)&&i.status==='ativo');
   const movs=[...db.estoque_bau].map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));const movsF=aplicarFiltros(movs,'bau');
   const gruposBau=agruparBau(movs,movsF);const paginaBau=pagina(gruposBau,'bau');
-  const alertas=itensComAlerta();
   c.innerHTML=`
   <h2 class="page-title">Baú — Estoque de Insumos</h2>
   <p class="page-sub">Estoque desacoplado do ciclo de vendas. Vendas no PDV nunca movimentam o Baú.</p>
@@ -1457,7 +1421,6 @@ function renderBau(c){
     <button class="btn btn-purple" onclick="telaNovaCompra()">🚚 Nova compra</button>
     <button class="btn btn-primary" onclick="telaProducao()">🏭 Produzir</button>
   </div>
-  ${alertas.length?`<div class="alert-banner"><b>⚠️ Itens no limite mínimo:</b><br>${alertas.map(i=>`${esc(i.nome)} — ${saldoItem(i.id)}/${i.qtd_minima} ${esc(i.unidade_medida)}`).join(' · ')}</div>`:''}
   <div class="sum-grid">${itens.map(i=>{
     const s=saldoItem(i.id);
     const alerta=i.qtd_minima>0&&s<=i.qtd_minima;
@@ -2172,7 +2135,7 @@ const COLS_FIN=[
  {key:'deslocamento',label:'Deslocamento'},
  {key:'status',label:'Status'},
  {key:'valor',label:'Valor'},
- {key:'entrada',label:'Entrada'},
+ {key:'entrada',label:'Entrada/Saída'},
  {key:'repasse',label:'Repasse'},
  {key:'descricao',label:'Descrição'}
 ];
@@ -2223,9 +2186,9 @@ function linhasFinanceiro(){
  const rows=[];
  db.vendas.filter(v=>v.status!=='excluida').forEach(v=>{const rp=repasseDaVenda(v),dataCaixa=v.guardada_em||v.data;rows.push({id:'venda:'+v.id,tipo:'venda',operacao_id:v.operacao_id||'',data:dataCaixa,usuario_nome:v.usuario_nome||'',tipo_label:'Venda',itens:(v.itens||[]).map(i=>i.qtd+'× '+i.nome).join(', '),desconto:v.parceria_nome||'—',deslocamento:(v.taxa_nome&&v.taxa_valor>0)?v.taxa_nome+' ('+fmt(v.taxa_valor)+')':'—',descricao:descricaoVendaFin(v),entrada:v.receita_loja||0,repasse:rp.principal,valor:v.total||0,status:v.status,v});
   rp.aux.forEach((a,k)=>rows.push({id:'aux:'+v.id+':'+k,pai:'venda:'+v.id,tipo:'auxiliar',operacao_id:v.operacao_id||'',data:dataCaixa,usuario_nome:a.nome||'?',tipo_label:'Auxiliar',itens:'—',desconto:'—',deslocamento:'—',descricao:'Referente ao auxílio na venda de '+(v.usuario_nome||'—'),entrada:null,repasse:a.valor,valor:null,status:v.status,v}))});
- db.compras.filter(k=>k.status!=='excluida').forEach(k=>{rows.push({id:'compra:'+k.id,tipo:'compra',operacao_id:k.operacao_id||'',data:k.data,usuario_nome:k.usuario_nome||'',tipo_label:'Compra',itens:(k.itens||[]).map(i=>{const it=db.itens.find(x=>x.id===i.item_id);const nome=i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?');const q=i.qtd??i.quantidade;return (q??'?')+'× '+nome+(i.fornecedor_nome&&i.fornecedor_nome!==k.fornecedor_nome?' ('+i.fornecedor_nome+')':'')}).join(', ')||'—',desconto:'—',deslocamento:'—',descricao:k.descricao||'—',entrada:0,repasse:0,valor:-(k.valor_total||0),status:k.status,k});
+ db.compras.filter(k=>k.status!=='excluida').forEach(k=>{rows.push({id:'compra:'+k.id,tipo:'compra',operacao_id:k.operacao_id||'',data:k.data,usuario_nome:k.usuario_nome||'',tipo_label:'Compra',itens:(k.itens||[]).map(i=>{const it=db.itens.find(x=>x.id===i.item_id);const nome=i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?');const q=i.qtd??i.quantidade;return (q??'?')+'× '+nome+(i.fornecedor_nome&&i.fornecedor_nome!==k.fornecedor_nome?' ('+i.fornecedor_nome+')':'')}).join(', ')||'—',desconto:'—',deslocamento:'—',descricao:k.descricao||'—',entrada:-(k.valor_total||0),repasse:0,valor:-(k.valor_total||0),status:k.status,k});
   if((k.itens||[]).length>1)(k.itens||[]).forEach((i,n)=>{const it=db.itens.find(x=>x.id===i.item_id);const q=Number(i.qtd??i.quantidade)||0;rows.push({id:'citem:'+k.id+':'+n,pai:'compra:'+k.id,tipo:'compra_item',operacao_id:k.operacao_id||'',data:k.data,usuario_nome:i.fornecedor_nome||k.fornecedor_nome||'',tipo_label:i.item_id?'Insumo':'Não controlado',itens:q+'× '+(i.nome&&i.nome!=='?'?i.nome:(it?it.nome:'?')),desconto:'—',deslocamento:'—',descricao:(i.item_id?'Entrada no Baú':'Sem entrada no Baú')+' · '+fmt(Number(i.preco_unitario)||0)+'/un',entrada:null,repasse:null,valor:-(q*(Number(i.preco_unitario)||0)),status:k.status,k})})});
- (db.ajustes_caixa||[]).forEach(a=>rows.push({id:'ajuste:'+a.id,tipo:'ajuste',operacao_id:'',data:a.data,usuario_nome:a.usuario_nome||'',tipo_label:'Ajuste ('+(a.tipo==='entrada'?'+':'−')+')',itens:'—',desconto:'—',deslocamento:'—',descricao:a.motivo||'—',entrada:a.tipo==='entrada'?a.valor:0,repasse:0,valor:a.tipo==='entrada'?a.valor:-a.valor,status:a.status||'ativa',a}));
+ (db.ajustes_caixa||[]).forEach(a=>rows.push({id:'ajuste:'+a.id,tipo:'ajuste',operacao_id:'',data:a.data,usuario_nome:a.usuario_nome||'',tipo_label:'Ajuste ('+(a.tipo==='entrada'?'+':'−')+')',itens:'—',desconto:'—',deslocamento:'—',descricao:a.motivo||'—',entrada:a.tipo==='entrada'?a.valor:-a.valor,repasse:0,valor:a.tipo==='entrada'?a.valor:-a.valor,status:a.status||'ativa',a}));
  return rows;
 }
 function caixaAtualValor(){return db.vendas.filter(v=>v.status==='ativa').reduce((s,v)=>s+(v.receita_loja||0),0)-db.compras.filter(k=>k.status==='ativa').reduce((s,k)=>s+(k.valor_total||0),0)+(db.ajustes_caixa||[]).filter(a=>(a.status||'ativa')==='ativa').reduce((s,a)=>s+(a.tipo==='entrada'?a.valor:-a.valor),0)}
@@ -2256,7 +2219,8 @@ function renderFinanceiro(c){
   if(key==='desconto')return `<td>${esc(r.desconto)}</td>`;
   if(key==='deslocamento')return `<td>${esc(r.deslocamento)}</td>`;
   if(key==='descricao')return `<td style="color:var(--muted)">${esc(r.descricao)}</td>`;
-  if(key==='entrada')return `<td class="money" style="color:var(--info)">${r.tipo==='venda'||(r.tipo==='ajuste'&&r.entrada>0)?fmt(r.entrada):'—'}</td>`;
+  // Entrada/Saída: o que entrou no caixa (venda, ajuste +) e, negativo, o que saiu (compra, ajuste −)
+  if(key==='entrada'){if(!['venda','compra','ajuste'].includes(r.tipo)||r.entrada==null)return '<td style="color:var(--muted)">—</td>';return r.entrada<0?`<td class="money-neg">−${fmt(-r.entrada)}</td>`:`<td class="money" style="color:var(--info)">${fmt(r.entrada)}</td>`}
   if(key==='repasse')return `<td style="color:var(--purple)">${r.tipo==='venda'||r.tipo==='auxiliar'?fmt(r.repasse):'—'}</td>`;
   if(key==='valor')return r.valor==null?'<td style="color:var(--muted)">—</td>':r.valor>=0?`<td class="money money-total">${fmt(r.valor)}</td>`:`<td class="money-neg">−${fmt(-r.valor)}</td>`;
   if(key==='status')return `<td><span class="tag ${r.status==='ativa'?'g':r.status==='pendente'?'y':'r'}">${r.status}</span></td>`;
@@ -3536,7 +3500,7 @@ function exportarRegistros(tipo){
  if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem exportar planilhas.');
  let rows=[],heads=['Módulo','Data/hora','Usuário','Descrição','Valor','Repasse','Loja','Status'];
  if(tipo==='financeiro'){
-  heads=['Módulo','ID','Data/hora','Usuário','Tipo','Itens','Desconto','Deslocamento','Descrição','Entrada','Repasse','Valor','Status'];
+  heads=['Módulo','ID','Data/hora','Usuário','Tipo','Itens','Desconto','Deslocamento','Descrição','Entrada/Saída','Repasse','Valor','Status'];
   rows=aplicarFiltros(linhasFinanceiro(),'financeiro').map(r=>['Financeiro',r.operacao_id||'',dataHoraBR(r.data),r.usuario_nome,r.tipo_label,r.itens,r.desconto,r.deslocamento,r.descricao,r.entrada==null?'':r.entrada,r.repasse||0,r.valor==null?'':r.valor,r.status]);
  }
  if(tipo==='bau'){heads=['Módulo','Data/hora','Usuário','Item','Tipo','Quantidade','Saldo resultante','Origem','Status','ID'];rows=aplicarFiltros(db.estoque_bau.map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''})),'bau').map(m=>['Baú',dataHoraBR(m.data),m.usuario_nome||'',m.item_nome,MOV_LABEL[m.tipo_movimento]||m.tipo_movimento,m.quantidade,m.saldo_resultante||0,m.origem||'',m.status==='revertida'?'Revertida':'Ativa',m.operacao_id||''])}
@@ -3605,7 +3569,7 @@ function linhasFonte(tipo){
    get devolve o número bruto (null = sem valor na linha); moeda formata como dinheiro. */
 const NUMERICOS={
  bau:{quantidade:{get:r=>r.quantidade},saldo_resultante:{get:r=>r.saldo_resultante}},
- financeiro:{entrada:{get:r=>r.tipo==='venda'?r.entrada:null,moeda:1},repasse:{get:r=>r.tipo==='venda'||r.tipo==='auxiliar'?r.repasse:null,moeda:1},valor:{get:r=>r.valor,moeda:1}},
+ financeiro:{entrada:{get:r=>['venda','compra','ajuste'].includes(r.tipo)?r.entrada:null,moeda:1},repasse:{get:r=>r.tipo==='venda'||r.tipo==='auxiliar'?r.repasse:null,moeda:1},valor:{get:r=>r.valor,moeda:1}},
  cfg_produtos:{preco:{get:p=>p.preco,moeda:1}},
  cfg_itens:{qtd_minima:{get:i=>i.qtd_minima||0},saldo:{get:i=>controlaEstoque(i.categoria)?saldoItem(i.id):null}},
  cfg_categorias:{itens:{get:c=>db.itens.filter(i=>i.categoria===c.codigo).length}},
@@ -4011,7 +3975,6 @@ function iniciarPresenca(){
   _presCanal.on('presence',{event:'sync'},()=>{
     const st=_presCanal.presenceState?_presCanal.presenceState():{};
     _online=new Set(Object.keys(st));renderEquipe();
-    if(moduloAtual==='painel'&&podeRedesenhar())render();
   });
   _presCanal.subscribe(status=>{if(status==='SUBSCRIBED')_presCanal.track({usuario_id:eu,desde:new Date().toISOString()})});
 }

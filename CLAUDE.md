@@ -64,18 +64,22 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - No Histórico, a venda guardada aparece na data em que foi guardada (`guardada_em`; vendas antigas sem lote usam `data`), com o lote na descrição.
   - Cancelar pendente: o vendedor pede com motivo (`pedir_cancelamento_venda`); a venda fica travada até um Gerente ou acima aprovar (vira `revertida`) ou recusar (volta a pendente) com `responder_cancelamento_venda`. Gerente ou acima também cancela direto (↩️).
   - Vendedor não altera `vendas` direto (RLS); tudo passa pelas rpc.
-- No Histórico Financeiro, o ajuste de caixa entra nos cards de cima: "+ Entrada" soma em Entradas e "− Saída" soma em Saídas (ajuste revertido não conta). Na tabela, a coluna Entrada mostra o valor do ajuste de entrada.
+- No Histórico Financeiro, a coluna "Entrada/Saída" mostra o que entrou no caixa (venda, ajuste +) e, negativo e em vermelho, o que saiu (compra, ajuste −).
+- No Histórico Financeiro, o ajuste de caixa entra nos cards de cima: "+ Entrada" soma em Entradas e "− Saída" soma em Saídas (ajuste revertido não conta). Na tabela, a coluna Entrada/Saída mostra o valor do ajuste (+ ou −).
 
 ## Painel
 
-- Primeira aba do menu, só para Gerente, Diretor e Sócio; a gerência abre o sistema nele (o vendedor abre no Caixa de Balcão, e o Painel não aparece para ele).
-- Filtro de período no topo (Hoje, 7 dias, 30 dias, Este mês, Tudo, Personalizado), em dias de Brasília; os cards comparam com o período anterior de mesmo tamanho (Tudo não compara).
-- Vendas (vendidas = `ativa` + `pendente`) contam pela data da venda. O caixa (entradas e saídas) conta pela data em que o dinheiro entrou: venda guardada por `guardada_em`, compra por `data_local`, ajuste por `data`. "Caixa atual" é o mesmo `caixaAtualValor()` do Histórico.
-- Blocos: saúde do caixa (inclui dinheiro na mão dos vendedores), alertas (pedidos de cancelamento, pendentes há 24 h, pedidos de senha, ajustes avulsos), vendas no período com gráfico de receita da loja por dia (semana acima de 62 dias; mês acima de ~1 ano), vendedores (ranking pela receita da loja já guardada; repasse recebido inclui auxílios), produtos (quantidade vendida e sem venda), avisos e equipe (quem ainda não viu cada aviso; on-line), últimas 15 ações da auditoria (`registros`, lidas ao abrir).
+- Aba "Painel" logo abaixo do Histórico Financeiro, só para Gerente, Diretor e Sócio (o vendedor não vê). Todos abrem o sistema no Caixa de Balcão.
+- Alertas no topo, só estes: pedidos de cancelamento abertos, pedidos de nova senha, dinheiro na mão dos vendedores (vendas pendentes sem pedido de cancelamento; vermelho se a mais antiga tem 24 h ou mais) e itens no estoque mínimo (`itensComAlerta()`). Cada alerta leva à tela certa.
+- Filtro de período (Hoje, 7 dias, 30 dias, Este mês, Tudo, Personalizado), em dias de Brasília, sem comparação com período anterior. Vendas (`ativa` + `pendente`) contam pela data da venda.
+- Blocos: receita da loja por dia (semana acima de 62 dias; mês acima de ~1 ano), vendedores (ranking pela receita da loja já guardada; repasse recebido inclui auxílios), produtos (quantidade vendida e sem venda), avisos (quem ainda não viu cada aviso) e últimas ações da auditoria.
+- Últimas ações: paginação no banco (`registros` com `range` e `count`), sem filtro, 10/20/50/100 por página.
 - Gerente ou acima lê `avisos_vistos` de todos (migração `20261001010000_painel_avisos_vistos.sql`). O pop-up de aviso filtra pelo próprio usuário (`db.avisos_vistos`); `db.avisos_vistos_todos` é só para o Painel.
 - Gráficos em SVG/HTML próprios, sem biblioteca; cor das barras `#00A843` (um passo abaixo do verde da loja, validado no fundo escuro).
 
 ## Livro do Baú
+
+- Item no estoque mínimo: só a borda vermelha no cartão (não há faixa de aviso no topo do Baú).
 
 - Lançamentos com várias linhas mostram a etiqueta do tipo com cor própria: **Compra** em verde (só tem entradas, como as demais entradas) e **Produção** e **Produção em cascata** em roxo.
 
