@@ -5,7 +5,8 @@
 -- 2. A receita pode ser marcada como a que faz o produto final (receitas.produto_final). Ela é o último passo do
 --    processo produtivo; a tela Produzir monta a linha a partir dela e usa a foto do produto do catálogo.
 -- 3. Se a categoria do item tem controle de estoque, a venda tira o produto do Baú quando é guardada no caixa
---    (guardar_vendas). Cancelar/reverter a venda devolve; editar os itens de uma venda guardada refaz a baixa.
+--    (guardar_vendas). Reverter a venda devolve; editar os itens de uma venda guardada refaz a baixa
+--    (a anterior fica revertida no Livro do Baú; nada é apagado).
 --    Sem controle de estoque na categoria, nada muda. O saldo pode ficar negativo (escolha do dono).
 --    Vendas guardadas antes desta migração não mexem no Baú (vendas.baixa_bau = false).
 
@@ -36,8 +37,7 @@ begin
   end if;
   return new;
 end; $$;
-drop trigger if exists trg_produto_item on public.produtos;
-create trigger trg_produto_item after insert or update of nome, status on public.produtos
+create or replace trigger trg_produto_item after insert or update of nome, status on public.produtos
   for each row execute function public.produto_sincronizar_item();
 
 -- produto excluído: o item fica (pode ter histórico no Baú), mas inativo e sem vínculo
@@ -47,8 +47,7 @@ begin
   update public.itens set status = 'inativo' where produto_id = old.id;
   return old;
 end; $$;
-drop trigger if exists trg_produto_item_excluido on public.produtos;
-create trigger trg_produto_item_excluido before delete on public.produtos
+create or replace trigger trg_produto_item_excluido before delete on public.produtos
   for each row execute function public.produto_excluido_item();
 
 -- item vinculado: nome e categoria vêm do catálogo
@@ -63,8 +62,7 @@ begin
   end if;
   return new;
 end; $$;
-drop trigger if exists trg_item_vinculado on public.itens;
-create trigger trg_item_vinculado before update of nome, categoria on public.itens
+create or replace trigger trg_item_vinculado before update of nome, categoria on public.itens
   for each row execute function public.item_vinculado_protegido();
 
 -- itens dos produtos que já existem
@@ -84,7 +82,7 @@ select r.id, (
           where position(lower(p.nome) in lower(r.nome || ' | ' || coalesce((
                   select string_agg(it.nome, ' | ') from public.receita_insumos c join public.itens it on it.id = c.item_id
                    where c.receita_id = r.id and c.tipo = 'consumo'), ''))) > 0
-          order by length(p.nome) desc, p.status = 'ativo' desc limit 1), 1
+          order by length(p.nome) desc, p.status = 'ativo' desc limit 1), 'producao', 1
   from public.receitas r
  where r.produto_final
    and not exists (select 1 from public.receita_insumos ri where ri.receita_id = r.id and ri.tipo = 'producao')
@@ -106,6 +104,10 @@ returns table (item_id uuid, qtd numeric, nome text) language sql stable securit
 $$;
 revoke all on function public.venda_baixa_desejada(uuid) from public, anon, authenticated;
 
+-- Sincroniza a baixa da venda. Nunca apaga movimentos: a baixa anterior fica "revertida" (rastro no Livro do Baú)
+-- e entra a baixa atual. Se a baixa ativa já bate com a venda, não mexe.
+-- Venda excluída (só revertida pode): as saídas, já revertidas, ficam no Livro sem vínculo (venda_id vira null);
+-- o Sócio ou Diretor pode excluí-las ali, como os demais lançamentos revertidos.
 create or replace function public.venda_sincronizar_bau(p_venda uuid)
 returns void language plpgsql security definer set search_path = '' as $$
 declare
@@ -118,18 +120,8 @@ begin
   if not found then return; end if;
   if not v.baixa_bau and not exists (select 1 from public.estoque_bau where venda_id = p_venda) then return; end if;
 
-  -- venda revertida: as saídas dela ficam revertidas (o produto volta ao Baú)
-  if v.status <> 'ativa' or not v.baixa_bau then
-    select array_agg(distinct e.item_id) into v_itens from public.estoque_bau e
-     where e.venda_id = p_venda and e.status = 'ativa';
-    if v_itens is null then return; end if;
-    update public.estoque_bau set status = 'revertida' where venda_id = p_venda and status = 'ativa';
-    foreach v_item in array v_itens loop perform public.recalcular_saldos_bau(v_item); end loop;
-    return;
-  end if;
-
-  -- venda guardada: a baixa tem de bater com os itens da venda; se já bate, não mexe
-  if not exists (
+  -- se a baixa ativa já bate com o que a venda pede, não mexe
+  if v.status = 'ativa' and v.baixa_bau and not exists (
        (select d.item_id, d.qtd from public.venda_baixa_desejada(p_venda) d
         except select e.item_id, sum(e.quantidade) from public.estoque_bau e
                 where e.venda_id = p_venda and e.status = 'ativa' group by e.item_id)
@@ -140,16 +132,21 @@ begin
     return;
   end if;
 
+  -- a baixa anterior fica revertida (o produto volta ao Baú) ...
   select array_agg(distinct x) into v_itens from (
-    select e.item_id as x from public.estoque_bau e where e.venda_id = p_venda
+    select e.item_id as x from public.estoque_bau e where e.venda_id = p_venda and e.status = 'ativa'
     union select d.item_id from public.venda_baixa_desejada(p_venda) d) s;
-  delete from public.estoque_bau where venda_id = p_venda;
-  select * into v_dep from public.depositos_caixa where id = v.deposito_id;
-  insert into public.estoque_bau (operacao_id, item_id, tipo_movimento, quantidade, data, usuario_id, usuario_nome, origem, venda_id)
-  select coalesce(v_dep.operacao_id, v.operacao_id), d.item_id, 'saida_venda', d.qtd,
-         coalesce(v.guardada_em, now()), coalesce(v_dep.usuario_id, v.usuario_id), coalesce(v_dep.usuario_nome, v.usuario_nome),
-         'venda: ' || d.nome || coalesce(' — lote ' || v_dep.operacao_id, ''), p_venda
-    from public.venda_baixa_desejada(p_venda) d;
+  update public.estoque_bau set status = 'revertida' where venda_id = p_venda and status = 'ativa';
+
+  -- ... e, se a venda está guardada, entra a baixa atual
+  if v.status = 'ativa' and v.baixa_bau then
+    select * into v_dep from public.depositos_caixa where id = v.deposito_id;
+    insert into public.estoque_bau (operacao_id, item_id, tipo_movimento, quantidade, data, usuario_id, usuario_nome, origem, venda_id)
+    select coalesce(v_dep.operacao_id, v.operacao_id), d.item_id, 'saida_venda', d.qtd,
+           coalesce(v.guardada_em, now()), coalesce(v_dep.usuario_id, v.usuario_id), coalesce(v_dep.usuario_nome, v.usuario_nome),
+           'venda: ' || d.nome || coalesce(' — lote ' || v_dep.operacao_id, ''), p_venda
+      from public.venda_baixa_desejada(p_venda) d;
+  end if;
   if v_itens is not null then
     foreach v_item in array v_itens loop perform public.recalcular_saldos_bau(v_item); end loop;
   end if;
@@ -162,32 +159,28 @@ begin
   perform public.venda_sincronizar_bau(new.id);
   return null;
 end; $$;
-drop trigger if exists trg_vendas_bau on public.vendas;
-create trigger trg_vendas_bau after update of status, baixa_bau on public.vendas
+create or replace trigger trg_vendas_bau after update of status, baixa_bau on public.vendas
   for each row when (old.status is distinct from new.status or old.baixa_bau is distinct from new.baixa_bau)
   execute function public.trg_venda_bau();
 
+-- itens da venda: uma sincronização por venda afetada, por comando (não por linha)
 create or replace function public.trg_venda_itens_bau()
 returns trigger language plpgsql security definer set search_path = '' as $$
+declare v_id uuid;
 begin
-  if tg_op = 'DELETE' then perform public.venda_sincronizar_bau(old.venda_id);
-  else perform public.venda_sincronizar_bau(new.venda_id); end if;
+  if tg_op = 'DELETE' then
+    for v_id in select distinct venda_id from velhos loop perform public.venda_sincronizar_bau(v_id); end loop;
+  else
+    for v_id in select distinct venda_id from novos loop perform public.venda_sincronizar_bau(v_id); end loop;
+  end if;
   return null;
 end; $$;
-drop trigger if exists trg_venda_itens_bau on public.venda_itens;
-create trigger trg_venda_itens_bau after insert or update or delete on public.venda_itens
-  for each row execute function public.trg_venda_itens_bau();
-
--- venda excluída (só revertida pode): leva junto as saídas revertidas dela
-create or replace function public.trg_venda_excluida_bau()
-returns trigger language plpgsql security definer set search_path = '' as $$
-begin
-  delete from public.estoque_bau where venda_id = old.id and status = 'revertida';
-  return old;
-end; $$;
-drop trigger if exists trg_vendas_excluida_bau on public.vendas;
-create trigger trg_vendas_excluida_bau before delete on public.vendas
-  for each row execute function public.trg_venda_excluida_bau();
+create or replace trigger trg_venda_itens_bau_ins after insert on public.venda_itens
+  referencing new table as novos for each statement execute function public.trg_venda_itens_bau();
+create or replace trigger trg_venda_itens_bau_upd after update on public.venda_itens
+  referencing new table as novos for each statement execute function public.trg_venda_itens_bau();
+create or replace trigger trg_venda_itens_bau_del after delete on public.venda_itens
+  referencing old table as velhos for each statement execute function public.trg_venda_itens_bau();
 
 -- guardar no caixa passa a marcar a venda para baixa no Baú
 create or replace function public.guardar_vendas(p_ids uuid[])

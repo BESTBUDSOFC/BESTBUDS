@@ -86,10 +86,11 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 ## Produção
 
 - Categorias de receitas (`categorias_receitas`, migração `20261001020000_categorias_receitas.sql`) são cadastradas em Configurações › Receitas. Gerente ou acima cria e edita, e Sócio ou Diretor exclui. Excluir uma categoria deixa as receitas dela sem categoria.
-- A tela Produzir (Baú › 🏭 Produzir) mostra **uma linha de produção por variedade** (opção B), montada a partir das receitas ativas (`prodCadeias()`):
-  - A receita final é a que não alimenta nenhuma outra. A etapa anterior é a receita que produz o insumo dela (`receitaProdutora`). Hoje são no máximo 2 etapas (Dichavar → Enrolar), mas o código aceita mais.
-  - Fluxo da linha: caixa do insumo principal (saldo; borda vermelha zerado ou no mínimo) → etapa → caixa do intermediário → etapa → "Vende no Caixa" (ou a caixa do que a última receita gera no Baú).
-  - Variedade = produto ativo cujo nome aparece nas receitas ou itens da linha (foto e nome do produto). Sem produto, o título é o nome da receita final.
+- **Receita 🏁 (produto final)** (`receitas.produto_final`, migração `20261002000000_produto_final_bau.sql`): é o último passo do processo produtivo. Com 🏁, o bloco "produz" tem **um** item, e só da categoria Produto Final (quantidade padrão 1). Sem 🏁, o bloco "produz" é obrigatório e não aceita Produto Final. Assim o processo pode ter quantas etapas quiser.
+- A tela Produzir (Baú › 🏭 Produzir) mostra **uma linha de produção por receita 🏁** (`prodCadeias()`):
+  - A linha volta pelas receitas que produzem os insumos de cada etapa (`receitaProdutora`), sem limite de etapas. Receitas que não levam a nenhuma 🏁 aparecem sozinhas.
+  - Fluxo da linha: caixa do insumo principal (saldo; borda vermelha zerado ou no mínimo) → etapa → caixa do intermediário → … → "🏁 Vende no Caixa" (com o saldo no Baú quando a categoria Produto Final tem controle de estoque).
+  - Foto e nome: do produto do Catálogo ligado ao item que a receita 🏁 produz (`itens.produto_id`). Não há mais adivinhação pelo nome.
   - Insumos de apoio (categoria Insumo Auxiliar ou usados em mais de uma linha, ex.: Zip Lock, Papel de Seda) ficam numa faixa no topo, não nas linhas.
   - O botão de cada etapa usa o ícone e o nome da categoria da receita (sem categoria: "▶ nome da receita"), **sem quantidade** (pedido do dono). A cor diz se dá: **verde** (dá para fazer agora), **roxo com 🔗** (só com cascata) ou apagado (faltam insumos).
 - O botão abre a janela (`prodAbrir` → `#prod-painel`, `modal-prod`) com quantidade (− / +), atalhos "máximo" e "🔗 máximo com cascata" e o item limitante:
@@ -99,6 +100,16 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - Sem insumos nem com cascata: mostra o que falta e trava o botão.
 - O vendedor produz direto. A cascata é só para Gerente ou acima: o vendedor vê as etapas, mas o botão fica desativado.
 - Os máximos usam `saldosBau()`, que calcula todos os saldos de uma vez, e `planejarCascata(rid,q,saldo)`. Não chame `saldoItem` item a item dentro de laços da tela.
+
+## Produto final e Baú
+
+- Cada produto do Catálogo tem um item na categoria **Produto Final** (`itens.produto_id`), criado e mantido pelo banco (trigger `trg_produto_item`): criar o produto cria o item; renomear, ativar ou inativar o produto faz o mesmo no item; excluir o produto inativa o item.
+- No Cadastro Central, o item do Catálogo tem a etiqueta "🔗 Catálogo": nome e categoria travados (o banco também bloqueia), sem ⏸️ e sem 🗑️; ali só se ajusta unidade e quantidade mínima. Não se cria item de Produto Final à mão.
+- O controle de Baú do produto final é **da categoria** Produto Final ("Controle de estoque"), para todos os produtos, inclusive os sem receita (ex.: CBD).
+- Com controle ligado: a produção põe o produto no Baú; a venda tira **quando é guardada no caixa** (`guardar_vendas` marca `vendas.baixa_bau`; o banco grava `saida_venda` com `venda_id`, trigger `trg_vendas_bau`). Pendente não mexe no Baú. O saldo **pode ficar negativo** (escolha do dono).
+- Reverter a venda devolve (as saídas viram "revertida"). Editar os itens de uma venda guardada refaz a baixa: a anterior fica revertida e entra a nova (nada é apagado). Vendas guardadas antes da migração não mexem no Baú.
+- No Livro do Baú, a saída de venda aparece como "Saída (Venda)" (lote = "Venda") e não tem ↩️: volta ao Baú quando a venda é revertida no Histórico Financeiro.
+- Supabase: o `apply_migration` cancela comandos com `drop trigger` e `delete` dentro de funções. Use `create or replace trigger` e evite `delete` (a baixa de venda só reverte e insere).
 
 ## Compras e preços
 

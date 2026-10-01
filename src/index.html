@@ -99,6 +99,7 @@ label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-wei
 .prod-bloco{border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:10px 14px}.prod-bloco.sai{border-left-color:var(--warning-light)}.prod-bloco.ent{border-left-color:var(--green)}
 .prod-bloco-tit{font-weight:800;font-size:13px;margin-bottom:4px}.prod-bloco.sai .prod-bloco-tit{color:var(--warning-light)}.prod-bloco.ent .prod-bloco-tit{color:var(--green)}.prod-bloco-vazio{font-size:13px;padding:4px 0}
 .prod-bloco .prod-tab td:first-child{width:46%}
+.r-final{display:flex;align-items:center;gap:10px;margin:2px 0 6px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;text-transform:none;font-size:13px;font-weight:400;color:var(--text);cursor:pointer}.r-final input{width:auto}.r-final:has(input:checked){border-color:var(--green);background:rgba(0,204,82,.06)}
 .prod-sai{color:var(--warning-light)}.prod-ent{color:var(--green)}.prod-baixo{color:#F87171}
 .prod-cascata{border:1px dashed var(--purple);border-radius:10px;padding:12px}.prod-cas-tit{font-weight:800;color:var(--purple-light);margin-bottom:4px}
 .prod-passo{border-left:3px solid var(--purple);background:rgba(var(--purple-rgb),.06);border-radius:6px;padding:8px 10px;margin-top:8px}.prod-passo.pedida{border-left-color:var(--green);background:rgba(0,204,82,.06)}
@@ -576,7 +577,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.21.2';
+const VERSAO='v4.22.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -1304,7 +1305,7 @@ async function confirmarGuardarCaixa(){
   vendas.forEach(v=>{v.status='ativa';v.guardada_em=dep.data;v.deposito_id=dep.id});
   selPend.clear();
   reg('Vendas guardadas no caixa',`Lote ${dep.operacao_id||'—'} — ${dep.qtd_vendas} venda(s) — ${fmt(dep.valor_caixa)} no caixa`);
-  closeModal();render();
+  closeModal();render();agendarSincronizacao();
   toast(`✅ Lote ${dep.operacao_id||''} guardado!\n${dep.qtd_vendas} venda(s) · ${fmt(dep.valor_caixa)} entraram no caixa.`);
 }
 function modalPedirCancelamento(id){
@@ -1442,7 +1443,7 @@ function moverFornecedor(id,dir){return moverNaOrdem('fornecedores',db.fornecedo
 function moverDesconto(id,dir){return moverNaOrdem('parcerias',db.parcerias,'id',id,dir)}
 function moverTaxa(id,dir){return moverNaOrdem('taxas_deslocamento',db.taxas_deslocamento,'id',id,dir)}
 function itensCompraveis(){return db.itens.filter(i=>i.status==='ativo'&&catCompravel(i.categoria)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'))}
-const MOV_LABEL={entrada_compra:'Entrada (Compra)',entrada_producao:'Entrada (Produção)',saida_producao:'Saída (Produção)',saida_deducao:'Saída (Dedução)',ajuste_entrada:'Ajuste (+)',ajuste_saida:'Ajuste (−)'};
+const MOV_LABEL={entrada_compra:'Entrada (Compra)',entrada_producao:'Entrada (Produção)',saida_producao:'Saída (Produção)',saida_deducao:'Saída (Dedução)',ajuste_entrada:'Ajuste (+)',ajuste_saida:'Ajuste (−)',saida_venda:'Saída (Venda)'};
 
 function saldoItem(itemId){
   return db.estoque_bau.filter(m=>m.item_id===itemId&&m.status!=='revertida').reduce((s,m)=>s+(m.tipo_movimento.startsWith('entrada')||m.tipo_movimento==='ajuste_entrada'?m.quantidade:-m.quantidade),0);
@@ -1457,7 +1458,7 @@ function renderBau(c){
   const movs=[...db.estoque_bau].map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));const movsF=aplicarFiltros(movs,'bau');
   const gruposBau=agruparBau(movs,movsF);const paginaBau=pagina(gruposBau,'bau');
   c.innerHTML=`
-  <h2 class="page-title">Baú — Estoque de Insumos${ajuda('Estoque desacoplado do ciclo de vendas. Vendas no PDV nunca movimentam o Baú.')}</h2>
+  <h2 class="page-title">Baú — Estoque de Insumos${ajuda('Estoque de insumos e produtos. Produto final só entra no Baú se a categoria Produto Final tiver controle de estoque: aí a produção põe o produto no Baú e a venda, ao ser guardada no caixa, tira. Reverter a venda devolve.')}</h2>
   <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
     <button class="btn btn-purple" onclick="telaNovaCompra()">🚚 Nova compra</button>
     <button class="btn btn-primary" onclick="telaProducao()">🏭 Produzir</button>
@@ -1504,8 +1505,8 @@ function agruparBau(todos,filtrados){
     ms.sort((a,b)=>(new Date(a.data)-new Date(b.data))||(pos(a)-pos(b)));
     const data=ms.reduce((d,m)=>m.data>d?m.data:d,ms[0].data);
     if(ms.length===1)return{grupo:false,chave,movs:ms,ids:[ms[0].id],data};
-    const o=(ms[0].origem||'').toLowerCase(),cascata=o.startsWith('produção em cascata'),compra=ms.every(m=>m.tipo_movimento==='entrada_compra'),producao=!compra&&ms.some(m=>/producao|deducao/.test(m.tipo_movimento));
-    const rotulo=cascata?'Produção em cascata':compra?'Compra':producao?'Produção':'Lançamento';
+    const o=(ms[0].origem||'').toLowerCase(),cascata=o.startsWith('produção em cascata'),compra=ms.every(m=>m.tipo_movimento==='entrada_compra'),venda=ms.every(m=>m.tipo_movimento==='saida_venda'),producao=!compra&&ms.some(m=>/producao|deducao/.test(m.tipo_movimento));
+    const rotulo=cascata?'Produção em cascata':compra?'Compra':venda?'Venda':producao?'Produção':'Lançamento';
     const origem=cascata?(ms.find(m=>/\(para /.test(m.origem||''))?.origem.match(/\(para (.*)\)/)?.[1]||ms[0].origem):compra?[...new Set(ms.map(m=>(m.origem||'').replace(/^compra:\s*/,'')))].join(' + '):(ms[0].origem||'—');
     const nomes=[...new Set(ms.map(m=>m.item_nome))];
     return{grupo:true,chave,movs:ms,filhos:ms.filter(m=>ok.has(m.id)),ids:ms.map(m=>m.id),data,usuario:ms[0].usuario_nome||'—',rotulo,
@@ -1517,6 +1518,9 @@ function thSelTodosIds(tipo,listas){if(!podeExcluirLinhas())return '';const todo
 /* Baú: um lançamento (grupo ou movimento avulso) é revertido por inteiro — sai do saldo mas continua no livro. Só depois de revertido pode ser excluído. */
 function movsDoLancamentoBau(chave){return db.estoque_bau.filter(m=>(m.operacao_id||('m:'+m.id))===chave)}
 function acoesBau(chave,revertido){
+  // saída de venda: volta ao Baú quando a venda é revertida no Histórico Financeiro (não se reverte por aqui)
+  if(!revertido&&movsDoLancamentoBau(chave).some(m=>m.tipo_movimento==='saida_venda'&&m.status!=='revertida'))
+    return '<span class="muted" style="font-size:11px" title="Volta ao Baú quando a venda é revertida no Histórico Financeiro">pela venda</span>';
   if(!revertido)return `<button class="iconbtn" title="Reverter lançamento" onclick="reverterLancamentoBau('${chave}')">↩️</button>`;
   return isSocioOuDiretor()?`<button class="iconbtn" title="Excluir lançamento" onclick="excluirGrupoBau('${chave}')">🗑️</button>`:'';
 }
@@ -1537,6 +1541,7 @@ async function reverterMovsBau(ms){
 function reverterLancamentoBau(chave){
   if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem reverter lançamentos.');
   const ms=movsDoLancamentoBau(chave).filter(m=>m.status!=='revertida');if(!ms.length)return;
+  if(ms.some(m=>m.tipo_movimento==='saida_venda'))return toast('⚠️ Saída de venda: reverta a venda no Histórico Financeiro e o produto volta ao Baú.');
   const neg=saldoNegativoAoReverter(ms);
   if(neg.length)return toast('⚠️ Não é possível reverter: o saldo ficaria negativo em '+neg.join(', ')+'. Reverta antes as produções/saídas que usaram esse estoque.');
   confirmar('Reverter lançamento do Baú',(ms.length>1?'As '+ms.length+' movimentações deste lançamento deixarão de contar no saldo (continuam no livro como revertidas).':'A movimentação deixará de contar no saldo (continua no livro como revertida).')+' Confirmar?',async()=>{
@@ -1549,6 +1554,7 @@ async function reverterSelecionadasBau(){
   const ids=[...selExclusao.bau];
   const ms=db.estoque_bau.filter(m=>ids.includes(m.id)&&m.status!=='revertida');
   if(!ms.length)return toast('ℹ️ Nada selecionado precisa ser revertido — já pode excluir.');
+  if(ms.some(m=>m.tipo_movimento==='saida_venda'))return toast('⚠️ A seleção tem saída de venda: reverta a venda no Histórico Financeiro e o produto volta ao Baú.');
   const neg=saldoNegativoAoReverter(ms);
   if(neg.length)return toast('⚠️ Não é possível reverter: o saldo ficaria negativo em '+neg.join(', ')+'.');
   confirmar('Reverter selecionadas',ms.length+' movimentação(ões) deixarão de contar no saldo. Confirmar?',async()=>{
@@ -1599,33 +1605,56 @@ async function salvarAjusteBau(itemId,tipo){
 }
 
 /* ================= PRODUÇÃO ================= */
+/* Receita do produto final (🏁): é o último passo do processo produtivo. Ela produz exatamente um item da categoria
+   Produto Final (o item de um produto do Catálogo). Receita sem o flag não produz produto final. */
+function ehProdutoFinal(it){return !!it&&it.categoria==='produto_final'}
+function itensReceita(usados){return db.itens.filter(i=>(i.status==='ativo'&&catReceitas(i.categoria))||(usados&&usados.has(i.id)))}
+function itensProduzidos(final,usados){return itensReceita(usados).filter(i=>ehProdutoFinal(i)===!!final)}
 function modalReceita(id){
   if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem criar ou editar receitas.');
   const r=id?db.receitas.find(x=>x.id===id):null;
   const ins=r?(r.insumos||[]):[];
   const usados=new Set(ins.map(x=>x.item_id));
-  const itensSel=db.itens.filter(i=>(i.status==='ativo'&&catReceitas(i.categoria))||usados.has(i.id));
+  const final=!!(r&&r.produto_final);
   const cons=ins.filter(x=>x.papel==='consumo'),prod=ins.filter(x=>x.papel==='produzido');
   openModal(`<h3>${r?'Editar receita':'Nova receita'}</h3>
   <div class="row2"><div class="field"><label>Nome da receita</label><input id="r-nome" value="${r?esc(r.nome):''}"></div>
   <div class="field"><label>Categoria</label><select id="r-cat"><option value="">Sem categoria</option>${catsReceitaOrdenadas().map(c=>`<option value="${c.id}" ${r&&r.categoria_id===c.id?'selected':''}>${esc((c.icone?c.icone+' ':'')+c.nome)}</option>`).join('')}</select></div></div>
+  <label class="r-final"><input type="checkbox" id="r-final" ${final?'checked':''} onchange="receitaFinalMudou()"> <span>🏁 Esta receita faz o <b>produto final</b> (último passo do processo)</span></label>
   <div class="section-title" style="margin-top:8px;color:var(--warning-light)">⬇️ Bloco 1 — Itens utilizados (insumos consumidos do Baú)</div>
-  <div id="r-cons">${cons.map(ri=>linhaReceita(ri,itensSel,'cons')).join('')}</div>
+  <div id="r-cons">${cons.map(ri=>linhaReceita(ri,itensReceita(usados),'cons')).join('')}</div>
   <button class="btn btn-ghost btn-sm" onclick="addLinhaReceita('cons')">+ Adicionar insumo</button>
-  <div class="section-title" style="margin-top:16px;color:var(--green)">⬆️ Bloco 2 — Itens produzidos (entram no Baú)</div>
-  <div id="r-prod">${prod.map(ri=>linhaReceita(ri,itensSel,'prod')).join('')}</div>
-  <button class="btn btn-ghost btn-sm" onclick="addLinhaReceita('prod')">+ Adicionar item produzido</button>
-  <p style="color:var(--muted);font-size:12px;margin-top:8px">Se o bloco 2 ficar vazio, a receita é de <b>Produto Final</b> (apenas deduz insumos).</p>
-  <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-    <input type="checkbox" id="r-prodfinal" style="width:auto">
-    <label for="r-prodfinal" style="margin:0;text-transform:none;font-size:13px;color:var(--muted)">Confirmar receita de Produto Final (bloco 2 vazio)</label>
-  </div>
+  <div class="section-title" style="margin-top:16px;color:var(--green)" id="r-prod-tit"></div>
+  <div id="r-prod">${prod.map(ri=>linhaReceita(ri,itensProduzidos(final,usados),'prod')).join('')}</div>
+  <button class="btn btn-ghost btn-sm" id="r-prod-add" onclick="addLinhaReceita('prod')">+ Adicionar item produzido</button>
+  <p class="muted" id="r-prod-dica" style="font-size:12px;margin-top:8px"></p>
   <p id="r-err" style="color:var(--danger);font-size:13px;display:none;margin-top:10px"></p>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarReceita('${id||''}')">Salvar</button></div>`);
+  receitaFinalMudou(true);
+}
+/* Liga/desliga o 🏁: troca as opções do bloco "produz" (só Produto Final, ou tudo menos Produto Final) */
+function receitaFinalMudou(abrindo){
+  const final=document.getElementById('r-final').checked;
+  const box=document.getElementById('r-prod');
+  const usados=new Set([...box.querySelectorAll('.ri-item')].map(s=>s.value));
+  const opcoes=itensProduzidos(final,usados);
+  [...box.querySelectorAll('[data-prod]')].forEach(d=>{
+    const sel=d.querySelector('.ri-item');if(opcoes.some(i=>i.id===sel.value))return;
+    if(abrindo)return; // receita antiga fora da regra: mostra como está; salvar avisa
+    d.remove();
+  });
+  if(final&&!box.querySelector('[data-prod]'))addLinhaReceita('prod');
+  if(final)[...box.querySelectorAll('[data-prod]')].slice(1).forEach(d=>d.remove());
+  const pf=controlaEstoque('produto_final');
+  document.getElementById('r-prod-tit').textContent=final?'🏁 Bloco 2 — Produto final (vendido no Caixa)':'⬆️ Bloco 2 — Itens produzidos (entram no Baú)';
+  document.getElementById('r-prod-add').style.display=final?'none':'';
+  document.getElementById('r-prod-dica').innerHTML=final
+    ?`Escolha o produto do Catálogo que esta receita faz. A foto e o nome dele aparecem na tela Produzir. ${pf?'A categoria Produto Final tem controle de estoque: o produto entra no Baú ao produzir e sai na venda guardada no caixa.':'A categoria Produto Final está sem controle de estoque: o produto não entra no Baú.'}`
+    :'Produto final só no último passo: marque 🏁 acima.';
 }
 function linhaReceita(ri,itensSel,tipo){
-  const opts=itensSel.map(i=>`<option value="${i.id}" ${ri.item_id===i.id?'selected':''}>${esc(i.nome)} (${catNome(i.categoria)})</option>`).join('');
+  const opts=(ri.item_id?'':'<option value="" disabled hidden selected>Selecione...</option>')+itensSel.map(i=>`<option value="${i.id}" ${ri.item_id===i.id?'selected':''}>${esc(i.nome)} (${catNome(i.categoria)})</option>`).join('');
   return`<div class="row2" style="margin-bottom:8px" data-${tipo}>
     <select class="ri-item">${opts}</select>
     <div style="display:flex;gap:6px">
@@ -1634,9 +1663,10 @@ function linhaReceita(ri,itensSel,tipo){
     </div></div>`;
 }
 function addLinhaReceita(tipo){
-  const itensSel=db.itens.filter(i=>i.status==='ativo'&&catReceitas(i.categoria));
+  const final=!!document.getElementById('r-final')?.checked;
+  const itensSel=tipo==='prod'?itensProduzidos(final):itensReceita();
   const d=document.createElement('div');
-  d.innerHTML=linhaReceita({item_id:'',quantidade:''},itensSel,tipo);
+  d.innerHTML=linhaReceita({item_id:'',quantidade:tipo==='prod'&&final?1:''},itensSel,tipo);
   document.getElementById(tipo==='cons'?'r-cons':'r-prod').appendChild(d.firstElementChild);
 }
 async function salvarReceita(id){
@@ -1651,18 +1681,25 @@ async function salvarReceita(id){
   const prod=[...document.querySelectorAll('#r-prod [data-prod]')].map(d=>({
     item_id:d.querySelector('.ri-item').value,quantidade:parseFloat(d.querySelector('.ri-qtd').value),papel:'produzido'
   })).filter(x=>x.item_id&&x.quantidade>0);
+  const produto_final=document.getElementById('r-final').checked;
+  const itemDe=x=>db.itens.find(i=>i.id===x.item_id);
   if(!nome)return fail('Informe o nome da receita.');
   if(!cons.length)return fail('Adicione ao menos um insumo consumido no Bloco 1.');
-  if(!prod.length&&!document.getElementById('r-prodfinal').checked)
-    return fail('Bloco 2 vazio = receita de Produto Final. Marque a caixa de confirmação para salvar.');
+  if(produto_final){
+    if(prod.length!==1)return fail('Receita do produto final: escolha um produto final no Bloco 2, com a quantidade.');
+    if(!ehProdutoFinal(itemDe(prod[0])))return fail('O Bloco 2 da receita do produto final só aceita item da categoria Produto Final.');
+  }else{
+    if(!prod.length)return fail('Adicione ao menos um item produzido no Bloco 2 (ou marque 🏁 se esta receita faz o produto final).');
+    if(prod.some(x=>ehProdutoFinal(itemDe(x))))return fail('Produto final só no último passo: marque 🏁 "Esta receita faz o produto final".');
+  }
   const todos=[...cons,...prod];
   let receitaId=id,novaOrdem=null;
   if(id){
-    const{error}=await sb.from('receitas').update({nome,categoria_id}).eq('id',id);
+    const{error}=await sb.from('receitas').update({nome,categoria_id,produto_final}).eq('id',id);
     if(error)return fail('Erro ao salvar: '+error.message);
     await sb.from('receita_insumos').delete().eq('receita_id',id);
   }else{
-    const{data,error}=await sb.from('receitas').insert({nome,categoria_id,ordem:proximaOrdem(db.receitas),criado_por:sessionUser().id}).select().single();
+    const{data,error}=await sb.from('receitas').insert({nome,categoria_id,produto_final,ordem:proximaOrdem(db.receitas),criado_por:sessionUser().id}).select().single();
     if(error)return fail('Erro ao salvar: '+error.message);
     receitaId=data.id;novaOrdem=data.ordem;
   }
@@ -1670,8 +1707,8 @@ async function salvarReceita(id){
   const{data:insInseridos,error:e2}=await sb.from('receita_insumos').insert(linhas).select();
   if(e2)return fail('Erro ao salvar insumos: '+e2.message);
   const insumosLocal=insInseridos.map(ri=>({item_id:ri.item_id,quantidade:Number(ri.quantidade),papel:ri.tipo==='producao'?'produzido':'consumo',_id:ri.id}));
-  if(id){const i=db.receitas.findIndex(x=>x.id===id);db.receitas[i]={...db.receitas[i],nome,categoria_id,insumos:insumosLocal}}
-  else db.receitas.push({id:receitaId,nome,categoria_id,ordem:novaOrdem,status:'ativo',criado_em:nowISO(),criado_por:sessionUser().id,insumos:insumosLocal});
+  if(id){const i=db.receitas.findIndex(x=>x.id===id);db.receitas[i]={...db.receitas[i],nome,categoria_id,produto_final,insumos:insumosLocal}}
+  else db.receitas.push({id:receitaId,nome,categoria_id,produto_final,ordem:novaOrdem,status:'ativo',criado_em:nowISO(),criado_por:sessionUser().id,insumos:insumosLocal});
   reg(id?'Receita editada':'Receita criada',nome);
   closeModal();toast('✅ Receita salva.');render();
 }
@@ -2134,12 +2171,14 @@ function prodAtualizarJanela(){
   el.innerHTML=prodPainelHTML(r,prodInfo(r,saldo),saldo);
 }
 function prodSaidasEstoque(r){return (r.insumos||[]).filter(x=>x.papel==='produzido'&&x.quantidade>0).map(x=>({ri:x,it:db.itens.find(i=>i.id===x.item_id)})).filter(x=>x.it&&controlaEstoque(x.it.categoria))}
+/* Uma linha por receita 🏁 (produto final): volta pelas receitas que produzem cada insumo (receitaProdutora), sem
+   limite de etapas. Foto e nome vêm do produto do Catálogo ligado ao item que a receita 🏁 produz.
+   Receitas que não levam a nenhuma 🏁 aparecem sozinhas, como linhas de uma etapa. */
 function prodCadeias(){
   const recs=[...db.receitas].filter(r=>r.status==='ativo').sort((a,b)=>(a.ordem||99)-(b.ordem||99));
-  const alimentaOutra=r=>prodSaidasEstoque(r).some(x=>recs.some(o=>o.id!==r.id&&(o.insumos||[]).some(y=>y.papel==='consumo'&&y.item_id===x.it.id)));
-  const cadeias=recs.filter(r=>!alimentaOutra(r)).map(r=>{
+  const cadeias=recs.filter(r=>r.produto_final).map(r=>{
     const passos=[r];
-    for(let n=0;n<5;n++){
+    for(let n=0;n<20;n++){
       let ant=null;
       for(const x of (passos[0].insumos||[]).filter(x=>x.papel==='consumo')){ant=receitaProdutora(x.item_id,passos.map(p=>p.id));if(ant)break}
       if(!ant)break;passos.unshift(ant);
@@ -2151,13 +2190,13 @@ function prodCadeias(){
   // insumo de apoio = usado em mais de uma linha (ex.: Zip Lock, Papel de Seda) ou da categoria Insumo Auxiliar
   const linhasDoItem={};
   cadeias.forEach((c,k)=>c.passos.forEach(p=>(p.insumos||[]).filter(x=>x.papel==='consumo').forEach(x=>{(linhasDoItem[x.item_id]=linhasDoItem[x.item_id]||new Set()).add(k)})));
-  const ehApoio=id=>{const it=db.itens.find(i=>i.id===id);return !!it&&controlaEstoque(it.categoria)&&(it.categoria==='insumo_auxiliar'||(cadeias.length>1&&linhasDoItem[id]?.size>1))};
-  // variedade = produto ativo cujo nome aparece nas receitas ou itens da linha (o nome mais longo vence)
-  const prods=db.produtos.filter(p=>p.status==='ativo'&&sselNorm(p.nome)).sort((a,b)=>sselNorm(b.nome).length-sselNorm(a.nome).length);
+  const ehApoio=id=>{const it=db.itens.find(i=>i.id===id);return !!it&&controlaEstoque(it.categoria)&&!ehProdutoFinal(it)&&(it.categoria==='insumo_auxiliar'||(cadeias.length>1&&linhasDoItem[id]?.size>1))};
   cadeias.forEach(c=>{
-    const txt=[...c.passos.map(p=>p.nome),...c.passos.flatMap(p=>(p.insumos||[]).map(x=>(db.itens.find(i=>i.id===x.item_id)||{}).nome||''))].map(sselNorm).join(' | ');
-    c.produto=prods.find(p=>txt.includes(sselNorm(p.nome)))||null;
-    c.titulo=c.produto?c.produto.nome:c.passos[c.passos.length-1].nome;
+    const ult=c.passos[c.passos.length-1];
+    const pf=ult.produto_final?(ult.insumos||[]).map(x=>x.papel==='produzido'&&db.itens.find(i=>i.id===x.item_id)).find(ehProdutoFinal):null;
+    c.itemFinal=pf||null;
+    c.produto=pf&&pf.produto_id?db.produtos.find(p=>p.id===pf.produto_id)||null:null;
+    c.titulo=c.produto?c.produto.nome:pf?pf.nome:ult.nome;
   });
   cadeias.sort((a,b)=>(a.produto?a.produto.ordem??999:1e4)-(b.produto?b.produto.ordem??999:1e4)||a.titulo.localeCompare(b.titulo,'pt-BR'));
   return {cadeias,ehApoio};
@@ -2185,17 +2224,21 @@ function telaProducaoHTML(c){
    if(ent.length)partes.push(caixa(ent));
    c.passos.forEach((r,k)=>{
      partes.push(etapa(r));
-     const out=prodSaidasEstoque(r).map(x=>x.it);
+     const out=prodSaidasEstoque(r).map(x=>x.it).filter(it=>!ehProdutoFinal(it));
      if(k<c.passos.length-1||out.length)partes.push(out.length?caixa(out):'');
    });
-   if(!prodSaidasEstoque(ult).length)partes.push(`<div class="pl-box pl-final"><div class="pl-rot">Vende no Caixa</div><div class="pl-nome">${esc(c.produto?c.produto.nome:ult.nome)}</div><div class="pl-sub">produto final</div></div>`);
+   if(c.itemFinal){
+     // produto final: com controle de estoque mostra o saldo no Baú; sem controle, só que vende no Caixa
+     const it=c.itemFinal,ctrl=controlaEstoque(it.categoria),sf=saldo[it.id]||0;
+     partes.push(`<div class="pl-box pl-final${ctrl&&baixo(it)?' baixo':''}"><div class="pl-rot">🏁 Vende no Caixa</div><div class="pl-nome">${esc(c.produto?c.produto.nome:it.nome)}</div>${ctrl?`<div class="pl-qtd${baixo(it)?' bad':''}">${fmtQtd(sf)} ${un(it)}</div><div class="pl-sub">no Baú</div>`:'<div class="pl-sub">produto final · sem controle no Baú</div>'}</div>`);
+   }else if(!prodSaidasEstoque(ult).length)partes.push(`<div class="pl-box pl-final"><div class="pl-rot">Vende no Caixa</div><div class="pl-nome">${esc(ult.nome)}</div><div class="pl-sub">produto final</div></div>`);
    const img=c.produto&&c.produto.imagem?`<img src="${esc(c.produto.imagem)}" alt="" loading="lazy">`:'<span class="pl-sem-img">🏭</span>';
    return `<div class="card pl-linha"><div class="pl-cab">${img}<div><b>${esc(c.titulo)}</b><div class="muted" style="font-size:12px">${c.passos.length} etapa${c.passos.length>1?'s':''}</div></div></div>
      <div class="pl-fluxo">${partes.join('')}</div></div>`;
  };
  const apoio=db.itens.filter(it=>it.status==='ativo'&&ehApoio(it.id)&&cadeias.some(c=>c.passos.some(r=>(r.insumos||[]).some(x=>x.papel==='consumo'&&x.item_id===it.id))));
  c.innerHTML=`
-  <div class="prod-topo"><h2 class="page-title" style="margin:0">🏭 Produzir${ajuda('Cada linha é uma variedade, da compra até o Caixa. O botão de cada etapa mostra quantas vezes dá para fazer agora (verde) ou só com produção em cascata (roxo 🔗); clique para escolher a quantidade e conferir o que entra e sai do Baú. Vermelho = estoque zerado ou no mínimo. Os nomes dos botões vêm das categorias de receitas (Configurações › Receitas).')}</h2>
+  <div class="prod-topo"><h2 class="page-title" style="margin:0">🏭 Produzir${ajuda('Cada linha é uma variedade, da compra até o Caixa. A linha nasce da receita marcada com 🏁 (produto final) e volta pelas receitas que fazem os insumos dela; a foto é a do produto no Catálogo. A cor do botão de cada etapa diz se dá para fazer agora (verde) ou só com produção em cascata (roxo 🔗); clique para escolher a quantidade e conferir o que entra e sai do Baú. Vermelho = estoque zerado ou no mínimo. Os nomes dos botões vêm das categorias de receitas (Configurações › Receitas).')}</h2>
   <button class="btn btn-ghost btn-sm" onclick="fecharTelaBau()">← Voltar ao Baú</button></div>
   ${apoio.length?`<div class="pl-apoio"><span class="muted">Insumos de apoio:</span>${apoio.map(it=>`<span class="pl-chip${baixo(it)?' bad':''}">${esc(it.nome)} <b>${fmtQtd(saldo[it.id]||0)}</b></span>`).join('')}</div>`:''}
   ${cadeias.length?`<div class="pl-lista">${cadeias.map(linha).join('')}</div>`:'<div class="empty">Nenhuma receita ativa. Cadastre em Configurações › Receitas.</div>'}`;
@@ -2428,7 +2471,8 @@ function excluirAjusteCaixa(id){
     render();toast('✅ Ajuste excluído.');
   });
 }
-/* Reverter: só muda o status (sem estorno no Baú). Vale para venda, compra e ajuste de caixa. */
+/* Reverter: só muda o status. Vale para venda, compra e ajuste de caixa. Venda guardada que tirou produto final do Baú
+   (categoria com controle de estoque) devolve o produto: quem faz isso é o banco (trigger trg_vendas_bau). */
 const FIN_TABELA={venda:'vendas',compra:'compras',ajuste:'ajustes_caixa'},FIN_LISTA={venda:'vendas',compra:'compras',ajuste:'ajustes_caixa'},FIN_NOME={venda:'Venda',compra:'Compra',ajuste:'Ajuste de caixa'};
 function reverterFin(tipo,id){
  if(!isGerente())return;
@@ -2438,7 +2482,7 @@ function reverterFin(tipo,id){
   if(error)return toast('⚠️ Erro ao reverter: '+error.message);
   const o=db[FIN_LISTA[tipo]].find(x=>x.id===realId);
   if(o){o.status='revertida';reg(FIN_NOME[tipo]+' revertida',fmt(o.total??o.valor_total??o.valor))}
-  render();
+  render();if(tipo==='venda')agendarSincronizacao();
  });
 }
 /* Apagar: exclui a linha por completo — só permitido se status = revertida */
@@ -2516,7 +2560,7 @@ async function salvarEdicaoVendaFin(id){
  Object.assign(v,patch);
  v.itens=itd.map(i=>({produto_id:i.produto_id,nome:i.nome,qtd:Number(i.qtd),preco_unit:Number(i.preco_unit),rateio:i.rateio}));
  reg('Venda editada',itens.length+' item(ns) — entrada '+fmt(entrada)+', repasse '+fmt(repasse));
- closeModal();render();toast('✅ Venda atualizada.');
+ closeModal();render();agendarSincronizacao();toast('✅ Venda atualizada.');
 }
 /* Editar compra: mesmas duas seções da Nova compra. Não refaz as entradas no Baú. */
 function editCompraFin(id){
@@ -2838,14 +2882,14 @@ async function salvarProduto(id){
     db.produtos.push({...data,preco:Number(data.preco),imagem:data.imagem_url});
     reg('Produto criado',nome);
   }
-  window._pImgFile=null;closeModal();render();
+  window._pImgFile=null;closeModal();render();agendarSincronizacao(); // o item "Produto Final" do produto é criado/atualizado pelo banco
 }
 async function toggleProduto(id){
   const p=db.produtos.find(x=>x.id===id);
   const novo=p.status==='ativo'?'inativo':'ativo';
   const{error}=await sb.from('produtos').update({status:novo}).eq('id',id);
   if(error)return toast('⚠️ Erro: '+error.message);
-  p.status=novo;reg('Produto '+(novo==='ativo'?'ativado':'inativado'),p.nome);render();
+  p.status=novo;reg('Produto '+(novo==='ativo'?'ativado':'inativado'),p.nome);render();agendarSincronizacao();
 }
 function excluirProduto(id){
   if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir linhas de cadastro.');
@@ -2871,7 +2915,7 @@ function cfgItens(b){
   <tr><th>Ordem</th>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
   ${F.rows.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr class="${i.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverItem',i.id)}
-    <td><b>${esc(i.nome)}</b>${alerta?' <span class="tag r">⚠️ no mínimo</span>':''}</td>
+    <td><b>${esc(i.nome)}</b>${i.produto_id?' <span class="tag g" title="Item do Catálogo de Produtos: nome, ativo/inativo e exclusão são feitos no Catálogo">🔗 Catálogo</span>':''}${alerta?' <span class="tag r">⚠️ no mínimo</span>':''}</td>
     <td><span class="tag">${catNome(i.categoria)}</span></td>
     <td style="color:var(--muted)">${esc(i.unidade_medida)}</td>
     <td>${i.qtd_minima||0}</td>
@@ -2879,8 +2923,8 @@ function cfgItens(b){
     <td><span class="badge ${i.status==='ativo'?'ativo':'inativo'}">${i.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(i.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalItem('${i.id}')">✏️</button>
-      <button class="iconbtn" onclick="toggleItem('${i.id}')">${i.status==='ativo'?'⏸️':'▶️'}</button>
-      ${isSocioOuDiretor()&&i.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
+      ${i.produto_id?'':`<button class="iconbtn" onclick="toggleItem('${i.id}')">${i.status==='ativo'?'⏸️':'▶️'}</button>`}
+      ${isSocioOuDiretor()&&i.status!=='ativo'&&!i.produto_id?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
   </tr>`}).join('')||linhaSemResultado(9,T)}</table></div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
     <div class="section-title" style="margin:0">🏷️ Categorias de itens${ajuda('Controle de estoque: itens entram no Baú. Pode ser comprada: itens aparecem em "Insumos" na compra e podem ser vinculados a fornecedores (exige controle de estoque). Aparece nas Receitas: itens aparecem na lista das Receitas.')}</div>
@@ -2901,6 +2945,7 @@ function modalCategoria(codigo){
   openModal(`<h3>${c?'Editar categoria':'Nova categoria'}</h3>
   <div class="field"><label>Nome da categoria</label><input id="cat-nome" value="${c?esc(c.nome):''}"></div>
   ${chk('cat-estoque','Controle de estoque (itens entram no Baú)',c?c.controla_estoque:true,false)}
+  ${c&&c.codigo==='produto_final'?'<p class="muted" style="font-size:12px;margin:-4px 0 12px 26px">Produto Final com controle de estoque: a produção põe o produto no Baú e a venda, ao ser guardada no caixa, tira (o saldo pode ficar negativo). Reverter a venda devolve. Vendas guardadas antes de ligar não mexem no Baú.</p>':''}
   ${chk('cat-compravel','Pode ser comprada (itens aparecem na compra e no vínculo com fornecedores)',c?c.compravel:true,false)}
   <p class="muted" style="font-size:12px;margin:-4px 0 12px 26px">Comprável sem controle de estoque: a compra do item fica só no financeiro e não entra no Baú.</p>
   ${chk('cat-receitas','Aparece na lista suspensa das Receitas',c?c.aparece_receitas:true,false)}
@@ -2951,13 +2996,17 @@ function modalItem(id,opts){
   opts=opts||{};
   const it=id?db.itens.find(x=>x.id===id):null;
   _itemAtalho=opts.onSaved||null;
-  const cats=_itemAtalho?db.categorias.filter(c=>c.compravel||(it&&it.categoria===c.codigo)):db.categorias;
+  // Produto Final: os itens vêm do Catálogo de Produtos (um por produto, criados pelo banco); não se cria à mão
+  const cats=(_itemAtalho?db.categorias.filter(c=>c.compravel||(it&&it.categoria===c.codigo)):db.categorias).filter(c=>c.codigo!=='produto_final'||(it&&it.categoria===c.codigo));
+  const vinc=it&&it.produto_id?db.produtos.find(p=>p.id===it.produto_id):null;
   const fechar=_itemAtalho?'fecharModalItem()':'closeModal()';
   (_itemAtalho?openModal2:openModal)(`<h3>${it?'Editar item':'Novo item'}</h3>
   ${_itemAtalho?`<p class="muted" style="font-size:12px;margin:-6px 0 12px">Depois de salvar, o item já fica escolhido na linha da compra. Categoria com controle de estoque: a compra entra no Baú; sem controle: só no financeiro.</p>`:''}
-  <div class="field"><label>Nome</label><input id="i-nome" value="${esc(it?it.nome:(opts.nome||''))}"></div>
+  ${vinc?`<p class="muted" style="font-size:12px;margin:-6px 0 12px">🔗 Item do produto <b>${esc(vinc.nome)}</b> do Catálogo de Produtos. Nome, categoria e ativo/inativo são definidos no Catálogo; aqui você ajusta unidade e quantidade mínima.</p>`:''}
+  ${!it?`<p class="muted" style="font-size:12px;margin:-6px 0 12px">Produto final não se cadastra aqui: cada produto do Catálogo de Produtos já tem o seu item.</p>`:''}
+  <div class="field"><label>Nome</label><input id="i-nome" value="${esc(it?it.nome:(opts.nome||''))}" ${vinc?'disabled':''}></div>
   <div class="row2">
-    <div class="field"><label>Categoria</label><select id="i-cat">
+    <div class="field"><label>Categoria</label><select id="i-cat" ${vinc?'disabled':''}>
       ${it?'':'<option value="" disabled hidden selected>Selecione a categoria...</option>'}${cats.map(c=>`<option value="${esc(c.codigo)}" ${it&&it.categoria===c.codigo?'selected':''}>${esc(c.nome)}${_itemAtalho?(c.controla_estoque?' · entra no Baú':' · sem Baú'):''}</option>`).join('')}</select></div>
     <div class="field"><label>Unidade</label><input id="i-un" value="${it?esc(it.unidade_medida):'un'}"></div>
   </div>
@@ -2978,6 +3027,7 @@ async function salvarItem(id){
   if(!cat)return toast('⚠️ Selecione a categoria do item.');
   if(db.itens.some(x=>x.id!==id&&sselNorm(x.nome)===sselNorm(nome)))return toast('⚠️ Já existe um item com esse nome no cadastro.');
   const campos={nome,categoria:cat,unidade_medida:un,qtd_minima:min};
+  if(id&&(db.itens.find(x=>x.id===id)||{}).produto_id){delete campos.nome;delete campos.categoria} // vêm do Catálogo
   if(id){
     const{error}=await sb.from('itens').update(campos).eq('id',id);
     if(error)return toast('⚠️ Erro ao salvar: '+error.message);
@@ -2993,6 +3043,7 @@ async function salvarItem(id){
 }
 async function toggleItem(id){
   const it=db.itens.find(x=>x.id===id);
+  if(it&&it.produto_id)return toast('⚠️ Item do Catálogo: ative ou inative o produto em Configurações › Catálogo de Produtos.');
   const novo=it.status==='ativo'?'inativo':'ativo';
   const{error}=await sb.from('itens').update({status:novo}).eq('id',id);
   if(error)return toast('⚠️ Erro: '+error.message);
@@ -3016,6 +3067,7 @@ async function vinculosDoItem(id){
 function excluirItem(id){
   if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir linhas de cadastro.');
   const it=db.itens.find(x=>x.id===id);if(!it)return;
+  if(it.produto_id)return toast('⚠️ Item do Catálogo: ele sai junto quando o produto é excluído do Catálogo de Produtos.');
   if(it.status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');
   confirmar('Excluir item',`"${it.nome}" será removido do cadastro. Só é possível excluir se o item não estiver em receitas, compras ou movimentações do Baú. Confirmar?`,async()=>{
     let motivos;
@@ -3036,7 +3088,7 @@ function cfgReceitas(b){
   const T='cfg_receitas',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.receitas]),{
     nome:r=>r.nome,status:r=>r.status,data:r=>r.criado_em,categoria:r=>nomeCatReceita(r.categoria_id),
     consome:r=>(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'—',
-    produz:r=>(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'});
+    produz:r=>(r.produto_final?'🏁 ':'')+((r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'—')});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">🏭 Receitas de Produção${ajuda('A ordem definida aqui é a ordem em que as receitas aparecem na tela de produção do Baú.')}</div>
     <button class="btn btn-purple btn-sm" onclick="modalReceita()">+ Nova receita</button></div>
@@ -3907,7 +3959,7 @@ async function reverterSelecionadas(){
     vendaIds.forEach(id=>{const v=db.vendas.find(x=>x.id===id);if(v)v.status='revertida'});
     compraIds.forEach(id=>{const k=db.compras.find(x=>x.id===id);if(k)k.status='revertida'});
     reg('Reversão em lote',(vendaIds.length+compraIds.length+ajusteIds.length)+' lançamento(s)');
-    render();toast('✅ Revertido(s). A seleção continua marcada — pode excluir agora.');
+    render();if(vendaIds.length)agendarSincronizacao();toast('✅ Revertido(s). A seleção continua marcada — pode excluir agora.');
   });
 }
 function thSelTodos(tipo,visiveis){if(!podeExcluirLinhas())return '';return `<th style="width:34px"><input type="checkbox" id="sel-todos-${tipo}" style="width:auto" title="Selecionar todas" onchange="toggleSelTodos('${tipo}',this.checked)" ${visiveis.length&&visiveis.every(r=>selExclusao[tipo].has(r.id))?'checked':''}></th>`}
