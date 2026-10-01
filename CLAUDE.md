@@ -64,7 +64,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - No Histórico, a venda guardada aparece na data em que foi guardada (`guardada_em`; vendas antigas sem lote usam `data`), com o lote na descrição.
   - Cancelar pendente: o vendedor pede com motivo (`pedir_cancelamento_venda`); a venda fica travada até um Gerente ou acima aprovar (vira `revertida`) ou recusar (volta a pendente) com `responder_cancelamento_venda`. Gerente ou acima também cancela direto (↩️).
   - Vendedor não altera `vendas` direto (RLS); tudo passa pelas rpc.
-- No Histórico Financeiro, a coluna "Entrada/Saída" mostra o que entrou no caixa (venda, ajuste +) e, negativo e em vermelho, o que saiu (compra, ajuste −).
+- No Histórico Financeiro, a coluna "Entrada/Saída" mostra o que entrou no caixa (venda, ajuste +) e, negativo e em vermelho, o que saiu (compra e suas sublinhas, ajuste −). O dinheiro que sai fica só nessa coluna: "Valor" mostra apenas o total da venda (compra e ajuste ficam com "—"). O card Saídas soma a partir de Entrada/Saída.
 - No Histórico Financeiro, o ajuste de caixa entra nos cards de cima: "+ Entrada" soma em Entradas e "− Saída" soma em Saídas (ajuste revertido não conta). Na tabela, a coluna Entrada/Saída mostra o valor do ajuste (+ ou −).
 
 ## Painel
@@ -99,12 +99,17 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 ## Avisos
 
-- Gerente, Diretor ou Sócio publica um aviso (título até 80 caracteres, mensagem até 1000) pelo botão 📢 no topo.
+- Gerente, Diretor ou Sócio publica um aviso (título até 80 caracteres, mensagem até 1000) pelo botão "Avisos" no topo.
 - O aviso aparece como pop-up para todos, em tempo real ou ao entrar. Cada pessoa vê o pop-up uma vez (`avisos_vistos`).
 - O aviso pode levar uma imagem (PNG, JPG ou WebP), reduzida no navegador para até 1600 px e enviada ao Storage em `midia/avisos/`. Com imagem, a mensagem é opcional. O banco só aceita imagem desse caminho do Storage.
 - Imagens de avisos vencidos são apagadas pelo site (1 listagem + 1 remoção) quando alguém publica ou apaga um aviso.
 - O banco define o autor e a validade de 24 horas (trigger). Depois disso o aviso some da tela e o pg_cron o apaga de vez (a cada 10 minutos).
 - As janelas de cadastro usadas por atalho abrem na segunda camada (`modal2`), que é esvaziada ao fechar. As funções do cadastro de fornecedor procuram elementos só dentro da janela aberta.
+
+## Visual limpo
+
+- Ícones só nas abas do menu (e o 🔑 de pedidos de senha ao lado de Configurações). Títulos, botões, mensagens, janelas e tabelas não levam ícone; ações de tabela são botões de texto (Editar, Reverter, Excluir, Desativar/Ativar). Ficam os sinais de controle (✕ remover, ↑↓ ordenar, ▸ abrir sublinhas) e o 🌿 no lugar do logo ou da foto quando não há imagem.
+- Explicações de página e de seção não ficam na tela: vão para o "?" ao lado do título (`ajuda(texto)`), que mostra o texto ao passar o mouse ou tocar. Instruções dentro de janelas (antes de confirmar uma ação) continuam visíveis.
 
 ## Menu lateral e topo
 
