@@ -96,6 +96,9 @@ label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-wei
 .chip-max{border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;border:1px solid transparent}.chip-max.ok{background:rgba(0,204,82,.12);color:#2ee07a;cursor:pointer}.chip-max.cas{background:rgba(var(--purple-rgb),.18);color:var(--purple-light);cursor:pointer}.chip-max.zero{background:rgba(248,113,113,.12);color:#FCA5A5}
 .chip-max.ok:hover{border-color:var(--green)}.chip-max.cas:hover{border-color:var(--purple)}
 .prod-tab{width:100%;border-collapse:collapse;font-size:14px}.prod-tab th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:6px 8px 6px 0}.prod-tab td{border-top:1px solid var(--border);padding:9px 8px 9px 0}
+.prod-bloco{border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:10px 14px}.prod-bloco.sai{border-left-color:var(--warning-light)}.prod-bloco.ent{border-left-color:var(--green)}
+.prod-bloco-tit{font-weight:800;font-size:13px;margin-bottom:4px}.prod-bloco.sai .prod-bloco-tit{color:var(--warning-light)}.prod-bloco.ent .prod-bloco-tit{color:var(--green)}.prod-bloco-vazio{font-size:13px;padding:4px 0}
+.prod-bloco .prod-tab td:first-child{width:46%}
 .prod-sai{color:var(--warning-light)}.prod-ent{color:var(--green)}.prod-baixo{color:#F87171}
 .prod-cascata{border:1px dashed var(--purple);border-radius:10px;padding:12px}.prod-cas-tit{font-weight:800;color:var(--purple-light);margin-bottom:4px}
 .prod-passo{border-left:3px solid var(--purple);background:rgba(var(--purple-rgb),.06);border-radius:6px;padding:8px 10px;margin-top:8px}.prod-passo.pedida{border-left-color:var(--green);background:rgba(0,204,82,.06)}
@@ -390,7 +393,9 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .ssel-btn .ssel-car{color:var(--muted);font-size:10px;flex-shrink:0}
 .ssel-pop{position:fixed;z-index:400;background:var(--surface);border:1px solid var(--purple);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden}
 .ssel-pop .ssel-q{border:none;border-bottom:1px solid var(--border);border-radius:0;background:var(--input-bg)}
-.ssel-ops{overflow:auto;max-height:260px}
+.ssel-ops{overflow:auto;max-height:260px;min-height:0;flex:1 1 auto}
+.ssel-pop.ssel-folha{box-shadow:0 0 0 100vmax rgba(0,0,0,.55)}.ssel-pop.ssel-folha .ssel-op{padding-top:12px;padding-bottom:12px}
+@media(pointer:coarse){.ssel-pop .ssel-q,input[data-combo]{font-size:16px}}
 .ssel-op{padding:9px 12px;cursor:pointer;font-size:13px}
 .ssel-op.hl{background:rgba(var(--purple-rgb),.18)}
 .ssel-op.sel{color:var(--green);font-weight:700}
@@ -571,7 +576,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.21.1';
+const VERSAO='v4.21.2';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -2169,10 +2174,9 @@ function telaProducaoHTML(c){
    const sai=(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>({x,it:db.itens.find(t=>t.id===x.item_id)})).filter(y=>y.it);
    const receita=cons.map(y=>`${fmtQtd(y.x.quantidade)} ${esc(y.it.nome)}`).join(' + ')+(sai.length?' → '+sai.map(y=>`${fmtQtd(y.x.quantidade)} ${esc(y.it.nome)}`).join(' + '):'');
    const nome=cat?`${cat.icone?esc(cat.icone)+' ':''}${esc(cat.nome)}`:'▶ '+esc(r.nome);
-   const fmt=n=>n>=PROD_LIMITE?'∞':n;
-   const [cls,extra]=i.max>0?['btn-primary',` · até ${fmt(i.max)}`]:i.cascata>0?['btn-purple',` · 🔗 até ${fmt(i.cascata)}`]:['btn-ghost pl-off',''];
+   const [cls,extra,dica]=i.max>0?['btn-primary','','dá para fazer agora']:i.cascata>0?['btn-purple','🔗 ','só com produção em cascata']:['btn-ghost pl-off','','faltam insumos'];
    return `<div class="pl-etapa${i.max>0?' ok':''}"><div class="pl-receita" title="${esc(r.nome)}">${receita}</div><div class="pl-seta"></div>
-     <button class="btn btn-sm ${cls}" data-rec="${r.id}" onclick="prodAbrir('${r.id}')" title="${esc(r.nome)}">${nome}${extra}</button></div>`;
+     <button class="btn btn-sm ${cls}" data-rec="${r.id}" onclick="prodAbrir('${r.id}')" title="${esc(r.nome)} — ${dica}">${extra}${nome}</button></div>`;
  };
  const linha=c=>{
    const ult=c.passos[c.passos.length-1];
@@ -2214,10 +2218,18 @@ function prodPainelHTML(r,i,saldo){
   const pl=planejarCascata(r.id,q,saldo);
   const ger=isGerente();
   let corpo,botao;
+  // o que sai e o que entra no Baú, em blocos separados
+  const blocos=efeito=>{
+    const lin=e=>{const d=e.depois-e.antes,min=e.it.qtd_minima||0,baixo=min>0&&e.depois<=min;
+      return `<tr><td>${esc(e.it.nome)}</td><td>${fmtQtd(e.antes)}</td><td class="${d<0?'prod-sai':'prod-ent'}">${d<0?'−':'+'}${fmtQtd(Math.abs(d))}</td><td class="${baixo?'prod-baixo':''}">${fmtQtd(e.depois)} ${esc(e.it.unidade_medida||'')}${baixo?` <small>(mín. ${fmtQtd(min)})</small>`:''}</td></tr>`};
+    const sai=efeito.filter(e=>e.depois<e.antes),ent=efeito.filter(e=>e.depois>e.antes);
+    const tab=(cls,tit,col,ls,vazio)=>`<div class="prod-bloco ${cls}"><div class="prod-bloco-tit">${tit}</div>${ls.length?`<table class="prod-tab"><thead><tr><th>Item</th><th>Tem agora</th><th>${col}</th><th>Fica</th></tr></thead><tbody>${ls.map(lin).join('')}</tbody></table>`:`<div class="muted prod-bloco-vazio">${vazio}</div>`}</div>`;
+    const finais=prd.filter(x=>!controlaEstoque(x.it.categoria)).map(x=>esc(x.it.nome));
+    return tab('sai','⬇️ Sai do Baú','Usa',sai,'Nada sai do Baú.')+
+      tab('ent','⬆️ Entra no Baú','Gera',ent,`Nada entra no Baú: ${finais.length?finais.join(', ')+' é':'o resultado é'} produto final, vendido no Caixa.`);
+  };
   if(pl.possivel&&!pl.temCascata){
-    const linhas=pl.efeito.map(e=>{const d=e.depois-e.antes,min=e.it.qtd_minima||0,baixo=min>0&&e.depois<=min;
-      return `<tr><td>${esc(e.it.nome)}</td><td>${fmtQtd(e.antes)}</td><td class="${d<0?'prod-sai':'prod-ent'}">${d<0?'−':'+'}${fmtQtd(Math.abs(d))}</td><td class="${baixo?'prod-baixo':''}">${fmtQtd(e.depois)} ${esc(e.it.unidade_medida||'')}${baixo?` <small>(mín. ${fmtQtd(min)})</small>`:''}</td></tr>`}).join('');
-    corpo=linhas?`<table class="prod-tab"><thead><tr><th>Item</th><th>Tem agora</th><th>Usa / gera</th><th>Fica</th></tr></thead><tbody>${linhas}</tbody></table>`:'<p class="muted">Esta receita não movimenta o Baú.</p>';
+    corpo=blocos(pl.efeito);
     botao=`<button class="btn btn-primary prod-acao" id="btn-produzir" onclick="produzirDireto('${r.id}',${q})">▶ Produzir ${q} × ${esc(r.nome)}</button>`;
   }else if(pl.possivel){
     const n=pl.passos.length;
@@ -2225,7 +2237,7 @@ function prodPainelHTML(r,i,saldo){
       <div class="muted" style="font-size:12px;margin-bottom:8px">Não há insumos para fazer direto. As etapas abaixo são feitas juntas, nesta ordem, numa operação só.</div>
       ${pl.passos.map((p,k)=>{const ult=k===n-1;return `<div class="prod-passo ${ult?'pedida':'auto'}"><div><b>${k+1}. ${esc(p.r.nome)} × ${p.qtd}</b> <span class="prod-passo-tag">${ult?'pedida':'feita antes, automática'}</span></div>
         <div class="prod-passo-mov">${p.mov.map(m=>`<span class="${m.q<0?'prod-sai':'prod-ent'}">${m.q<0?'−':'+'}${fmtQtd(Math.abs(m.q))} ${esc(m.it.nome)}</span>`).join(' · ')||'<span class="muted">não movimenta o Baú</span>'}</div></div>`}).join('')}</div>
-      <table class="prod-tab"><thead><tr><th>Item</th><th>Tem agora</th><th>Fica</th></tr></thead><tbody>${pl.efeito.map(e=>{const min=e.it.qtd_minima||0,baixo=min>0&&e.depois<=min;return `<tr><td>${esc(e.it.nome)}</td><td>${fmtQtd(e.antes)}</td><td class="${baixo?'prod-baixo':''}">${fmtQtd(e.depois)} ${esc(e.it.unidade_medida||'')}${baixo?` <small>(mín. ${fmtQtd(min)})</small>`:''}</td></tr>`}).join('')}</tbody></table>`;
+      ${blocos(pl.efeito)}`;
     botao=ger?`<button class="btn btn-purple prod-acao" id="btn-conf-cascata" onclick="confirmarCascata('${r.id}',${q})">🔗 Produzir em cascata · ${n} etapas</button>`
       :`<button class="btn btn-purple prod-acao" disabled>🔗 Produzir em cascata · ${n} etapas</button><div class="muted" style="font-size:12px;text-align:center">A produção em cascata é feita por Gerente, Diretor ou Sócio. Você pode produzir até ${i.max} direto.</div>`;
   }else{
@@ -4004,6 +4016,31 @@ function sselAplicar(sel){
   new MutationObserver(sync).observe(sel,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled','selected']});
   sync();
 }
+/* Posição das listas suspensas. No celular o teclado, ao abrir, dispara "resize" e "scroll":
+   a lista não fecha por isso, só se reposiciona. No celular (tela estreita) a lista com busca vira um painel
+   no alto da área visível, acima do teclado. */
+function popCelular(){return window.matchMedia('(max-width:700px) and (pointer:coarse)').matches}
+function popPosicionar(pop,anc,minW,folha){
+  if(!pop||!anc||!anc.isConnected)return;
+  const vv=window.visualViewport,vt=vv?vv.offsetTop:0,vl=vv?vv.offsetLeft:0,vh=vv?vv.height:innerHeight,vw=vv?vv.width:innerWidth;
+  const ops=pop.querySelector('.ssel-ops');
+  pop.style.top='';pop.style.bottom='';pop.style.maxHeight='';
+  if(folha){
+    pop.style.left=(vl+8)+'px';pop.style.width=(vw-16)+'px';pop.style.top=(vt+8)+'px';pop.style.maxHeight=(vh-16)+'px';
+    if(ops)ops.style.maxHeight='none';
+    return;
+  }
+  const r=anc.getBoundingClientRect(),w=Math.min(Math.max(r.width,minW),vw-16);
+  pop.style.width=w+'px';pop.style.left=Math.max(vl+8,Math.min(r.left,vl+vw-w-8))+'px';
+  const abaixo=vt+vh-r.bottom-12,acima=r.top-vt-12;
+  if(abaixo<220&&acima>abaixo){pop.style.bottom=(innerHeight-r.top+4)+'px';pop.style.maxHeight=Math.max(120,acima)+'px'}
+  else{pop.style.top=(r.bottom+4)+'px';pop.style.maxHeight=Math.max(120,abaixo)+'px'}
+  if(ops)ops.style.maxHeight='';
+}
+function popReposicionar(){
+  if(_sselPop&&_sselAberto)popPosicionar(_sselPop,_sselAberto._ssel.btn,240,_sselPop.classList.contains('ssel-folha'));
+  if(_comboPop&&_comboInp)popPosicionar(_comboPop,_comboInp,260,false);
+}
 function sselAbrir(sel){
   sselFechar();if(sel.disabled)return;
   _sselAberto=sel;sel._ssel.btn.classList.add('aberto');
@@ -4035,16 +4072,16 @@ function sselAbrir(sel){
   if(q){q.addEventListener('input',desenhar);q.addEventListener('keydown',teclas)}else pop.addEventListener('keydown',teclas);
   pop.tabIndex=-1;
   document.body.appendChild(pop);desenhar();
-  const r=sel._ssel.btn.getBoundingClientRect(),w=Math.max(r.width,240);
-  pop.style.width=w+'px';pop.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+'px';
-  if(window.innerHeight-r.bottom<320&&r.top>window.innerHeight-r.bottom){pop.style.bottom=(window.innerHeight-r.top+4)+'px'}else pop.style.top=(r.bottom+4)+'px';
-  (q||pop).focus();
+  const folha=popCelular();if(folha)pop.classList.add('ssel-folha');
+  popPosicionar(pop,sel._ssel.btn,240,folha);
+  (q||pop).focus({preventScroll:true});
   const d=ops.querySelector('.ssel-op.sel');if(d)d.scrollIntoView({block:'nearest'});
 }
 function sselFechar(){if(_sselPop){_sselPop.remove();_sselPop=null}if(_sselAberto){_sselAberto._ssel.btn.classList.remove('aberto');_sselAberto=null}}
 document.addEventListener('mousedown',e=>{if(_sselPop&&!_sselPop.contains(e.target)&&!(_sselAberto&&_sselAberto._ssel.btn.contains(e.target)))sselFechar()});
-window.addEventListener('resize',sselFechar);
-document.addEventListener('scroll',e=>{if(_sselPop&&!_sselPop.contains(e.target))sselFechar()},true);
+window.addEventListener('resize',popReposicionar);
+document.addEventListener('scroll',e=>{if((_sselPop&&!_sselPop.contains(e.target))||(_comboPop&&!_comboPop.contains(e.target)))popReposicionar()},true);
+if(window.visualViewport){visualViewport.addEventListener('resize',popReposicionar);visualViewport.addEventListener('scroll',popReposicionar)}
 new MutationObserver(ms=>{ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.tagName==='SELECT')sselAplicar(n);else n.querySelectorAll&&n.querySelectorAll('select').forEach(sselAplicar)}));if(_sselAberto&&!_sselAberto.isConnected)sselFechar()}).observe(document.documentElement,{childList:true,subtree:true});
 document.querySelectorAll('select').forEach(sselAplicar);
 
@@ -4105,10 +4142,7 @@ function comboAbrir(inp){
     pop.addEventListener('mousedown',e=>{e.preventDefault();const d=e.target.closest('.ssel-op');if(d)comboEscolher(+d.dataset.i)});
     document.body.appendChild(pop);
   }
-  const r=inp.getBoundingClientRect(),w=Math.max(r.width,260);
-  _comboPop.style.width=w+'px';_comboPop.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+'px';
-  _comboPop.style.top='';_comboPop.style.bottom='';
-  if(window.innerHeight-r.bottom<300&&r.top>window.innerHeight-r.bottom)_comboPop.style.bottom=(window.innerHeight-r.top+4)+'px';else _comboPop.style.top=(r.bottom+4)+'px';
+  popPosicionar(_comboPop,inp,260,false);
   comboDesenhar();
 }
 function comboEscolher(i){
@@ -4126,8 +4160,7 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='Escape'||e.key==='Tab')comboFechar();
 });
 document.addEventListener('mousedown',e=>{if(_comboPop&&!_comboPop.contains(e.target)&&e.target!==_comboInp)comboFechar()});
-document.addEventListener('scroll',e=>{if(_comboPop&&!_comboPop.contains(e.target))comboFechar()},true);
-window.addEventListener('resize',comboFechar);
+
 
 
 /* ================= EQUIPE: QUEM ESTÁ ON-LINE =================

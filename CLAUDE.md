@@ -91,10 +91,11 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - Fluxo da linha: caixa do insumo principal (saldo; borda vermelha zerado ou no mínimo) → etapa → caixa do intermediário → etapa → "Vende no Caixa" (ou a caixa do que a última receita gera no Baú).
   - Variedade = produto ativo cujo nome aparece nas receitas ou itens da linha (foto e nome do produto). Sem produto, o título é o nome da receita final.
   - Insumos de apoio (categoria Insumo Auxiliar ou usados em mais de uma linha, ex.: Zip Lock, Papel de Seda) ficam numa faixa no topo, não nas linhas.
-  - O botão de cada etapa usa o ícone e o nome da categoria da receita (sem categoria: "▶ nome da receita") e mostra **verde "até N"** (dá para fazer agora), **roxo "🔗 até N"** (só com cascata) ou apagado (faltam insumos).
+  - O botão de cada etapa usa o ícone e o nome da categoria da receita (sem categoria: "▶ nome da receita"), **sem quantidade** (pedido do dono). A cor diz se dá: **verde** (dá para fazer agora), **roxo com 🔗** (só com cascata) ou apagado (faltam insumos).
 - O botão abre a janela (`prodAbrir` → `#prod-painel`, `modal-prod`) com quantidade (− / +), atalhos "máximo" e "🔗 máximo com cascata" e o item limitante:
-  - Produção direta: tabela Tem agora / Usa / Fica (Fica em vermelho no estoque mínimo) e botão verde (`#btn-produzir` → `produzirDireto`).
-  - Cascata: etapas e antes → depois; botão roxo (`#btn-conf-cascata` → `confirmarCascata`).
+  - O que muda no Baú vem em dois blocos separados: **⬇️ Sai do Baú** (Item / Tem agora / Usa / Fica) e **⬆️ Entra no Baú** (Item / Tem agora / Gera / Fica). Fica em vermelho no estoque mínimo. Produto final não entra no Baú, e o bloco "Entra" diz isso.
+  - Produção direta: botão verde (`#btn-produzir` → `produzirDireto`).
+  - Cascata: etapas e os mesmos dois blocos; botão roxo (`#btn-conf-cascata` → `confirmarCascata`).
   - Sem insumos nem com cascata: mostra o que falta e trava o botão.
 - O vendedor produz direto. A cascata é só para Gerente ou acima: o vendedor vê as etapas, mas o botão fica desativado.
 - Os máximos usam `saldosBau()`, que calcula todos os saldos de uma vez, e `planejarCascata(rid,q,saldo)`. Não chame `saldoItem` item a item dentro de laços da tela.
@@ -112,6 +113,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Vendedor registra compras e produções (grava só em nome próprio), mas não cadastra fornecedores, itens nem vínculos. Ajustes manuais de estoque (+ Entrada / − Saída) são de Gerente para cima.
 - No cadastro do fornecedor, os itens aparecem na ordem em que foram colocados (`fornecedor_itens.criado_em`); item novo vai sempre para o fim.
 - Toda lista suspensa tem o mesmo campo de pesquisa. Campos de texto com lista (`data-combo`) aceitam valores fora da lista.
+- Celular: o teclado, ao abrir, dispara `resize`/`scroll`; as listas **não fecham** por isso, só se reposicionam (`popPosicionar`/`popReposicionar`, também com `visualViewport`). No celular (tela estreita e toque) a lista suspensa com busca abre como painel no alto da área visível (`.ssel-folha`), acima do teclado. A busca usa fonte de 16px para o iPhone não dar zoom. Fecha ao escolher, com Esc ou tocando fora.
 
 ## Avisos
 
