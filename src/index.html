@@ -242,9 +242,6 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .cart-line .iconbtn{color:var(--danger);border:1px solid var(--danger);background:rgba(var(--danger-rgb),.08);font-weight:800}
 .cart-line .iconbtn:hover{background:rgba(var(--danger-rgb),.25)}
 .iconbtn:hover{background:var(--border)}
-.iconbtn.acao{font-size:12px;font-weight:600;color:var(--muted);border:1px solid var(--border);padding:3px 8px;margin:1px 2px;line-height:1.4}
-.iconbtn.acao:hover{color:var(--text);background:var(--border)}
-.iconbtn.acao-del:hover{color:var(--danger-light);border-color:var(--danger)}
 .td-exp{width:34px;padding-left:6px!important;padding-right:0!important}
 .btn-exp{display:inline-flex;align-items:center;gap:2px;background:#282836;color:var(--text);border-radius:6px;padding:2px 6px;font-size:11px;font-weight:800;line-height:18px;transition:background .15s}
 .btn-exp small{font-size:10px;color:var(--muted)}
@@ -295,7 +292,7 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .aviso-item{border:1px solid var(--border);border-radius:10px;padding:12px}
 .aviso-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
 .aviso-form textarea{width:100%;resize:vertical;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font:inherit}
-#btn-avisos{position:relative;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;line-height:1}
+#btn-avisos{position:relative;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:15px;line-height:1}
 .avisos-selo{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--warning);color:#1a1300;font-size:11px;font-weight:800;line-height:18px;text-align:center}
 .alert-banner{background:rgba(var(--danger-rgb),.08);border:1px solid var(--danger);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
 .alert-banner.aviso-pedido-senha{background:rgba(var(--warning-rgb),.10);border-color:var(--warning-border);color:var(--text)}
@@ -504,7 +501,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
   <span id="h-nome-loja" class="h-marca" title="BEST BUDS">BEST<span>BUDS</span></span>
   <span class="vselo" id="h-versao">v4.8.0</span>
   <div class="who" style="margin-left:auto"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
-  <button id="btn-avisos" title="Avisos" onclick="modalAvisos()">Avisos<span id="avisos-selo" class="avisos-selo" style="display:none"></span></button>
+  <button id="btn-avisos" title="Avisos" onclick="modalAvisos()">📢<span id="avisos-selo" class="avisos-selo" style="display:none"></span></button>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
 
@@ -543,7 +540,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.20.2';
+const VERSAO='v4.20.3';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -908,7 +905,7 @@ function renderPDV(c){
   <h2 class="page-title">Caixa de Balcão${ajuda('Registro de pedidos, descontos escalonados e partilha instantânea.')}</h2>
   <div class="pdv-layout">
     <div>
-      <div class="section-title">Catálogo</div>
+      <div class="section-title">🛒 Catálogo</div>
       <div class="cat-grid">${prodAtivos().map(p=>`
         <div class="cat-card" onclick="addCupom('${p.id}',1)">
           ${p.imagem?`<img class="cat-img" src="${imgSrc(p.imagem)||''}" alt="${esc(p.nome)}">`:`<div class="cat-img">🌿</div>`}
@@ -925,7 +922,7 @@ function renderPDV(c){
     </div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div class="section-title" style="margin:0">Cupom atual</div>
+        <div class="section-title" style="margin:0">🧾 Cupom atual</div>
         <button class="btn btn-clear btn-sm" onclick="limparCupom()">Limpar cupom</button>
       </div>
       <div class="row2" style="margin-bottom:12px">
@@ -1109,8 +1106,8 @@ function renderPainel(c){
   if(estoqueMin.length)alertas.push(`<button class="pn-alerta r" onclick="go('bau')"><b>${estoqueMin.length}</b> item(ns) no estoque mínimo: ${estoqueMin.map(i=>esc(i.nome)).join(', ')}</button>`);
   c.innerHTML=`
   <h2 class="page-title">Painel${ajuda('Visão geral da loja. As vendas contam pela data da venda.')}</h2>
-  <div class="section-title">Alertas</div>
-  <div class="pn-alertas">${alertas.join('')||`<div class="pn-ok">Nada pendente agora.</div>`}</div>
+  <div class="section-title">🚨 Alertas</div>
+  <div class="pn-alertas">${alertas.join('')||`<div class="pn-ok">✅ Nada pendente agora.</div>`}</div>
 
   <div class="pn-filtros">
     ${PN_PRESETS.map(([k,r])=>`<button class="btn btn-sm ${painelPer.preset===k?'btn-primary':'btn-ghost'}" onclick="pnAlternar('${k}')">${r}</button>`).join('')}
@@ -1118,13 +1115,13 @@ function renderPainel(c){
     <span class="pn-per">${txtPer}</span>
   </div>
   <div class="card pn-card">
-    <div class="pn-card-tit">Receita da loja por ${baldes.tipo}${ajuda('Parte da loja (total menos repasse) das vendas feitas em cada '+baldes.tipo+', guardadas no caixa ou não.')}</div>
+    <div class="pn-card-tit">📈 Receita da loja por ${baldes.tipo}${ajuda('Parte da loja (total menos repasse) das vendas feitas em cada '+baldes.tipo+', guardadas no caixa ou não.')}</div>
     ${vendasPer.length?`<div id="pn-colunas" class="pn-colunas"></div>
     <details class="pn-tabela-det"><summary>Ver em tabela</summary><div class="table-wrap"><table><tr><th>${baldes.tipo==='dia'?'Dia':'Início'}</th><th>Vendas</th><th>Receita da loja</th></tr>${baldes.b.filter(b=>b.n).map(b=>`<tr><td>${dataBRdia(b.de)}</td><td>${b.n}</td><td class="money">${fmt(b.valor)}</td></tr>`).join('')}</table></div></details>`:`<div class="empty">Nenhuma venda no período.</div>`}
   </div>
 
   <div class="card pn-card">
-      <div class="pn-card-tit">Vendedores${ajuda('Ranking pela receita da loja já guardada no caixa. Não guardado: vendas ainda pendentes. Repasse recebido inclui o que a pessoa ganhou como auxiliar.')}</div>
+      <div class="pn-card-tit">🏆 Vendedores${ajuda('Ranking pela receita da loja já guardada no caixa. Não guardado: vendas ainda pendentes. Repasse recebido inclui o que a pessoa ganhou como auxiliar.')}</div>
       ${vendedores.length?pnBarras(vendedores.filter(p=>p.n).map(p=>({nome:p.nome,valor:p.loja})),fmt)+`
       <div class="table-wrap pn-tab"><table>
         <tr><th>Vendedor</th><th>Vendas</th><th>Total vendido</th><th>Receita loja</th><th>Não guardado</th><th>Repasse recebido</th><th>Desconto médio</th></tr>
@@ -1133,7 +1130,7 @@ function renderPainel(c){
   </div>
   <div class="pn-duas">
     <div class="card pn-card">
-      <div class="pn-card-tit">Produtos${ajuda('Quantidade vendida no período, guardada ou não. Embaixo, os produtos ativos que não venderam.')}</div>
+      <div class="pn-card-tit">🌿 Produtos${ajuda('Quantidade vendida no período, guardada ou não. Embaixo, os produtos ativos que não venderam.')}</div>
       ${prods.lista.length?pnBarras(prods.lista.map(p=>({nome:p.nome,valor:p.qtd})),n=>n.toLocaleString('pt-BR')+' un')+`
       <div class="table-wrap pn-tab"><table>
         <tr><th>Produto</th><th>Qtd</th><th>Vendido</th><th>% do vendido</th></tr>
@@ -1142,7 +1139,7 @@ function renderPainel(c){
       ${prods.parados.length?`<p class="pn-parados"><b>Sem venda no período:</b> ${prods.parados.map(esc).join(', ')}</p>`:''}
     </div>
     <div class="card pn-card">
-      <div class="pn-card-tit">Avisos${ajuda('Avisos ativos (somem em 24 h) e quem da equipe ainda não viu.')}</div>
+      <div class="pn-card-tit">📢 Avisos${ajuda('Avisos ativos (somem em 24 h) e quem da equipe ainda não viu.')}</div>
       ${avisos.length?avisos.map(a=>{const vistos=vistosPor(a.id),falta=eqs.filter(u=>!vistos.has(u.id));const pct=eqs.length?Math.round((eqs.length-falta.length)/eqs.length*100):0;
         return `<div class="pn-aviso"><div class="pn-aviso-t"><b>${esc(a.titulo)}</b><span class="muted">por ${esc(a.criado_por_nome||'—')} · some ${esc(dataHoraBR(a.expira_em))}</span></div>
         <div class="pn-meter" role="img" aria-label="${eqs.length-falta.length} de ${eqs.length} viram"><span style="width:${pct}%"></span></div>
@@ -1150,7 +1147,7 @@ function renderPainel(c){
     </div>
   </div>
   <div class="card pn-card">
-    <div class="pn-card-tit">Últimas ações${ajuda('Registro de auditoria: tudo o que foi feito no sistema, do mais recente para o mais antigo.')}</div>
+    <div class="pn-card-tit">🕘 Últimas ações${ajuda('Registro de auditoria: tudo o que foi feito no sistema, do mais recente para o mais antigo.')}</div>
     <div id="pn-atividade">${pnHtmlAtividade()}</div>
   </div>
   <div id="pn-tip" class="pn-tip" role="tooltip"></div>`;
@@ -1191,8 +1188,8 @@ function htmlPendentes(){
   const linha=v=>{
     const rp=repasseDaVenda(v),pedido=v.cancelamento_status==='pedido',meu=v.usuario_id===sessionUser().id;
     let acoes='';
-    if(pedido&&ger)acoes=`<button class="btn btn-ghost btn-sm" title="Aprovar o cancelamento" onclick="responderCancelamento('${v.id}',true)">Aprovar</button> <button class="btn btn-ghost btn-sm" title="Recusar o cancelamento" onclick="responderCancelamento('${v.id}',false)">Recusar</button>`;
-    else if(!pedido&&ger)acoes=`<button class="iconbtn acao" title="Cancelar venda" onclick="reverterFin('venda','venda:${v.id}')">Cancelar</button>`;
+    if(pedido&&ger)acoes=`<button class="btn btn-ghost btn-sm" title="Aprovar o cancelamento" onclick="responderCancelamento('${v.id}',true)">✅ Aprovar</button> <button class="btn btn-ghost btn-sm" title="Recusar o cancelamento" onclick="responderCancelamento('${v.id}',false)">✖ Recusar</button>`;
+    else if(!pedido&&ger)acoes=`<button class="iconbtn" title="Cancelar venda" onclick="reverterFin('venda','venda:${v.id}')">↩️</button>`;
     else if(!pedido&&meu)acoes=`<button class="btn btn-ghost btn-sm" onclick="modalPedirCancelamento('${v.id}')">Pedir cancelamento</button>`;
     const situacao=pedido?`<span class="tag r" title="${esc(v.cancelamento_motivo||'')}">Cancelamento pedido</span><div class="pend-motivo">${esc(v.cancelamento_motivo||'')}</div>`
       :v.cancelamento_status==='recusado'?`<span class="tag y" title="Recusado por ${esc(v.cancelamento_respondido_por_nome||'—')}">Cancelamento recusado</span>`
@@ -1211,8 +1208,8 @@ function htmlPendentes(){
   };
   return `<div class="card pend-card" id="pend-card">
     <div class="pend-topo">
-      <div class="section-title" style="margin:0">Vendas a guardar no caixa${ajuda('A venda só entra no caixa quando o dinheiro é guardado. Marque as vendas cujo valor você vai guardar agora e confirme.')}</div>
-      <button class="btn btn-primary" ${escolhidas.length?'':'disabled'} onclick="modalGuardarCaixa()">Guardar no caixa${escolhidas.length?` (${escolhidas.length}) · ${fmt(valorSel)}`:''}</button>
+      <div class="section-title" style="margin:0">💰 Vendas a guardar no caixa${ajuda('A venda só entra no caixa quando o dinheiro é guardado. Marque as vendas cujo valor você vai guardar agora e confirme.')}</div>
+      <button class="btn btn-primary" ${escolhidas.length?'':'disabled'} onclick="modalGuardarCaixa()">💰 Guardar no caixa${escolhidas.length?` (${escolhidas.length}) · ${fmt(valorSel)}`:''}</button>
     </div>
     ${porVendedor}
     ${lista.length?`<div class="table-wrap"><table>
@@ -1236,10 +1233,10 @@ function resumoGuardar(vendas){
 }
 function modalGuardarCaixa(){
   const vendas=vendasPendentesVisiveis().filter(v=>selPend.has(v.id)&&pendenteSelecionavel(v));
-  if(!vendas.length)return toast('Marque ao menos uma venda.');
+  if(!vendas.length)return toast('⚠️ Marque ao menos uma venda.');
   const r=resumoGuardar(vendas),eu=sessionUser().nome;
   const auxDe=vendas.flatMap(v=>repasseDaVenda(v).aux.map(a=>({pagador:v.usuario_nome||'—',nome:a.nome||'?',valor:a.valor})));
-  openModal(`<h3>Guardar no caixa</h3>
+  openModal(`<h3>💰 Guardar no caixa</h3>
   <div class="pend-lista">${vendas.map(v=>`<div class="pend-lista-linha"><span>${esc(v.operacao_id||'—')} · ${dataHoraBR(v.data)}${isGerente()?' · '+esc(v.usuario_nome||'—'):''}</span><span class="money">${fmt(v.receita_loja)}</span></div>`).join('')}</div>
   <div style="margin-top:12px">
     <div class="tot-line"><span>Vendas</span><b>${r.n}</b></div>
@@ -1262,14 +1259,14 @@ async function confirmarGuardarCaixa(){
   if(!vendas.length)return closeModal();
   const btn=document.getElementById('gc-ok');if(btn)btn.disabled=true;
   const{data,error}=await sb.rpc('guardar_vendas',{p_ids:vendas.map(v=>v.id)});
-  if(error){const e=document.getElementById('gc-err');if(e){e.textContent=''+error.message;e.style.display='block'}if(btn)btn.disabled=false;return}
+  if(error){const e=document.getElementById('gc-err');if(e){e.textContent='⚠️ '+error.message;e.style.display='block'}if(btn)btn.disabled=false;return}
   const dep={...data,total_vendas:Number(data.total_vendas),repasse:Number(data.repasse),valor_caixa:Number(data.valor_caixa)};
   (db.depositos=db.depositos||[]).unshift(dep);
   vendas.forEach(v=>{v.status='ativa';v.guardada_em=dep.data;v.deposito_id=dep.id});
   selPend.clear();
   reg('Vendas guardadas no caixa',`Lote ${dep.operacao_id||'—'} — ${dep.qtd_vendas} venda(s) — ${fmt(dep.valor_caixa)} no caixa`);
   closeModal();render();
-  toast(`Lote ${dep.operacao_id||''} guardado!\n${dep.qtd_vendas} venda(s) · ${fmt(dep.valor_caixa)} entraram no caixa.`);
+  toast(`✅ Lote ${dep.operacao_id||''} guardado!\n${dep.qtd_vendas} venda(s) · ${fmt(dep.valor_caixa)} entraram no caixa.`);
 }
 function modalPedirCancelamento(id){
   const v=db.vendas.find(x=>x.id===id);if(!v)return;
@@ -1284,12 +1281,12 @@ async function pedirCancelamento(id){
   const motivo=(document.getElementById('pc-motivo').value||'').trim(),e=document.getElementById('pc-err');
   if(motivo.length<3){e.textContent='Informe o motivo.';e.style.display='block';return}
   const{error}=await sb.rpc('pedir_cancelamento_venda',{p_id:id,p_motivo:motivo});
-  if(error){e.textContent=''+error.message;e.style.display='block';return}
+  if(error){e.textContent='⚠️ '+error.message;e.style.display='block';return}
   const v=db.vendas.find(x=>x.id===id);
   if(v)Object.assign(v,{cancelamento_status:'pedido',cancelamento_motivo:motivo,cancelamento_pedido_por_nome:sessionUser().nome,cancelamento_pedido_em:nowISO()});
   selPend.delete(id);
   reg('Cancelamento de venda pedido',`ID ${v&&v.operacao_id||'—'} — ${motivo}`);
-  closeModal();render();toast('Pedido enviado. A venda fica parada até a resposta do gerente.');
+  closeModal();render();toast('✅ Pedido enviado. A venda fica parada até a resposta do gerente.');
 }
 function responderCancelamento(id,aprovar){
   if(!isGerente())return;
@@ -1298,10 +1295,10 @@ function responderCancelamento(id,aprovar){
     `Venda ${v.operacao_id||''} de ${v.usuario_nome||'—'} (${fmt(v.total)}). Motivo: ${v.cancelamento_motivo||'—'}. `+(aprovar?'A venda será revertida e não entra no caixa.':'A venda volta a esperar para ser guardada.'),
     async()=>{
       const{error}=await sb.rpc('responder_cancelamento_venda',{p_id:id,p_aprovar:aprovar});
-      if(error)return toast(''+error.message);
+      if(error)return toast('⚠️ '+error.message);
       Object.assign(v,{status:aprovar?'revertida':'pendente',cancelamento_status:aprovar?'aprovado':'recusado',cancelamento_respondido_por_nome:sessionUser().nome,cancelamento_respondido_em:nowISO()});
       reg(aprovar?'Cancelamento de venda aprovado':'Cancelamento de venda recusado',`ID ${v.operacao_id||'—'} — ${v.cancelamento_motivo||''}`);
-      render();toast(aprovar?'Venda cancelada.':'Pedido recusado.');
+      render();toast(aprovar?'✅ Venda cancelada.':'✅ Pedido recusado.');
     });
 }
 /* Vendedor auxiliar: escolhido entre os usuários ativos (menos quem está vendendo e quem já foi escolhido) */
@@ -1347,8 +1344,8 @@ async function finalizarVenda(){
   const cup=calcCupom();
   if(!cup.itens.length)return;
   const auxs=pdvState.auxiliares||[];
-  if(auxs.some(a=>!a.usuario_id))return toast('Selecione o vendedor auxiliar em todas as linhas (ou remova a linha).');
-  let operacaoId;try{operacaoId=await nextOpId()}catch(err){return toast('Erro ao gerar o ID da venda: '+(err.message||err))}
+  if(auxs.some(a=>!a.usuario_id))return toast('⚠️ Selecione o vendedor auxiliar em todas as linhas (ou remova a linha).');
+  let operacaoId;try{operacaoId=await nextOpId()}catch(err){return toast('⚠️ Erro ao gerar o ID da venda: '+(err.message||err))}
   const cabecalho={
     operacao_id:operacaoId,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,
     parceria_id:pdvState.parceriaId,parceria_nome:cup.parceria?cup.parceria.nome:null,
@@ -1359,15 +1356,15 @@ async function finalizarVenda(){
     status:'pendente'
   };
   const{data:vRow,error:e1}=await sb.from('vendas').insert(cabecalho).select().single();
-  if(e1)return toast('Erro ao registrar venda: '+e1.message);
+  if(e1)return toast('⚠️ Erro ao registrar venda: '+e1.message);
   const itensRows=cup.itens.map(x=>({venda_id:vRow.id,produto_id:x.prod.id,nome:x.prod.nome,qtd:x.qtd,preco_unit:x.prod.preco,rateio:x.prod.rateio}));
   const{data:itensInseridos,error:e2}=await sb.from('venda_itens').insert(itensRows).select();
-  if(e2){await sb.from('vendas').delete().eq('id',vRow.id);return toast('Erro ao registrar itens da venda: '+e2.message)}
+  if(e2){await sb.from('vendas').delete().eq('id',vRow.id);return toast('⚠️ Erro ao registrar itens da venda: '+e2.message)}
   const v={...vRow,itens:itensInseridos.map(i=>({produto_id:i.produto_id,nome:i.nome,qtd:Number(i.qtd),preco_unit:Number(i.preco_unit),rateio:i.rateio}))};
   db.vendas.unshift(v);
   reg('Venda finalizada',`ID ${v.operacao_id||'—'} — ${v.itens.map(i=>i.qtd+'× '+i.nome).join(', ')} — total ${fmt(v.total)}`);
   limparCupom();
-  toast(`Venda registrada como pendente!\nTotal: ${fmt(v.total)} · Repasse: ${fmt(v.cota_funcionario)}\nGuarde ${fmt(v.receita_loja)} no caixa e confirme em "Vendas a guardar".`);
+  toast(`✅ Venda registrada como pendente!\nTotal: ${fmt(v.total)} · Repasse: ${fmt(v.cota_funcionario)}\nGuarde ${fmt(v.receita_loja)} no caixa e confirme em "Vendas a guardar".`);
   render();
 }
 
@@ -1383,18 +1380,18 @@ function ordenarPorOrdem(arr){return arr.sort((a,b)=>(a.ordem??1e9)-(b.ordem??1e
 function proximaOrdem(arr){return Math.max(0,...arr.map(x=>x.ordem||0))+1}
 function setasOrdem(fn,id){return `<td style="white-space:nowrap"><button class="iconbtn btn-ordem" title="Subir" onclick="${fn}('${esc(id)}',-1)">↑</button><button class="iconbtn btn-ordem" title="Descer" onclick="${fn}('${esc(id)}',1)">↓</button></td>`}
 async function moverNaOrdem(tabela,arr,chave,id,dir){
-  if(!isGerente())return toast('Apenas Gerente, Diretor ou Sócio podem reordenar.');
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem reordenar.');
   const lista=ordenarPorOrdem([...arr]),i=lista.findIndex(x=>x[chave]===id),j=i+dir;
   if(i<0||j<0||j>=lista.length)return;
   // garante ordens únicas e sequenciais antes de trocar (registros sem ordem ou repetidos)
   if(lista.some((x,k)=>x.ordem!==k+1)){
     const res=await Promise.all(lista.map((x,k)=>x.ordem===k+1?null:sb.from(tabela).update({ordem:k+1}).eq(chave,x[chave])).filter(Boolean));
-    if(res.some(r=>r.error))return toast('Erro ao reordenar.');
+    if(res.some(r=>r.error))return toast('⚠️ Erro ao reordenar.');
     lista.forEach((x,k)=>x.ordem=k+1);
   }
   const x=lista[i],y=lista[j],ox=x.ordem,oy=y.ordem;
   const[r1,r2]=await Promise.all([sb.from(tabela).update({ordem:oy}).eq(chave,x[chave]),sb.from(tabela).update({ordem:ox}).eq(chave,y[chave])]);
-  if(r1.error||r2.error)return toast('Erro ao reordenar.');
+  if(r1.error||r2.error)return toast('⚠️ Erro ao reordenar.');
   x.ordem=oy;y.ordem=ox;ordenarPorOrdem(arr);render();
 }
 function itensOrdenados(){return ordenarPorOrdem([...db.itens])}
@@ -1423,8 +1420,8 @@ function renderBau(c){
   c.innerHTML=`
   <h2 class="page-title">Baú — Estoque de Insumos${ajuda('Estoque desacoplado do ciclo de vendas. Vendas no PDV nunca movimentam o Baú.')}</h2>
   <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-    <button class="btn btn-purple" onclick="telaNovaCompra()">Nova compra</button>
-    <button class="btn btn-primary" onclick="telaProducao()">Produzir</button>
+    <button class="btn btn-purple" onclick="telaNovaCompra()">🚚 Nova compra</button>
+    <button class="btn btn-primary" onclick="telaProducao()">🏭 Produzir</button>
   </div>
   <div class="sum-grid">${itens.map(i=>{
     const s=saldoItem(i.id);
@@ -1437,8 +1434,8 @@ function renderBau(c){
         <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="modalAjusteBau('${i.id}','saida')">− Saída</button>
       </div>`:''}
     </div>`}).join('')||'<div class="empty">Sem itens com saldo.</div>'}</div>
-  <div class="section-title"><span>Livro de movimentações</span></div>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">${isGerente()?`<button class="btn btn-export btn-sm" onclick="exportarRegistros('bau')">Exportar CSV</button>`:``}${contadorFiltro('bau',gruposBau.length,agruparBau(movs,movs).length)}${botaoExcluirSel('bau')}</div>
+  <div class="section-title"><span>📜 Livro de movimentações</span></div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">${isGerente()?`<button class="btn btn-export btn-sm" onclick="exportarRegistros('bau')">⬇ Exportar CSV</button>`:``}${contadorFiltro('bau',gruposBau.length,agruparBau(movs,movs).length)}${botaoExcluirSel('bau')}</div>
   <div class="table-wrap"><table>
     <tr><th class="td-exp"></th>${thSelTodosIds('bau',paginaBau.rows.map(g=>g.ids))}${thCol('bau','data','Data/hora')}${thCol('bau','usuario_nome','Usuário')}${thCol('bau','item_nome','Item')}${thCol('bau','tipo_movimento','Tipo')}${thCol('bau','quantidade','Qtd')}${thCol('bau','saldo_resultante','Saldo resultante')}${thCol('bau','origem','Origem')}${isGerente()?'<th>Ações</th>':''}</tr>
     ${paginaBau.rows.map(g=>{
@@ -1481,8 +1478,8 @@ function thSelTodosIds(tipo,listas){if(!podeExcluirLinhas())return '';const todo
 /* Baú: um lançamento (grupo ou movimento avulso) é revertido por inteiro — sai do saldo mas continua no livro. Só depois de revertido pode ser excluído. */
 function movsDoLancamentoBau(chave){return db.estoque_bau.filter(m=>(m.operacao_id||('m:'+m.id))===chave)}
 function acoesBau(chave,revertido){
-  if(!revertido)return `<button class="iconbtn acao" title="Reverter lançamento" onclick="reverterLancamentoBau('${chave}')">Reverter</button>`;
-  return isSocioOuDiretor()?`<button class="iconbtn acao acao-del" title="Excluir lançamento" onclick="excluirGrupoBau('${chave}')">Excluir</button>`:'';
+  if(!revertido)return `<button class="iconbtn" title="Reverter lançamento" onclick="reverterLancamentoBau('${chave}')">↩️</button>`;
+  return isSocioOuDiretor()?`<button class="iconbtn" title="Excluir lançamento" onclick="excluirGrupoBau('${chave}')">🗑️</button>`:'';
 }
 /* Itens que ficariam com saldo negativo se estes movimentos fossem revertidos (ex.: compra já consumida em produção) */
 function saldoNegativoAoReverter(ms){
@@ -1493,50 +1490,50 @@ function saldoNegativoAoReverter(ms){
 async function reverterMovsBau(ms){
   const ids=ms.map(m=>m.id),itens=[...new Set(ms.map(m=>m.item_id))];
   const{error}=await sb.from('estoque_bau').update({status:'revertida'}).in('id',ids);
-  if(error){toast('Erro ao reverter: '+error.message);return false}
+  if(error){toast('⚠️ Erro ao reverter: '+error.message);return false}
   ms.forEach(m=>{m.status='revertida'});
   for(const it of itens)await recalcularSaldosItem(it);
   return true;
 }
 function reverterLancamentoBau(chave){
-  if(!isGerente())return toast('Apenas Gerente, Diretor ou Sócio podem reverter lançamentos.');
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem reverter lançamentos.');
   const ms=movsDoLancamentoBau(chave).filter(m=>m.status!=='revertida');if(!ms.length)return;
   const neg=saldoNegativoAoReverter(ms);
-  if(neg.length)return toast('Não é possível reverter: o saldo ficaria negativo em '+neg.join(', ')+'. Reverta antes as produções/saídas que usaram esse estoque.');
+  if(neg.length)return toast('⚠️ Não é possível reverter: o saldo ficaria negativo em '+neg.join(', ')+'. Reverta antes as produções/saídas que usaram esse estoque.');
   confirmar('Reverter lançamento do Baú',(ms.length>1?'As '+ms.length+' movimentações deste lançamento deixarão de contar no saldo (continuam no livro como revertidas).':'A movimentação deixará de contar no saldo (continua no livro como revertida).')+' Confirmar?',async()=>{
     if(!await reverterMovsBau(ms))return;
-    reg('Lançamento do Baú revertido',chave+' — '+ms.length+' movimentação(ões)');render();toast('Lançamento revertido.');
+    reg('Lançamento do Baú revertido',chave+' — '+ms.length+' movimentação(ões)');render();toast('✅ Lançamento revertido.');
   });
 }
 async function reverterSelecionadasBau(){
-  if(!isGerente())return toast('Apenas Gerente, Diretor ou Sócio podem reverter lançamentos.');
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem reverter lançamentos.');
   const ids=[...selExclusao.bau];
   const ms=db.estoque_bau.filter(m=>ids.includes(m.id)&&m.status!=='revertida');
   if(!ms.length)return toast('ℹ️ Nada selecionado precisa ser revertido — já pode excluir.');
   const neg=saldoNegativoAoReverter(ms);
-  if(neg.length)return toast('Não é possível reverter: o saldo ficaria negativo em '+neg.join(', ')+'.');
+  if(neg.length)return toast('⚠️ Não é possível reverter: o saldo ficaria negativo em '+neg.join(', ')+'.');
   confirmar('Reverter selecionadas',ms.length+' movimentação(ões) deixarão de contar no saldo. Confirmar?',async()=>{
     if(!await reverterMovsBau(ms))return;
-    reg('Reversão em lote (Baú)',ms.length+' movimentação(ões)');render();toast('Revertido(s). A seleção continua marcada — pode excluir agora.');
+    reg('Reversão em lote (Baú)',ms.length+' movimentação(ões)');render();toast('✅ Revertido(s). A seleção continua marcada — pode excluir agora.');
   });
 }
 function excluirGrupoBau(chave){
-  if(!isSocioOuDiretor())return toast('Apenas Sócio ou Diretor podem excluir movimentações.');
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir movimentações.');
   const ms=movsDoLancamentoBau(chave);if(!ms.length)return;
-  if(ms.some(m=>m.status!=='revertida'))return toast('Reverta o lançamento (Reverter) antes de excluir.');
+  if(ms.some(m=>m.status!=='revertida'))return toast('⚠️ Reverta o lançamento (↩️) antes de excluir.');
   confirmar('Excluir lançamento do Baú',(ms.length>1?`As ${ms.length} movimentações deste lançamento serão removidas`:'A movimentação será removida')+' definitivamente do livro. Confirmar?',async()=>{
     const ids=ms.map(m=>m.id),itens=[...new Set(ms.map(m=>m.item_id))];
     const{error}=await sb.from('estoque_bau').delete().in('id',ids);
-    if(error)return toast('Erro ao excluir: '+error.message);
+    if(error)return toast('⚠️ Erro ao excluir: '+error.message);
     db.estoque_bau=db.estoque_bau.filter(m=>!ids.includes(m.id));
     for(const it of itens)await recalcularSaldosItem(it);
     ids.forEach(id=>selExclusao.bau.delete(id));
-    reg('Lançamento do Baú excluído',chave+' — '+ids.length+' movimentação(ões)');render();toast('Lançamento excluído.');
+    reg('Lançamento do Baú excluído',chave+' — '+ids.length+' movimentação(ões)');render();toast('✅ Lançamento excluído.');
   });
 }
 function modalAjusteBau(itemId,tipo){
   const it=db.itens.find(i=>i.id===itemId);if(!it)return;
-  openModal(`<h3>${tipo==='entrada'?'Entrada avulsa':'Saída avulsa'} — ${esc(it.nome)}</h3>
+  openModal(`<h3>${tipo==='entrada'?'➕ Entrada avulsa':'➖ Saída avulsa'} — ${esc(it.nome)}</h3>
   <p style="color:var(--muted);margin-bottom:14px">Saldo atual: <b style="color:var(--green)">${saldoItem(it.id)} ${esc(it.unidade_medida)}</b></p>
   <div class="field"><label>Quantidade (${esc(it.unidade_medida)})</label><input id="aj-qtd" type="number" min="0.01" step="0.01"></div>
   <div class="field"><label>Motivo / observação (opcional)</label><input id="aj-motivo" placeholder="ex.: ajuste de inventário, perda, doação"></div>
@@ -1545,7 +1542,7 @@ function modalAjusteBau(itemId,tipo){
   <button class="btn btn-primary" onclick="salvarAjusteBau('${itemId}','${tipo}')">Confirmar</button></div>`);
 }
 async function salvarAjusteBau(itemId,tipo){
-  if(!isGerente())return toast('Vendedores não podem realizar entradas e saídas avulsas.');
+  if(!isGerente())return toast('⚠️ Vendedores não podem realizar entradas e saídas avulsas.');
   const it=db.itens.find(i=>i.id===itemId);if(!it)return;
   const qtd=parseFloat(document.getElementById('aj-qtd').value);
   const motivo=document.getElementById('aj-motivo').value.trim();
@@ -1556,15 +1553,15 @@ async function salvarAjusteBau(itemId,tipo){
   const operacaoId=await nextOpId();
   const mv={operacao_id:operacaoId,item_id:itemId,tipo_movimento:tipo==='entrada'?'ajuste_entrada':'ajuste_saida',quantidade:qtd,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome,origem:(motivo||'ajuste manual')+' — por '+sessionUser().nome,saldo_resultante:tipo==='entrada'?saldoAnt+qtd:saldoAnt-qtd};
   const{data,error}=await sb.from('estoque_bau').insert(mv).select().single();
-  if(error)return toast('Erro ao registrar movimentação: '+error.message);
+  if(error)return toast('⚠️ Erro ao registrar movimentação: '+error.message);
   db.estoque_bau.unshift({...data,quantidade:Number(data.quantidade),saldo_resultante:Number(data.saldo_resultante)});
   reg(tipo==='entrada'?'Ajuste de estoque (+)':'Ajuste de estoque (−)',`${it.nome}: ${tipo==='entrada'?'+':'−'}${qtd} ${it.unidade_medida}${motivo?' — '+motivo:''}`);
-  closeModal();toast('Movimentação registrada no Baú.');render();
+  closeModal();toast('✅ Movimentação registrada no Baú.');render();
 }
 
 /* ================= PRODUÇÃO ================= */
 function modalReceita(id){
-  if(!isGerente())return toast('Apenas Gerentes, Diretores ou Sócios podem criar ou editar receitas.');
+  if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem criar ou editar receitas.');
   const r=id?db.receitas.find(x=>x.id===id):null;
   const ins=r?(r.insumos||[]):[];
   const usados=new Set(ins.map(x=>x.item_id));
@@ -1572,10 +1569,10 @@ function modalReceita(id){
   const cons=ins.filter(x=>x.papel==='consumo'),prod=ins.filter(x=>x.papel==='produzido');
   openModal(`<h3>${r?'Editar receita':'Nova receita'}</h3>
   <div class="field"><label>Nome da receita</label><input id="r-nome" value="${r?esc(r.nome):''}"></div>
-  <div class="section-title" style="margin-top:8px;color:var(--warning-light)">Bloco 1 — Itens utilizados (insumos consumidos do Baú)</div>
+  <div class="section-title" style="margin-top:8px;color:var(--warning-light)">⬇️ Bloco 1 — Itens utilizados (insumos consumidos do Baú)</div>
   <div id="r-cons">${cons.map(ri=>linhaReceita(ri,itensSel,'cons')).join('')}</div>
   <button class="btn btn-ghost btn-sm" onclick="addLinhaReceita('cons')">+ Adicionar insumo</button>
-  <div class="section-title" style="margin-top:16px;color:var(--green)">Bloco 2 — Itens produzidos (entram no Baú)</div>
+  <div class="section-title" style="margin-top:16px;color:var(--green)">⬆️ Bloco 2 — Itens produzidos (entram no Baú)</div>
   <div id="r-prod">${prod.map(ri=>linhaReceita(ri,itensSel,'prod')).join('')}</div>
   <button class="btn btn-ghost btn-sm" onclick="addLinhaReceita('prod')">+ Adicionar item produzido</button>
   <p style="color:var(--muted);font-size:12px;margin-top:8px">Se o bloco 2 ficar vazio, a receita é de <b>Produto Final</b> (apenas deduz insumos).</p>
@@ -1603,7 +1600,7 @@ function addLinhaReceita(tipo){
   document.getElementById(tipo==='cons'?'r-cons':'r-prod').appendChild(d.firstElementChild);
 }
 async function salvarReceita(id){
-  if(!isGerente())return toast('Apenas Gerentes, Diretores ou Sócios podem criar ou editar receitas.');
+  if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem criar ou editar receitas.');
   const nome=document.getElementById('r-nome').value.trim();
   const e=document.getElementById('r-err');
   const fail=m=>{e.textContent=m;e.style.display='block'};
@@ -1635,20 +1632,20 @@ async function salvarReceita(id){
   if(id){const i=db.receitas.findIndex(x=>x.id===id);db.receitas[i]={...db.receitas[i],nome,insumos:insumosLocal}}
   else db.receitas.push({id:receitaId,nome,ordem:novaOrdem,status:'ativo',criado_em:nowISO(),criado_por:sessionUser().id,insumos:insumosLocal});
   reg(id?'Receita editada':'Receita criada',nome);
-  closeModal();toast('Receita salva.');render();
+  closeModal();toast('✅ Receita salva.');render();
 }
 async function delReceita(id){
   const r=db.receitas.find(x=>x.id===id);if(!r)return;
   confirmar('Excluir receita',`A receita "${r.nome}" será removida. Confirmar?`,async()=>{
     const{error}=await sb.from('receitas').delete().eq('id',id);
-    if(error)return toast('Erro ao excluir: '+error.message);
+    if(error)return toast('⚠️ Erro ao excluir: '+error.message);
     db.receitas=db.receitas.filter(x=>x.id!==id);
     reg('Receita excluída',r.nome);render();
   });
 }
 function excluirReceita(id){
-  if(!isSocioOuDiretor())return toast('Apenas Sócio ou Diretor podem excluir linhas de cadastro.');
-  if((db.receitas.find(x=>x.id===id)||{}).status==='ativo')return toast('Inative o cadastro (Desativar) antes de excluir.');
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir linhas de cadastro.');
+  if((db.receitas.find(x=>x.id===id)||{}).status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');
   delReceita(id);
 }
 function execProducao(rid){
@@ -1672,8 +1669,8 @@ function atualizarPreviaProducao(rid){
   const max=falt.length?Math.min(...falt.map(x=>Math.floor(saldoItem(x.it.id)/x.ri.quantidade))):null;
   const el=document.getElementById('prod-previa');if(!el)return;
   el.innerHTML=`<div class="card" style="padding:12px;margin-top:10px"><b>Resumo da produção</b>
-    <div style="margin-top:8px;color:var(--warning-light)"><b>Insumos consumidos</b>${cons.map(x=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span>−${x.ri.quantidade*q} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div>—</div>'}</div>
-    <div style="margin-top:8px;color:var(--green)"><b>Itens produzidos</b>${prd.map(x=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span>+${x.ri.quantidade*q} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div>Produto final — não entra no Baú</div>'}</div>
+    <div style="margin-top:8px;color:var(--warning-light)"><b>⬇️ Insumos consumidos</b>${cons.map(x=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span>−${x.ri.quantidade*q} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div>—</div>'}</div>
+    <div style="margin-top:8px;color:var(--green)"><b>⬆️ Itens produzidos</b>${prd.map(x=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span>+${x.ri.quantidade*q} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div>Produto final — não entra no Baú</div>'}</div>
     ${falt.length?`<div style="color:var(--danger);margin-top:10px">Saldo insuficiente. Quantidade máxima possível: <b>${Math.max(0,max)}</b>.</div>${blocoCascata(rid,q)}`:''}</div>`;
 }
 
@@ -1717,14 +1714,14 @@ function blocoCascata(rid,q){
   if(!pl.possivel)return `<div style="margin-top:10px;font-size:12px;color:var(--muted)">Nem com produção em cascata é possível: falta${pl.faltas.length>1?'m':''} ${pl.faltas.map(f=>`<b style="color:var(--danger)">${fmtQtd(f.falta)} ${esc(f.it.unidade_medida)} de ${esc(f.it.nome)}</b>`).join(', ')} (compre antes de produzir).</div>`;
   return `<div style="margin-top:12px;padding:10px;border:1px dashed var(--purple);border-radius:8px">
     <div style="font-size:13px">É possível produzir em <b>cascata</b>: ${pl.passos.length-1} produção(ões) anterior(es) geram os insumos que faltam.</div>
-    <button class="btn btn-purple btn-sm" style="margin-top:8px" onclick="revisarCascata('${rid}')">Ver produção em cascata</button></div>`;
+    <button class="btn btn-purple btn-sm" style="margin-top:8px" onclick="revisarCascata('${rid}')">🔗 Ver produção em cascata</button></div>`;
 }
 function fmtQtd(n){return Number(n.toFixed(4)).toLocaleString('pt-BR')}
 function revisarCascata(rid){
   const q=Math.max(1,parseInt(document.getElementById('prod-qtd')?.value)||1);
   const pl=planejarCascata(rid,q);
-  if(!pl.possivel||!pl.temCascata)return toast('A produção em cascata não é possível com o saldo atual.');
-  openModal2(`<h3>Produção em cascata</h3>
+  if(!pl.possivel||!pl.temCascata)return toast('⚠️ A produção em cascata não é possível com o saldo atual.');
+  openModal2(`<h3>🔗 Produção em cascata</h3>
     <p class="muted" style="font-size:12px;margin-bottom:10px">As produções serão feitas nesta ordem, numa única operação. Confira antes de confirmar.</p>
     <div class="resumo">${pl.passos.map((p,i)=>`
       <div class="rs-sec">${i+1}. ${esc(p.r.nome)} × ${p.qtd}${i===pl.passos.length-1?' <span style="color:var(--green)">(pedida)</span>':''}</div>
@@ -1736,11 +1733,11 @@ function revisarCascata(rid){
     <button class="btn btn-primary" id="btn-conf-cascata" onclick="confirmarCascata('${rid}',${q})">Confirmar produção em cascata</button></div>`);
 }
 async function confirmarCascata(rid,q){
-  if(!isGerente())return toast('Apenas Gerente, Diretor ou Sócio podem produzir.');
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem produzir.');
   const pl=planejarCascata(rid,q);
-  if(!pl.possivel)return toast('O saldo mudou e a cascata não é mais possível. Revise a produção.');
+  if(!pl.possivel)return toast('⚠️ O saldo mudou e a cascata não é mais possível. Revise a produção.');
   const btn=document.getElementById('btn-conf-cascata');if(btn){btn.disabled=true;btn.textContent='Produzindo…'}
-  let opId;try{opId=await nextOpId()}catch(e){if(btn){btn.disabled=false;btn.textContent='Confirmar produção em cascata'}return toast('Erro ao gerar ID: '+(e.message||e))}
+  let opId;try{opId=await nextOpId()}catch(e){if(btn){btn.disabled=false;btn.textContent='Confirmar produção em cascata'}return toast('⚠️ Erro ao gerar ID: '+(e.message||e))}
   const alvo=pl.passos[pl.passos.length-1].r.nome,saldo={},movimentos=[];
   pl.passos.forEach(p=>p.mov.forEach(m=>{
     if(saldo[m.it.id]===undefined)saldo[m.it.id]=saldoItem(m.it.id);
@@ -1751,10 +1748,10 @@ async function confirmarCascata(rid,q){
   }));
   // um único insert: ou grava a cascata inteira, ou nada
   const{data,error}=await sb.from('estoque_bau').insert(movimentos).select();
-  if(error){if(btn){btn.disabled=false;btn.textContent='Confirmar produção em cascata'}return toast('Erro ao gravar a produção: '+error.message)}
+  if(error){if(btn){btn.disabled=false;btn.textContent='Confirmar produção em cascata'}return toast('⚠️ Erro ao gravar a produção: '+error.message)}
   data.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
   reg('Produção em cascata',`${alvo} × ${q} — ID ${opId} — ${pl.passos.map(p=>p.r.nome+' ×'+p.qtd).join(' → ')}`);
-  closeModal2();closeModal();toast('Produção em cascata executada.');render();
+  closeModal2();closeModal();toast('✅ Produção em cascata executada.');render();
 }
 async function confirmarProducao(rid){
   const r=db.receitas.find(x=>x.id===rid);if(!r)return;
@@ -1779,7 +1776,7 @@ async function confirmarProducao(rid){
   const{data,error}=await sb.from('estoque_bau').insert(movimentos).select();
   if(error){err.textContent='Erro ao gravar produção: '+error.message;err.style.display='block';return}
   data.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
-  reg('Produção executada',`${r.nome} — ID ${producaoId} — quantidade ${q}`);closeModal();toast('Produção executada.');render();
+  reg('Produção executada',`${r.nome} — ID ${producaoId} — quantidade ${q}`);closeModal();toast('✅ Produção executada.');render();
 }
 
 /* ================= COMPRAS ================= */
@@ -1810,13 +1807,13 @@ function celFornCompra(p,itemId,fornId,fornNome){
     :`<input class="cp-forn-txt" data-combo="fornecedores" autocomplete="off" placeholder="Fornecedor" value="${esc(fornNome||'')}">`;
 }
 function celPrecoCompra(p,itemId,preco){
-  return itemId?`<span class="cp-preco-fixo" title="Valor do fornecedor para este item (Configurações › Fornecedores)"><b>${preco!==''&&preco!=null?fmt(preco):'—'}</b></span>`
+  return itemId?`<span class="cp-preco-fixo" title="Valor do fornecedor para este item (Configurações › Fornecedores)">🔒 <b>${preco!==''&&preco!=null?fmt(preco):'—'}</b></span>`
     :`<input class="cp-preco" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${preco??''}" oninput="aoEditarValorCompra(this,'preco','${p}')">`;
 }
 /* Subtotal: Automático = travado (quantidade × valor do fornecedor); Manual = digitável.
    Manual: quantidade + valor unitário → calcula o subtotal; quantidade + subtotal → calcula o valor unitário. */
 function celSubCompra(p,itemId,sub){
-  return itemId?`<span class="cp-preco-fixo cp-sub-fixo" title="Quantidade × valor do fornecedor"><b>—</b></span>`
+  return itemId?`<span class="cp-preco-fixo cp-sub-fixo" title="Quantidade × valor do fornecedor">🔒 <b>—</b></span>`
     :`<input class="cp-sub" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${sub??''}" oninput="aoEditarValorCompra(this,'sub','${p}')">`;
 }
 const arred2=v=>Math.round(v*100)/100;
@@ -1968,7 +1965,7 @@ function fornSselExtra(sel,q){
   const vinc=new Set(db.fornecedor_itens.filter(x=>x.item_id===itemId).map(x=>x.fornecedor_id));
   const livres=db.fornecedores.filter(f=>f.status==='ativo'&&!vinc.has(f.id)&&(!t||sselNorm(f.nome).includes(t))).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   const existe=q&&db.fornecedores.find(f=>sselNorm(f.nome)===sselNorm(q));
-  return (livres.length?`<div class="ssel-grp">Vincular fornecedor já cadastrado</div><div class="ssel-vinc">${livres.map(f=>`<button type="button" class="ssel-op ssel-vinc-op" onclick="vincularFornecedorExistente('${f.id}')">${esc(f.nome)}</button>`).join('')}</div>`:'')
+  return (livres.length?`<div class="ssel-grp">Vincular fornecedor já cadastrado</div><div class="ssel-vinc">${livres.map(f=>`<button type="button" class="ssel-op ssel-vinc-op" onclick="vincularFornecedorExistente('${f.id}')">🔗 ${esc(f.nome)}</button>`).join('')}</div>`:'')
     +(existe?'':`<button type="button" class="ssel-add" onclick="cadastrarFornecedorAtalho(${esc(JSON.stringify(q))})">+ Cadastrar novo fornecedor${q?' “'+esc(q)+'”':''}</button>`);
 }
 /* Vincula um fornecedor existente ao item da linha: pede só o valor do item nesse fornecedor */
@@ -1987,11 +1984,11 @@ function vincularFornecedorExistente(fid){
 async function salvarVinculoFornecedor(){
   const v=_vincPend;if(!v)return;
   const preco=parseFloat(document.getElementById('vinc-preco').value);
-  if(!(preco>0))return toast('Informe o valor do item neste fornecedor.');
+  if(!(preco>0))return toast('⚠️ Informe o valor do item neste fornecedor.');
   const btn=document.getElementById('btn-vinc');btn.disabled=true;
   const{data,error}=await sb.from('fornecedor_itens').insert({fornecedor_id:v.fid,item_id:v.itemId,preco_unitario:preco}).select().single();
   btn.disabled=false;
-  if(error)return toast('Não foi possível vincular: '+error.message);
+  if(error)return toast('⚠️ Não foi possível vincular: '+error.message);
   db.fornecedor_itens.push({...(data||{fornecedor_id:v.fid,item_id:v.itemId}),preco_unitario:preco});
   _vincPend=null;closeModal2();
   const p=v.linha.parentElement.id.replace(/-linhas$/,''),f=db.fornecedores.find(x=>x.id===v.fid),it=db.itens.find(x=>x.id===v.itemId);
@@ -2002,7 +1999,7 @@ async function salvarVinculoFornecedor(){
   });
   v.linha.classList.remove('linha-erro');recalcCompra(p);
   reg('Fornecedor vinculado a item',`${f?f.nome:''} — ${it?it.nome:''} — ${fmt(preco)}`);
-  toast('"'+(f?f.nome:'')+'" vinculado e escolhido.');
+  toast('✅ "'+(f?f.nome:'')+'" vinculado e escolhido.');
 }
 function cadastrarFornecedorAtalho(nome){
   const sel=_sselAberto;sselFechar();if(!sel)return;
@@ -2016,7 +2013,7 @@ function cadastrarFornecedorAtalho(nome){
       const fs=r.querySelector('.cp-forn'),v=r===linha?f.id:fs.value;
       fs.innerHTML=fornOptionsHTML(itemId,v);fs.value=v;aoTrocarFornCompra(fs,p);
     });
-    linha.classList.remove('linha-erro');recalcCompra(p);toast('Fornecedor "'+f.nome+'" vinculado e selecionado.');
+    linha.classList.remove('linha-erro');recalcCompra(p);toast('✅ Fornecedor "'+f.nome+'" vinculado e selecionado.');
   }});
 }
 /* Resumo minimalista antes de registrar */
@@ -2067,14 +2064,14 @@ async function efetivarCompra(){
   });
   if(movimentos.length){
     const{data:bd,error:e3}=await sb.from('estoque_bau').insert(movimentos).select();
-    if(e3)toast('Compra salva, mas houve erro ao lançar no Baú: '+e3.message);
+    if(e3)toast('⚠️ Compra salva, mas houve erro ao lançar no Baú: '+e3.message);
     else bd.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
   }
   const k={...kRow,itens:(itd||[]).map(i=>({item_id:i.item_id,nome:i.nome,quantidade:Number(i.quantidade),preco_unitario:Number(i.preco_unitario),fornecedor_id:i.fornecedor_id,fornecedor_nome:i.fornecedor_nome})),valor_total:Number(kRow.valor_total)};
   db.compras.unshift(k);
   reg('Compra registrada',`${k.fornecedor_nome} — ${fmt(f.total)}${movimentos.length?` (${movimentos.length} insumo(s) entraram no Baú)`:''}`);
   _compraPendente=null;closeModal2();bauTela=null;
-  toast('Compra registrada!'+(movimentos.length?' Entrada de insumos no Baú.':''));
+  toast('✅ Compra registrada!'+(movimentos.length?' Entrada de insumos no Baú.':''));
   render();
 }
 /* ================= TELAS DE COMPRA E PRODUÇÃO (dentro do Baú) ================= */
@@ -2088,8 +2085,8 @@ function telaProducao(){
 function fecharTelaBau(){bauTela=null;render()}
 function telaCompraHTML(c){
  c.innerHTML=`
-  <h2 class="page-title">Registrar compra${ajuda('Registro de despesa e entrada de insumos no Baú.')}</h2>
-  <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">Voltar ao Baú</button>
+  <h2 class="page-title">🚚 Registrar compra${ajuda('Registro de despesa e entrada de insumos no Baú.')}</h2>
+  <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">← Voltar ao Baú</button>
   <div class="card cmp-card">
     <div class="row2">
       <div class="field"><label>Data</label><input id="c-data" type="date" value="${todayISO()}"></div>
@@ -2103,8 +2100,8 @@ function telaProducaoHTML(c){
  const ger=isGerente();
  const recs=[...db.receitas].filter(r=>r.status==='ativo').sort((a,b)=>(a.ordem||99)-(b.ordem||99));
  c.innerHTML=`
-  <h2 class="page-title">Produzir${ajuda('Selecione uma receita e execute a produção. Fichas em escala reduzida.')}</h2>
-  <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">Voltar ao Baú</button>
+  <h2 class="page-title">🏭 Produzir${ajuda('Selecione uma receita e execute a produção. Fichas em escala reduzida.')}</h2>
+  <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">← Voltar ao Baú</button>
   <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">
     ${recs.map(r=>{
       const ins=(r.insumos||[]).filter(x=>x.papel==='consumo').map(ri=>({ri,it:db.itens.find(i=>i.id===ri.item_id)}));
@@ -2112,9 +2109,9 @@ function telaProducaoHTML(c){
       return`<div class="card" style="padding:14px">
         <b style="font-size:14px">${esc(r.nome)}</b>
         <div style="font-size:11px;margin-top:8px">
-          <div style="font-weight:700;margin-bottom:3px;color:var(--warning-light)">Consome</div>
+          <div style="font-weight:700;margin-bottom:3px;color:var(--warning-light)">⬇️ Consome</div>
           ${ins.map(x=>`<div style="display:flex;justify-content:space-between;padding:2px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span style="color:var(--muted)">−${x.ri.quantidade} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div class="muted">—</div>'}
-          <div style="font-weight:700;margin:8px 0 3px;color:var(--green)">Produz</div>
+          <div style="font-weight:700;margin:8px 0 3px;color:var(--green)">⬆️ Produz</div>
           ${prd.map(x=>`<div style="display:flex;justify-content:space-between;padding:2px 0"><span>${x.it?esc(x.it.nome):'?'}</span><span style="color:var(--muted)">+${x.ri.quantidade} ${x.it?esc(x.it.unidade_medida):''}</span></div>`).join('')||'<div class="muted">Produto final</div>'}
         </div>
         <button class="btn btn-primary btn-sm" style="margin-top:12px;width:100%;justify-content:center" onclick="execProducao('${r.id}')">▶ Produzir</button>
@@ -2197,8 +2194,8 @@ function linhasFinanceiro(){
 function caixaAtualValor(){return db.vendas.filter(v=>v.status==='ativa').reduce((s,v)=>s+(v.receita_loja||0),0)-db.compras.filter(k=>k.status==='ativa').reduce((s,k)=>s+(k.valor_total||0),0)+(db.ajustes_caixa||[]).filter(a=>(a.status||'ativa')==='ativa').reduce((s,a)=>s+(a.tipo==='entrada'?a.valor:-a.valor),0)}
 function acoesFin(r){
   const ajuste=r.tipo==='ajuste',id=ajuste?r.a.id:(r.tipo==='venda'?r.v.id:r.k.id);
-  if(r.status==='ativa'||r.status==='pendente')return `<button class="iconbtn acao" title="Editar" onclick="${ajuste?`modalAjusteCaixa('${r.a.tipo}','${id}')`:r.tipo==='venda'?`editVendaFin('${id}')`:`editCompraFin('${id}')`}">Editar</button><button class="iconbtn acao" title="Reverter" onclick="reverterFin('${r.tipo}','${r.id}')">Reverter</button>`;
-  return isSocioOuDiretor()?`<button class="iconbtn acao acao-del" title="Apagar linha" onclick="apagarFin('${r.tipo}','${r.id}')">Apagar</button>`:'';
+  if(r.status==='ativa'||r.status==='pendente')return `<button class="iconbtn" title="Editar" onclick="${ajuste?`modalAjusteCaixa('${r.a.tipo}','${id}')`:r.tipo==='venda'?`editVendaFin('${id}')`:`editCompraFin('${id}')`}">✏️</button><button class="iconbtn" title="Reverter" onclick="reverterFin('${r.tipo}','${r.id}')">↩️</button>`;
+  return isSocioOuDiretor()?`<button class="iconbtn" title="Apagar linha" onclick="apagarFin('${r.tipo}','${r.id}')">🗑️</button>`:'';
 }
 function renderFinanceiro(c){
  const todas=linhasFinanceiro();
@@ -2244,9 +2241,9 @@ function renderFinanceiro(c){
     <div class="sum-card"><div class="sl">Total Lançamentos</div><div class="sv">${grupos.length}</div></div>
   </div>
   <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <button class="btn btn-ghost btn-sm" onclick="modalColunasFin()">Colunas</button>
+    <button class="btn btn-ghost btn-sm" onclick="modalColunasFin()">▦ Colunas</button>
     ${contadorFiltro('financeiro',grupos.length,todas.filter(r=>!r.pai).length)}
-    ${ger?`<button class="btn btn-export btn-sm" onclick="exportarRegistros('financeiro')">Exportar CSV</button>`:``}
+    ${ger?`<button class="btn btn-export btn-sm" onclick="exportarRegistros('financeiro')">⬇ Exportar CSV</button>`:``}
     ${botaoExcluirSel('financeiro')}
   </div>
   <div class="table-wrap"><table>
@@ -2257,10 +2254,10 @@ function renderFinanceiro(c){
 }
 /* Ajuste manual de caixa (Gerente+): entrada/saída direta, sem venda ou compra por trás */
 function modalAjusteCaixa(tipo,id){
-  if(!isGerente())return toast('Apenas Gerentes, Diretores ou Sócios podem ajustar o caixa.');
+  if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem ajustar o caixa.');
   const a=id?db.ajustes_caixa.find(x=>x.id===id):null;
   const caixaAtual=caixaAtualValor();
-  openModal(`<h3>${a?'Editar ajuste de caixa':tipo==='entrada'?'Entrada avulsa — Caixa':'Saída avulsa — Caixa'}</h3>
+  openModal(`<h3>${a?'✏️ Editar ajuste de caixa':tipo==='entrada'?'➕ Entrada avulsa — Caixa':'➖ Saída avulsa — Caixa'}</h3>
   <p style="color:var(--muted);margin-bottom:14px">Saldo atual: <b style="color:var(--green)">${fmt(caixaAtual)}</b></p>
   ${a?`<div class="field"><label>Tipo</label><select id="ac-tipo"><option value="entrada" ${a.tipo==='entrada'?'selected':''}>Entrada (+)</option><option value="saida" ${a.tipo==='saida'?'selected':''}>Saída (−)</option></select></div>`:''}
   <div class="field"><label>Valor ($)</label><input id="ac-valor" type="number" min="0.01" step="0.01" value="${a?a.valor:''}"></div>
@@ -2270,7 +2267,7 @@ function modalAjusteCaixa(tipo,id){
   <button class="btn btn-primary" onclick="salvarAjusteCaixa('${tipo}','${id||''}')">${a?'Salvar':'Confirmar'}</button></div>`);
 }
 async function salvarAjusteCaixa(tipo,id){
-  if(!isGerente())return toast('Apenas Gerentes, Diretores ou Sócios podem ajustar o caixa.');
+  if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem ajustar o caixa.');
   const valor=parseFloat(document.getElementById('ac-valor').value);
   const motivo=document.getElementById('ac-motivo').value.trim();
   const e=document.getElementById('ac-err');
@@ -2282,25 +2279,25 @@ async function salvarAjusteCaixa(tipo,id){
     if(error){e.textContent='Erro ao salvar: '+error.message;e.style.display='block';return}
     Object.assign(a,{tipo:novoTipo,valor,motivo});
     reg('Ajuste de caixa editado',(novoTipo==='entrada'?'+':'−')+fmt(valor)+(motivo?' — '+motivo:''));
-    closeModal();toast('Ajuste atualizado.');render();return;
+    closeModal();toast('✅ Ajuste atualizado.');render();return;
   }
   const registro={tipo,valor,motivo,usuario_id:sessionUser().id,usuario_nome:sessionUser().nome};
   const{data,error}=await sb.from('ajustes_caixa').insert(registro).select().single();
   if(error){e.textContent='Erro ao salvar: '+error.message;e.style.display='block';return}
   db.ajustes_caixa.unshift({...data,valor:Number(data.valor)});
   reg(tipo==='entrada'?'Ajuste de caixa (+)':'Ajuste de caixa (−)',fmt(valor)+(motivo?' — '+motivo:''));
-  closeModal();toast('Caixa ajustado.');render();
+  closeModal();toast('✅ Caixa ajustado.');render();
 }
 function excluirAjusteCaixa(id){
-  if(!isSocioOuDiretor())return toast('Apenas Sócio ou Diretor podem excluir ajustes de caixa.');
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir ajustes de caixa.');
   const a=db.ajustes_caixa.find(x=>x.id===id);if(!a)return;
-  if((a.status||'ativa')!=='revertida')return toast('Reverta o ajuste antes de excluir.');
+  if((a.status||'ativa')!=='revertida')return toast('⚠️ Reverta o ajuste antes de excluir.');
   confirmar('Excluir ajuste de caixa','O lançamento será removido definitivamente do caixa. Confirmar?',async()=>{
     const{error}=await sb.from('ajustes_caixa').delete().eq('id',id);
-    if(error)return toast('Erro ao excluir: '+error.message);
+    if(error)return toast('⚠️ Erro ao excluir: '+error.message);
     db.ajustes_caixa=db.ajustes_caixa.filter(x=>x.id!==id);
     reg('Ajuste de caixa excluído',fmt(a.valor));
-    render();toast('Ajuste excluído.');
+    render();toast('✅ Ajuste excluído.');
   });
 }
 /* Reverter: só muda o status (sem estorno no Baú). Vale para venda, compra e ajuste de caixa. */
@@ -2310,7 +2307,7 @@ function reverterFin(tipo,id){
  const realId=id.slice(id.indexOf(':')+1);
  confirmar('Reverter lançamento','O registro será marcado como revertido e sairá dos totais'+(tipo==='ajuste'?' e do caixa':'')+'. Confirmar?',async()=>{
   const{error}=await sb.from(FIN_TABELA[tipo]).update({status:'revertida'}).eq('id',realId);
-  if(error)return toast('Erro ao reverter: '+error.message);
+  if(error)return toast('⚠️ Erro ao reverter: '+error.message);
   const o=db[FIN_LISTA[tipo]].find(x=>x.id===realId);
   if(o){o.status='revertida';reg(FIN_NOME[tipo]+' revertida',fmt(o.total??o.valor_total??o.valor))}
   render();
@@ -2318,18 +2315,18 @@ function reverterFin(tipo,id){
 }
 /* Apagar: exclui a linha por completo — só permitido se status = revertida */
 function apagarFin(tipo,id){
- if(!isSocioOuDiretor())return toast('Apenas Sócio ou Diretor podem apagar linhas.');
+ if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem apagar linhas.');
  const realId=id.slice(id.indexOf(':')+1);
  const obj=db[FIN_LISTA[tipo]].find(x=>x.id===realId);
  if(!obj)return;
- if((obj.status||'ativa')!=='revertida')return toast('Só é possível apagar linhas com status "revertida".');
+ if((obj.status||'ativa')!=='revertida')return toast('⚠️ Só é possível apagar linhas com status "revertida".');
  confirmar('Apagar linha','A linha será excluída por completo do histórico. Confirmar?',async()=>{
   const{error}=await sb.from(FIN_TABELA[tipo]).delete().eq('id',realId);
-  if(error)return toast('Erro ao apagar: '+error.message);
+  if(error)return toast('⚠️ Erro ao apagar: '+error.message);
   db[FIN_LISTA[tipo]]=db[FIN_LISTA[tipo]].filter(x=>x.id!==realId);
   selExclusao.financeiro.delete(id);
   reg('Lançamento apagado',tipo+' '+realId);
-  render();toast('Linha apagada.');
+  render();toast('✅ Linha apagada.');
  });
 }
 /* Editar venda: itens/quantidades, parceria, deslocamento, entrada e repasse */
@@ -2391,7 +2388,7 @@ async function salvarEdicaoVendaFin(id){
  Object.assign(v,patch);
  v.itens=itd.map(i=>({produto_id:i.produto_id,nome:i.nome,qtd:Number(i.qtd),preco_unit:Number(i.preco_unit),rateio:i.rateio}));
  reg('Venda editada',itens.length+' item(ns) — entrada '+fmt(entrada)+', repasse '+fmt(repasse));
- closeModal();render();toast('Venda atualizada.');
+ closeModal();render();toast('✅ Venda atualizada.');
 }
 /* Editar compra: mesmas duas seções da Nova compra. Não refaz as entradas no Baú. */
 function editCompraFin(id){
@@ -2435,7 +2432,7 @@ async function salvarEdicaoCompraFin(id){
  }
  Object.assign(k,patch);
  reg('Compra editada',k.fornecedor_nome+' — '+fmt(k.valor_total));
- closeModal();render();toast('Compra atualizada.');
+ closeModal();render();toast('✅ Compra atualizada.');
 }
 
 /* ================= CONFIGURAÇÕES ================= */
@@ -2460,7 +2457,7 @@ function usuariosOrdenados(){return [...db.usuarios].sort((a,b)=>(PERFIL_NIVEL[b
 function cfgUsuarios(b){
   const T='cfg_usuarios',F=tabelaFiltravel(T,usuariosOrdenados,{nome:u=>u.nome,usuario:u=>u.usuario||'—',perfil:u=>PERFIL_LABEL[u.perfil]||u.perfil,status:u=>u.status,primeiro_acesso:u=>primeiroAcessoFeito(u)?'Feito':'Pendente',data:u=>u.criado_em});
   b.innerHTML=`${avisoPedidosSenha()}<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">Usuários${ajuda('Sócio gerencia todos os perfis, incluindo outros Sócios. Diretor tem as mesmas permissões do Sócio, exceto que não pode alterar, ativar/inativar, excluir ou promover ninguém ao perfil Sócio. Gerentes podem cadastrar vendedores. Ninguém altera o próprio perfil. Deve existir sempre ao menos um sócio ativo.')}</div>
+    <div class="section-title" style="margin:0">👥 Usuários${ajuda('Sócio gerencia todos os perfis, incluindo outros Sócios. Diretor tem as mesmas permissões do Sócio, exceto que não pode alterar, ativar/inativar, excluir ou promover ninguém ao perfil Sócio. Gerentes podem cadastrar vendedores. Ninguém altera o próprio perfil. Deve existir sempre ao menos um sócio ativo.')}</div>
     <button class="btn btn-purple btn-sm" onclick="modalUsuario()">+ Novo usuário</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr>${thCol(T,'nome','Nome')}${thCol(T,'usuario','Usuário')}${thCol(T,'perfil','Perfil')}${thCol(T,'status','Status')}${thCol(T,'primeiro_acesso','Primeiro acesso')}${thCol(T,'data','Criado em')}<th>Ações</th></tr>
@@ -2469,28 +2466,28 @@ function cfgUsuarios(b){
     const ehUltimoSocio=u.perfil==='socio'&&u.status==='ativo'&&sociosAtivos<=1;
     const ped=pedidoSenhaDe(u.id),podeU=podeGerenciarUsuario(u)&&u.id!==session.usuario_id;
     return`<tr class="${ped?'linha-pedido-senha':''}${u.status!=='ativo'?' linha-inativa':''}">
-    <td><b>${esc(u.nome)}</b>${u.id===session.usuario_id?' <span class="tag">você</span>':''}${ped?`<br><span class="tag y" title="Pedido feito na tela de login">pediu nova senha · ${dataHoraBR(ped.criado_em)}</span>`:''}</td>
+    <td><b>${esc(u.nome)}</b>${u.id===session.usuario_id?' <span class="tag">você</span>':''}${ped?`<br><span class="tag y" title="Pedido feito na tela de login">🔑 pediu nova senha · ${dataHoraBR(ped.criado_em)}</span>`:''}</td>
     <td style="color:var(--muted)">${esc(u.usuario||'—')}</td>
     <td><span class="badge ${u.perfil}">${PERFIL_LABEL[u.perfil]||u.perfil}</span></td>
     <td><span class="badge ${u.status==='ativo'?'ativo':'inativo'}">${u.status}</span></td>
-    <td>${primeiroAcessoFeito(u)?`<span class="tag g" title="${u.ultimo_login?'Último acesso: '+dataHoraBR(u.ultimo_login):'Já criou a própria senha'}">Feito</span>`:`<span class="tag y" title="Ainda não entrou para criar a própria senha">Pendente</span>`}</td>
+    <td>${primeiroAcessoFeito(u)?`<span class="tag g" title="${u.ultimo_login?'Último acesso: '+dataHoraBR(u.ultimo_login):'Já criou a própria senha'}">✅ Feito</span>`:`<span class="tag y" title="Ainda não entrou para criar a própria senha">⏳ Pendente</span>`}</td>
     <td style="color:var(--muted)">${dataHoraBR(u.criado_em)}</td>
-    <td><button class="iconbtn acao" title="${ped&&podeU?'Editar e definir a senha nova':'Editar'}" onclick="modalUsuario('${u.id}')">Editar</button>${ped&&podeU?`<button class="iconbtn" title="Dispensar o pedido (a senha continua a mesma)" onclick="dispensarPedidoSenha('${ped.id}')">✕</button>`:''}
-      ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)?`<button class="iconbtn acao" title="${u.status==='ativo'?'Inativar':'Ativar'}" onclick="toggleStatusUsuario('${u.id}')">${u.status==='ativo'?'Desativar':'Ativar'}</button>`:''}
-      ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)&&isSocioOuDiretor()&&u.status!=='ativo'?`<button class="iconbtn acao acao-del" title="Excluir linha" onclick="excluirUsuario('${u.id}')">Excluir</button>`:''}
-      ${ehUltimoSocio?'<span class="tag y" title="Deve existir ao menos um sócio ativo">último sócio</span>':''}</td>
+    <td><button class="iconbtn" title="${ped&&podeU?'Editar e definir a senha nova':'Editar'}" onclick="modalUsuario('${u.id}')">✏️</button>${ped&&podeU?`<button class="iconbtn" title="Dispensar o pedido (a senha continua a mesma)" onclick="dispensarPedidoSenha('${ped.id}')">✕</button>`:''}
+      ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)?`<button class="iconbtn" title="${u.status==='ativo'?'Inativar':'Ativar'}" onclick="toggleStatusUsuario('${u.id}')">${u.status==='ativo'?'⏸️':'▶️'}</button>`:''}
+      ${u.id!==session.usuario_id&&podeGerenciarUsuario(u)&&isSocioOuDiretor()&&u.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirUsuario('${u.id}')">🗑️</button>`:''}
+      ${ehUltimoSocio?'<span class="tag y" title="Deve existir ao menos um sócio ativo">🔒 último sócio</span>':''}</td>
   </tr>`}).join('')||linhaSemResultado(7,T)}</table></div>`;
 }
 /* ---- Pedidos de nova senha (feitos na tela de login) ----
    Não existe senha padrão: quem esqueceu pede na tela de login, o pedido destaca a linha da pessoa em Usuários
-   e alguém com permissão edita o usuário (Editar) e define uma senha nova. A pessoa troca no primeiro acesso. */
+   e alguém com permissão edita o usuário (✏️) e define uma senha nova. A pessoa troca no primeiro acesso. */
 /* Primeiro acesso feito = a pessoa já entrou e criou a própria senha (sem troca obrigatória pendente).
    Depois que alguém define uma senha nova para ela, volta a ficar pendente até ela entrar e trocar. */
 function primeiroAcessoFeito(u){return !u.troca_senha_obrigatoria}
 function pedidoSenhaDe(uid){return (db.pedidos_senha||[]).find(p=>p.usuario_id===uid)}
 function avisoPedidosSenha(){
   const n=(db.pedidos_senha||[]).length;if(!n)return '';
-  return `<div class="alert-banner aviso-pedido-senha" style="margin-bottom:14px"><b>${n} pedido(s) de nova senha.</b> A linha da pessoa está destacada abaixo: toque em Editar, digite uma senha nova, salve e passe a senha para ela. No primeiro acesso ela cria a própria senha.</div>`;
+  return `<div class="alert-banner aviso-pedido-senha" style="margin-bottom:14px">🔑 <b>${n} pedido(s) de nova senha.</b> A linha da pessoa está destacada abaixo: toque em ✏️, digite uma senha nova, salve e passe a senha para ela. No primeiro acesso ela cria a própria senha.</div>`;
 }
 function dispensarPedidoSenha(pid){
   const x=(db.pedidos_senha||[]).find(p=>p.id===pid);if(!x)return;
@@ -2500,7 +2497,7 @@ function dispensarPedidoSenha(pid){
 }
 async function resolverPedidoSenha(x,status){
   const{error}=await sb.from('solicitacoes_senha').update({status,resolvido_em:nowISO(),resolvido_por:session.usuario_id,resolvido_por_nome:sessionUser().nome}).eq('id',x.id);
-  if(error)toast('Erro ao atualizar o pedido: '+error.message);
+  if(error)toast('⚠️ Erro ao atualizar o pedido: '+error.message);
   db.pedidos_senha=db.pedidos_senha.filter(p=>p.id!==x.id);render();
 }
 function podeGerenciarUsuario(alvo){
@@ -2514,7 +2511,7 @@ function podeGerenciarUsuario(alvo){
 }
 function modalUsuario(id){
   const u=id?db.usuarios.find(x=>x.id===id):null;
-  if(u&&!podeGerenciarUsuario(u))return toast('Você não tem permissão para editar '+PERFIL_LABEL[u.perfil]+'.');
+  if(u&&!podeGerenciarUsuario(u))return toast('⚠️ Você não tem permissão para editar '+PERFIL_LABEL[u.perfil]+'.');
   const sociosAtivos=db.usuarios.filter(x=>x.perfil==='socio'&&x.status==='ativo').length;
   const ehUltimoSocio=u&&u.perfil==='socio'&&u.status==='ativo'&&sociosAtivos<=1;
   const alvoEhSocio=u&&u.perfil==='socio';
@@ -2522,7 +2519,7 @@ function modalUsuario(id){
   const podePerfil=u&&u.id!==session.usuario_id&&!ehUltimoSocio&&(isSocio()||(isDiretor()&&!alvoEhSocio));
   const ped=u?pedidoSenhaDe(u.id):null;
   openModal(`<h3>${u?'Editar usuário':'Novo usuário'}</h3>
-  ${ped?`<div class="alert-banner aviso-pedido-senha" style="margin-bottom:14px"><b>${esc(u.nome)}</b> pediu nova senha em ${dataHoraBR(ped.criado_em)}. Digite uma senha nova abaixo, salve e passe para a pessoa. No primeiro acesso ela cria a própria senha.</div>`:''}
+  ${ped?`<div class="alert-banner aviso-pedido-senha" style="margin-bottom:14px">🔑 <b>${esc(u.nome)}</b> pediu nova senha em ${dataHoraBR(ped.criado_em)}. Digite uma senha nova abaixo, salve e passe para a pessoa. No primeiro acesso ela cria a própria senha.</div>`:''}
   <div class="field"><label>Nome</label><input id="u-nome" value="${u?esc(u.nome):''}"></div>
   <div class="row2">
     <div class="field"><label>Nome de usuário (login)</label><input id="u-usuario" value="${u?esc(u.usuario||''):''}" placeholder="ex.: joao.silva"></div>
@@ -2598,26 +2595,26 @@ async function salvarUsuario(id){
 }
 async function toggleStatusUsuario(id){
   const u=db.usuarios.find(x=>x.id===id);if(!u)return;
-  if(u.id===session.usuario_id)return toast('Você não pode inativar a sua própria conta.');
-  if(!podeGerenciarUsuario(u))return toast('Você não tem permissão para alterar '+PERFIL_LABEL[u.perfil]+'.');
+  if(u.id===session.usuario_id)return toast('⚠️ Você não pode inativar a sua própria conta.');
+  if(!podeGerenciarUsuario(u))return toast('⚠️ Você não tem permissão para alterar '+PERFIL_LABEL[u.perfil]+'.');
   if(u.perfil==='socio'&&u.status==='ativo'){
     const sociosAtivos=db.usuarios.filter(x=>x.perfil==='socio'&&x.status==='ativo').length;
-    if(sociosAtivos<=1)return toast('Deve existir ao menos um sócio ativo.');
+    if(sociosAtivos<=1)return toast('⚠️ Deve existir ao menos um sócio ativo.');
   }
   const novo=u.status==='ativo'?'inativo':'ativo';
   const{error}=await sb.from('profiles').update({status:novo}).eq('id',id);
-  if(error)return toast('Erro ao alterar status: '+error.message);
+  if(error)return toast('⚠️ Erro ao alterar status: '+error.message);
   u.status=novo;
   reg('Usuário '+(u.status==='ativo'?'ativado':'inativado'),u.nome);
   render();
 }
 function excluirUsuario(id){
-  if(!isSocioOuDiretor())return toast('Apenas Sócio ou Diretor podem excluir linhas.');
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir linhas.');
   const u=db.usuarios.find(x=>x.id===id);if(!u)return;
-  if(!podeGerenciarUsuario(u))return toast('Apenas o Sócio pode excluir uma conta de Sócio.');
-  if(u.status==='ativo')return toast('Para excluir, o usuário deve estar inativo primeiro.');
+  if(!podeGerenciarUsuario(u))return toast('⚠️ Apenas o Sócio pode excluir uma conta de Sócio.');
+  if(u.status==='ativo')return toast('⚠️ Para excluir, o usuário deve estar inativo primeiro.');
   confirmar('Excluir linha de usuário',`"${u.nome}" será removido definitivamente. O histórico comercial será preservado. Confirmar?`,async()=>{
-    try{await chamarAdminUsers({action:'delete_auth_user',targetUserId:id})}catch(err){return toast('Erro ao excluir: '+err.message)}
+    try{await chamarAdminUsers({action:'delete_auth_user',targetUserId:id})}catch(err){return toast('⚠️ Erro ao excluir: '+err.message)}
     db.usuarios=db.usuarios.filter(x=>x.id!==id);
     reg('Usuário excluído',u.nome);
     render();
@@ -2627,7 +2624,7 @@ function excluirUsuario(id){
 function cfgProdutos(b){
   const T='cfg_produtos',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.produtos]),{nome:p=>p.nome,preco:p=>fmt(p.preco),rateio:p=>p.rateio,status:p=>p.status,data:p=>p.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">Catálogo de Venda (PDV)</div>
+    <div class="section-title" style="margin:0">🏷️ Catálogo de Venda (PDV)</div>
     <button class="btn btn-purple btn-sm" onclick="modalProduto()">+ Novo produto</button></div>
   <div class="card" style="margin-bottom:16px;max-width:420px">
     <label>Alíquota global de rateio (% repassado ao vendedor, itens "Padrão")</label>
@@ -2644,19 +2641,19 @@ function cfgProdutos(b){
     <td class="money">${fmt(p.preco)}</td><td><span class="tag">${esc(p.rateio)}</span></td>
     <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(p.criado_em)}</td>
-    <td><button class="iconbtn acao" onclick="modalProduto('${p.id}')">Editar</button>
-      <button class="iconbtn acao" onclick="toggleProduto('${p.id}')">${p.status==='ativo'?'Desativar':'Ativar'}</button>
-      ${isSocioOuDiretor()&&p.status!=='ativo'?`<button class="iconbtn acao acao-del" title="Excluir linha" onclick="excluirProduto('${p.id}')">Excluir</button>`:''}</td>
+    <td><button class="iconbtn" onclick="modalProduto('${p.id}')">✏️</button>
+      <button class="iconbtn" onclick="toggleProduto('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>
+      ${isSocioOuDiretor()&&p.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirProduto('${p.id}')">🗑️</button>`:''}</td>
   </tr>`).join('')||linhaSemResultado(8,T)}</table></div>`;
 }
 async function salvarAliquotaGlobal(){
   const g=parseFloat(document.getElementById('al-global').value);
-  if(!(g>=0&&g<=100))return toast('Alíquota deve estar entre 0 e 100.');
+  if(!(g>=0&&g<=100))return toast('⚠️ Alíquota deve estar entre 0 e 100.');
   const{error}=await sb.from('configuracoes').update({aliquota_global:g}).eq('id',1);
-  if(error)return toast('Erro ao salvar: '+error.message);
+  if(error)return toast('⚠️ Erro ao salvar: '+error.message);
   db.aliquota_global=g;
   reg('Alíquota global alterada',g+'%');
-  toast('Alíquota global atualizada.');render();
+  toast('✅ Alíquota global atualizada.');render();
 }
 function modalProduto(id){
   const p=id?db.produtos.find(x=>x.id===id):null;
@@ -2685,7 +2682,7 @@ function modalProduto(id){
 }
 function pImgTmp(input){
   const f=input.files[0];if(!f)return;
-  if(!['image/png','image/jpeg','image/webp'].includes(f.type))return toast('Formato inválido. Use PNG, JPG ou WebP.');
+  if(!['image/png','image/jpeg','image/webp'].includes(f.type))return toast('⚠️ Formato inválido. Use PNG, JPG ou WebP.');
   window._pImgFile=f;
   const r=new FileReader();
   r.onload=()=>{document.getElementById('p-img-prev').innerHTML=`<img src="${r.result}" style="width:100%;height:100%;object-fit:cover">`};
@@ -2719,16 +2716,16 @@ async function toggleProduto(id){
   const p=db.produtos.find(x=>x.id===id);
   const novo=p.status==='ativo'?'inativo':'ativo';
   const{error}=await sb.from('produtos').update({status:novo}).eq('id',id);
-  if(error)return toast('Erro: '+error.message);
+  if(error)return toast('⚠️ Erro: '+error.message);
   p.status=novo;reg('Produto '+(novo==='ativo'?'ativado':'inativado'),p.nome);render();
 }
 function excluirProduto(id){
-  if(!isSocioOuDiretor())return toast('Apenas Sócio ou Diretor podem excluir linhas de cadastro.');
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir linhas de cadastro.');
   const p=db.produtos.find(x=>x.id===id);if(!p)return;
-  if(p.status==='ativo')return toast('Inative o cadastro (Desativar) antes de excluir.');
+  if(p.status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');
   confirmar('Excluir produto',`"${p.nome}" será removido do catálogo. Vendas antigas permanecem no histórico. Confirmar?`,async()=>{
     const{error}=await sb.from('produtos').delete().eq('id',id);
-    if(error)return toast('Erro ao excluir: '+error.message);
+    if(error)return toast('⚠️ Erro ao excluir: '+error.message);
     db.produtos=db.produtos.filter(x=>x.id!==id);
     reg('Produto excluído',p.nome);
     render();
@@ -2740,32 +2737,32 @@ function cfgItens(b){
   const T='cfg_itens',F=tabelaFiltravel(T,itensOrdenados,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
   const TC='cfg_categorias',FC=tabelaFiltravel(TC,()=>ordenarPorOrdem([...db.categorias]),{nome:c=>c.nome,estoque:c=>sn(c.controla_estoque),compravel:c=>sn(c.compravel),receitas:c=>sn(c.aparece_receitas),itens:c=>String(db.itens.filter(i=>i.categoria===c.codigo).length),data:c=>c.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">Cadastro Central de Itens</div>
+    <div class="section-title" style="margin:0">📦 Cadastro Central de Itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalItem()">+ Novo item</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
   ${F.rows.map(i=>{const s=saldoItem(i.id);const alerta=i.qtd_minima>0&&controlaEstoque(i.categoria)&&s<=i.qtd_minima;return`<tr class="${i.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverItem',i.id)}
-    <td><b>${esc(i.nome)}</b>${alerta?' <span class="tag r">no mínimo</span>':''}</td>
+    <td><b>${esc(i.nome)}</b>${alerta?' <span class="tag r">⚠️ no mínimo</span>':''}</td>
     <td><span class="tag">${catNome(i.categoria)}</span></td>
     <td style="color:var(--muted)">${esc(i.unidade_medida)}</td>
     <td>${i.qtd_minima||0}</td>
     <td>${!controlaEstoque(i.categoria)?'<span style="color:var(--muted)">n/a</span>':s}</td>
     <td><span class="badge ${i.status==='ativo'?'ativo':'inativo'}">${i.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(i.criado_em)}</td>
-    <td><button class="iconbtn acao" onclick="modalItem('${i.id}')">Editar</button>
-      <button class="iconbtn acao" onclick="toggleItem('${i.id}')">${i.status==='ativo'?'Desativar':'Ativar'}</button>
-      ${isSocioOuDiretor()&&i.status!=='ativo'?`<button class="iconbtn acao acao-del" title="Excluir linha" onclick="excluirItem('${i.id}')">Excluir</button>`:''}</td>
+    <td><button class="iconbtn" onclick="modalItem('${i.id}')">✏️</button>
+      <button class="iconbtn" onclick="toggleItem('${i.id}')">${i.status==='ativo'?'⏸️':'▶️'}</button>
+      ${isSocioOuDiretor()&&i.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
   </tr>`}).join('')||linhaSemResultado(9,T)}</table></div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
-    <div class="section-title" style="margin:0">Categorias de itens${ajuda('Controle de estoque: itens entram no Baú. Pode ser comprada: itens aparecem em "Insumos" na compra e podem ser vinculados a fornecedores (exige controle de estoque). Aparece nas Receitas: itens aparecem na lista das Receitas.')}</div>
+    <div class="section-title" style="margin:0">🏷️ Categorias de itens${ajuda('Controle de estoque: itens entram no Baú. Pode ser comprada: itens aparecem em "Insumos" na compra e podem ser vinculados a fornecedores (exige controle de estoque). Aparece nas Receitas: itens aparecem na lista das Receitas.')}</div>
     <button class="btn btn-purple btn-sm" onclick="modalCategoria()">+ Nova categoria</button></div>
   ${FC.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(TC,'nome','Categoria')}${thCol(TC,'estoque','Controle de estoque')}${thCol(TC,'compravel','Pode ser comprada')}${thCol(TC,'receitas','Aparece nas Receitas')}${thCol(TC,'itens','Itens')}${thCol(TC,'data','Cadastrado em')}<th>Ações</th></tr>
   ${FC.rows.map(c=>{const n=db.itens.filter(i=>i.categoria===c.codigo).length;return`<tr>
     ${setasOrdem('moverCategoria',c.codigo)}<td><b>${esc(c.nome)}</b></td><td>${simNao(c.controla_estoque)}</td><td>${simNao(c.compravel)}</td><td>${simNao(c.aparece_receitas)}</td>
     <td>${n}</td><td style="color:var(--muted)">${dataHoraBR(c.criado_em)}</td>
-    <td><button class="iconbtn acao" onclick="modalCategoria('${esc(c.codigo)}')">Editar</button>${isSocioOuDiretor()?`<button class="iconbtn acao acao-del" title="Excluir categoria" onclick="excluirCategoria('${esc(c.codigo)}')">Excluir</button>`:''}</td>
+    <td><button class="iconbtn" onclick="modalCategoria('${esc(c.codigo)}')">✏️</button>${isSocioOuDiretor()?`<button class="iconbtn" title="Excluir categoria" onclick="excluirCategoria('${esc(c.codigo)}')">🗑️</button>`:''}</td>
   </tr>`}).join('')||linhaSemResultado(8,TC)}</table></div>`;
 }
 function simNao(v){return `<span class="tag ${v?'g':''}">${v?'Sim':'Não'}</span>`}
@@ -2783,39 +2780,39 @@ function modalCategoria(codigo){
   <button class="btn btn-purple" onclick="salvarCategoria('${c?esc(c.codigo):''}')">Salvar</button></div>`);
 }
 async function salvarCategoria(codigo){
-  if(!isGerente())return toast('Apenas Gerente, Diretor ou Sócio podem cadastrar categorias.');
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem cadastrar categorias.');
   const c=codigo?db.categorias.find(x=>x.codigo===codigo):null;
   const nome=document.getElementById('cat-nome').value.trim();
   const estoque=document.getElementById('cat-estoque').checked;
   const campos={compravel:document.getElementById('cat-compravel').checked,aparece_receitas:document.getElementById('cat-receitas').checked};
-  if(!nome)return toast('Informe o nome da categoria.');
-  if(db.categorias.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.codigo!==codigo))return toast('Já existe uma categoria com esse nome.');
+  if(!nome)return toast('⚠️ Informe o nome da categoria.');
+  if(db.categorias.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.codigo!==codigo))return toast('⚠️ Já existe uma categoria com esse nome.');
   Object.assign(campos,{nome,controla_estoque:estoque});
   if(c&&c.controla_estoque&&!estoque){
     const ids=db.itens.filter(i=>i.categoria===c.codigo).map(i=>i.id);
-    if(db.estoque_bau.some(m=>ids.includes(m.item_id)))return toast('Não é possível desligar o controle de estoque: há itens desta categoria com movimentações no Baú.');
+    if(db.estoque_bau.some(m=>ids.includes(m.item_id)))return toast('⚠️ Não é possível desligar o controle de estoque: há itens desta categoria com movimentações no Baú.');
   }
   if(c){
     const{error}=await sb.from('categorias_itens').update(campos).eq('codigo',c.codigo);
-    if(error)return toast('Erro ao salvar: '+error.message);
+    if(error)return toast('⚠️ Erro ao salvar: '+error.message);
     Object.assign(c,campos);reg('Categoria editada',c.nome);
   }else{
     let cod=slugCategoria(nome),n=2;while(db.categorias.some(x=>x.codigo===cod))cod=slugCategoria(nome)+'_'+(n++);
     const ordem=Math.max(0,...db.categorias.map(x=>x.ordem||0))+1;
     const{data,error}=await sb.from('categorias_itens').insert({codigo:cod,ordem,...campos}).select().single();
-    if(error)return toast('Erro ao salvar: '+error.message);
+    if(error)return toast('⚠️ Erro ao salvar: '+error.message);
     db.categorias.push(data);reg('Categoria criada',nome);
   }
   closeModal();render();
 }
 function excluirCategoria(codigo){
-  if(!isSocioOuDiretor())return toast('Apenas Sócio ou Diretor podem excluir categorias.');
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir categorias.');
   const c=db.categorias.find(x=>x.codigo===codigo);if(!c)return;
   const n=db.itens.filter(i=>i.categoria===codigo).length;
-  if(n)return toast('Não é possível excluir "'+c.nome+'": há '+n+' item(ns) nesta categoria. Mude a categoria deles antes.');
+  if(n)return toast('⚠️ Não é possível excluir "'+c.nome+'": há '+n+' item(ns) nesta categoria. Mude a categoria deles antes.');
   confirmar('Excluir categoria','A categoria "'+c.nome+'" será removida. Confirmar?',async()=>{
     const{error}=await sb.from('categorias_itens').delete().eq('codigo',codigo);
-    if(error)return toast('Erro ao excluir: '+error.message);
+    if(error)return toast('⚠️ Erro ao excluir: '+error.message);
     db.categorias=db.categorias.filter(x=>x.codigo!==codigo);reg('Categoria excluída',c.nome);render();
   });
 }
@@ -2844,23 +2841,23 @@ function modalItem(id,opts){
 }
 function fecharModalItem(){_itemAtalho=null;closeModal2()}
 async function salvarItem(id){
-  if(!isGerente())return toast('Apenas Gerente, Diretor ou Sócio podem cadastrar itens.');
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem cadastrar itens.');
   const nome=document.getElementById('i-nome').value.trim();
   const cat=document.getElementById('i-cat').value;
   const un=document.getElementById('i-un').value.trim()||'un';
   const min=parseFloat(document.getElementById('i-min').value)||0;
-  if(!nome)return toast('Informe o nome do item.');
-  if(!cat)return toast('Selecione a categoria do item.');
-  if(db.itens.some(x=>x.id!==id&&sselNorm(x.nome)===sselNorm(nome)))return toast('Já existe um item com esse nome no cadastro.');
+  if(!nome)return toast('⚠️ Informe o nome do item.');
+  if(!cat)return toast('⚠️ Selecione a categoria do item.');
+  if(db.itens.some(x=>x.id!==id&&sselNorm(x.nome)===sselNorm(nome)))return toast('⚠️ Já existe um item com esse nome no cadastro.');
   const campos={nome,categoria:cat,unidade_medida:un,qtd_minima:min};
   if(id){
     const{error}=await sb.from('itens').update(campos).eq('id',id);
-    if(error)return toast('Erro ao salvar: '+error.message);
+    if(error)return toast('⚠️ Erro ao salvar: '+error.message);
     Object.assign(db.itens.find(x=>x.id===id),campos);reg('Item editado',nome);
   }else{
     campos.ordem=Math.max(0,...db.itens.map(x=>x.ordem||0))+1;
     const{data,error}=await sb.from('itens').insert(campos).select().single();
-    if(error)return toast('Erro ao salvar: '+error.message);
+    if(error)return toast('⚠️ Erro ao salvar: '+error.message);
     db.itens.push({...data,qtd_minima:Number(data.qtd_minima)});reg('Item criado',nome);id=data.id;
   }
   if(_itemAtalho){const cb=_itemAtalho;fecharModalItem();cb(db.itens.find(x=>x.id===id));return}
@@ -2870,7 +2867,7 @@ async function toggleItem(id){
   const it=db.itens.find(x=>x.id===id);
   const novo=it.status==='ativo'?'inativo':'ativo';
   const{error}=await sb.from('itens').update({status:novo}).eq('id',id);
-  if(error)return toast('Erro: '+error.message);
+  if(error)return toast('⚠️ Erro: '+error.message);
   it.status=novo;reg('Item '+(novo==='ativo'?'ativado':'inativado'),it.nome);render();
 }
 /* Consulta no banco (não no cache local) tudo que ainda referencia o item e impede a exclusão */
@@ -2889,16 +2886,16 @@ async function vinculosDoItem(id){
   return motivos;
 }
 function excluirItem(id){
-  if(!isSocioOuDiretor())return toast('Apenas Sócio ou Diretor podem excluir linhas de cadastro.');
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir linhas de cadastro.');
   const it=db.itens.find(x=>x.id===id);if(!it)return;
-  if(it.status==='ativo')return toast('Inative o cadastro (Desativar) antes de excluir.');
+  if(it.status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');
   confirmar('Excluir item',`"${it.nome}" será removido do cadastro. Só é possível excluir se o item não estiver em receitas, compras ou movimentações do Baú. Confirmar?`,async()=>{
     let motivos;
-    try{motivos=await vinculosDoItem(id)}catch(e){return toast('Erro ao verificar vínculos: '+(e.message||e))}
-    if(motivos.length)return toast('Não é possível excluir "'+it.nome+'": '+motivos.join('; ')+'.');
+    try{motivos=await vinculosDoItem(id)}catch(e){return toast('⚠️ Erro ao verificar vínculos: '+(e.message||e))}
+    if(motivos.length)return toast('⚠️ Não é possível excluir "'+it.nome+'": '+motivos.join('; ')+'.');
     const{data,error}=await sb.from('itens').delete().eq('id',id).select('id');
-    if(error)return toast('Erro ao excluir: '+error.message);
-    if(!data||!data.length)return toast('O item não foi excluído (sem permissão ou já removido). Recarregue a página.');
+    if(error)return toast('⚠️ Erro ao excluir: '+error.message);
+    if(!data||!data.length)return toast('⚠️ O item não foi excluído (sem permissão ou já removido). Recarregue a página.');
     db.itens=db.itens.filter(x=>x.id!==id);
     db.fornecedor_itens=db.fornecedor_itens.filter(x=>x.item_id!==id);
     reg('Item excluído',it.nome);
@@ -2913,7 +2910,7 @@ function cfgReceitas(b){
     consome:r=>(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'—',
     produz:r=>(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">Receitas de Produção${ajuda('A ordem definida aqui é a ordem em que as receitas aparecem na tela de produção do Baú.')}</div>
+    <div class="section-title" style="margin:0">🏭 Receitas de Produção${ajuda('A ordem definida aqui é a ordem em que as receitas aparecem na tela de produção do Baú.')}</div>
     <button class="btn btn-purple btn-sm" onclick="modalReceita()">+ Nova receita</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Receita')}${thCol(T,'consome','Consome')}${thCol(T,'produz','Produz')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
@@ -2927,16 +2924,16 @@ function cfgReceitas(b){
     <td style="color:var(--muted);font-size:12px">${prd.map(x=>nm(x.item_id)+' ×'+x.quantidade).join(', ')||'produto final'}</td>
     <td><span class="badge ${r.status==='ativo'?'ativo':'inativo'}">${r.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(r.criado_em)}</td>
-    <td><button class="iconbtn acao" onclick="modalReceita('${r.id}')">Editar</button>
-      <button class="iconbtn acao" onclick="toggleReceita('${r.id}')">${r.status==='ativo'?'Desativar':'Ativar'}</button>
-      ${isSocioOuDiretor()&&r.status!=='ativo'?`<button class="iconbtn acao acao-del" title="Excluir linha" onclick="excluirReceita('${r.id}')">Excluir</button>`:''}</td>
+    <td><button class="iconbtn" onclick="modalReceita('${r.id}')">✏️</button>
+      <button class="iconbtn" onclick="toggleReceita('${r.id}')">${r.status==='ativo'?'⏸️':'▶️'}</button>
+      ${isSocioOuDiretor()&&r.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirReceita('${r.id}')">🗑️</button>`:''}</td>
   </tr>`}).join('')||linhaSemResultado(7,T)}</table></div>`;
 }
 async function toggleReceita(id){
   const r=db.receitas.find(x=>x.id===id);
   const novo=r.status==='ativo'?'inativo':'ativo';
   const{error}=await sb.from('receitas').update({status:novo}).eq('id',id);
-  if(error)return toast('Erro: '+error.message);
+  if(error)return toast('⚠️ Erro: '+error.message);
   r.status=novo;reg('Receita '+(novo==='ativo'?'ativada':'inativada'),r.nome);render();
 }
 /* ---- Fornecedores ---- */
@@ -2950,7 +2947,7 @@ function fornecedoresDoItem(itemId){
 function cfgFornecedores(b){
   const T='cfg_fornecedores',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.fornecedores]),{nome:f=>f.nome,itens:f=>itensDoFornecedor(f.id).map(i=>i.nome).join(', ')||'—',status:f=>f.status,data:f=>f.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">Fornecedores${ajuda('Vincule cada fornecedor aos itens que ele fornece e informe o valor de cada item nesse fornecedor. Na compra, ao escolher o fornecedor de um item, o valor unitário vem daqui.')}</div>
+    <div class="section-title" style="margin:0">🚚 Fornecedores${ajuda('Vincule cada fornecedor aos itens que ele fornece e informe o valor de cada item nesse fornecedor. Na compra, ao escolher o fornecedor de um item, o valor unitário vem daqui.')}</div>
     <button class="btn btn-purple btn-sm" onclick="modalFornecedor()">+ Novo fornecedor</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Nome')}${thCol(T,'itens','Itens fornecidos')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
@@ -2959,8 +2956,8 @@ function cfgFornecedores(b){
     <td style="color:var(--muted);font-size:12px">${its.length?its.map(i=>{const pr=precoFornItem(f.id,i.id);return esc(i.nome)+` <b style="color:var(--text)">${pr!=null?fmt(pr):'—'}</b>`}).join(' · '):'—'}</td>
     <td><span class="badge ${f.status==='ativo'?'ativo':'inativo'}">${f.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(f.criado_em)}</td>
-    <td><button class="iconbtn acao" onclick="modalFornecedor('${f.id}')">Editar</button>
-    <button class="iconbtn acao" onclick="toggleFornecedor('${f.id}')">${f.status==='ativo'?'Desativar':'Ativar'}</button>${isSocioOuDiretor()&&f.status!=='ativo'?`<button class="iconbtn acao acao-del" title="Excluir linha" onclick="excluirFornecedor('${f.id}')">Excluir</button>`:''}</td>
+    <td><button class="iconbtn" onclick="modalFornecedor('${f.id}')">✏️</button>
+    <button class="iconbtn" onclick="toggleFornecedor('${f.id}')">${f.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()&&f.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirFornecedor('${f.id}')">🗑️</button>`:''}</td>
   </tr>`}).join('')||linhaSemResultado(6,T)}</table></div>`;
 }
 /* Atalho da compra: abre o cadastro por cima do formulário (2ª camada) e devolve o fornecedor criado */
@@ -2983,7 +2980,7 @@ function modalFornecedor(id,opts){
   <div class="field"><label>Itens fornecidos e valor de cada um neste fornecedor</label>
     <div class="msel" id="f-msel">
       <div class="fvinc" id="f-chips"></div>
-      <input id="f-busca" autocomplete="off" placeholder="Pesquisar itens…" onfocus="mselAbrir(true)" oninput="mselFiltrar(this.value)">
+      <input id="f-busca" autocomplete="off" placeholder="🔍 Pesquisar itens…" onfocus="mselAbrir(true)" oninput="mselFiltrar(this.value)">
       <div class="msel-list" id="f-itens" style="display:none">${itens.map(i=>`<label class="msel-opt" data-nome="${esc(i.nome.toLowerCase())}"><input type="checkbox" value="${i.id}" data-label="${esc(i.nome)}" ${vinculados.has(i.id)?'checked':''} onchange="mselChips()"> ${esc(i.nome)}<span class="tag">${esc(catNome(i.categoria))}</span></label>`).join('')}<div class="msel-vazio" id="f-vazio" style="display:${itens.length?'none':'block'}">${itens.length?'Nenhum item encontrado.':'Nenhum item de categoria comprável cadastrado.'}</div></div>
     </div></div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModalFornecedor()">Cancelar</button>
@@ -3023,24 +3020,24 @@ function mselDesmarcar(itemId){const c=fq(`#f-itens input[value="${itemId}"]`);i
 document.addEventListener('mousedown',e=>{const m=fq('#f-msel');if(m&&!m.contains(e.target))mselAbrir(false)});
 async function salvarFornecedor(id){
   const nome=fq('#f-nome').value.trim();
-  if(!nome)return toast('Informe o nome do fornecedor.');
-  if(db.fornecedores.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.id!==id))return toast('Já existe um fornecedor com esse nome.');
+  if(!nome)return toast('⚠️ Informe o nome do fornecedor.');
+  if(db.fornecedores.some(x=>x.nome.toLowerCase()===nome.toLowerCase()&&x.id!==id))return toast('⚠️ Já existe um fornecedor com esse nome.');
   const marcados=fqa('#f-itens input:checked').map(c=>c.value);
   const precos={};
   for(const iid of marcados){
     const v=parseFloat(_fornPrecos[iid]);
-    if(!(v>0)){const it=db.itens.find(i=>i.id===iid);const inp=fq(`.fvinc-row[data-item="${iid}"] .fvinc-preco`);if(inp){inp.classList.add('campo-erro');inp.focus()}return toast('Informe o valor de "'+(it?it.nome:'item')+'" neste fornecedor.')}
+    if(!(v>0)){const it=db.itens.find(i=>i.id===iid);const inp=fq(`.fvinc-row[data-item="${iid}"] .fvinc-preco`);if(inp){inp.classList.add('campo-erro');inp.focus()}return toast('⚠️ Informe o valor de "'+(it?it.nome:'item')+'" neste fornecedor.')}
     precos[iid]=Math.round(v*100)/100;
   }
   const campos={nome};
   let fid=id;
   if(id){
     const{error}=await sb.from('fornecedores').update(campos).eq('id',id);
-    if(error)return toast('Erro: '+error.message);
+    if(error)return toast('⚠️ Erro: '+error.message);
     Object.assign(db.fornecedores.find(x=>x.id===id),campos);reg('Fornecedor editado',nome);
   }else{
     const{data,error}=await sb.from('fornecedores').insert({...campos,ordem:proximaOrdem(db.fornecedores)}).select().single();
-    if(error)return toast('Erro: '+error.message);
+    if(error)return toast('⚠️ Erro: '+error.message);
     db.fornecedores.push(data);fid=data.id;reg('Fornecedor criado',nome);
   }
   // sincroniza vínculos com Matérias-Primas
@@ -3051,13 +3048,13 @@ async function salvarFornecedor(id){
   // grava primeiro (novos e valores alterados) e só depois remove os desmarcados: se a gravação falhar, nenhum vínculo é perdido
   if(gravar.length){
     const{data,error}=await sb.from('fornecedor_itens').upsert(gravar,{onConflict:'fornecedor_id,item_id'}).select();
-    if(error)return toast('Fornecedor salvo, mas houve erro ao gravar itens e valores: '+error.message);
+    if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao gravar itens e valores: '+error.message);
     data.forEach(d=>{const v={...d,preco_unitario:Number(d.preco_unitario)};const i=db.fornecedor_itens.findIndex(x=>x.fornecedor_id===d.fornecedor_id&&x.item_id===d.item_id);if(i>=0)db.fornecedor_itens[i]=v;else db.fornecedor_itens.push(v)});
     reg('Valores do fornecedor atualizados',nome+' — '+gravar.length+' item(ns)');
   }
   if(remover.length){
     const{error}=await sb.from('fornecedor_itens').delete().in('id',remover);
-    if(error)return toast('Fornecedor salvo, mas houve erro ao remover vínculos: '+error.message);
+    if(error)return toast('⚠️ Fornecedor salvo, mas houve erro ao remover vínculos: '+error.message);
     db.fornecedor_itens=db.fornecedor_itens.filter(x=>!remover.includes(x.id));
   }
   if(_fornAtalho){const cb=_fornAtalho;_fornAtalho=null;closeModal2();cb(db.fornecedores.find(x=>x.id===fid));return}
@@ -3067,7 +3064,7 @@ async function toggleFornecedor(id){
   const f=db.fornecedores.find(x=>x.id===id);
   const novo=f.status==='ativo'?'inativo':'ativo';
   const{error}=await sb.from('fornecedores').update({status:novo}).eq('id',id);
-  if(error)return toast('Erro: '+error.message);
+  if(error)return toast('⚠️ Erro: '+error.message);
   f.status=novo;render();
 }
 /* ---- Descontos ---- */
@@ -3075,7 +3072,7 @@ function descontoResumo(p){return p.tipo==='fixa'?p.desconto_fixo+'%':(p.faixas|
 function cfgDescontos(b){
   const T='cfg_descontos',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.parcerias]),{nome:p=>p.nome,tipo:p=>p.tipo==='fixa'?'Fixa':'Escalonada',desconto:p=>descontoResumo(p),status:p=>p.status});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">Descontos Comerciais</div>
+    <div class="section-title" style="margin:0">🤝 Descontos Comerciais</div>
     <button class="btn btn-purple btn-sm" onclick="modalDescontos()">+ Novo desconto</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Nome')}${thCol(T,'tipo','Tipo')}${thCol(T,'desconto','Desconto')}${thCol(T,'status','Status')}<th>Ações</th></tr>
@@ -3084,8 +3081,8 @@ function cfgDescontos(b){
     <td><span class="tag">${p.tipo==='fixa'?'Fixa':'Escalonada'}</span></td>
     <td style="font-size:12px">${esc(descontoResumo(p))}</td>
     <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
-    <td><button class="iconbtn acao" onclick="modalDescontos('${p.id}')">Editar</button>
-      <button class="iconbtn acao" onclick="toggleDescontos('${p.id}')">${p.status==='ativo'?'Desativar':'Ativar'}</button>${isSocioOuDiretor()&&p.status!=='ativo'?`<button class="iconbtn acao acao-del" title="Excluir linha" onclick="excluirDesconto('${p.id}')">Excluir</button>`:''}</td>
+    <td><button class="iconbtn" onclick="modalDescontos('${p.id}')">✏️</button>
+      <button class="iconbtn" onclick="toggleDescontos('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()&&p.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirDesconto('${p.id}')">🗑️</button>`:''}</td>
   </tr>`).join('')||linhaSemResultado(6,T)}</table></div>`;
 }
 function modalDescontos(id){
@@ -3159,14 +3156,14 @@ async function toggleDescontos(id){
   const p=db.parcerias.find(x=>x.id===id);
   const novo=p.status==='ativo'?'inativo':'ativo';
   const{error}=await sb.from('parcerias').update({status:novo}).eq('id',id);
-  if(error)return toast('Erro: '+error.message);
+  if(error)return toast('⚠️ Erro: '+error.message);
   p.status=novo;render();
 }
 /* ---- Deslocamento (ex-Taxas + alíquota da taxa) ---- */
 function cfgDeslocamento(b){
   const T='cfg_deslocamento',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.taxas_deslocamento]),{nome:t=>t.nome,valor:t=>fmt(t.valor),status:t=>t.status});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">Deslocamento</div>
+    <div class="section-title" style="margin:0">🚗 Deslocamento</div>
     <button class="btn btn-purple btn-sm" onclick="modalTaxa()">+ Nova taxa</button></div>
   <div class="card" style="margin-bottom:16px;max-width:520px">
     <label>Alíquota da Taxa de Deslocamento (% da taxa que vai para a cota do funcionário)</label>
@@ -3180,18 +3177,18 @@ function cfgDeslocamento(b){
   ${F.rows.map(t=>`<tr class="${t.status!=='ativo'?'linha-inativa':''}">
     ${setasOrdem('moverTaxa',t.id)}<td><b>${esc(t.nome)}</b></td><td class="money">${fmt(t.valor)}</td>
     <td><span class="badge ${t.status==='ativo'?'ativo':'inativo'}">${t.status}</span></td>
-    <td><button class="iconbtn acao" onclick="modalTaxa('${t.id}')">Editar</button>
-    <button class="iconbtn acao" onclick="toggleTaxa('${t.id}')">${t.status==='ativo'?'Desativar':'Ativar'}</button>${isSocioOuDiretor()&&t.status!=='ativo'?`<button class="iconbtn acao acao-del" title="Excluir linha" onclick="excluirTaxa('${t.id}')">Excluir</button>`:''}</td>
+    <td><button class="iconbtn" onclick="modalTaxa('${t.id}')">✏️</button>
+    <button class="iconbtn" onclick="toggleTaxa('${t.id}')">${t.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()&&t.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirTaxa('${t.id}')">🗑️</button>`:''}</td>
   </tr>`).join('')||linhaSemResultado(5,T)}</table></div>`;
 }
 async function salvarAliquotaTaxa(){
   const t=parseFloat(document.getElementById('al-taxa').value);
-  if(!(t>=0&&t<=100))return toast('Alíquota deve estar entre 0 e 100.');
+  if(!(t>=0&&t<=100))return toast('⚠️ Alíquota deve estar entre 0 e 100.');
   const{error}=await sb.from('configuracoes').update({aliquota_taxa_deslocamento:t}).eq('id',1);
-  if(error)return toast('Erro ao salvar: '+error.message);
+  if(error)return toast('⚠️ Erro ao salvar: '+error.message);
   db.aliquota_taxa_deslocamento=t;
   reg('Alíquota da taxa alterada',t+'%');
-  toast('Alíquota atualizada.');render();
+  toast('✅ Alíquota atualizada.');render();
 }
 function modalTaxa(id){
   const t=id?db.taxas_deslocamento.find(x=>x.id===id):null;
@@ -3206,14 +3203,14 @@ function modalTaxa(id){
 async function salvarTaxa(id){
   const nome=document.getElementById('t-nome').value.trim();
   const valor=parseFloat(document.getElementById('t-valor').value)||0;
-  if(!nome)return toast('Informe a localidade.');
+  if(!nome)return toast('⚠️ Informe a localidade.');
   if(id){
     const{error}=await sb.from('taxas_deslocamento').update({nome,valor}).eq('id',id);
-    if(error)return toast('Erro: '+error.message);
+    if(error)return toast('⚠️ Erro: '+error.message);
     Object.assign(db.taxas_deslocamento.find(x=>x.id===id),{nome,valor});
   }else{
     const{data,error}=await sb.from('taxas_deslocamento').insert({nome,valor,ordem:proximaOrdem(db.taxas_deslocamento)}).select().single();
-    if(error)return toast('Erro: '+error.message);
+    if(error)return toast('⚠️ Erro: '+error.message);
     db.taxas_deslocamento.push({...data,valor:Number(data.valor)});
   }
   reg('Taxa de deslocamento salva',nome);
@@ -3223,7 +3220,7 @@ async function toggleTaxa(id){
   const t=db.taxas_deslocamento.find(x=>x.id===id);
   const novo=t.status==='ativo'?'inativo':'ativo';
   const{error}=await sb.from('taxas_deslocamento').update({status:novo}).eq('id',id);
-  if(error)return toast('Erro: '+error.message);
+  if(error)return toast('⚠️ Erro: '+error.message);
   t.status=novo;render();
 }
 /* ---- Registros (auditoria geral) ---- */
@@ -3232,13 +3229,13 @@ function cfgLogo(b){
   const logoRef=db.identidade_visual&&db.identidade_visual.logotipo;
   const logo=imgSrc(logoRef);
   const nome=nomeLojaAtual();
-  b.innerHTML=`<div class="section-title">Identidade Visual</div>
+  b.innerHTML=`<div class="section-title">🎨 Identidade Visual</div>
   <div class="card" style="max-width:520px">
     <div class="field"><label>Nome da loja</label>
       <input type="text" id="cfg-nome-loja" value="${esc(nome)}" maxlength="40" placeholder="Ex: BEST BUDS" oninput="previaNomeLoja()">
     </div>
     <p style="color:var(--muted);font-size:12px;margin:-6px 0 14px">Aparece no título da aba, na tela de login e no cabeçalho do sistema.</p>
-    <button class="btn btn-primary btn-sm" onclick="salvarNomeLoja()">Salvar nome da loja</button>
+    <button class="btn btn-primary btn-sm" onclick="salvarNomeLoja()">💾 Salvar nome da loja</button>
   </div>
   <div class="card" style="max-width:520px;margin-top:16px">
     <div style="text-align:center;margin-bottom:16px">
@@ -3267,19 +3264,19 @@ function cfgFundoLoginHTML(){
   const iv=db.identidade_visual,f=iv.login_fundo;
   const origem=f==='nenhuma'?'Sem imagem (só a cor do Fundo Geral)':(f?'Imagem enviada':'Imagem padrão');
   return `<div class="card" style="max-width:520px;margin-top:16px">
-    <div class="section-title" style="margin-top:0">Fundo da tela de login</div>
+    <div class="section-title" style="margin-top:0">🖼️ Fundo da tela de login</div>
     <div class="lf-previa" id="lf-previa"><div class="lf-form"><i class="t"></i><i></i><i></i><i class="b"></i></div><div class="lf-painel" id="lf-painel">${esc(nomeLojaAtual())}</div></div>
     <p class="muted" style="font-size:12px;margin:-6px 0 12px">Atual: <b>${origem}</b>. A imagem serve só de textura; ajuste o escurecimento para manter a tela legível.</p>
     <div class="drop-zone" id="lf-drop" style="padding:18px" onclick="document.getElementById('lf-file').click()">Arraste uma imagem aqui ou clique para trocar o fundo<br><small>(PNG, JPG ou WebP)</small></div>
     <input type="file" id="lf-file" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="uploadFundoLogin(this.files[0])">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px">
-      ${f?`<button class="btn btn-ghost btn-sm" onclick="salvarFundoLogin({login_fundo_url:null},'Imagem padrão restaurada')">Usar imagem padrão</button>`:''}
+      ${f?`<button class="btn btn-ghost btn-sm" onclick="salvarFundoLogin({login_fundo_url:null},'Imagem padrão restaurada')">↺ Usar imagem padrão</button>`:''}
       ${f!=='nenhuma'?`<button class="btn btn-ghost btn-sm" onclick="salvarFundoLogin({login_fundo_url:'nenhuma'},'Fundo sem imagem')">Sem imagem</button>`:''}
     </div>
     <div class="field"><label>Escurecer a imagem</label>
       <div class="lf-slider"><input type="range" id="lf-escurecer" min="0" max="95" step="1" value="${iv.login_escurecer}" oninput="previaFundoLogin()"><b id="lf-escurecer-v">${iv.login_escurecer}%</b></div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-primary btn-sm" onclick="salvarAjustesFundoLogin()">Salvar ajustes</button>
+      <button class="btn btn-primary btn-sm" onclick="salvarAjustesFundoLogin()">💾 Salvar ajustes</button>
       <button class="btn btn-ghost btn-sm" onclick="document.getElementById('lf-escurecer').value=${LOGIN_ESCURECER_PADRAO};previaFundoLogin()">Valores padrão</button>
     </div>
   </div>`;
@@ -3293,13 +3290,13 @@ function previaFundoLogin(){
   pv.style.backgroundImage=`linear-gradient(rgba(0,0,0,${e/100}),rgba(0,0,0,${e/100}))${url==='none'?'':','+url}`;
 }
 async function salvarFundoLogin(campos,msg){
-  if(!isGerente())return toast('Apenas Gerente, Diretor ou Sócio podem alterar a identidade visual.');
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem alterar a identidade visual.');
   const{error}=await sb.from('configuracoes').update({...campos,atualizado_em:nowISO()}).eq('id',1);
-  if(error)return toast('Erro ao salvar: '+error.message);
+  if(error)return toast('⚠️ Erro ao salvar: '+error.message);
   const iv=db.identidade_visual;
   if('login_fundo_url' in campos)iv.login_fundo=campos.login_fundo_url;
   if('login_fundo_escurecer' in campos)iv.login_escurecer=campos.login_fundo_escurecer;
-  aplicarFundoLogin();reg('Fundo da tela de login alterado',msg||'');toast(''+(msg||'Fundo da tela de login salvo.'));render();
+  aplicarFundoLogin();reg('Fundo da tela de login alterado',msg||'');toast('✅ '+(msg||'Fundo da tela de login salvo.'));render();
 }
 function salvarAjustesFundoLogin(){
   const e=+document.getElementById('lf-escurecer').value;
@@ -3307,25 +3304,25 @@ function salvarAjustesFundoLogin(){
 }
 async function uploadFundoLogin(file){
   if(!file)return;
-  if(!['image/png','image/jpeg','image/webp'].includes(file.type))return toast('Formato inválido. Use PNG, JPG ou WebP.');
-  if(file.size>5*1024*1024)return toast('Imagem muito grande (máx. 5 MB). Reduza o tamanho para o login carregar rápido.');
-  let url;try{url=await uploadImagem(file,'identidade')}catch(err){return toast('Erro ao enviar imagem: '+err.message)}
+  if(!['image/png','image/jpeg','image/webp'].includes(file.type))return toast('⚠️ Formato inválido. Use PNG, JPG ou WebP.');
+  if(file.size>5*1024*1024)return toast('⚠️ Imagem muito grande (máx. 5 MB). Reduza o tamanho para o login carregar rápido.');
+  let url;try{url=await uploadImagem(file,'identidade')}catch(err){return toast('⚠️ Erro ao enviar imagem: '+err.message)}
   salvarFundoLogin({login_fundo_url:url},'Nova imagem de fundo');
 }
 async function uploadLogo(file){
   if(!file)return;
-  if(!['image/png','image/jpeg','image/webp'].includes(file.type))return toast('Formato inválido. Use PNG, JPG ou WebP.');
+  if(!['image/png','image/jpeg','image/webp'].includes(file.type))return toast('⚠️ Formato inválido. Use PNG, JPG ou WebP.');
   let url;
-  try{url=await uploadImagem(file,'identidade')}catch(err){return toast('Erro ao enviar logo: '+err.message)}
+  try{url=await uploadImagem(file,'identidade')}catch(err){return toast('⚠️ Erro ao enviar logo: '+err.message)}
   const{error}=await sb.from('configuracoes').update({logotipo_url:url,atualizado_em:nowISO()}).eq('id',1);
-  if(error)return toast('Erro ao salvar: '+error.message);
+  if(error)return toast('⚠️ Erro ao salvar: '+error.message);
   db.identidade_visual.logotipo=url;
   reg('Logotipo atualizado','');
   aplicarLogo();render();
 }
 async function removerLogo(){
   const{error}=await sb.from('configuracoes').update({logotipo_url:null,atualizado_em:nowISO()}).eq('id',1);
-  if(error)return toast('Erro: '+error.message);
+  if(error)return toast('⚠️ Erro: '+error.message);
   db.identidade_visual.logotipo=null;
   reg('Logotipo removido','');
   aplicarLogo();render();
@@ -3432,33 +3429,33 @@ async function mudarCor(key,hex,commit){
     db.identidade_visual.cores=db.identidade_visual.cores||{};
     db.identidade_visual.cores[key]=hex.toUpperCase();
     const{error}=await sb.from('configuracoes').update({cores:db.identidade_visual.cores,atualizado_em:nowISO()}).eq('id',1);
-    if(error)return toast('Erro ao salvar cor: '+error.message);
+    if(error)return toast('⚠️ Erro ao salvar cor: '+error.message);
     reg('Cor da identidade visual alterada',(def?def.label:key)+' → '+hex.toUpperCase());
   }
 }
 function mudarCorTexto(key,valor){
-  if(!hexValido(valor))return toast('Informe um hex válido, ex: #8B5CF6');
+  if(!hexValido(valor))return toast('⚠️ Informe um hex válido, ex: #8B5CF6');
   mudarCor(key,valor,true);
 }
 function restaurarCor(key){const def=PALETA_DEFS.find(d=>d.key===key);if(def)mudarCor(key,def.default,true)}
 function restaurarTodasCores(){
   confirmar('Restaurar paleta padrão','Todas as cores voltarão ao padrão original do sistema. Confirmar?',async()=>{
     const{error}=await sb.from('configuracoes').update({cores:{},atualizado_em:nowISO()}).eq('id',1);
-    if(error)return toast('Erro: '+error.message);
+    if(error)return toast('⚠️ Erro: '+error.message);
     db.identidade_visual.cores={};
     reg('Paleta de cores restaurada','todas as cores voltaram ao padrão');
-    aplicarCores();closeConfirm();renderConfig(document.getElementById('main-content'));toast('Paleta restaurada ao padrão.');
+    aplicarCores();closeConfirm();renderConfig(document.getElementById('main-content'));toast('✅ Paleta restaurada ao padrão.');
   });
 }
 async function salvarNomeLoja(){
   const inp=document.getElementById('cfg-nome-loja');
   const nome=(inp?.value||'').trim();
-  if(!nome)return toast('O nome da loja não pode ficar em branco.');
+  if(!nome)return toast('⚠️ O nome da loja não pode ficar em branco.');
   const{error}=await sb.from('configuracoes').update({nome_loja:nome,atualizado_em:nowISO()}).eq('id',1);
-  if(error)return toast('Erro ao salvar: '+error.message);
+  if(error)return toast('⚠️ Erro ao salvar: '+error.message);
   db.identidade_visual.nome_loja=nome;
   reg('Nome da loja alterado',nome);
-  aplicarNomeLoja();toast('Nome da loja atualizado.');
+  aplicarNomeLoja();toast('✅ Nome da loja atualizado.');
 }
 function previaNomeLoja(){
   const inp=document.getElementById('cfg-nome-loja');
@@ -3471,8 +3468,8 @@ function previaNomeLoja(){
 function cfgPaletaHTML(){
   return `<div class="card" style="margin-top:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px">
-      <div class="section-title" style="margin:0">Paleta de Cores do Sistema${ajuda('Cada cor abaixo corresponde a um elemento específico do site. Ao alterar um hex, todos os locais que usam aquela cor mudam automaticamente em tempo real — inclusive fundos translúcidos derivados dela.')}</div>
-      <button class="btn btn-ghost btn-sm" onclick="restaurarTodasCores()">Restaurar tudo ao padrão</button>
+      <div class="section-title" style="margin:0">🎨 Paleta de Cores do Sistema${ajuda('Cada cor abaixo corresponde a um elemento específico do site. Ao alterar um hex, todos os locais que usam aquela cor mudam automaticamente em tempo real — inclusive fundos translúcidos derivados dela.')}</div>
+      <button class="btn btn-ghost btn-sm" onclick="restaurarTodasCores()">↺ Restaurar tudo ao padrão</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
     ${PALETA_DEFS.map(def=>{
@@ -3485,7 +3482,7 @@ function cfgPaletaHTML(){
         </div>
         <input type="color" id="cor-${def.key}" value="${esc(v)}" style="width:44px;height:36px;padding:2px;flex-shrink:0" oninput="mudarCor('${def.key}',this.value,false)" onchange="mudarCor('${def.key}',this.value,true)">
         <input type="text" id="cor-${def.key}-hex" value="${esc(v)}" style="width:100px;flex-shrink:0;text-align:center;font-variant-numeric:tabular-nums" maxlength="7" onchange="mudarCorTexto('${def.key}',this.value)">
-        <button class="btn btn-ghost btn-sm" title="Restaurar padrão (${esc(def.default)})" onclick="restaurarCor('${def.key}')">Padrão</button>
+        <button class="btn btn-ghost btn-sm" title="Restaurar padrão (${esc(def.default)})" onclick="restaurarCor('${def.key}')">↺</button>
       </div>`;
     }).join('')}
     </div>
@@ -3494,14 +3491,14 @@ function cfgPaletaHTML(){
 
 /* ================= EXPORTAÇÃO E EXCLUSÕES v2.4.0 ================= */
 function exportarRegistros(tipo){
- if(!isGerente())return toast('Apenas Gerentes, Diretores ou Sócios podem exportar planilhas.');
+ if(!isGerente())return toast('⚠️ Apenas Gerentes, Diretores ou Sócios podem exportar planilhas.');
  let rows=[],heads=['Módulo','Data/hora','Usuário','Descrição','Valor','Repasse','Loja','Status'];
  if(tipo==='financeiro'){
   heads=['Módulo','ID','Data/hora','Usuário','Tipo','Itens','Desconto','Deslocamento','Descrição','Entrada/Saída','Repasse','Valor','Status'];
   rows=aplicarFiltros(linhasFinanceiro(),'financeiro').map(r=>['Financeiro',r.operacao_id||'',dataHoraBR(r.data),r.usuario_nome,r.tipo_label,r.itens,r.desconto,r.deslocamento,r.descricao,r.entrada==null?'':r.entrada,r.repasse||0,r.valor==null?'':r.valor,r.status]);
  }
  if(tipo==='bau'){heads=['Módulo','Data/hora','Usuário','Item','Tipo','Quantidade','Saldo resultante','Origem','Status','ID'];rows=aplicarFiltros(db.estoque_bau.map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''})),'bau').map(m=>['Baú',dataHoraBR(m.data),m.usuario_nome||'',m.item_nome,MOV_LABEL[m.tipo_movimento]||m.tipo_movimento,m.quantidade,m.saldo_resultante||0,m.origem||'',m.status==='revertida'?'Revertida':'Ativa',m.operacao_id||''])}
- const csv=[heads.join(';')].concat(rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')));const blob=new Blob(['\ufeff'+csv.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bestbuds-'+tipo+'-'+todayISO()+'.csv';a.click();URL.revokeObjectURL(a.href);reg('Registros exportados (CSV)',tipo+' — '+rows.length+' linha(s)');toast('CSV exportado: '+rows.length+' linha(s).')
+ const csv=[heads.join(';')].concat(rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')));const blob=new Blob(['\ufeff'+csv.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bestbuds-'+tipo+'-'+todayISO()+'.csv';a.click();URL.revokeObjectURL(a.href);reg('Registros exportados (CSV)',tipo+' — '+rows.length+' linha(s)');toast('✅ CSV exportado: '+rows.length+' linha(s).')
 }
 /* Recalcula o saldo resultante de um item (ignorando revertidos). A tela recalcula na hora;
    o banco atualiza tudo numa única chamada (recalcular_saldos_bau), para não gastar uma requisição por linha
@@ -3525,20 +3522,20 @@ async function recalcularSaldosItem(itemId){
   }
 }
 async function excluirMovimentoBau(id){
-  if(!isSocioOuDiretor())return toast('Apenas Sócio ou Diretor podem excluir movimentos do Baú.');
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir movimentos do Baú.');
   const m=db.estoque_bau.find(x=>x.id===id);if(!m)return;
-  if(m.status!=='revertida')return toast('Reverta o lançamento (Reverter) antes de excluir.');
+  if(m.status!=='revertida')return toast('⚠️ Reverta o lançamento (↩️) antes de excluir.');
   confirmar('Excluir movimento do Baú','A linha será removida definitivamente e o saldo será recalculado. Confirmar?',async()=>{
     const{error}=await sb.from('estoque_bau').delete().eq('id',id);
-    if(error)return toast('Erro ao excluir: '+error.message);
+    if(error)return toast('⚠️ Erro ao excluir: '+error.message);
     db.estoque_bau=db.estoque_bau.filter(x=>x.id!==id);
     await recalcularSaldosItem(m.item_id);
     reg('Movimento do Baú excluído',m.operacao_id||m.id);render();
   });
 }
-function excluirFornecedor(id){if(!isSocioOuDiretor())return toast('Apenas Sócio ou Diretor podem excluir cadastros.');const f=db.fornecedores.find(x=>x.id===id);if(!f)return;if(f.status==='ativo')return toast('Inative o cadastro (Desativar) antes de excluir.');if(db.compras.some(k=>k.fornecedor_id===id||(k.itens||[]).some(i=>i.fornecedor_id===id)))return toast('Não é possível excluir: há compras vinculadas.');confirmar('Excluir fornecedor','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('fornecedores').delete().eq('id',id);if(error)return toast('Erro ao excluir: '+error.message);db.fornecedores=db.fornecedores.filter(x=>x.id!==id);db.fornecedor_itens=db.fornecedor_itens.filter(x=>x.fornecedor_id!==id);reg('Fornecedor excluído',f.nome);render()})}
-function excluirDesconto(id){if(!isSocioOuDiretor())return toast('Apenas Sócio ou Diretor podem excluir cadastros.');const d=db.parcerias.find(x=>x.id===id);if(!d)return;if(d.status==='ativo')return toast('Inative o cadastro (Desativar) antes de excluir.');if(db.vendas.some(v=>v.parceria_id===id))return toast('Não é possível excluir: há vendas vinculadas.');confirmar('Excluir desconto','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('parcerias').delete().eq('id',id);if(error)return toast('Erro ao excluir: '+error.message);db.parcerias=db.parcerias.filter(x=>x.id!==id);db.descontos=db.parcerias;reg('Desconto excluído',d.nome);render()})}
-function excluirTaxa(id){if(!isSocioOuDiretor())return toast('Apenas Sócio ou Diretor podem excluir cadastros.');const t=db.taxas_deslocamento.find(x=>x.id===id);if(!t)return;if(t.status==='ativo')return toast('Inative o cadastro (Desativar) antes de excluir.');if(db.vendas.some(v=>v.taxa_id===id))return toast('Não é possível excluir: há vendas vinculadas.');confirmar('Excluir deslocamento','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('taxas_deslocamento').delete().eq('id',id);if(error)return toast('Erro ao excluir: '+error.message);db.taxas_deslocamento=db.taxas_deslocamento.filter(x=>x.id!==id);reg('Deslocamento excluído',t.nome);render()})}
+function excluirFornecedor(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const f=db.fornecedores.find(x=>x.id===id);if(!f)return;if(f.status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');if(db.compras.some(k=>k.fornecedor_id===id||(k.itens||[]).some(i=>i.fornecedor_id===id)))return toast('⚠️ Não é possível excluir: há compras vinculadas.');confirmar('Excluir fornecedor','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('fornecedores').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.fornecedores=db.fornecedores.filter(x=>x.id!==id);db.fornecedor_itens=db.fornecedor_itens.filter(x=>x.fornecedor_id!==id);reg('Fornecedor excluído',f.nome);render()})}
+function excluirDesconto(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const d=db.parcerias.find(x=>x.id===id);if(!d)return;if(d.status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');if(db.vendas.some(v=>v.parceria_id===id))return toast('⚠️ Não é possível excluir: há vendas vinculadas.');confirmar('Excluir desconto','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('parcerias').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.parcerias=db.parcerias.filter(x=>x.id!==id);db.descontos=db.parcerias;reg('Desconto excluído',d.nome);render()})}
+function excluirTaxa(id){if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor podem excluir cadastros.');const t=db.taxas_deslocamento.find(x=>x.id===id);if(!t)return;if(t.status==='ativo')return toast('⚠️ Inative o cadastro (⏸️) antes de excluir.');if(db.vendas.some(v=>v.taxa_id===id))return toast('⚠️ Não é possível excluir: há vendas vinculadas.');confirmar('Excluir deslocamento','O cadastro será removido definitivamente. Confirmar?',async()=>{const{error}=await sb.from('taxas_deslocamento').delete().eq('id',id);if(error)return toast('⚠️ Erro ao excluir: '+error.message);db.taxas_deslocamento=db.taxas_deslocamento.filter(x=>x.id!==id);reg('Deslocamento excluído',t.nome);render()})}
 
 
 /* ================= FILTRO POR DROPDOWN v2.6.0 ================= */
@@ -3625,7 +3622,7 @@ function abrirFiltroFaixa(tipo,key,label,anchor){
  const marcas=hi>lo?[0,.25,.5,.75,1].map(t=>lo+(hi-lo)*t):[lo];
  const box=document.createElement('div');box.className='excel-filter-dropdown efd-faixa';
  box.dataset.lo=lo;box.dataset.hi=hi;box.dataset.moeda=num.moeda?1:'';
- box.innerHTML=`<div class="fx-topo"><div class="fx-titulo">${esc(label)}</div><button type="button" class="fx-limpar" onclick="limparFiltroColuna('${tipo}','${key}')">Limpar</button></div>
+ box.innerHTML=`<div class="fx-topo"><div class="fx-titulo">${esc(label)}</div><button type="button" class="fx-limpar" onclick="limparFiltroColuna('${tipo}','${key}')">✕ Limpar</button></div>
   ${!vals.length?'<p class="muted" style="font-size:12px">Nenhum valor para filtrar.</p>':`
   <div class="fx-campos">
     <label class="fx-campo">${num.moeda?'<span>$</span>':''}<input type="number" id="fx-min" step="${passo}" min="${lo}" max="${hi}" value="${+a.toFixed(2)}" aria-label="Valor mínimo"></label>
@@ -3698,39 +3695,39 @@ function estadoSelecao(tipo){
 function botaoExcluirSel(tipo){
   if(!podeExcluirLinhas())return '';
   const e=estadoSelecao(tipo);
-  const reverter=tipo==='financeiro'||tipo==='bau'?`<button class="btn btn-ghost btn-sm" id="btn-reverter-sel" style="${e.reverter?'':'display:none'}" onclick="${tipo==='bau'?'reverterSelecionadasBau()':'reverterSelecionadas()'}">Reverter selecionadas (${e.n})</button>`:'';
-  return `${reverter}<button class="btn btn-danger btn-sm" id="btn-excluir-sel" style="${e.excluir?'':'display:none'}" onclick="excluirSelecionadas('${tipo}')">Excluir selecionadas (${e.n})</button>`;
+  const reverter=tipo==='financeiro'||tipo==='bau'?`<button class="btn btn-ghost btn-sm" id="btn-reverter-sel" style="${e.reverter?'':'display:none'}" onclick="${tipo==='bau'?'reverterSelecionadasBau()':'reverterSelecionadas()'}">↩️ Reverter selecionadas (${e.n})</button>`:'';
+  return `${reverter}<button class="btn btn-danger btn-sm" id="btn-excluir-sel" style="${e.excluir?'':'display:none'}" onclick="excluirSelecionadas('${tipo}')">🗑️ Excluir selecionadas (${e.n})</button>`;
 }
 function atualizarBotaoExcluirSel(tipo){
   const btn=document.getElementById('btn-excluir-sel');if(!btn)return;
   const e=estadoSelecao(tipo);
-  btn.textContent='Excluir selecionadas ('+e.n+')';btn.style.display=e.excluir?'':'none';
+  btn.textContent='🗑️ Excluir selecionadas ('+e.n+')';btn.style.display=e.excluir?'':'none';
   const btnRev=document.getElementById('btn-reverter-sel');
-  if(btnRev){btnRev.textContent='Reverter selecionadas ('+e.n+')';btnRev.style.display=e.reverter?'':'none'}
+  if(btnRev){btnRev.textContent='↩️ Reverter selecionadas ('+e.n+')';btnRev.style.display=e.reverter?'':'none'}
 }
 /* Reverte de uma vez todas as vendas/compras selecionadas que ainda estejam ativas — a seleção continua marcada depois, pronta pra excluir em seguida */
 async function reverterSelecionadas(){
-  if(!isGerente())return toast('Apenas Gerente, Diretor ou Sócio podem reverter lançamentos.');
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem reverter lançamentos.');
   const ids=[...selExclusao.financeiro];
   const vendaIds=ids.filter(x=>x.startsWith('venda:')).map(x=>x.replace('venda:','')).filter(id=>{const v=db.vendas.find(x=>x.id===id);return v&&(v.status==='ativa'||v.status==='pendente')});
   const compraIds=ids.filter(x=>x.startsWith('compra:')).map(x=>x.replace('compra:','')).filter(id=>{const k=db.compras.find(x=>x.id===id);return k&&k.status==='ativa'});
   const ajusteIds=ids.filter(x=>x.startsWith('ajuste:')).map(x=>x.replace('ajuste:','')).filter(id=>{const a=db.ajustes_caixa.find(x=>x.id===id);return a&&(a.status||'ativa')==='ativa'});
   if(!vendaIds.length&&!compraIds.length&&!ajusteIds.length)return toast('ℹ️ Nada selecionado precisa ser revertido — já pode excluir.');
   confirmar('Reverter selecionadas',(vendaIds.length+compraIds.length+ajusteIds.length)+' lançamento(s) serão marcados como revertidos e sairão dos totais. Confirmar?',async()=>{
-    if(vendaIds.length){const{error}=await sb.from('vendas').update({status:'revertida'}).in('id',vendaIds);if(error)return toast('Erro ao reverter vendas: '+error.message)}
-    if(compraIds.length){const{error}=await sb.from('compras').update({status:'revertida'}).in('id',compraIds);if(error)return toast('Erro ao reverter compras: '+error.message)}
-    if(ajusteIds.length){const{error}=await sb.from('ajustes_caixa').update({status:'revertida'}).in('id',ajusteIds);if(error)return toast('Erro ao reverter ajustes: '+error.message)}
+    if(vendaIds.length){const{error}=await sb.from('vendas').update({status:'revertida'}).in('id',vendaIds);if(error)return toast('⚠️ Erro ao reverter vendas: '+error.message)}
+    if(compraIds.length){const{error}=await sb.from('compras').update({status:'revertida'}).in('id',compraIds);if(error)return toast('⚠️ Erro ao reverter compras: '+error.message)}
+    if(ajusteIds.length){const{error}=await sb.from('ajustes_caixa').update({status:'revertida'}).in('id',ajusteIds);if(error)return toast('⚠️ Erro ao reverter ajustes: '+error.message)}
     ajusteIds.forEach(id=>{const a=db.ajustes_caixa.find(x=>x.id===id);if(a)a.status='revertida'});
     vendaIds.forEach(id=>{const v=db.vendas.find(x=>x.id===id);if(v)v.status='revertida'});
     compraIds.forEach(id=>{const k=db.compras.find(x=>x.id===id);if(k)k.status='revertida'});
     reg('Reversão em lote',(vendaIds.length+compraIds.length+ajusteIds.length)+' lançamento(s)');
-    render();toast('Revertido(s). A seleção continua marcada — pode excluir agora.');
+    render();toast('✅ Revertido(s). A seleção continua marcada — pode excluir agora.');
   });
 }
 function thSelTodos(tipo,visiveis){if(!podeExcluirLinhas())return '';return `<th style="width:34px"><input type="checkbox" id="sel-todos-${tipo}" style="width:auto" title="Selecionar todas" onchange="toggleSelTodos('${tipo}',this.checked)" ${visiveis.length&&visiveis.every(r=>selExclusao[tipo].has(r.id))?'checked':''}></th>`}
 function tdSel(tipo,id){if(!podeExcluirLinhas())return '';return `<td><input type="checkbox" style="width:auto" data-sel-${tipo} value="${id}" ${selExclusao[tipo].has(id)?'checked':''} onchange="toggleSelLinha('${tipo}','${id}',this.checked)"></td>`}
 function excluirSelecionadas(tipo){
- if(!podeExcluirLinhas())return toast('Apenas Gerente, Diretor ou Sócio podem excluir linhas.');
+ if(!podeExcluirLinhas())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem excluir linhas.');
  const ids=[...(selExclusao[tipo]||[])];if(!ids.length)return;
  const nomes={vendas:'venda(s)',compras:'compra(s)',bau:'movimentação(ões)',financeiro:'lançamento(s)'};
  let idsParaExcluir=ids, bloqueadas=0;
@@ -3743,11 +3740,11 @@ function excluirSelecionadas(tipo){
      return false;
    });
    bloqueadas=ids.length-idsParaExcluir.length;
-   if(bloqueadas>0&&idsParaExcluir.length===0)return toast(''+bloqueadas+' venda(s)/compra(s) selecionada(s) ainda estão ativas — reverta antes de excluir (botão "Reverter selecionadas").');
+   if(bloqueadas>0&&idsParaExcluir.length===0)return toast('⚠️ '+bloqueadas+' venda(s)/compra(s) selecionada(s) ainda estão ativas — reverta antes de excluir (botão "↩️ Reverter selecionadas").');
  }else if(tipo==='bau'){
    idsParaExcluir=ids.filter(id=>{const m=db.estoque_bau.find(x=>x.id===id);return m&&m.status==='revertida'});
    bloqueadas=ids.length-idsParaExcluir.length;
-   if(bloqueadas>0&&idsParaExcluir.length===0)return toast('As movimentações selecionadas ainda estão ativas — reverta antes de excluir (botão "Reverter selecionadas").');
+   if(bloqueadas>0&&idsParaExcluir.length===0)return toast('⚠️ As movimentações selecionadas ainda estão ativas — reverta antes de excluir (botão "↩️ Reverter selecionadas").');
  }
  if(!idsParaExcluir.length)return;
  confirmar('Excluir selecionadas',idsParaExcluir.length+' '+nomes[tipo]+' serão removidas definitivamente.'+(bloqueadas?' ('+bloqueadas+' ficarão de fora por ainda estarem ativas — reverta-as primeiro.)':'')+' Confirmar?',async()=>{
@@ -3755,23 +3752,23 @@ function excluirSelecionadas(tipo){
   if(tipo==='bau'){
    const itensAfetados=[...new Set(db.estoque_bau.filter(m=>ids.includes(m.id)).map(m=>m.item_id))];
    const{error}=await sb.from('estoque_bau').delete().in('id',ids);
-   if(error)return toast('Erro ao excluir: '+error.message);
+   if(error)return toast('⚠️ Erro ao excluir: '+error.message);
    db.estoque_bau=db.estoque_bau.filter(x=>!ids.includes(x.id));
    for(const itemId of itensAfetados)await recalcularSaldosItem(itemId);
   }else if(tipo==='financeiro'){
    const vendaIds=ids.filter(x=>x.startsWith('venda:')).map(x=>x.replace('venda:',''));
    const compraIds=ids.filter(x=>x.startsWith('compra:')).map(x=>x.replace('compra:',''));
    const ajusteIds=ids.filter(x=>x.startsWith('ajuste:')).map(x=>x.replace('ajuste:',''));
-   if(vendaIds.length){const{error}=await sb.from('vendas').delete().in('id',vendaIds);if(error)return toast('Erro ao excluir vendas: '+error.message)}
-   if(compraIds.length){const{error}=await sb.from('compras').delete().in('id',compraIds);if(error)return toast('Erro ao excluir compras: '+error.message)}
-   if(ajusteIds.length){const{error}=await sb.from('ajustes_caixa').delete().in('id',ajusteIds);if(error)return toast('Erro ao excluir ajustes: '+error.message)}
+   if(vendaIds.length){const{error}=await sb.from('vendas').delete().in('id',vendaIds);if(error)return toast('⚠️ Erro ao excluir vendas: '+error.message)}
+   if(compraIds.length){const{error}=await sb.from('compras').delete().in('id',compraIds);if(error)return toast('⚠️ Erro ao excluir compras: '+error.message)}
+   if(ajusteIds.length){const{error}=await sb.from('ajustes_caixa').delete().in('id',ajusteIds);if(error)return toast('⚠️ Erro ao excluir ajustes: '+error.message)}
    db.vendas=db.vendas.filter(x=>!vendaIds.includes(x.id));
    db.compras=db.compras.filter(x=>!compraIds.includes(x.id));
    db.ajustes_caixa=db.ajustes_caixa.filter(x=>!ajusteIds.includes(x.id));
   }
   reg('Exclusão em lote',tipo+' — '+ids.length+' linha(s)');
   ids.forEach(id=>selExclusao[tipo].delete(id));
-  render();toast(''+ids.length+' linha(s) excluída(s).'+(bloqueadas?' '+bloqueadas+' continuam selecionadas, ainda ativas.':''));
+  render();toast('✅ '+ids.length+' linha(s) excluída(s).'+(bloqueadas?' '+bloqueadas+' continuam selecionadas, ainda ativas.':''));
  });
 }
 
@@ -3846,7 +3843,7 @@ function sselAbrir(sel){
   const nOps=visiveis.filter(x=>x.o).length;
   const extraFn=sel.dataset.sselExtra&&window[sel.dataset.sselExtra];
   const comBusca=true; // mesmo filtro em todas as listas suspensas
-  pop.innerHTML=`${comBusca?'<input class="ssel-q" placeholder="Pesquisar..." autocomplete="off">':''}<div class="ssel-ops"></div><div class="ssel-extra"></div>`;
+  pop.innerHTML=`${comBusca?'<input class="ssel-q" placeholder="🔍 Pesquisar..." autocomplete="off">':''}<div class="ssel-ops"></div><div class="ssel-extra"></div>`;
   const q=pop.querySelector('.ssel-q'),ops=pop.querySelector('.ssel-ops'),extra=pop.querySelector('.ssel-extra');
   let hl=-1,lista=[];
   const desenhar=()=>{
@@ -3894,7 +3891,7 @@ const COMBO_EXTRA={
     if(exato||!isGerente()||!inp.closest('.cmp-row'))return '';
     const ja=q&&db.itens.find(i=>sselNorm(i.nome)===sselNorm(q));
     if(ja&&ja.status!=='ativo')return`<div class="ssel-vazio">“${esc(ja.nome)}” está inativo no cadastro. Reative em Configurações › Cadastro Central de Itens.</div>`;
-    if(ja)return`<button type="button" class="ssel-add" onclick="cadastrarItemAtalho()">“${esc(ja.nome)}” é de categoria que não pode ser comprada — trocar a categoria</button>`;
+    if(ja)return`<button type="button" class="ssel-add" onclick="cadastrarItemAtalho()">✏️ “${esc(ja.nome)}” é de categoria que não pode ser comprada — trocar a categoria</button>`;
     return`<button type="button" class="ssel-add" onclick="cadastrarItemAtalho()">+ Cadastrar ${q?'item “'+esc(q)+'”':'novo item'}</button>`;
   }
 };
@@ -3904,9 +3901,9 @@ function cadastrarItemAtalho(){
   const ja=q&&db.itens.find(i=>sselNorm(i.nome)===sselNorm(q));
   modalItem(ja?ja.id:null,{nome:q,onSaved:it=>{
     if(!it)return;
-    if(!catCompravel(it.categoria)){toast('"'+it.nome+'" foi salvo, mas a categoria não pode ser comprada.');return}
+    if(!catCompravel(it.categoria)){toast('⚠️ "'+it.nome+'" foi salvo, mas a categoria não pode ser comprada.');return}
     inp.value=it.nome;aoDigitarItemCompra(inp,p);linha.classList.remove('linha-erro');
-    toast('Item "'+it.nome+'" cadastrado e escolhido.'+(fornecedoresDoItem(it.id).length?'':' Agora vincule o fornecedor e o valor na lista de Fornecedor.'));
+    toast('✅ Item "'+it.nome+'" cadastrado e escolhido.'+(fornecedoresDoItem(it.id).length?'':' Agora vincule o fornecedor e o valor na lista de Fornecedor.'));
   }});
 }
 let _comboInp=null,_comboPop=null,_comboHl=-1,_comboLista=[];
@@ -4019,7 +4016,7 @@ let _avisoImg=null;
 function escolherImagemAviso(inp){
   const f=inp.files&&inp.files[0];inp.value='';
   if(!f)return;
-  if(!['image/png','image/jpeg','image/webp'].includes(f.type))return toast('Formato inválido. Use PNG, JPG ou WebP.');
+  if(!['image/png','image/jpeg','image/webp'].includes(f.type))return toast('⚠️ Formato inválido. Use PNG, JPG ou WebP.');
   _avisoImg=f;
   const pv=document.getElementById('av-img-prev');
   pv.innerHTML=`<img src="${URL.createObjectURL(f)}" alt="Prévia da imagem"><button type="button" class="iconbtn" title="Tirar a imagem" onclick="tirarImagemAviso()">✕</button>`;pv.style.display='';
@@ -4049,7 +4046,7 @@ function mostrarAvisosPendentes(){
   if(bg.classList.contains('open'))return;
   const a=avisosNaoVistos()[0];if(!a)return;
   _avisoAtual=a.id;
-  document.getElementById('aviso-box').innerHTML=`<div class="aviso-topo">Aviso</div>
+  document.getElementById('aviso-box').innerHTML=`<div class="aviso-topo">📢 Aviso</div>
     <h3 class="aviso-titulo">${esc(a.titulo)}</h3>
     ${avisoImgHTML(a)}
     ${a.mensagem?`<div class="aviso-msg">${esc(a.mensagem)}</div>`:''}
@@ -4068,19 +4065,19 @@ async function marcarAvisoVisto(){
 }
 function modalAvisos(){
   const ger=isGerente(),lista=avisosAtivos();
-  openModal(`<h3>Avisos</h3>
+  openModal(`<h3>📢 Avisos</h3>
   ${ger?`<div class="aviso-form">
     <div class="field"><label>Título</label><input id="av-titulo" maxlength="${AVISO_TITULO_MAX}" placeholder="Ex.: Reunião hoje às 20h"></div>
     <div class="field"><label>Mensagem</label><textarea id="av-msg" rows="4" maxlength="${AVISO_MSG_MAX}" placeholder="Escreva o aviso para toda a equipe"></textarea></div>
     <div class="field"><label>Imagem (opcional)</label>
-      <label class="btn btn-ghost btn-sm aviso-img-btn">Escolher imagem<input type="file" id="av-img" accept="image/png,image/jpeg,image/webp" hidden onchange="escolherImagemAviso(this)"></label>
+      <label class="btn btn-ghost btn-sm aviso-img-btn">🖼️ Escolher imagem<input type="file" id="av-img" accept="image/png,image/jpeg,image/webp" hidden onchange="escolherImagemAviso(this)"></label>
       <div class="aviso-img-prev" id="av-img-prev" style="display:none"></div></div>
     <p class="muted" style="font-size:12px;margin:-4px 0 10px">Aparece como pop-up na tela de todos e é apagado automaticamente depois de 24 horas.</p>
     <button class="btn btn-primary" id="btn-publicar-aviso" onclick="publicarAviso()">Publicar para todos</button>
   </div>`:''}
   <div class="section-title" style="margin-top:${ger?'18px':'4px'}">Avisos das últimas 24 horas</div>
   <div class="aviso-lista">${lista.length?lista.map(a=>`<div class="aviso-item">
-      <div class="aviso-item-top"><b>${esc(a.titulo)}</b>${ger?`<button class="iconbtn acao acao-del" title="Apagar agora" onclick="apagarAviso('${a.id}')">Apagar</button>`:''}</div>
+      <div class="aviso-item-top"><b>${esc(a.titulo)}</b>${ger?`<button class="iconbtn" title="Apagar agora" onclick="apagarAviso('${a.id}')">🗑️</button>`:''}</div>
       ${avisoImgHTML(a)}
       ${a.mensagem?`<div class="aviso-msg">${esc(a.mensagem)}</div>`:''}
       <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
@@ -4093,34 +4090,34 @@ function modalAvisos(){
     sb.from('avisos_vistos').upsert(novos.map(a=>({aviso_id:a.id,usuario_id:session.usuario_id})),{onConflict:'aviso_id,usuario_id',ignoreDuplicates:true}).then(({error})=>{if(error)console.warn('[Best Buds] falha ao marcar avisos',error)})}
 }
 async function publicarAviso(){
-  if(!isGerente())return toast('Apenas Gerente, Diretor ou Sócio podem publicar avisos.');
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem publicar avisos.');
   const titulo=document.getElementById('av-titulo').value.trim(),mensagem=document.getElementById('av-msg').value.trim();
-  if(!titulo)return toast('Informe o título do aviso.');
-  if(!mensagem&&!_avisoImg)return toast('Escreva a mensagem ou coloque uma imagem no aviso.');
+  if(!titulo)return toast('⚠️ Informe o título do aviso.');
+  if(!mensagem&&!_avisoImg)return toast('⚠️ Escreva a mensagem ou coloque uma imagem no aviso.');
   const btn=document.getElementById('btn-publicar-aviso');btn.disabled=true;
   let imagem_url=null;
   if(_avisoImg){
     btn.textContent='Enviando imagem…';
     try{imagem_url=await uploadImagem(await reduzirImagem(_avisoImg,AVISO_IMG_LADO),'avisos')}
-    catch(err){btn.disabled=false;btn.textContent='Publicar para todos';return toast('Erro ao enviar a imagem: '+(err.message||err))}
+    catch(err){btn.disabled=false;btn.textContent='Publicar para todos';return toast('⚠️ Erro ao enviar a imagem: '+(err.message||err))}
   }
   const{data,error}=await sb.from('avisos').insert({titulo:titulo.slice(0,AVISO_TITULO_MAX),mensagem:mensagem.slice(0,AVISO_MSG_MAX),...(imagem_url?{imagem_url}:{}),criado_por:session.usuario_id,criado_por_nome:sessionUser().nome}).select().single();
   btn.disabled=false;btn.textContent='Publicar para todos';
   if(error){
     if(imagem_url)sb.storage.from('midia').remove(['avisos/'+imagem_url.split('/').pop()]).then(()=>{});
-    return toast('Não foi possível publicar: '+error.message);
+    return toast('⚠️ Não foi possível publicar: '+error.message);
   }
   _avisoImg=null;limparImagensAvisos();
   db.avisos.unshift(data);db.avisos_vistos.add(data.id);
   sb.from('avisos_vistos').insert({aviso_id:data.id,usuario_id:session.usuario_id}).then(()=>{});
-  reg('Aviso publicado',titulo);toast('Aviso publicado para todos.');modalAvisos();
+  reg('Aviso publicado',titulo);toast('✅ Aviso publicado para todos.');modalAvisos();
 }
 function apagarAviso(id){
   if(!isGerente())return;
   const a=(db.avisos||[]).find(x=>x.id===id);if(!a)return;
   confirmar('Apagar aviso','O aviso "'+a.titulo+'" sai da tela de todos agora. Confirmar?',async()=>{
     const{error}=await sb.from('avisos').delete().eq('id',id);
-    if(error)return toast('Erro ao apagar: '+error.message);
+    if(error)return toast('⚠️ Erro ao apagar: '+error.message);
     if(a.imagem_url)sb.storage.from('midia').remove(['avisos/'+a.imagem_url.split('/').pop()]).then(()=>{});
     db.avisos=db.avisos.filter(x=>x.id!==id);reg('Aviso apagado',a.titulo);atualizarSeloAvisos();modalAvisos();
   });
