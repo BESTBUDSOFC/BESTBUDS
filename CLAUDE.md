@@ -87,8 +87,10 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 - Categorias de receitas (`categorias_receitas`, migração `20261001020000_categorias_receitas.sql`) são cadastradas em Configurações › Receitas. Gerente ou acima cria e edita, e Sócio ou Diretor exclui. Excluir uma categoria deixa as receitas dela sem categoria.
 - **Receita 🏁 (produto final)** (`receitas.produto_final`, migração `20261002000000_produto_final_bau.sql`): é o último passo do processo produtivo. Com 🏁, o bloco "produz" tem **um** item, e só da categoria Produto Final (quantidade padrão 1). Sem 🏁, o bloco "produz" é obrigatório e não aceita Produto Final. Assim o processo pode ter quantas etapas quiser.
+- Baú: tocar em "Baú" no menu (mesmo já estando nele) ou trocar de aba e voltar sempre abre a tela inicial do Baú; sai de Nova compra e Produzir e esquece o "voltar à produção" (`go()` zera `bauTela` e `_voltarProducao`). Em Nova compra e Produzir, "← Voltar ao Baú" fica logo abaixo do título.
 - A tela Produzir (Baú › 🏭 Produzir) mostra **uma linha de produção por receita 🏁** (`prodCadeias()`):
   - A linha volta pelas receitas que produzem os insumos de cada etapa (`receitaProdutora`), sem limite de etapas. Receitas que não levam a nenhuma 🏁 aparecem sozinhas.
+  - Cabeçalho da linha: foto do produto grande (132 px) e o nome abaixo dela, centralizados.
   - Fluxo da linha: cartão de cada receita → seta → … → cartão "🏁 Vende no Caixa". As setas ficam **fora** dos cartões, entre eles. **Não há blocos de quantidade nas linhas** (pedido do dono).
   - Cartão da receita: nome da receita no topo, "⬇️ Consome" (−qtd item; em vermelho o que não tem o suficiente no Baú), "⬆️ Gera" (+qtd item) e o botão pequeno da etapa (`.pl-btn`).
   - Foto e nome: do produto do Catálogo ligado ao item que a receita 🏁 produz (`itens.produto_id`). Não há mais adivinhação pelo nome.
@@ -102,7 +104,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - **Sem insumos (nem com cascata):** um aviso só no topo ("Falta X"; se vem da etapa anterior, diz também o que falta lá); tabela "⬇️ Sai do Baú" com **Tem / Precisa / Falta**; bloco "🚚 Para comprar" com a quantidade que falta, o **fornecedor vinculado mais barato** (`prodCompraSugerida`) e o total estimado (item sem fornecedor com valor fica avisado). O selo "faltam insumos" não existe mais e "limite: …" só aparece quando dá para fazer algo direto.
   - Botão **"🚚 Comprar o que falta"** (`prodComprarFalta`): abre a Nova compra já preenchida (item, fornecedor mais barato, quantidade), com o aviso de para qual produção é e "← Voltar à produção". Depois de registrar, volta para a janela de produção na mesma quantidade (`_voltarProducao`).
   - Falta = o que **esta** produção deixaria negativo (`planejarCascata`). Saldo que já estava negativo (venda sem estoque, permitido) não trava outras produções.
-- O vendedor produz direto. A cascata é só para Gerente ou acima: o vendedor vê as etapas, mas o botão fica desativado.
+- Todos produzem direto e em cascata, inclusive o vendedor (pedido do dono, v4.26). A cascata grava só movimentos de produção em nome de quem produz, o que a regra do banco (`bau_insert`) já aceita para o vendedor.
 - Os máximos usam `saldosBau()`, que calcula todos os saldos de uma vez, e `planejarCascata(rid,q,saldo)`. Não chame `saldoItem` item a item dentro de laços da tela.
 
 ## Produto final e Baú
@@ -121,6 +123,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - A compra é uma lista única de itens. Cada linha é de um de dois tipos:
   - **Automático:** item do cadastro. O fornecedor é escolhido entre os vinculados ao item e o valor vem do vínculo, travado. Dá entrada no Baú só se a categoria do item tem controle de estoque; sem controle, fica só no financeiro (tag "Automático · sem Baú").
   - **Manual:** item digitado que não está no cadastro. Fornecedor e valor são digitados. Só registro financeiro.
+- Quantidade: cada linha tem os atalhos **+5, +15 e +75** abaixo do campo (`somarQtdCompra`), que somam ao que já está lá e recalculam como se tivesse digitado.
 - Subtotal: no Automático é travado (qtd × valor do fornecedor). No Manual é digitável: qtd + valor unitário calcula o subtotal; qtd + subtotal calcula o valor unitário. Manda o último campo de valor digitado.
 - A categoria decide: "pode ser comprada" (aparece na compra e nos vínculos com fornecedor) e "controle de estoque" (entra no Baú) são independentes.
 - A lista de itens da compra é agrupada por categoria (na ordem das categorias), com divisória entre os grupos. Gerente ou acima tem o atalho "+ Cadastrar item" no rodapé da lista (abre o cadastro no `modal2`, só com categorias compráveis, e escolhe o item na linha).
@@ -146,9 +149,9 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 ## Vídeos "Como fazer"
 
-- MP4 em `src/videos/` (servidos pela Vercel; o dono preferiu ao YouTube: sem anúncio, sem sugestões no fim, só quem entra no sistema vê e a troca é automática na publicação). Lista em `VIDEOS` (`src/index.html`): arquivo, título, duração e `ger` (só Gerente ou acima vê).
+- MP4 em `src/videos/` (servidos pela Vercel; o dono preferiu ao YouTube: sem anúncio, sem sugestões no fim, só quem entra no sistema vê e a troca é automática na publicação). Lista em `VIDEOS` (`src/index.html`): arquivo, título, duração e, opcional, `ger` (só Gerente ou acima vê; nenhum usa hoje).
 - `ajuda(texto,[ids])` põe, no balão do "?", um botão "▶ Ver como fazer: título · duração" por vídeo. `verVideo(id)` abre o player na 2ª camada (`modal2`, classe `modal-video`); fechar esvazia a janela e o vídeo para. O vídeo só baixa quando a pessoa toca no botão.
-- Onde aparecem: Caixa de Balcão (caixa), Baú (compra, produção, cascata, falta), Nova compra (compra), Produzir (produção, cascata, falta), Histórico Financeiro (histórico). A cascata não aparece para o vendedor.
+- Onde aparecem: Caixa de Balcão (caixa), Baú (compra, produção, cascata, falta), Nova compra (compra), Produzir (produção, cascata, falta), Histórico Financeiro (histórico). Todos veem todos (desde a v4.26 o vendedor também faz cascata).
 - Gravação: dados reais (cadastros e histórico lidos da produção só para consulta), quadros PNG sem perda pelo screencast do Chrome, H.264 1920×1080 com `+faststart`, narração na tela (destaque, balão "Passo N de T", cursor). Navegador em português (`LANG=pt_BR.UTF-8`), senão o campo de data sai no formato americano.
 - **Regravar na publicação** os vídeos das telas que mudaram e atualizar a duração em `VIDEOS`.
 - O balão do "?" abre também com o foco dentro dele (`:focus-within`), para o toque no botão funcionar no celular. No celular ele vira um painel fixo acima da barra de baixo, sem empurrar a página para o lado.

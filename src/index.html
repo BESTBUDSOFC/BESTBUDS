@@ -71,14 +71,13 @@ label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-wei
 .btn-primary:hover{background:var(--green-hover)}
 .btn-purple{background:var(--purple);color:var(--white)}
 .btn-purple:hover{background:var(--purple-hover)}
-.prod-topo{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}.prod-topo .btn{margin-left:auto}
 .pl-estoque{padding:12px 14px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px}
 .pl-estoque-tit{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pl-estoque-grp{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.pl-estoque-cat{font-size:11px;color:var(--muted);min-width:130px}
 .pl-chip{background:#22222c;color:var(--muted);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;border:1px solid transparent}.pl-chip b{color:var(--text);margin-left:4px}.pl-chip.bad{border-color:rgba(170,34,34,.6)}.pl-chip.bad b{color:#F87171}
 .pl-lista{display:flex;flex-direction:column;gap:14px}
 .pl-linha{padding:16px;display:flex;align-items:center;gap:16px}
-.pl-cab{display:flex;align-items:center;gap:12px;width:200px;flex:none}.pl-cab img,.pl-sem-img{width:56px;height:56px;border-radius:10px;object-fit:cover;flex:none}.pl-sem-img{display:flex;align-items:center;justify-content:center;background:var(--input-bg);font-size:24px}.pl-cab b{font-size:16px}
+.pl-cab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:170px;flex:none;text-align:center}.pl-cab img,.pl-sem-img{width:132px;height:132px;border-radius:14px;object-fit:cover;flex:none}.pl-sem-img{display:flex;align-items:center;justify-content:center;background:var(--input-bg);font-size:48px}.pl-cab b{font-size:16px;line-height:1.25}
 /* cartões da linha (receitas e vende no Caixa) do mesmo tamanho, com a seta entre eles */
 .pl-fluxo{flex:1;min-width:0;display:grid;grid-template-columns:var(--pl-cols,1fr);align-items:stretch}
 .pl-box{border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-height:178px;background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -359,7 +358,11 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
   #bottom-nav{display:none!important}
 }
 /* Formulário de compra (duas seções) */
-.cmp-row{display:grid;grid-template-columns:2fr 1.7fr .7fr 1fr .9fr 104px 34px;gap:6px;align-items:center;margin-bottom:8px;padding:3px;border-radius:10px;border:1px solid transparent}
+.cmp-row{display:grid;grid-template-columns:2fr 1.7fr 1.15fr 1fr .9fr 104px 34px;gap:6px;align-items:center;margin-bottom:8px;padding:3px;border-radius:10px;border:1px solid transparent}
+.cp-qtd-cel{display:flex;flex-direction:column;gap:4px;min-width:0}
+.cp-atalhos{display:flex;gap:4px}
+.cp-atalhos button{flex:1;min-width:0;padding:3px 0;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.cp-atalhos button:hover,.cp-atalhos button:focus-visible{color:var(--green);border-color:var(--green);outline:none}
 .cmp-head{margin-bottom:4px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
 
 .cmp-card{max-width:1180px}
@@ -385,7 +388,7 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 @media(max-width:700px){
   .cmp-row{grid-template-columns:1fr 1fr;padding:8px;border-color:var(--border)}
   .cmp-row{grid-template-columns:1fr 1fr 34px;grid-template-areas:"item item del" "forn forn forn" "qtd preco preco" "sub tipo tipo"}
-  .cmp-row>.cp-item{grid-area:item}.cmp-row>.cp-forn-cel{grid-area:forn}.cmp-row>.cp-qtd{grid-area:qtd}.cmp-row>.cp-preco-cel{grid-area:preco}
+  .cmp-row>.cp-item{grid-area:item}.cmp-row>.cp-forn-cel{grid-area:forn}.cmp-row>.cp-qtd-cel{grid-area:qtd}.cmp-row>.cp-preco-cel{grid-area:preco}
   .cmp-row>.cp-sub-cel{grid-area:sub}.cmp-row>.cp-tipo{grid-area:tipo;justify-self:end}.cmp-row>.btn-del-linha{grid-area:del}
   .cmp-tabela{padding:8px}
   .cmp-row>.btn-del-linha{justify-self:end}
@@ -600,7 +603,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.25.0';
+const VERSAO='v4.26.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -629,10 +632,10 @@ function fmt(n){return '$'+Number(n||0).toLocaleString('pt-BR',{minimumFractionD
 /* Vídeos "Como fazer" (src/videos/, gravados com dados reais). Só baixam quando a pessoa toca em "▶ Ver como fazer". */
 const VIDEOS={
   caixa:{arq:'caixa-vender-e-guardar.mp4',titulo:'Vender e guardar no caixa',dur:'1:13'},
-  compra:{arq:'compra.mp4',titulo:'Registrar uma compra',dur:'1:19'},
+  compra:{arq:'compra.mp4',titulo:'Registrar uma compra',dur:'1:23'},
   producao:{arq:'producao.mp4',titulo:'Produzir',dur:'0:43'},
-  cascata:{arq:'producao-cascata.mp4',titulo:'Produção em cascata',dur:'0:38',ger:true},
-  falta:{arq:'producao-comprar-falta.mp4',titulo:'Faltou insumo? Compre e produza',dur:'0:44'},
+  cascata:{arq:'producao-cascata.mp4',titulo:'Produção em cascata',dur:'0:38'},
+  falta:{arq:'producao-comprar-falta.mp4',titulo:'Faltou insumo? Compre e produza',dur:'0:45'},
   historico:{arq:'historico-financeiro.mp4',titulo:'Histórico: resumo, filtros e colunas',dur:'1:08'}
 };
 function ajuda(txt,videos){
@@ -897,6 +900,8 @@ function buildNav(){
     `<button class="nav-item ${m.id===moduloAtual?'active':''}" onclick="go('${m.id}')"><span class="ic">${m.ic}</span>${m.nome.split(' ')[0]}${selosMenu(m)}</button>`).join('');
 }
 function go(mod){
+  // tocar no menu (inclusive no Baú de novo) volta à tela inicial do módulo: sai de Nova compra / Produzir
+  bauTela=null;_voltarProducao=null;
   moduloAtual=mod;
   buildNav();
   render();
@@ -1813,7 +1818,6 @@ function planejarCascata(rid,q,base){
 }
 function fmtQtd(n){return Number(n.toFixed(4)).toLocaleString('pt-BR')}
 async function confirmarCascata(rid,q){
-  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem produzir.');
   const pl=planejarCascata(rid,q);
   if(!pl.possivel)return toast('⚠️ O saldo mudou e a cascata não é mais possível. Revise a produção.');
   const btn=document.getElementById('btn-conf-cascata');if(btn){btn.disabled=true;btn.textContent='Produzindo…'}
@@ -1900,6 +1904,11 @@ function celSubCompra(p,itemId,sub){
     :`<input class="cp-sub" type="number" min="0.01" step="0.01" placeholder="$ 0,00" value="${sub??''}" oninput="aoEditarValorCompra(this,'sub','${p}')">`;
 }
 const arred2=v=>Math.round(v*100)/100;
+/* Atalhos +5 / +15 / +75: somam à quantidade da linha e recalculam como se tivesse digitado */
+function somarQtdCompra(btn,n){
+  const inp=btn.closest('.cp-qtd-cel').querySelector('.cp-qtd');
+  inp.value=arred2((parseFloat(inp.value)||0)+n);inp.dispatchEvent(new Event('input',{bubbles:true}));
+}
 function aoEditarValorCompra(inp,campo,p){
   const r=inp.closest('.cmp-row');
   if(!r.dataset.item){
@@ -1922,7 +1931,8 @@ function linhaCompra(p,ci){
   return`<div class="cmp-row" data-cmp data-item="${it?it.id:''}" data-preco="${it&&preco!=null?preco:''}" oninput="this.classList.remove('linha-erro')" onchange="this.classList.remove('linha-erro')">
     <input class="cp-item" data-combo="itens" autocomplete="off" placeholder="Item (digite ou escolha)" value="${esc(it?it.nome:(ci.nome||''))}" oninput="aoDigitarItemCompra(this,'${p}')" onblur="nomeCanonicoItem(this)">
     <div class="cp-forn-cel">${celFornCompra(p,it&&it.id,forn,ci.fornecedor_nome)}</div>
-    <input class="cp-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="aoEditarValorCompra(this,'qtd','${p}')">
+    <div class="cp-qtd-cel"><input class="cp-qtd" type="number" min="0.01" step="0.01" placeholder="Qtd" value="${ci.quantidade??''}" oninput="aoEditarValorCompra(this,'qtd','${p}')">
+      <div class="cp-atalhos">${[5,15,75].map(n=>`<button type="button" title="Somar ${n} à quantidade" onclick="somarQtdCompra(this,${n})">+${n}</button>`).join('')}</div></div>
     <div class="cp-preco-cel">${celPrecoCompra(p,it&&it.id,it?preco:ci.preco_unitario)}</div>
     <div class="cp-sub-cel">${celSubCompra(p,it&&it.id,!it&&ci.quantidade>0&&ci.preco_unitario>0?arred2(ci.quantidade*ci.preco_unitario):'')}</div>
     <span class="cp-tipo">${tagTipoCompra(it,!it&&!ci.nome)}</span>
@@ -2283,8 +2293,8 @@ function telaProducaoHTML(c){
    .sort((a,b)=>ordCat(a.categoria)-ordCat(b.categoria)||a.nome.localeCompare(b.nome,'pt-BR'));
  const grupos=[...new Set(noBau.map(it=>it.categoria))];
  c.innerHTML=`
-  <div class="prod-topo"><h2 class="page-title" style="margin:0">🏭 Produzir${ajuda('Cada linha é uma variedade, da compra até o Caixa: nasce da receita marcada com 🏁 (produto final) e volta pelas receitas que fazem os insumos dela; a foto é a do produto no Catálogo. Cada cartão mostra o que a etapa consome do Baú e o que gera. A cor do botão diz se dá para fazer agora (verde) ou só com produção em cascata (roxo 🔗); clique para escolher a quantidade e conferir antes de produzir. O saldo de cada item está no quadro "No Baú" (vermelho = zerado ou no mínimo). Os nomes dos botões vêm das categorias de receitas (Configurações › Receitas).',['producao','cascata','falta'])}</h2>
-  <button class="btn btn-ghost btn-sm" onclick="fecharTelaBau()">← Voltar ao Baú</button></div>
+  <h2 class="page-title">🏭 Produzir${ajuda('Cada linha é uma variedade, da compra até o Caixa: nasce da receita marcada com 🏁 (produto final) e volta pelas receitas que fazem os insumos dela; a foto é a do produto no Catálogo. Cada cartão mostra o que a etapa consome do Baú e o que gera. A cor do botão diz se dá para fazer agora (verde) ou só com produção em cascata (roxo 🔗); clique para escolher a quantidade e conferir antes de produzir. O saldo de cada item está no quadro "No Baú" (vermelho = zerado ou no mínimo). Os nomes dos botões vêm das categorias de receitas (Configurações › Receitas).',['producao','cascata','falta'])}</h2>
+  <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">← Voltar ao Baú</button>
   ${noBau.length?`<div class="card pl-estoque"><div class="pl-estoque-tit">📦 No Baú</div>${grupos.map(g=>`<div class="pl-estoque-grp"><span class="pl-estoque-cat">${esc(catNome(g))}</span>${noBau.filter(it=>it.categoria===g).map(it=>`<span class="pl-chip${baixo(it)?' bad':''}" title="${baixo(it)?'Zerado ou no estoque mínimo':''}">${esc(it.nome)} <b>${fmtQtd(saldo[it.id]||0)} ${un(it)}</b></span>`).join('')}</div>`).join('')}</div>`:''}
   ${cadeias.length?`<div class="pl-lista" style="--pl-cols:${colunas}">${linhas.map(l=>l.html).join('')}</div>`:'<div class="empty">Nenhuma receita ativa. Cadastre em Configurações › Receitas.</div>'}`;
 }
@@ -2323,7 +2333,6 @@ function prodPainelHTML(r,i,saldo){
       <div class="prod-step"><button onclick="prodSetQtd(${q-1})" ${q<=1?'disabled':''} aria-label="Diminuir">−</button><input id="prod-qtd" type="number" min="1" step="1" value="${q}" onchange="prodSetQtd(this.value)"><button onclick="prodSetQtd(${q+1})" aria-label="Aumentar">+</button></div>
       ${chips}</div>`;
   const pl=planejarCascata(r.id,q,saldo);
-  const ger=isGerente();
   let corpo,botao;
   // o que sai e o que entra no Baú, em blocos separados
   const blocos=efeito=>{
@@ -2345,8 +2354,7 @@ function prodPainelHTML(r,i,saldo){
       ${pl.passos.map((p,k)=>{const ult=k===n-1;return `<div class="prod-passo ${ult?'pedida':'auto'}"><div><b>${k+1}. ${esc(p.r.nome)} × ${p.qtd}</b> <span class="prod-passo-tag">${ult?'pedida':'feita antes, automática'}</span></div>
         <div class="prod-passo-mov">${p.mov.map(m=>`<span class="${m.q<0?'prod-sai':'prod-ent'}">${m.q<0?'−':'+'}${fmtQtd(Math.abs(m.q))} ${esc(m.it.nome)}</span>`).join(' · ')||'<span class="muted">não movimenta o Baú</span>'}</div></div>`}).join('')}</div>
       ${blocos(pl.efeito)}`;
-    botao=ger?`<button class="btn btn-purple prod-acao" id="btn-conf-cascata" onclick="confirmarCascata('${r.id}',${q})">🔗 Produzir em cascata · ${n} etapas</button>`
-      :`<button class="btn btn-purple prod-acao" disabled>🔗 Produzir em cascata · ${n} etapas</button><div class="muted" style="font-size:12px;text-align:center">A produção em cascata é feita por Gerente, Diretor ou Sócio. Você pode produzir até ${i.max} direto.</div>`;
+    botao=`<button class="btn btn-purple prod-acao" id="btn-conf-cascata" onclick="confirmarCascata('${r.id}',${q})">🔗 Produzir em cascata · ${n} etapas</button>`;
   }else{
     const unid=it=>esc(it.unidade_medida||'');
     const cons=prodConsumos(r).map(x=>{const precisa=x.ri.quantidade*q,tem=saldo[x.it.id]||0;return {it:x.it,tem,precisa,falta:Math.max(0,precisa-tem)}});
