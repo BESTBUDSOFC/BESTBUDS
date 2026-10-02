@@ -8,7 +8,8 @@ D.config_privada=[];
 D.avisos=D.avisos||[];D.avisos_vistos=[];D.registros=[];
 })();
 ;(function(){const D=window.__DB;
-if(!(D.categorias_receitas||[]).length)D.categorias_receitas=[{id:'c-dich',nome:'Dichavar',icone:'🌿',ordem:1},{id:'c-enr',nome:'Enrolar',icone:'🚬',ordem:2}];
+// o banco falso já vem com categorias de exemplo: quem decide é o instantâneo
+if(!(window.__SNAP.categorias_receitas||[]).length)D.categorias_receitas=[{id:'c-dich',nome:'Dichavar',icone:'🌿',ordem:1},{id:'c-enr',nome:'Enrolar',icone:'🚬',ordem:2}];
 if(!D.itens.some(i=>i.produto_id))D.produtos.forEach((p,k)=>D.itens.push({id:'pf-'+p.id,nome:p.nome,categoria:'produto_final',unidade_medida:'un',qtd_minima:0,status:p.status,produto_id:p.id,ordem:900+k,criado_em:new Date().toISOString()}));
 if(!D.receitas.some(r=>r.produto_final))D.receitas.forEach(r=>{const n=r.nome.toLowerCase();if(n.includes('dichavada'))r.categoria_id='c-dich';else if(/^ba[sd]eado/.test(n)){r.categoria_id='c-enr';r.produto_final=true;
   const cons=D.receita_insumos.filter(x=>x.receita_id===r.id).map(x=>(D.itens.find(i=>i.id===x.item_id)||{}).nome||'').join(' ');

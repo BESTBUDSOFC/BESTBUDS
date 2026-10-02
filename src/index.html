@@ -615,7 +615,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.27.1';
+const VERSAO='v4.27.2';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -1582,7 +1582,7 @@ function agruparBau(todos,filtrados){
     const data=ms.reduce((d,m)=>m.data>d?m.data:d,ms[0].data);
     if(ms.length===1)return{grupo:false,chave,movs:ms,ids:[ms[0].id],data};
     const o=(ms[0].origem||'').toLowerCase(),cascata=o.startsWith('produção em cascata'),compra=ms.every(m=>m.tipo_movimento==='entrada_compra'),venda=ms.every(m=>m.tipo_movimento==='saida_venda'),producao=!compra&&ms.some(m=>/producao|deducao/.test(m.tipo_movimento));
-    const rotulo=cascata?'Produção em cascata':compra?'Compra':venda?'Venda':producao?'Produção':'Lançamento';
+    const rotulo=compra?'Compra':venda?'Venda':producao?'Produção':'Lançamento';
     const origem=cascata?(ms.find(m=>/\(para /.test(m.origem||''))?.origem.match(/\(para (.*)\)/)?.[1]||ms[0].origem):compra?[...new Set(ms.map(m=>(m.origem||'').replace(/^compra:\s*/,'')))].join(' + '):(ms[0].origem||'—');
     const nomes=[...new Set(ms.map(m=>m.item_nome))];
     return{grupo:true,chave,movs:ms,filhos:ms.filter(m=>ok.has(m.id)),ids:ms.map(m=>m.id),data,usuario:ms[0].usuario_nome||'—',rotulo,

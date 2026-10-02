@@ -76,7 +76,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 - Item no estoque mínimo: só a borda vermelha no cartão (não há faixa de aviso no topo do Baú).
 
-- Lançamentos com várias linhas mostram a etiqueta do tipo com cor própria: **Compra** em verde (só tem entradas, como as demais entradas) e **Produção** e **Produção em cascata** em roxo.
+- Lançamentos com várias linhas mostram a etiqueta do tipo com cor própria: **Compra** em verde (só tem entradas, como as demais entradas) e **Produção** em roxo. A produção em cascata também aparece só como **Produção** (pedido do dono, v4.27.2); a origem diz "para <receita pedida>" e as sublinhas mostram cada etapa.
 
 ## Produção
 

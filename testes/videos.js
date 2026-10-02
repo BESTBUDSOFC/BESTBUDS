@@ -57,7 +57,7 @@ async cascata(p){const T=6;
   await passo(p,'#btn-conf-cascata',5,T,'Toque em <b>Produzir em cascata</b>.',null,{clicar:true});
   await p.waitForTimeout(400);
   await tocar(p,'button:has-text("Voltar ao Baú")');
-  await passo(p,'.table-wrap tr:nth-child(2)',6,T,'No Livro do Baú, a operação aparece como <b>Produção em cascata</b>.','Toque na seta para ver cada movimento.');
+  await passo(p,'.table-wrap tr:nth-child(2)',6,T,'No Livro do Baú, a cascata aparece como uma <b>Produção</b> só, com todas as etapas.','Toque na seta para ver cada movimento.');
   await limpar(p);await p.waitForTimeout(600);
   await capa(p,'Pronto!','As etapas foram feitas juntas.',2200);
 },
