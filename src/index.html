@@ -223,7 +223,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 /* Topo: nome da loja com a tipografia da tela de login (sem logo) + versão ao lado */
 .h-marca{font-weight:900;font-size:15px;letter-spacing:-.4px;line-height:.95;color:var(--text);white-space:nowrap;text-transform:uppercase}
 .h-marca span{display:block;color:transparent;-webkit-text-stroke:1px var(--text)}
-@media(min-width:768px){#app-header .who,#btn-sair{display:none}#btn-avisos{margin-left:auto}}
+@media(min-width:768px){#app-header .who,#btn-sair{display:none}#btn-tutorial{margin-left:auto}}
 @media(max-width:420px){#app-header .who .nm{display:none}}
 .nav-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:var(--muted);font-weight:600;font-size:14px;background:transparent;width:100%;text-align:left}
 .nav-item:hover{color:var(--text);background:rgba(var(--purple-rgb),.08)}
@@ -338,7 +338,18 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .aviso-item{border:1px solid var(--border);border-radius:10px;padding:12px}
 .aviso-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
 .aviso-form textarea{width:100%;resize:vertical;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font:inherit}
-#btn-avisos{position:relative;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:15px;line-height:1}
+#btn-avisos,#btn-tutorial{position:relative;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:15px;line-height:1;cursor:pointer}
+/* Tutorial de primeiro acesso */
+#tut-bloq{position:fixed;inset:0;z-index:400}
+#tut-spot{position:fixed;z-index:401;border-radius:12px;pointer-events:none;box-shadow:0 0 0 3px var(--green),0 0 0 9999px rgba(0,0,0,.62);transition:all .35s ease}
+#tut-spot.centro{left:50%!important;top:50%!important;width:0!important;height:0!important;box-shadow:0 0 0 9999px rgba(0,0,0,.62)}
+#tut-bal{position:fixed;z-index:402;width:min(380px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--green);border-radius:14px;padding:14px 16px;box-shadow:0 12px 36px rgba(0,0,0,.6);transition:top .35s ease,left .35s ease}
+#tut-bal .tut-p{display:inline-block;background:var(--green);color:#04120A;border-radius:20px;padding:1px 9px;font-size:11px;font-weight:800;margin-bottom:6px}
+#tut-bal h4{font-size:16px;margin:0 0 6px}#tut-bal p{font-size:14px;line-height:1.5;color:var(--text);margin:0}
+#tut-bal .tut-acoes{display:flex;gap:8px;align-items:center;margin-top:14px}
+#tut-bal .tut-acoes .tut-pular{margin-right:auto;background:none;border:0;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;padding:4px 0;text-decoration:underline}
+#tut-bal .tut-espera{font-size:12px;color:var(--warning-light,#F5C451);margin-top:8px}
+.ajuda.aberta .ajuda-txt{display:block}
 .avisos-selo{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--warning);color:#1a1300;font-size:11px;font-weight:800;line-height:18px;text-align:center}
 .alert-banner{background:rgba(var(--danger-rgb),.08);border:1px solid var(--danger);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
 .alert-banner.aviso-pedido-senha{background:rgba(var(--warning-rgb),.10);border-color:var(--warning-border);color:var(--text)}
@@ -564,6 +575,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
   <span id="h-nome-loja" class="h-marca" title="BEST BUDS">BEST<span>BUDS</span></span>
   <span class="vselo" id="h-versao">v4.8.0</span>
   <div class="who" style="margin-left:auto"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
+  <button id="btn-tutorial" title="Rever o tutorial" aria-label="Rever o tutorial" onclick="iniciarTutorial()">🎓</button>
   <button id="btn-avisos" title="Avisos" onclick="modalAvisos()">📢<span id="avisos-selo" class="avisos-selo" style="display:none"></span></button>
   <button id="btn-sair" onclick="logout()">Sair</button>
 </header>
@@ -603,7 +615,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.26.0';
+const VERSAO='v4.27.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -636,10 +648,19 @@ const VIDEOS={
   producao:{arq:'producao.mp4',titulo:'Produzir',dur:'0:43'},
   cascata:{arq:'producao-cascata.mp4',titulo:'Produção em cascata',dur:'0:38'},
   falta:{arq:'producao-comprar-falta.mp4',titulo:'Faltou insumo? Compre e produza',dur:'0:45'},
-  historico:{arq:'historico-financeiro.mp4',titulo:'Histórico: resumo, filtros e colunas',dur:'1:08'}
+  historico:{arq:'historico-financeiro.mp4',titulo:'Histórico: resumo, filtros e colunas',dur:'1:08'},
+  cfg_usuarios:{arq:'cfg-usuarios.mp4',titulo:'Usuários',dur:'0:54',ger:true},
+  cfg_catalogo:{arq:'cfg-catalogo.mp4',titulo:'Catálogo PDV',dur:'0:45',ger:true},
+  cfg_itens:{arq:'cfg-itens.mp4',titulo:'Cadastro Central de Itens',dur:'0:55',ger:true},
+  cfg_receitas:{arq:'cfg-receitas.mp4',titulo:'Receitas',dur:'0:44',ger:true},
+  cfg_fornecedores:{arq:'cfg-fornecedores.mp4',titulo:'Fornecedores',dur:'0:32',ger:true},
+  cfg_descontos:{arq:'cfg-descontos.mp4',titulo:'Descontos',dur:'0:35',ger:true},
+  cfg_deslocamento:{arq:'cfg-deslocamento.mp4',titulo:'Deslocamento',dur:'0:33',ger:true},
+  cfg_identidade:{arq:'cfg-identidade.mp4',titulo:'Identidade Visual',dur:'0:25',ger:true}
 };
 function ajuda(txt,videos){
   const vs=(videos||[]).filter(k=>VIDEOS[k]&&(!VIDEOS[k].ger||isGerente()));
+  if(!vs.length)return '';   // só há "?" onde há vídeo (pedido do dono, v4.27)
   const lista=vs.length?`<span class="ajuda-videos">${vs.map(k=>`<button type="button" class="ajuda-video" onclick="event.stopPropagation();verVideo('${k}')"><span class="pl">▶</span>Ver como fazer: ${esc(VIDEOS[k].titulo)}<small>${VIDEOS[k].dur}</small></button>`).join('')}</span>`:'';
   return `<span class="ajuda" tabindex="0" role="button" aria-label="Ajuda: ${esc(txt)}">?<span class="ajuda-txt" role="tooltip">${esc(txt)}${lista}</span></span>`;
 }
@@ -649,6 +670,7 @@ function verVideo(k){
   openModal2(`<h3>▶ ${esc(v.titulo)}</h3><video src="videos/${v.arq}" controls autoplay playsinline preload="metadata"></video>
     <div class="modal-actions"><button class="btn btn-primary" onclick="closeModal2()">Fechar</button></div>`);
   document.getElementById('modal2-box').classList.add('modal-video');document.body.classList.add('video-aberto');
+  if(_tut)tutPausar();
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 /* ---- Data e hora: o site inteiro usa o horário de Brasília, seja qual for o fuso do aparelho ou do servidor ----
@@ -743,7 +765,7 @@ async function carregarTudo(){
   });
   const porVenda={};
   (vendaItens.data||[]).forEach(vi=>{
-    (porVenda[vi.venda_id]=porVenda[vi.venda_id]||[]).push({produto_id:vi.produto_id,nome:vi.nome,qtd:Number(vi.qtd),preco_unit:Number(vi.preco_unit),rateio:vi.rateio,_id:vi.id});
+    (porVenda[vi.venda_id]=porVenda[vi.venda_id]||[]).push({produto_id:vi.produto_id,nome:vi.nome,qtd:Number(vi.qtd),preco_unit:Number(vi.preco_unit),custo_unit:Number(vi.custo_unit||0),rateio:vi.rateio,_id:vi.id});
   });
   const porCompra={};
   (compraItens.data||[]).forEach(ci=>{
@@ -759,7 +781,7 @@ async function carregarTudo(){
   if(depositosR.error)console.warn('[Best Buds] lotes de depósito indisponíveis',depositosR.error);
   db={
     usuarios:(perfis.data||[]),
-    produtos:(produtos.data||[]).map(p=>({...p,preco:Number(p.preco),imagem:p.imagem_url})),
+    produtos:(produtos.data||[]).map(p=>({...p,preco:Number(p.preco),custo:Number(p.custo||0),imagem:p.imagem_url})),
     itens:(itens.data||[]).map(i=>({...i,qtd_minima:Number(i.qtd_minima)})),
     receitas:(receitas.data||[]).map(r=>({...r,insumos:porReceita[r.id]||[]})),
     categorias_receitas:catRecR.error?[]:(catRecR.data||[]),
@@ -774,7 +796,7 @@ async function carregarTudo(){
     parcerias:parceriasArr,
     descontos:parceriasArr,
     taxas_deslocamento:(taxas.data||[]).map(t=>({...t,valor:Number(t.valor)})),
-    vendas:(vendas.data||[]).map(v=>({...v,itens:porVenda[v.id]||[],total:Number(v.total),subtotal:Number(v.subtotal),desconto:Number(v.desconto),cota_funcionario:Number(v.cota_funcionario),receita_loja:Number(v.receita_loja),taxa_valor:Number(v.taxa_valor||0),auxiliares:v.auxiliares||[]})),
+    vendas:(vendas.data||[]).map(v=>({...v,itens:porVenda[v.id]||[],total:Number(v.total),subtotal:Number(v.subtotal),desconto:Number(v.desconto),cota_funcionario:Number(v.cota_funcionario),receita_loja:Number(v.receita_loja),custo_total:Number(v.custo_total||0),taxa_valor:Number(v.taxa_valor||0),auxiliares:v.auxiliares||[]})),
     compras:(compras.data||[]).map(k=>({...k,itens:porCompra[k.id]||[],valor_total:Number(k.valor_total)})),
     estoque_bau:(bau.data||[]).map(m=>({...m,quantidade:Number(m.quantidade),saldo_resultante:Number(m.saldo_resultante)})),
     ajustes_caixa:(ajustesCaixa.data||[]).map(a=>({...a,valor:Number(a.valor)})),
@@ -921,7 +943,9 @@ function startApp(){
   bp.className='badge '+(['gerente','socio','diretor'].includes(u.perfil)?u.perfil:'vendedor');
   document.getElementById('h-versao').textContent=VERSAO;
   aplicarIdentidadeVisual();
-  buildNav();render();atualizarSeloAvisos();setTimeout(mostrarAvisosPendentes,400);
+  buildNav();render();atualizarSeloAvisos();
+  // primeiro acesso (inclusive quem já usava antes da v4.27): tutorial antes dos avisos
+  if(precisaTutorial())setTimeout(iniciarTutorial,500);else setTimeout(mostrarAvisosPendentes,400);
 }
 function render(){
   const c=document.getElementById('main-content');
@@ -943,7 +967,7 @@ function render(){
 function openModal(html){const mb=document.getElementById('modal-box');mb.classList.remove('modal-larga','modal-prod');mb.innerHTML=html;document.getElementById('modal-bg').classList.add('open')}
 function closeModal(){document.getElementById('modal-bg').classList.remove('open')}
 function openModal2(html){document.getElementById('modal2-box').classList.remove('modal-video');document.getElementById('modal2-box').innerHTML=html;document.getElementById('modal2-bg').classList.add('open')}
-function closeModal2(){document.body.classList.remove('video-aberto');document.getElementById('modal2-bg').classList.remove('open');document.getElementById('modal2-box').innerHTML=''}
+function closeModal2(){if(document.body.classList.contains('video-aberto')&&_tut)setTimeout(tutRetomar,50);document.body.classList.remove('video-aberto');document.getElementById('modal2-bg').classList.remove('open');document.getElementById('modal2-box').innerHTML=''}
 function closeConfirm(){document.getElementById('confirm-bg').classList.remove('open')}
 function confirmar(titulo,msg,cb){
   document.getElementById('confirm-title').textContent=titulo;
@@ -981,11 +1005,14 @@ function calcCupom(){
   const desconto=Math.min(subtotal,inteiroMaisProximo(subtotal*pct/100));   // 5% de 90 = 4,50 → $5
   const taxaValor=taxa?taxa.valor:0;
   const total=Math.max(0,subtotal-desconto+taxaValor);
-  // o repasse parte do valor já com o desconto arredondado (o mesmo desconto que o cliente paga) e também vai para inteiro
+  // o repasse parte do valor já com o desconto arredondado (o mesmo desconto que o cliente paga) e também vai para inteiro.
+  // O custo do produto (Catálogo) sai antes de dividir: a equipe recebe a parte dela do lucro, não do preço
+  // (ex.: CBD $100, 100% Equipe, custo $75 → repasse $25; a loja fica com $75, que cobre o custo).
   const fatorLiquido=subtotal>0?(subtotal-desconto)/subtotal:0;
-  const cota=inteiroMaisProximo(itens.reduce((s,x)=>s+(x.qtd*x.prod.preco)*fatorLiquido*fatorRateio(x.prod),0)+(taxaValor*(db.aliquota_taxa_deslocamento||0)/100));
+  const custo=itens.reduce((s,x)=>s+x.qtd*(x.prod.custo||0),0);
+  const cota=inteiroMaisProximo(itens.reduce((s,x)=>s+Math.max(0,x.qtd*x.prod.preco*fatorLiquido-x.qtd*(x.prod.custo||0))*fatorRateio(x.prod),0)+(taxaValor*(db.aliquota_taxa_deslocamento||0)/100));
   const loja=total-cota;
-  return {itens,qtdItens,parceria,taxa,pct,subtotal,desconto,taxaValor,total,cota,loja};
+  return {itens,qtdItens,parceria,taxa,pct,subtotal,desconto,taxaValor,total,custo,cota,loja};
 }
 function renderPDV(c){
   const cup=calcCupom();
@@ -1045,6 +1072,7 @@ function renderPDV(c){
         <div class="tot-line"><span>Subtotal (${cup.qtdItens} ${cup.qtdItens===1?'item':'itens'})</span><b>${fmt(cup.subtotal)}</b></div>
         <div class="tot-line"><span>Desconto ${cup.parceria?esc(cup.parceria.nome):''} (${cup.pct}%)</span><b style="color:var(--danger)">−${fmt(cup.desconto)}</b></div>
         <div class="tot-line"><span>Taxa de deslocamento</span><b>+${fmt(cup.taxaValor)}</b></div>
+        ${cup.custo>0?`<div class="tot-line" title="Custo dos produtos (Catálogo): sai antes de calcular o repasse e fica com a loja"><span>Custo dos produtos <small class="muted">(sai antes do repasse)</small></span><b class="muted">${fmt(cup.custo)}</b></div>`:''}
         <div class="tot-line"><span>Repasse equipe</span><b style="color:var(--purple)">${fmt(cup.cota)}</b></div>
         <div class="tot-line"><span>Receita líquida da loja</span><b style="color:var(--green)">${fmt(cup.loja)}</b></div>
         <div class="tot-line grande"><span>Valor Total</span><b>${fmt(cup.total)}</b></div>
@@ -1193,7 +1221,7 @@ function renderPainel(c){
   if(pendAbertas.length)alertas.push(`<button class="pn-alerta ${maisAntiga&&(Date.now()-new Date(maisAntiga.data).getTime())>=24*36e5?'r':'y'}" onclick="go('pdv')"><b>${fmt(pendValor)}</b> na mão de ${pendVendedores} vendedor(es) · ${pendAbertas.length} venda(s) a guardar · mais antiga ${idadeVenda(maisAntiga)}</button>`);
   if(estoqueMin.length)alertas.push(`<button class="pn-alerta r" onclick="go('bau')"><b>${estoqueMin.length}</b> item(ns) no estoque mínimo: ${estoqueMin.map(i=>esc(i.nome)).join(', ')}</button>`);
   c.innerHTML=`
-  <h2 class="page-title">Painel${ajuda('Visão geral da loja. As vendas contam pela data da venda.')}</h2>
+  <h2 class="page-title">Painel</h2>
   <div class="section-title">🚨 Alertas</div>
   <div class="pn-alertas">${alertas.join('')||`<div class="pn-ok">✅ Nada pendente agora.</div>`}</div>
 
@@ -1203,13 +1231,13 @@ function renderPainel(c){
     <span class="pn-per">${txtPer}</span>
   </div>
   <div class="card pn-card">
-    <div class="pn-card-tit">📈 Receita da loja por ${baldes.tipo}${ajuda('Parte da loja (total menos repasse) das vendas feitas em cada '+baldes.tipo+', guardadas no caixa ou não.')}</div>
+    <div class="pn-card-tit">📈 Receita da loja por ${baldes.tipo}</div>
     ${vendasPer.length?`<div id="pn-colunas" class="pn-colunas"></div>
     <details class="pn-tabela-det"><summary>Ver em tabela</summary><div class="table-wrap"><table><tr><th>${baldes.tipo==='dia'?'Dia':'Início'}</th><th>Vendas</th><th>Receita da loja</th></tr>${baldes.b.filter(b=>b.n).map(b=>`<tr><td>${dataBRdia(b.de)}</td><td>${b.n}</td><td class="money">${fmt(b.valor)}</td></tr>`).join('')}</table></div></details>`:`<div class="empty">Nenhuma venda no período.</div>`}
   </div>
 
   <div class="card pn-card">
-      <div class="pn-card-tit">🏆 Vendedores${ajuda('Ranking pela receita da loja já guardada no caixa. Não guardado: vendas ainda pendentes. Repasse recebido inclui o que a pessoa ganhou como auxiliar.')}</div>
+      <div class="pn-card-tit">🏆 Vendedores</div>
       ${vendedores.length?pnBarras(vendedores.filter(p=>p.n).map(p=>({nome:p.nome,valor:p.loja})),fmt)+`
       <div class="table-wrap pn-tab"><table>
         <tr><th>Vendedor</th><th>Vendas</th><th>Total vendido</th><th>Receita loja</th><th>Não guardado</th><th>Repasse recebido</th><th>Desconto médio</th></tr>
@@ -1218,7 +1246,7 @@ function renderPainel(c){
   </div>
   <div class="pn-duas">
     <div class="card pn-card">
-      <div class="pn-card-tit">🌿 Produtos${ajuda('Quantidade vendida no período, guardada ou não. Embaixo, os produtos ativos que não venderam.')}</div>
+      <div class="pn-card-tit">🌿 Produtos</div>
       ${prods.lista.length?pnBarras(prods.lista.map(p=>({nome:p.nome,valor:p.qtd})),n=>n.toLocaleString('pt-BR')+' un')+`
       <div class="table-wrap pn-tab"><table>
         <tr><th>Produto</th><th>Qtd</th><th>Vendido</th><th>% do vendido</th></tr>
@@ -1227,7 +1255,7 @@ function renderPainel(c){
       ${prods.parados.length?`<p class="pn-parados"><b>Sem venda no período:</b> ${prods.parados.map(esc).join(', ')}</p>`:''}
     </div>
     <div class="card pn-card">
-      <div class="pn-card-tit">📢 Avisos${ajuda('Avisos ativos (somem em 24 h) e quem da equipe ainda não viu.')}</div>
+      <div class="pn-card-tit">📢 Avisos</div>
       ${avisos.length?avisos.map(a=>{const vistos=vistosPor(a.id),falta=eqs.filter(u=>!vistos.has(u.id));const pct=eqs.length?Math.round((eqs.length-falta.length)/eqs.length*100):0;
         return `<div class="pn-aviso"><div class="pn-aviso-t"><b>${esc(a.titulo)}</b><span class="muted">por ${esc(a.criado_por_nome||'—')} · some ${esc(dataHoraBR(a.expira_em))}</span></div>
         <div class="pn-meter" role="img" aria-label="${eqs.length-falta.length} de ${eqs.length} viram"><span style="width:${pct}%"></span></div>
@@ -1235,7 +1263,7 @@ function renderPainel(c){
     </div>
   </div>
   <div class="card pn-card">
-    <div class="pn-card-tit">🕘 Últimas ações${ajuda('Registro de auditoria: tudo o que foi feito no sistema, do mais recente para o mais antigo.')}</div>
+    <div class="pn-card-tit">🕘 Últimas ações</div>
     <div id="pn-atividade">${pnHtmlAtividade()}</div>
   </div>
   <div id="pn-tip" class="pn-tip" role="tooltip"></div>`;
@@ -1296,7 +1324,7 @@ function htmlPendentes(){
   };
   return `<div class="card pend-card" id="pend-card">
     <div class="pend-topo">
-      <div class="section-title" style="margin:0">💰 Vendas a guardar no caixa${ajuda('A venda só entra no caixa quando o dinheiro é guardado. Marque as vendas cujo valor você vai guardar agora e confirme.')}</div>
+      <div class="section-title" style="margin:0">💰 Vendas a guardar no caixa</div>
       <button class="btn btn-primary" ${escolhidas.length?'':'disabled'} onclick="modalGuardarCaixa()">💰 Guardar no caixa${escolhidas.length?` (${escolhidas.length}) · ${fmt(valorSel)}`:''}</button>
     </div>
     ${porVendedor}
@@ -1439,16 +1467,16 @@ async function finalizarVenda(){
     parceria_id:pdvState.parceriaId,parceria_nome:cup.parceria?cup.parceria.nome:null,
     taxa_id:pdvState.taxaId,taxa_nome:cup.taxa?cup.taxa.nome:null,taxa_valor:cup.taxaValor,
     subtotal:cup.subtotal,desconto:cup.desconto,pct_desconto:cup.pct,
-    total:cup.total,cota_funcionario:cup.cota,receita_loja:cup.loja,
+    total:cup.total,cota_funcionario:cup.cota,receita_loja:cup.loja,custo_total:cup.custo,
     auxiliares:repartirRepasse(cup.cota,auxs).aux.map(a=>{const u=db.usuarios.find(x=>x.id===a.usuario_id);return{usuario_id:a.usuario_id,nome:u?u.nome:'?',pct:a.pct,valor:a.valor}}),
     status:'pendente'
   };
   const{data:vRow,error:e1}=await sb.from('vendas').insert(cabecalho).select().single();
   if(e1)return toast('⚠️ Erro ao registrar venda: '+e1.message);
-  const itensRows=cup.itens.map(x=>({venda_id:vRow.id,produto_id:x.prod.id,nome:x.prod.nome,qtd:x.qtd,preco_unit:x.prod.preco,rateio:x.prod.rateio}));
+  const itensRows=cup.itens.map(x=>({venda_id:vRow.id,produto_id:x.prod.id,nome:x.prod.nome,qtd:x.qtd,preco_unit:x.prod.preco,custo_unit:x.prod.custo||0,rateio:x.prod.rateio}));
   const{data:itensInseridos,error:e2}=await sb.from('venda_itens').insert(itensRows).select();
   if(e2){await sb.from('vendas').delete().eq('id',vRow.id);return toast('⚠️ Erro ao registrar itens da venda: '+e2.message)}
-  const v={...vRow,itens:itensInseridos.map(i=>({produto_id:i.produto_id,nome:i.nome,qtd:Number(i.qtd),preco_unit:Number(i.preco_unit),rateio:i.rateio}))};
+  const v={...vRow,itens:itensInseridos.map(i=>({produto_id:i.produto_id,nome:i.nome,qtd:Number(i.qtd),preco_unit:Number(i.preco_unit),custo_unit:Number(i.custo_unit||0),rateio:i.rateio})),custo_total:Number(vRow.custo_total||0)};
   db.vendas.unshift(v);
   reg('Venda finalizada',`ID ${v.operacao_id||'—'} — ${v.itens.map(i=>i.qtd+'× '+i.nome).join(', ')} — total ${fmt(v.total)}`);
   limparCupom();
@@ -2628,7 +2656,7 @@ async function salvarEdicaoVendaFin(id){
  const e=document.getElementById('ev-err');
  const itens=[...document.querySelectorAll('#ev-itens [data-evitem]')].map(d=>{
   const sel=d.querySelector('.evi-prod');const p=db.produtos.find(x=>x.id===sel.value);
-  return{produto_id:sel.value,nome:p?p.nome:'?',qtd:parseInt(d.querySelector('.evi-qtd').value)||0,preco_unit:p?p.preco:0,rateio:p?p.rateio:'Padrão (Rateio Global)'};
+  return{produto_id:sel.value,nome:p?p.nome:'?',qtd:parseInt(d.querySelector('.evi-qtd').value)||0,preco_unit:p?p.preco:0,custo_unit:p?p.custo||0:0,rateio:p?p.rateio:'Padrão (Rateio Global)'};
  }).filter(x=>x.qtd>0);
  if(!itens.length){e.textContent='Adicione ao menos um item com quantidade.';e.style.display='block';return}
  const pid=document.getElementById('ev-parceria').value||null;
@@ -2638,14 +2666,14 @@ async function salvarEdicaoVendaFin(id){
  if(entrada+repasse<0){e.textContent='Valores inválidos.';e.style.display='block';return}
  const parceria=db.parcerias.find(x=>x.id===pid)||null;
  const taxa=db.taxas_deslocamento.find(x=>x.id===tid)||null;
- const patch={parceria_id:pid,parceria_nome:parceria?parceria.nome:null,taxa_id:tid,taxa_nome:taxa?taxa.nome:null,taxa_valor:taxa?taxa.valor:0,receita_loja:entrada,cota_funcionario:repasse,total:entrada+repasse};
+ const patch={parceria_id:pid,parceria_nome:parceria?parceria.nome:null,taxa_id:tid,taxa_nome:taxa?taxa.nome:null,taxa_valor:taxa?taxa.valor:0,receita_loja:entrada,cota_funcionario:repasse,total:entrada+repasse,custo_total:itens.reduce((t,i)=>t+i.qtd*i.custo_unit,0)};
  const{error:e1}=await sb.from('vendas').update(patch).eq('id',id);
  if(e1){e.textContent='Erro ao salvar: '+e1.message;e.style.display='block';return}
  await sb.from('venda_itens').delete().eq('venda_id',id);
  const{data:itd,error:e2}=await sb.from('venda_itens').insert(itens.map(i=>({...i,venda_id:id}))).select();
  if(e2){e.textContent='Erro ao salvar itens: '+e2.message;e.style.display='block';return}
  Object.assign(v,patch);
- v.itens=itd.map(i=>({produto_id:i.produto_id,nome:i.nome,qtd:Number(i.qtd),preco_unit:Number(i.preco_unit),rateio:i.rateio}));
+ v.itens=itd.map(i=>({produto_id:i.produto_id,nome:i.nome,qtd:Number(i.qtd),preco_unit:Number(i.preco_unit),custo_unit:Number(i.custo_unit||0),rateio:i.rateio}));
  reg('Venda editada',itens.length+' item(ns) — entrada '+fmt(entrada)+', repasse '+fmt(repasse));
  closeModal();render();agendarSincronizacao();toast('✅ Venda atualizada.');
 }
@@ -2697,7 +2725,7 @@ async function salvarEdicaoCompraFin(id){
 /* ================= CONFIGURAÇÕES ================= */
 function renderConfig(c){
   const tabs=[['usuarios','Usuários'],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['logo','Identidade Visual']];
-  c.innerHTML=`<h2 class="page-title">Configurações${ajuda('Cadastros e ajustes do sistema, para Gerente, Diretor e Sócio.')}</h2>
+  c.innerHTML=`<h2 class="page-title">Configurações</h2>
   <div class="cfg-tabs">${tabs.map(t=>`<button class="cfg-tab ${cfgTabAtual===t[0]?'active':''}" onclick="cfgTabAtual='${t[0]}';render()">${t[1]}</button>`).join('')}</div>
   <div id="cfg-body"></div>`;
   const b=document.getElementById('cfg-body');
@@ -2716,7 +2744,7 @@ function usuariosOrdenados(){return [...db.usuarios].sort((a,b)=>(PERFIL_NIVEL[b
 function cfgUsuarios(b){
   const T='cfg_usuarios',F=tabelaFiltravel(T,usuariosOrdenados,{nome:u=>u.nome,usuario:u=>u.usuario||'—',perfil:u=>PERFIL_LABEL[u.perfil]||u.perfil,status:u=>u.status,primeiro_acesso:u=>primeiroAcessoFeito(u)?'Feito':'Pendente',data:u=>u.criado_em});
   b.innerHTML=`${avisoPedidosSenha()}<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">👥 Usuários${ajuda('Sócio gerencia todos os perfis, incluindo outros Sócios. Diretor tem as mesmas permissões do Sócio, exceto que não pode alterar, ativar/inativar, excluir ou promover ninguém ao perfil Sócio. Gerentes podem cadastrar vendedores. Ninguém altera o próprio perfil. Deve existir sempre ao menos um sócio ativo.')}</div>
+    <div class="section-title" style="margin:0">👥 Usuários${ajuda('Quem acessa o sistema e com qual perfil. Sócio gerencia todos os perfis; Diretor, todos menos Sócio; Gerente cadastra vendedores. Ninguém altera o próprio perfil e sempre existe ao menos um Sócio ativo. Pedido de nova senha aparece destacado aqui.',['cfg_usuarios'])}</div>
     <button class="btn btn-purple btn-sm" onclick="modalUsuario()">+ Novo usuário</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr>${thCol(T,'nome','Nome')}${thCol(T,'usuario','Usuário')}${thCol(T,'perfil','Perfil')}${thCol(T,'status','Status')}${thCol(T,'primeiro_acesso','Primeiro acesso')}${thCol(T,'data','Criado em')}<th>Ações</th></tr>
@@ -2881,9 +2909,9 @@ function excluirUsuario(id){
 }
 /* ---- Catálogo PDV (com alíquota global, imagem e exclusão) ---- */
 function cfgProdutos(b){
-  const T='cfg_produtos',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.produtos]),{nome:p=>p.nome,preco:p=>fmt(p.preco),rateio:p=>p.rateio,status:p=>p.status,data:p=>p.criado_em});
+  const T='cfg_produtos',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.produtos]),{nome:p=>p.nome,preco:p=>fmt(p.preco),custo:p=>fmt(p.custo||0),rateio:p=>p.rateio,status:p=>p.status,data:p=>p.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">🏷️ Catálogo de Venda (PDV)</div>
+    <div class="section-title" style="margin:0">🏷️ Catálogo de Venda (PDV)${ajuda('Produtos vendidos no Caixa de Balcão: foto, preço, custo e rateio. O custo sai do valor da venda antes de calcular o repasse da equipe. Rateio Padrão usa a alíquota global; 100% Equipe e 100% Loja ignoram a alíquota. Cada produto cria sozinho o seu item de Produto Final no Cadastro Central.',['cfg_catalogo'])}</div>
     <button class="btn btn-purple btn-sm" onclick="modalProduto()">+ Novo produto</button></div>
   <div class="card" style="margin-bottom:16px;max-width:420px">
     <label>Alíquota global de rateio (% repassado ao vendedor, itens "Padrão")</label>
@@ -2893,17 +2921,17 @@ function cfgProdutos(b){
     </div>
   </div>
   ${F.barra}<div class="table-wrap"><table>
-  <tr><th>Imagem</th><th>Ordem</th>${thCol(T,'nome','Produto')}${thCol(T,'preco','Preço')}${thCol(T,'rateio','Rateio')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
+  <tr><th>Imagem</th><th>Ordem</th>${thCol(T,'nome','Produto')}${thCol(T,'preco','Preço')}${thCol(T,'custo','Custo')}${thCol(T,'rateio','Rateio')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
   ${F.rows.map(p=>`<tr class="${p.status!=='ativo'?'linha-inativa':''}">
     <td>${p.imagem?`<img class="thumb" src="${imgSrc(p.imagem)}">`:'🌿'}</td>
     ${setasOrdem('moverProduto',p.id)}<td><b>${esc(p.nome)}</b></td>
-    <td class="money">${fmt(p.preco)}</td><td><span class="tag">${esc(p.rateio)}</span></td>
+    <td class="money">${fmt(p.preco)}</td><td style="color:${p.custo>0?'var(--text)':'var(--muted)'}">${fmt(p.custo||0)}</td><td><span class="tag">${esc(p.rateio)}</span></td>
     <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(p.criado_em)}</td>
     <td><button class="iconbtn" onclick="modalProduto('${p.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleProduto('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()&&p.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirProduto('${p.id}')">🗑️</button>`:''}</td>
-  </tr>`).join('')||linhaSemResultado(8,T)}</table></div>`;
+  </tr>`).join('')||linhaSemResultado(9,T)}</table></div>`;
 }
 async function salvarAliquotaGlobal(){
   const g=parseFloat(document.getElementById('al-global').value);
@@ -2929,6 +2957,10 @@ function modalProduto(id){
   <div class="field"><label>Nome</label><input id="p-nome" value="${p?esc(p.nome):''}"></div>
   <div class="row2">
     <div class="field"><label>Preço unitário ($)</label><input id="p-preco" type="number" min="0" step="0.01" value="${p?p.preco:''}"></div>
+    <div class="field"><label>Custo ($)</label><input id="p-custo" type="number" min="0" step="0.01" value="${p?p.custo||0:0}"></div>
+  </div>
+  <p class="muted" style="font-size:12px;margin:-4px 0 12px">O custo sai do valor da venda antes de calcular o repasse da equipe (a equipe recebe a parte dela do lucro). Ex.: preço $100, custo $75, 100% Equipe → repasse $25.</p>
+  <div class="row2">
     <div class="field"><label>Rateio</label><select id="p-rateio">
       <option value="Padrão (Rateio Global)" ${p&&p.rateio.includes('Padrão')?'selected':''}>Padrão (Rateio Global)</option>
       <option value="100% Loja" ${p&&p.rateio==='100% Loja'?'selected':''}>100% Loja</option>
@@ -2951,22 +2983,25 @@ async function salvarProduto(id){
   const nome=document.getElementById('p-nome').value.trim();
   const preco=parseFloat(document.getElementById('p-preco').value);
   const rateio=document.getElementById('p-rateio').value;
+  const custoTxt=document.getElementById('p-custo').value.trim(),custo=custoTxt===''?0:parseFloat(custoTxt);
   const e=document.getElementById('p-err');
   if(!nome||!(preco>=0)){e.textContent='Informe nome e preço válido.';e.style.display='block';return}
+  if(!(custo>=0)){e.textContent='Informe um custo válido (0 ou mais).';e.style.display='block';return}
+  if(custo>preco){e.textContent='O custo não pode ser maior que o preço.';e.style.display='block';return}
   let imagemUrl=id?(db.produtos.find(x=>x.id===id)||{}).imagem||null:null;
   if(window._pImgFile){
     try{imagemUrl=await uploadImagem(window._pImgFile,'produtos')}catch(err){e.textContent='Erro ao enviar imagem: '+err.message;e.style.display='block';return}
   }
-  const campos={nome,preco,rateio,imagem_url:imagemUrl};
+  const campos={nome,preco,custo,rateio,imagem_url:imagemUrl};
   if(id){
     const{error}=await sb.from('produtos').update(campos).eq('id',id);
     if(error){e.textContent='Erro ao salvar: '+error.message;e.style.display='block';return}
-    Object.assign(db.produtos.find(x=>x.id===id),{nome,preco,rateio,imagem:imagemUrl});
+    Object.assign(db.produtos.find(x=>x.id===id),{nome,preco,custo,rateio,imagem:imagemUrl});
     reg('Produto editado',nome);
   }else{
     const{data,error}=await sb.from('produtos').insert({...campos,ordem:proximaOrdem(db.produtos),criado_por:sessionUser().id}).select().single();
     if(error){e.textContent='Erro ao salvar: '+error.message;e.style.display='block';return}
-    db.produtos.push({...data,preco:Number(data.preco),imagem:data.imagem_url});
+    db.produtos.push({...data,preco:Number(data.preco),custo:Number(data.custo||0),imagem:data.imagem_url});
     reg('Produto criado',nome);
   }
   window._pImgFile=null;closeModal();render();agendarSincronizacao(); // o item "Produto Final" do produto é criado/atualizado pelo banco
@@ -2996,7 +3031,7 @@ function cfgItens(b){
   const T='cfg_itens',F=tabelaFiltravel(T,itensOrdenados,{nome:i=>i.nome,categoria:i=>catNome(i.categoria),unidade:i=>i.unidade_medida,qtd_minima:i=>String(i.qtd_minima||0),saldo:i=>controlaEstoque(i.categoria)?String(saldoItem(i.id)):'n/a',status:i=>i.status,data:i=>i.criado_em});
   const TC='cfg_categorias',FC=tabelaFiltravel(TC,()=>ordenarPorOrdem([...db.categorias]),{nome:c=>c.nome,estoque:c=>sn(c.controla_estoque),compravel:c=>sn(c.compravel),receitas:c=>sn(c.aparece_receitas),itens:c=>String(db.itens.filter(i=>i.categoria===c.codigo).length),data:c=>c.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">📦 Cadastro Central de Itens</div>
+    <div class="section-title" style="margin:0">📦 Cadastro Central de Itens${ajuda('Itens usados no Baú, nas compras e nas receitas. A categoria decide: Controle de estoque (entra no Baú) e Pode ser comprada (aparece na compra e nos fornecedores). Quantidade mínima deixa o item em vermelho no Baú. Itens 🔗 Catálogo são criados pelos produtos e só têm unidade e mínimo editáveis.',['cfg_itens'])}</div>
     <button class="btn btn-purple btn-sm" onclick="modalItem()">+ Novo item</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Item')}${thCol(T,'categoria','Categoria')}${thCol(T,'unidade','Un.')}${thCol(T,'qtd_minima','Qtd mínima')}${thCol(T,'saldo','Saldo Baú')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
@@ -3014,7 +3049,7 @@ function cfgItens(b){
       ${isSocioOuDiretor()&&i.status!=='ativo'&&!i.produto_id?`<button class="iconbtn" title="Excluir linha" onclick="excluirItem('${i.id}')">🗑️</button>`:''}</td>
   </tr>`}).join('')||linhaSemResultado(9,T)}</table></div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
-    <div class="section-title" style="margin:0">🏷️ Categorias de itens${ajuda('Controle de estoque: itens entram no Baú. Pode ser comprada: itens aparecem em "Insumos" na compra e podem ser vinculados a fornecedores (exige controle de estoque). Aparece nas Receitas: itens aparecem na lista das Receitas.')}</div>
+    <div class="section-title" style="margin:0">🏷️ Categorias de itens</div>
     <button class="btn btn-purple btn-sm" onclick="modalCategoria()">+ Nova categoria</button></div>
   ${FC.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(TC,'nome','Categoria')}${thCol(TC,'estoque','Controle de estoque')}${thCol(TC,'compravel','Pode ser comprada')}${thCol(TC,'receitas','Aparece nas Receitas')}${thCol(TC,'itens','Itens')}${thCol(TC,'data','Cadastrado em')}<th>Ações</th></tr>
@@ -3177,7 +3212,7 @@ function cfgReceitas(b){
     consome:r=>(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'—',
     produz:r=>(r.produto_final?'🏁 ':'')+((r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>nmIt(x.item_id)+' ×'+x.quantidade).join(', ')||'—')});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">🏭 Receitas de Produção${ajuda('A ordem definida aqui é a ordem em que as receitas aparecem na tela de produção do Baú.')}</div>
+    <div class="section-title" style="margin:0">🏭 Receitas de Produção${ajuda('Cada receita diz o que consome e o que gera. Marque 🏁 na última etapa (produto final): ela monta a linha na tela Produzir. A ordem daqui é a ordem das linhas. As categorias de receitas dão nome e ícone aos botões (ex.: Dichavar, Enrolar).',['cfg_receitas'])}</div>
     <button class="btn btn-purple btn-sm" onclick="modalReceita()">+ Nova receita</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Receita')}${thCol(T,'categoria','Categoria')}${thCol(T,'consome','Consome')}${thCol(T,'produz','Produz')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
@@ -3206,7 +3241,7 @@ function rotuloCatReceita(id){const c=catReceita(id);return c?((c.icone?c.icone+
 function htmlCategoriasReceitas(){
   const cats=catsReceitaOrdenadas();
   return `<div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
-    <div class="section-title" style="margin:0">🗂️ Categorias de receitas${ajuda('Agrupam as receitas na tela Produzir, na ordem definida aqui (ex.: Dichavar, Enrolar). Receita sem categoria aparece no fim, em Sem categoria. Excluir uma categoria deixa as receitas dela sem categoria.')}</div>
+    <div class="section-title" style="margin:0">🗂️ Categorias de receitas</div>
     ${isGerente()?`<button class="btn btn-purple btn-sm" onclick="modalCategoriaReceita()">+ Nova categoria</button>`:''}</div>
   <div class="table-wrap"><table><tr><th>Ordem</th><th>Ícone</th><th>Categoria</th><th>Receitas</th><th>Ações</th></tr>
   ${cats.map(c=>`<tr>${setasOrdem('moverCategoriaReceita',c.id)}<td style="font-size:18px">${esc(c.icone||'—')}</td><td><b>${esc(c.nome)}</b></td>
@@ -3272,7 +3307,7 @@ function fornecedoresDoItem(itemId){
 function cfgFornecedores(b){
   const T='cfg_fornecedores',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.fornecedores]),{nome:f=>f.nome,itens:f=>itensDoFornecedor(f.id).map(i=>i.nome).join(', ')||'—',status:f=>f.status,data:f=>f.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">🚚 Fornecedores${ajuda('Vincule cada fornecedor aos itens que ele fornece e informe o valor de cada item nesse fornecedor. Na compra, ao escolher o fornecedor de um item, o valor unitário vem daqui.')}</div>
+    <div class="section-title" style="margin:0">🚚 Fornecedores${ajuda('Vincule cada fornecedor aos itens que ele fornece e informe o valor de cada item nesse fornecedor. Na compra, o valor unitário vem daqui, e o Comprar o que falta escolhe o mais barato.',['cfg_fornecedores'])}</div>
     <button class="btn btn-purple btn-sm" onclick="modalFornecedor()">+ Novo fornecedor</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Nome')}${thCol(T,'itens','Itens fornecidos')}${thCol(T,'status','Status')}${thCol(T,'data','Cadastrado em')}<th>Ações</th></tr>
@@ -3397,7 +3432,7 @@ function descontoResumo(p){return p.tipo==='fixa'?p.desconto_fixo+'%':(p.faixas|
 function cfgDescontos(b){
   const T='cfg_descontos',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.parcerias]),{nome:p=>p.nome,tipo:p=>p.tipo==='fixa'?'Fixa':'Escalonada',desconto:p=>descontoResumo(p),status:p=>p.status});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">🤝 Descontos Comerciais</div>
+    <div class="section-title" style="margin:0">🤝 Descontos Comerciais${ajuda('Descontos de parceria usados no Caixa de Balcão: percentual fixo ou escalonado por quantidade de itens. No Caixa o desconto é arredondado para o inteiro e reduz também o repasse.',['cfg_descontos'])}</div>
     <button class="btn btn-purple btn-sm" onclick="modalDescontos()">+ Novo desconto</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Nome')}${thCol(T,'tipo','Tipo')}${thCol(T,'desconto','Desconto')}${thCol(T,'status','Status')}<th>Ações</th></tr>
@@ -3488,7 +3523,7 @@ async function toggleDescontos(id){
 function cfgDeslocamento(b){
   const T='cfg_deslocamento',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.taxas_deslocamento]),{nome:t=>t.nome,valor:t=>fmt(t.valor),status:t=>t.status});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">🚗 Deslocamento</div>
+    <div class="section-title" style="margin:0">🚗 Deslocamento${ajuda('Taxas de entrega cobradas no Caixa de Balcão, por localidade. A alíquota define quanto da taxa vai para o repasse de quem vendeu.',['cfg_deslocamento'])}</div>
     <button class="btn btn-purple btn-sm" onclick="modalTaxa()">+ Nova taxa</button></div>
   <div class="card" style="margin-bottom:16px;max-width:520px">
     <label>Alíquota da Taxa de Deslocamento (% da taxa que vai para a cota do funcionário)</label>
@@ -3554,7 +3589,7 @@ function cfgLogo(b){
   const logoRef=db.identidade_visual&&db.identidade_visual.logotipo;
   const logo=imgSrc(logoRef);
   const nome=nomeLojaAtual();
-  b.innerHTML=`<div class="section-title">🎨 Identidade Visual</div>
+  b.innerHTML=`<div class="section-title">🎨 Identidade Visual${ajuda('Nome da loja, emblema, fundo da tela de login e cores do sistema. Mudar uma cor muda o site inteiro na hora.',['cfg_identidade'])}</div>
   <div class="card" style="max-width:520px">
     <div class="field"><label>Nome da loja</label>
       <input type="text" id="cfg-nome-loja" value="${esc(nome)}" maxlength="40" placeholder="Ex: BEST BUDS" oninput="previaNomeLoja()">
@@ -3793,7 +3828,7 @@ function previaNomeLoja(){
 function cfgPaletaHTML(){
   return `<div class="card" style="margin-top:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px">
-      <div class="section-title" style="margin:0">🎨 Paleta de Cores do Sistema${ajuda('Cada cor abaixo corresponde a um elemento específico do site. Ao alterar um hex, todos os locais que usam aquela cor mudam automaticamente em tempo real — inclusive fundos translúcidos derivados dela.')}</div>
+      <div class="section-title" style="margin:0">🎨 Paleta de Cores do Sistema</div>
       <button class="btn btn-ghost btn-sm" onclick="restaurarTodasCores()">↺ Restaurar tudo ao padrão</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
@@ -3889,15 +3924,17 @@ function linhasFonte(tipo){
 const NUMERICOS={
  bau:{quantidade:{get:r=>r.quantidade},saldo_resultante:{get:r=>r.saldo_resultante}},
  financeiro:{entrada:{get:r=>['venda','compra','ajuste'].includes(r.tipo)?r.entrada:null,moeda:1},repasse:{get:r=>r.tipo==='venda'||r.tipo==='auxiliar'?r.repasse:null,moeda:1},valor:{get:r=>r.valor,moeda:1}},
- cfg_produtos:{preco:{get:p=>p.preco,moeda:1}},
+ cfg_produtos:{preco:{get:p=>p.preco,moeda:1},custo:{get:p=>p.custo||0,moeda:1}},
  cfg_itens:{qtd_minima:{get:i=>i.qtd_minima||0},saldo:{get:i=>controlaEstoque(i.categoria)?saldoItem(i.id):null}},
  cfg_categorias:{itens:{get:c=>db.itens.filter(i=>i.categoria===c.codigo).length}},
  cfg_deslocamento:{valor:{get:t=>t.valor,moeda:1}}
 };
 function colunaNumerica(tipo,key){return NUMERICOS[tipo]&&NUMERICOS[tipo][key]}
 function ehFaixa(v){return v&&!Array.isArray(v)&&typeof v==='object'&&('min' in v||'max' in v)}
+/* Usuário: só o da linha principal. Sublinha (auxiliar da venda, item da compra com o fornecedor) não entra na lista
+   do filtro e, ao filtrar, acompanha a linha principal dela. */
 function valoresColuna(tipo,key){
- const a=linhasFonte(tipo);
+ const a=linhasFonte(tipo).filter(r=>!(key==='usuario_nome'&&r.pai));
  const get=GETTERS[tipo][key];
  return [...new Set(a.map(r=>String(get?get(r):(r[key]??''))).filter(v=>v!==''))].sort((x,y)=>x.localeCompare(y,'pt-BR',{numeric:true}));
 }
@@ -3906,11 +3943,14 @@ function colunaFiltrada(tipo,key){const v=regConsulta[tipo].filtros?.[key];retur
 function filtroAtivo(tipo){const f=regConsulta[tipo].filtros||{};return Object.keys(f).some(k=>k==='__de'||k==='__ate'||ehFaixa(f[k])||(Array.isArray(f[k])&&f[k].length))}
 function aplicarFiltros(arr,tipo){
  const f=regConsulta[tipo].filtros||{};const g=GETTERS[tipo]||{};
+ const pais=Array.isArray(f.usuario_nome)&&f.usuario_nome.length&&arr.some(r=>r.pai)?new Map(arr.filter(r=>!r.pai).map(r=>[r.id,r])):null;
  return arr.filter(r=>{const bruto=String(g.data?g.data(r):(r.data??''));const d=/^\d{4}-\d{2}-\d{2}T/.test(bruto)?diaBR(bruto):bruto.slice(0,10);   // instante → dia de Brasília
   if(f.__de&&d<f.__de)return false;if(f.__ate&&d>f.__ate)return false;
   return Object.keys(f).every(k=>{if(k==='__de'||k==='__ate')return true;
    if(ehFaixa(f[k])){const n=colunaNumerica(tipo,k);if(!n)return true;const v=n.get(r);if(v==null||isNaN(v))return false;return v>=f[k].min-1e-9&&v<=f[k].max+1e-9}
-   const vals=Array.isArray(f[k])?f[k]:[];if(!vals.length)return true;const val=String(g[k]?g[k](r):(r[k]??''));return vals.includes(val)})});
+   const vals=Array.isArray(f[k])?f[k]:[];if(!vals.length)return true;
+   const ref=k==='usuario_nome'&&r.pai&&pais?pais.get(r.pai)||r:r;   // sublinha: vale o usuário da linha principal
+   const val=String(g[k]?g[k](ref):(ref[k]??''));return vals.includes(val)})});
 }
 function thCol(tipo,key,label){
  const ativo=colunaFiltrada(tipo,key);
@@ -4386,6 +4426,101 @@ function atualizarSeloAvisos(){
   const b=document.getElementById('btn-avisos');if(b)b.title=n?n+' aviso(s) novo(s)':'Avisos';
 }
 let _avisoAtual=null;
+/* ================= TUTORIAL DE PRIMEIRO ACESSO =================
+   Todo mundo passa uma vez, inclusive quem já usava o sistema (profiles.tutorial_visto_em vazio). Mostra só as abas do perfil
+   e ensina o "?": tocar nele mostra a explicação e o vídeo "Como fazer". Rever: botão 🎓 no topo. */
+let _tut=null;
+const TUT_KEY=()=>'bb_tutorial_'+(sessionUser()||{}).id;
+function precisaTutorial(){
+  const u=sessionUser();if(!u||u.tutorial_visto_em)return false;
+  try{if(localStorage.getItem(TUT_KEY()))return false}catch(e){}
+  return true;
+}
+const TUT_MOD={
+  pdv:'Aqui você vende: toque nos produtos para montar o cupom, escolha desconto e deslocamento e finalize. A venda fica pendente até você guardar o dinheiro em "Vendas a guardar no caixa".',
+  bau:'O estoque de insumos. Daqui você registra uma Nova compra e entra em Produzir para dichavar e enrolar.',
+  financeiro:'Todas as vendas guardadas, compras e ajustes do caixa, com os resumos no topo e um filtro em cada coluna.',
+  painel:'Alertas que pedem ação (cancelamentos, senhas, dinheiro na mão, estoque mínimo) e os números da loja por período.',
+  config:'Cadastros do sistema: usuários, catálogo, itens, receitas, fornecedores, descontos, deslocamento e identidade visual. Cada aba tem o vídeo dela no "?".'
+};
+function tutVisivel(sel){return [...document.querySelectorAll(sel)].find(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!=='hidden'})||null}
+function tutPassos(){
+  const u=sessionUser(),mods=MODULOS.filter(m=>m.perfis.includes(u.perfil));
+  const P=[{titulo:`Olá, ${esc(String(u.nome||'').split(' ')[0])}! 👋`,texto:'Este é um tour rápido pelo sistema. Leva menos de um minuto.'},
+    {alvo:()=>tutVisivel('#sidebar-nav')||tutVisivel('#bottom-nav'),titulo:'O menu',texto:`Aqui ficam as abas. Você vê só as do seu perfil (${esc(PERFIL_LABEL[u.perfil]||u.perfil)}).`}];
+  mods.forEach(m=>P.push({antes:()=>go(m.id),alvo:()=>tutVisivel(`.nav-item[onclick="go('${m.id}')"]`),titulo:`${m.ic} ${m.nome}`,texto:TUT_MOD[m.id]||''}));
+  P.push({antes:()=>go('pdv'),alvo:()=>tutVisivel('#main-content .page-title .ajuda'),titulo:'O ponto de interrogação',
+    texto:'Onde aparece um <b>?</b>, tem a explicação da tela e um vídeo de como fazer. <b>Toque no ? agora.</b>',espera:'ajuda'});
+  P.push({alvo:()=>tutVisivel('#main-content .page-title .ajuda.aberta .ajuda-txt'),titulo:'Vídeo "Como fazer"',
+    texto:'Toque em <b>▶ Ver como fazer</b> para assistir agora (o tour continua quando você fechar o vídeo), ou em Próximo.',livre:true});
+  P.push({antes:()=>tutFecharAjuda(),alvo:()=>tutVisivel('#btn-tutorial'),titulo:'Rever o tutorial',texto:'Quer ver de novo? Toque em <b>🎓</b> aqui no topo, quando quiser.'});
+  P.push({titulo:'Pronto! ✅',texto:'Agora é com você. Bom trabalho!',fim:true});
+  return P;
+}
+function iniciarTutorial(){
+  if(!sessionUser())return;
+  tutFechar(false);closeModal();closeModal2();
+  _tut={i:0,passos:tutPassos()};
+  document.body.insertAdjacentHTML('beforeend','<div id="tut-bloq"></div><div id="tut-spot"></div><div id="tut-bal" role="dialog" aria-modal="true" aria-live="polite"></div>');
+  window.addEventListener('resize',tutPosicionar);document.addEventListener('scroll',tutPosicionar,true);
+  tutMostrar();
+}
+function tutFecharAjuda(){document.querySelectorAll('.ajuda.aberta').forEach(a=>a.classList.remove('aberta'));if(document.activeElement)document.activeElement.blur()}
+function tutMostrar(){
+  if(!_tut)return;
+  const p=_tut.passos[_tut.i],n=_tut.passos.length;
+  if(p.antes)p.antes();
+  const bal=document.getElementById('tut-bal');
+  bal.innerHTML=`<span class="tut-p">${_tut.i+1} de ${n}</span><h4>${p.titulo}</h4><p>${p.texto}</p>
+    ${p.espera?'<div class="tut-espera" id="tut-espera">👆 Toque no ? destacado para continuar.</div>':''}
+    <div class="tut-acoes">${p.fim?'':'<button class="tut-pular" onclick="tutFechar(true)">Pular tutorial</button>'}
+      ${_tut.i>0&&!p.fim?'<button class="btn btn-ghost btn-sm" onclick="tutIr(-1)">Voltar</button>':''}
+      <button class="btn btn-primary btn-sm" id="tut-prox" onclick="${p.fim?'tutFechar(true)':'tutIr(1)'}" ${p.espera?'disabled':''} style="${p.fim?'margin-left:auto':''}">${p.fim?'Concluir':'Próximo'}</button></div>`;
+  // no "?" e no vídeo a pessoa interage com a tela: sem bloqueio
+  document.getElementById('tut-bloq').style.display=p.espera||p.livre?'none':'block';
+  const alvo=p.alvo&&p.alvo();
+  if(alvo&&!alvo.closest('#sidebar-nav,#bottom-nav,#app-header'))alvo.scrollIntoView({block:'center',behavior:'instant'});
+  if(p.espera==='ajuda'&&alvo){
+    const ok=()=>{if(!_tut||_tut.passos[_tut.i]!==p)return;alvo.classList.add('aberta');tutIr(1)};
+    ['mouseenter','focusin','click','touchstart'].forEach(ev=>alvo.addEventListener(ev,ok,{once:true}));
+  }
+  tutPosicionar();
+  setTimeout(()=>{const b=document.getElementById('tut-prox');if(b&&!b.disabled)b.focus({preventScroll:true})},50);
+}
+function tutPosicionar(){
+  if(!_tut)return;
+  const p=_tut.passos[_tut.i],spot=document.getElementById('tut-spot'),bal=document.getElementById('tut-bal');if(!spot||!bal)return;
+  const alvo=p.alvo&&p.alvo(),vw=innerWidth,vh=innerHeight,bw=bal.offsetWidth,bh=bal.offsetHeight;
+  if(!alvo){spot.classList.add('centro');bal.style.left=Math.max(16,(vw-bw)/2)+'px';bal.style.top=Math.max(16,(vh-bh)/2)+'px';return}
+  spot.classList.remove('centro');
+  const r=alvo.getBoundingClientRect(),pad=6;
+  Object.assign(spot.style,{left:r.left-pad+'px',top:r.top-pad+'px',width:r.width+2*pad+'px',height:r.height+2*pad+'px'});
+  let top=r.bottom+14;if(top+bh>vh-12)top=r.top-bh-14;
+  if(top<12){top=Math.min(vh-bh-12,Math.max(12,r.top));}   // alvo alto (menu lateral): o balão fica ao lado
+  let left=r.left+r.width/2-bw/2;
+  if(r.height>vh*.6&&r.right+bw+24<vw)left=r.right+16;
+  bal.style.left=Math.max(16,Math.min(left,vw-bw-16))+'px';bal.style.top=top+'px';
+}
+function tutIr(d){if(!_tut)return;const p=_tut.passos[_tut.i];if(d<0&&p.espera===undefined)tutFecharAjuda();_tut.i=Math.max(0,Math.min(_tut.passos.length-1,_tut.i+d));tutMostrar()}
+/* vídeo aberto pelo tour: o tour some e volta quando o vídeo fecha */
+function tutPausar(){['tut-bloq','tut-spot','tut-bal'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.visibility='hidden'})}
+function tutRetomar(){if(!_tut)return;['tut-bloq','tut-spot','tut-bal'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.visibility=''});tutIr(1)}
+async function tutFechar(concluido){
+  const estava=!!_tut;_tut=null;
+  ['tut-bloq','tut-spot','tut-bal'].forEach(id=>{const e=document.getElementById(id);if(e)e.remove()});
+  window.removeEventListener('resize',tutPosicionar);document.removeEventListener('scroll',tutPosicionar,true);
+  tutFecharAjuda();
+  if(!estava||!concluido)return;
+  go('pdv');
+  const u=sessionUser(),agora=new Date().toISOString();
+  try{localStorage.setItem(TUT_KEY(),agora)}catch(e){}
+  if(u&&!u.tutorial_visto_em){
+    u.tutorial_visto_em=agora;
+    const{error}=await sb.from('profiles').update({tutorial_visto_em:agora}).eq('id',u.id);
+    if(error)console.warn('[Best Buds] tutorial: não gravou no perfil',error);
+  }
+  mostrarAvisosPendentes();
+}
 function mostrarAvisosPendentes(){
   if(!db||!session||!document.body.classList.contains('logado'))return;
   const bg=document.getElementById('aviso-bg');if(!bg)return;

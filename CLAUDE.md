@@ -50,6 +50,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 ## Vendas e caixa
 
 - No jogo não existem centavos. No Caixa de Balcão o desconto é arredondado para o inteiro mais próximo (metade sobe: 5% de $90 = $4,50 → $5). O repasse da equipe também é inteiro e parte do valor já com esse desconto; a loja fica com o resto (total − repasse). Vale para vendas novas; as antigas não mudam.
+- **Custo do produto** (`produtos.custo`, Catálogo PDV; migração `20261003000000_custo_produto_tutorial.sql`): sai do valor antes de dividir o repasse. Repasse do item = fator de rateio × (valor do item já com desconto − custo × qtd), nunca negativo; a loja fica com o resto (que cobre o custo). Ex.: CBD $100, 100% Equipe, custo $75 → repasse $25, loja $75; com 10% de desconto → repasse $15, loja $75. O cupom mostra a linha "Custo dos produtos" quando há custo. A venda grava `venda_itens.custo_unit` e `vendas.custo_total` (vendas antigas ficam com 0). Custo não pode passar do preço. Valor inicial: todos $0, CBD $75.
 - **Pré-registro:** toda venda nova nasce `pendente` (trigger `trg_vendas_nova_pendente`) e não entra no caixa nem nos totais do Histórico.
   - No Caixa de Balcão, "Vendas a guardar no caixa" lista as pendentes: o vendedor vê só as dele; Gerente ou acima vê todas, com o resumo "dinheiro na mão" por vendedor. Pendente há 24 h ou mais fica em vermelho.
   - O vendedor marca as vendas e clica em "Guardar no caixa". O resumo mostra total vendido, descontos, repasse por pessoa (e quem paga cada auxiliar) e, em destaque, o **valor para o caixa** (soma de `receita_loja`: o vendedor fica com o repasse e guarda só a parte da loja).
@@ -58,6 +59,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - Cancelar pendente: o vendedor pede com motivo (`pedir_cancelamento_venda`); a venda fica travada até um Gerente ou acima aprovar (vira `revertida`) ou recusar (volta a pendente) com `responder_cancelamento_venda`. Gerente ou acima também cancela direto (↩️).
   - Vendedor não altera `vendas` direto (RLS); tudo passa pelas rpc.
 - No Histórico Financeiro, a coluna "Entrada/Saída" mostra o que entrou no caixa (venda, ajuste +) e, negativo e em vermelho, o que saiu (compra e suas sublinhas, ajuste −). O dinheiro que sai fica só nessa coluna: "Valor" mostra apenas o total da venda (compra e ajuste ficam com "—"). O card Saídas soma a partir de Entrada/Saída.
+- Filtro da coluna Usuário (Histórico e demais tabelas com sublinhas): a lista mostra só os usuários das **linhas principais**; sublinha (auxiliar da venda, item da compra com o fornecedor) não entra na lista e, ao filtrar, acompanha a linha principal dela (`valoresColuna`/`aplicarFiltros`).
 - No Histórico Financeiro, o ajuste de caixa entra nos cards de cima: "+ Entrada" soma em Entradas e "− Saída" soma em Saídas (ajuste revertido não conta). Na tabela, a coluna Entrada/Saída mostra o valor do ajuste (+ ou −).
 
 ## Painel
@@ -137,21 +139,34 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 ## Explicações na tela
 
-- Explicações de página e de seção não ficam na tela: vão para o "?" ao lado do título (`ajuda(texto)`), que mostra o texto ao passar o mouse ou tocar. Instruções dentro de janelas (antes de confirmar uma ação) continuam visíveis.
+- **Só existe "?" onde há vídeo** (pedido do dono, v4.27): `ajuda(texto,[vídeos])` não desenha nada sem vídeo. O "?" fica ao lado do título da tela (ou da aba de Configurações), com a explicação e o botão do vídeo. Painel não tem "?". Instruções dentro de janelas (antes de confirmar uma ação) continuam visíveis.
 - Os ícones continuam no site todo (o dono pediu para manter, depois de testar sem eles).
 
 ## Vídeos "Como fazer"
 
 - MP4 em `src/videos/` (servidos pela Vercel; o dono preferiu ao YouTube: sem anúncio, sem sugestões no fim, só quem entra no sistema vê e a troca é automática na publicação). Lista em `VIDEOS` (`src/index.html`): arquivo, título, duração e, opcional, `ger` (só Gerente ou acima vê; nenhum usa hoje).
 - `ajuda(texto,[ids])` põe, no balão do "?", um botão "▶ Ver como fazer: título · duração" por vídeo. `verVideo(id)` abre o player na 2ª camada (`modal2`, classe `modal-video`); fechar esvazia a janela e o vídeo para. O vídeo só baixa quando a pessoa toca no botão.
-- Onde aparecem: Caixa de Balcão (caixa), Baú (compra, produção, cascata, falta), Nova compra (compra), Produzir (produção, cascata, falta), Histórico Financeiro (histórico). Todos veem todos (desde a v4.26 o vendedor também faz cascata).
+- Onde aparecem: Caixa de Balcão (caixa), Baú (compra, produção, cascata, falta), Nova compra (compra), Produzir (produção, cascata, falta), Histórico Financeiro (histórico) e um por aba de Configurações (`cfg_usuarios`, `cfg_catalogo`, `cfg_itens`, `cfg_receitas`, `cfg_fornecedores`, `cfg_descontos`, `cfg_deslocamento`, `cfg_identidade`, com `ger`). O vendedor vê todos os da operação (desde a v4.26 ele também faz cascata).
+- Ferramentas de gravação e testes: pasta `testes/` (ver `testes/README.md`). `node testes/videos.js <vídeo>`, `node testes/videos-cfg.js <aba>` e `node testes/video-narrado.js` (caixa) gravam em `testes/saida/video/`.
 - Gravação: dados reais (cadastros e histórico lidos da produção só para consulta), quadros PNG sem perda pelo screencast do Chrome, H.264 1920×1080 com `+faststart`, narração na tela (destaque, balão "Passo N de T", cursor). Navegador em português (`LANG=pt_BR.UTF-8`), senão o campo de data sai no formato americano.
 - **Regravar na publicação** os vídeos das telas que mudaram e atualizar a duração em `VIDEOS`.
 - O balão do "?" abre também com o foco dentro dele (`:focus-within`), para o toque no botão funcionar no celular. No celular ele vira um painel fixo acima da barra de baixo, sem empurrar a página para o lado.
 
+## Tutorial de primeiro acesso
+
+- Todo mundo passa uma vez, inclusive quem já usava o sistema antes da v4.27 (`profiles.tutorial_visto_em` vazio; migração `20261003000000_custo_produto_tutorial.sql`). Abre sozinho depois do login (e da troca obrigatória de senha); os avisos esperam o tutorial acabar.
+- Passos (`tutPassos()`): boas-vindas, o menu, **uma parada por aba que o perfil vê** (vendedor: Caixa, Baú e Histórico; Gerente ou acima: também Painel e Configurações), o "?" (a pessoa precisa tocar nele para seguir), o vídeo (pode assistir: o tour pausa e volta quando o vídeo fecha), o botão 🎓 e o fim.
+- Concluir ou "Pular tutorial" grava `tutorial_visto_em` (e uma cópia em `localStorage`). O botão **🎓** no topo reabre o tutorial quando quiser.
+- Ao mudar abas, telas do tour ou o "?", atualize `TUT_MOD`/`tutPassos()` na mesma entrega.
+
+## Testes
+
+- Pasta `testes/` (no git): banco falso (`fake-supabase.js`), instantâneo real da produção (`dados-producao.json`, lido só para consulta) e as suítes. Rodar: `bash testes/rodar-testes.sh` (todas precisam dar "TUDO OK"). Prints e vídeos saem em `testes/saida/` (fora do git).
+- Mudou uma regra ou tela: ajuste ou crie o teste na mesma entrega.
+
 ## Menu lateral e topo
 
-- Topo: logo, nome da loja com a tipografia da tela de login (1ª parte cheia, última palavra vazada) e a versão ao lado. Não há "Sair" no topo no computador; no celular (sem menu lateral) o "Sair" e o selo do perfil continuam no topo.
+- Topo: logo, nome da loja com a tipografia da tela de login (1ª parte cheia, última palavra vazada) e a versão ao lado; à direita, 🎓 (rever o tutorial) e 📢 (avisos). Não há "Sair" no topo no computador; no celular (sem menu lateral) o "Sair" e o selo do perfil continuam no topo.
 - Menu lateral: módulos de operação no alto; "Configurações" fica separada, logo acima do rodapé com o usuário.
 - Menu lateral, abaixo dos módulos: "On-line" e "Off-line" com a contagem, recolhidos por padrão; clicar abre ou fecha a lista. Cada pessoa aparece com o nome e, na frente, o selo do perfil em tamanho menor (mesmo desenho da aba Usuários). Presença pelo Supabase Realtime (canal `presenca`, chave = id do usuário), sem gravar no banco.
 - Rodapé do menu: nome, selo do perfil e o botão "Sair".

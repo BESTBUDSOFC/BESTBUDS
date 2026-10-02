@@ -1,0 +1,4 @@
+# saídas (prints, quadros e vídeos gravados) e cópia local das fotos do Storage
+saida/
+midia/
+*.png
