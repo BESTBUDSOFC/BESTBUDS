@@ -72,26 +72,28 @@ label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-wei
 .btn-purple{background:var(--purple);color:var(--white)}
 .btn-purple:hover{background:var(--purple-hover)}
 .prod-topo{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}.prod-topo .btn{margin-left:auto}
-.pl-apoio{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:16px;font-size:12px}
-.pl-chip{background:#22222c;color:var(--muted);border-radius:20px;padding:4px 11px;font-weight:600}.pl-chip b{color:var(--text);margin-left:4px}.pl-chip.bad b{color:#F87171}
+.pl-estoque{padding:12px 14px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px}
+.pl-estoque-tit{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pl-estoque-grp{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.pl-estoque-cat{font-size:11px;color:var(--muted);min-width:130px}
+.pl-chip{background:#22222c;color:var(--muted);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;border:1px solid transparent}.pl-chip b{color:var(--text);margin-left:4px}.pl-chip.bad{border-color:rgba(170,34,34,.6)}.pl-chip.bad b{color:#F87171}
 .pl-lista{display:flex;flex-direction:column;gap:14px}
 .pl-linha{padding:16px;display:flex;align-items:center;gap:16px}
-.pl-cab{display:flex;align-items:center;gap:12px;width:210px;flex:none}.pl-cab img,.pl-sem-img{width:56px;height:56px;border-radius:10px;object-fit:cover;flex:none}.pl-sem-img{display:flex;align-items:center;justify-content:center;background:var(--input-bg);font-size:24px}.pl-cab b{font-size:16px}
-/* blocos da linha: todos do mesmo tamanho (saldo no Baú, etapa com receita+seta+botão, vende no Caixa) */
-.pl-fluxo{flex:1;min-width:0;display:grid;grid-template-columns:repeat(var(--pl-n,5),minmax(0,1fr));gap:10px;align-items:stretch}
-.pl-box{border:1px solid var(--border);border-radius:10px;padding:12px;height:150px;background:rgba(255,255,255,.02);display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0}
-.pl-box.baixo{border-color:rgba(170,34,34,.7)}.pl-box.pl-final{border-color:rgba(0,204,82,.35)}
-.pl-rot{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);line-height:1.3}
-.pl-qtd{font-size:20px;font-weight:800;color:var(--text)}.pl-qtd.bad{color:#F87171}.pl-sub{font-size:11px;color:var(--muted)}.pl-nome{font-size:15px;font-weight:800}
-.pl-box .pl-rot~.pl-rot{margin-top:6px}
-.pl-etapa{align-items:stretch;justify-content:space-between;gap:8px}.pl-etapa.ok{border-color:rgba(0,204,82,.35)}
-.pl-receita{font-size:11px;color:var(--muted);text-align:center;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.pl-seta{height:2px;background:#3a3a4a;position:relative;margin:0 6px}.pl-seta::after{content:'▶';position:absolute;right:-4px;top:-8px;font-size:11px;color:#3a3a4a}
-.pl-etapa.ok .pl-seta{background:var(--green)}.pl-etapa.ok .pl-seta::after{color:var(--green)}
-.pl-btn{width:100%;justify-content:center;padding:8px 10px;font-size:14px;font-weight:800;border-radius:8px}
+.pl-cab{display:flex;align-items:center;gap:12px;width:200px;flex:none}.pl-cab img,.pl-sem-img{width:56px;height:56px;border-radius:10px;object-fit:cover;flex:none}.pl-sem-img{display:flex;align-items:center;justify-content:center;background:var(--input-bg);font-size:24px}.pl-cab b{font-size:16px}
+/* cartões da linha (receitas e vende no Caixa) do mesmo tamanho, com a seta entre eles */
+.pl-fluxo{flex:1;min-width:0;display:grid;grid-template-columns:var(--pl-cols,1fr);align-items:stretch}
+.pl-box{border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-height:150px;background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:8px;min-width:0}
+.pl-etapa.ok{border-color:rgba(0,204,82,.35)}.pl-final{justify-content:center;gap:2px;border-color:rgba(0,204,82,.25)}
+.pl-io{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pl-io-tit{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.pl-io-tit.sai{color:var(--warning-light)}.pl-io-tit.ent{color:var(--green)}
+.pl-io-l{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pl-io-l b{display:inline-block;min-width:30px;font-weight:700}
+.pl-io:first-child .pl-io-l b{color:var(--warning-light)}.pl-io:nth-child(2) .pl-io-l b{color:var(--green)}
+.pl-io-l.falta{color:#F87171}.pl-io-l.falta b{color:#F87171!important}
+.pl-nome{font-size:15px;font-weight:800}.pl-sub{font-size:11px;color:var(--muted)}
+.pl-seta{display:flex;align-items:center;justify-content:center;color:#4a4a5a;font-size:16px}
+.pl-btn{margin-top:auto;align-self:center;padding:5px 14px;font-size:13px;font-weight:700}
 .pl-btn.pl-off{border:1px dashed #3a3a4a;color:var(--muted);background:transparent}
 @media(max-width:1100px){.pl-linha{flex-direction:column;align-items:stretch}.pl-cab{width:auto}.pl-fluxo{width:100%}}
-@media(max-width:700px){.pl-fluxo{grid-template-columns:1fr}.pl-box{height:auto}.pl-seta{display:none}}
+@media(max-width:700px){.pl-fluxo{grid-template-columns:1fr}.pl-box{min-height:0}.pl-seta{transform:rotate(90deg);height:24px}.pl-estoque-cat{min-width:0;flex-basis:100%}.pl-io-l{white-space:normal}}
 .prod-painel{display:flex;flex-direction:column;gap:16px;min-width:0}
 .prod-cat{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .prod-nome{font-size:20px;font-weight:800}
@@ -581,7 +583,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.22.2';
+const VERSAO='v4.23.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -2191,10 +2193,6 @@ function prodCadeias(){
   });
   const usadas=new Set(cadeias.flatMap(c=>c.passos.map(p=>p.id)));
   recs.filter(r=>!usadas.has(r.id)).forEach(r=>cadeias.push({passos:[r]}));
-  // insumo de apoio = usado em mais de uma linha (ex.: Zip Lock, Papel de Seda) ou da categoria Insumo Auxiliar
-  const linhasDoItem={};
-  cadeias.forEach((c,k)=>c.passos.forEach(p=>(p.insumos||[]).filter(x=>x.papel==='consumo').forEach(x=>{(linhasDoItem[x.item_id]=linhasDoItem[x.item_id]||new Set()).add(k)})));
-  const ehApoio=id=>{const it=db.itens.find(i=>i.id===id);return !!it&&controlaEstoque(it.categoria)&&!ehProdutoFinal(it)&&(it.categoria==='insumo_auxiliar'||(cadeias.length>1&&linhasDoItem[id]?.size>1))};
   cadeias.forEach(c=>{
     const ult=c.passos[c.passos.length-1];
     const pf=ult.produto_final?(ult.insumos||[]).map(x=>x.papel==='produzido'&&db.itens.find(i=>i.id===x.item_id)).find(ehProdutoFinal):null;
@@ -2203,50 +2201,49 @@ function prodCadeias(){
     c.titulo=c.produto?c.produto.nome:pf?pf.nome:ult.nome;
   });
   cadeias.sort((a,b)=>(a.produto?a.produto.ordem??999:1e4)-(b.produto?b.produto.ordem??999:1e4)||a.titulo.localeCompare(b.titulo,'pt-BR'));
-  return {cadeias,ehApoio};
+  return {cadeias};
 }
 function telaProducaoHTML(c){
- const saldo=saldosBau(),{cadeias,ehApoio}=prodCadeias();
+ const saldo=saldosBau(),{cadeias}=prodCadeias();
  const un=it=>esc(it.unidade_medida||'');
  const baixo=it=>{const s=saldo[it.id]||0,min=it.qtd_minima||0;return s<=0||(min>0&&s<=min)};
- const caixa=(itens,classe='')=>`<div class="pl-box${itens.some(baixo)?' baixo':''} ${classe}">${itens.map(it=>{const s=saldo[it.id]||0,min=it.qtd_minima||0;
-   return `<div class="pl-rot">${esc(it.nome)}</div><div class="pl-qtd${baixo(it)?' bad':''}">${fmtQtd(s)} ${un(it)}</div><div class="pl-sub">${min>0&&s<=min?`mín. ${fmtQtd(min)} · repor`:'no Baú'}</div>`}).join('')}</div>`;
+ // cartão da receita: o que consome (sai do Baú), o que gera (entra) e o botão da etapa
  const etapa=r=>{
    const i=prodInfo(r,saldo),cat=catReceita(r.categoria_id);
    const cons=(r.insumos||[]).filter(x=>x.papel==='consumo').map(x=>({x,it:db.itens.find(t=>t.id===x.item_id)})).filter(y=>y.it);
-   const sai=(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>({x,it:db.itens.find(t=>t.id===x.item_id)})).filter(y=>y.it);
-   const receita=cons.map(y=>`${fmtQtd(y.x.quantidade)} ${esc(y.it.nome)}`).join(' + ')+(sai.length?' → '+sai.map(y=>`${fmtQtd(y.x.quantidade)} ${esc(y.it.nome)}`).join(' + '):'');
+   const ger=(r.insumos||[]).filter(x=>x.papel==='produzido').map(x=>({x,it:db.itens.find(t=>t.id===x.item_id)})).filter(y=>y.it);
+   const falta=y=>controlaEstoque(y.it.categoria)&&(saldo[y.it.id]||0)<y.x.quantidade;
    const nome=cat?`${cat.icone?esc(cat.icone)+' ':''}${esc(cat.nome)}`:'▶ '+esc(r.nome);
    const [cls,extra,dica]=i.max>0?['btn-primary','','dá para fazer agora']:i.cascata>0?['btn-purple','🔗 ','só com produção em cascata']:['btn-ghost pl-off','','faltam insumos'];
-   return `<div class="pl-box pl-etapa${i.max>0?' ok':''}"><div class="pl-receita" title="${esc(r.nome)}: ${receita.replace(/"/g,'&quot;')}">${receita}</div><div class="pl-seta"></div>
-     <button class="btn pl-btn ${cls}" data-rec="${r.id}" onclick="prodAbrir('${r.id}')" title="${esc(r.nome)} — ${dica}">${extra}${nome}</button></div>`;
+   return `<div class="pl-box pl-etapa${i.max>0?' ok':''}" title="${esc(r.nome)}">
+     <div class="pl-io"><div class="pl-io-tit sai">⬇️ Consome</div>${cons.map(y=>`<div class="pl-io-l${falta(y)?' falta':''}" title="${falta(y)?'Não há o suficiente no Baú':''}"><b>−${fmtQtd(y.x.quantidade)}</b> ${esc(y.it.nome)}</div>`).join('')||'<div class="pl-io-l muted">—</div>'}</div>
+     <div class="pl-io"><div class="pl-io-tit ent">⬆️ Gera</div>${ger.map(y=>`<div class="pl-io-l"><b>+${fmtQtd(y.x.quantidade)}</b> ${esc(y.it.nome)}</div>`).join('')||'<div class="pl-io-l muted">produto final</div>'}</div>
+     <button class="btn btn-sm pl-btn ${cls}" data-rec="${r.id}" onclick="prodAbrir('${r.id}')" title="${esc(r.nome)} — ${dica}">${extra}${nome}</button></div>`;
  };
+ const seta='<div class="pl-seta" aria-hidden="true">➜</div>';
  const linha=c=>{
    const ult=c.passos[c.passos.length-1];
-   const partes=[];
-   const ent=prodConsumos(c.passos[0]).map(x=>x.it).filter(it=>!ehApoio(it.id));
-   if(ent.length)partes.push(caixa(ent));
-   c.passos.forEach((r,k)=>{
-     partes.push(etapa(r));
-     const out=prodSaidasEstoque(r).map(x=>x.it).filter(it=>!ehProdutoFinal(it));
-     if(k<c.passos.length-1||out.length)partes.push(out.length?caixa(out):'');
-   });
-   if(c.itemFinal){
-     // produto final: com controle de estoque mostra o saldo no Baú; sem controle, só que vende no Caixa
-     const it=c.itemFinal,ctrl=controlaEstoque(it.categoria),sf=saldo[it.id]||0;
-     partes.push(`<div class="pl-box pl-final${ctrl&&baixo(it)?' baixo':''}"><div class="pl-rot">🏁 Vende no Caixa</div><div class="pl-nome">${esc(c.produto?c.produto.nome:it.nome)}</div>${ctrl?`<div class="pl-qtd${baixo(it)?' bad':''}">${fmtQtd(sf)} ${un(it)}</div><div class="pl-sub">no Baú</div>`:'<div class="pl-sub">produto final · sem controle no Baú</div>'}</div>`);
-   }else if(!prodSaidasEstoque(ult).length)partes.push(`<div class="pl-box pl-final"><div class="pl-rot">Vende no Caixa</div><div class="pl-nome">${esc(ult.nome)}</div><div class="pl-sub">produto final</div></div>`);
+   const cards=c.passos.map(etapa);
+   if(c.itemFinal||!prodSaidasEstoque(ult).length)
+     cards.push(`<div class="pl-box pl-final"><div class="pl-io-tit ent">🏁 Vende no Caixa</div><div class="pl-nome">${esc(c.produto?c.produto.nome:c.itemFinal?c.itemFinal.nome:ult.nome)}</div><div class="pl-sub">produto final</div></div>`);
    const img=c.produto&&c.produto.imagem?`<img src="${esc(c.produto.imagem)}" alt="" loading="lazy">`:'<span class="pl-sem-img">🏭</span>';
-   return `<div class="card pl-linha"><div class="pl-cab">${img}<div><b>${esc(c.titulo)}</b><div class="muted" style="font-size:12px">${c.passos.length} etapa${c.passos.length>1?'s':''}</div></div></div>
-     <div class="pl-fluxo">${partes.filter(Boolean).join('')}</div></div>`;
+   return {n:cards.length,html:`<div class="card pl-linha"><div class="pl-cab">${img}<div><b>${esc(c.titulo)}</b><div class="muted" style="font-size:12px">${c.passos.length} etapa${c.passos.length>1?'s':''}</div></div></div>
+     <div class="pl-fluxo">${cards.join(seta)}</div></div>`};
  };
- const linhasHTML=cadeias.map(linha),maxBlocos=Math.max(1,...linhasHTML.map(h=>(h.match(/class="pl-box/g)||[]).length));
- const apoio=db.itens.filter(it=>it.status==='ativo'&&ehApoio(it.id)&&cadeias.some(c=>c.passos.some(r=>(r.insumos||[]).some(x=>x.papel==='consumo'&&x.item_id===it.id))));
+ const linhas=cadeias.map(linha),n=Math.max(1,...linhas.map(l=>l.n));
+ // todas as linhas usam as colunas da linha mais longa: cartões sempre do mesmo tamanho
+ const colunas=(n>1?`repeat(${n-1},minmax(0,1fr) 28px) `:'')+'minmax(0,1fr)';
+ // saldo no Baú de tudo que as receitas usam ou geram (insumos, intermediários e, com controle, o produto final)
+ const usados=new Set(cadeias.flatMap(c=>c.passos.flatMap(r=>(r.insumos||[]).map(x=>x.item_id))));
+ const ordCat=cod=>{const k=ordenarPorOrdem([...db.categorias]).findIndex(x=>x.codigo===cod);return k<0?99:k};
+ const noBau=db.itens.filter(it=>it.status==='ativo'&&usados.has(it.id)&&controlaEstoque(it.categoria))
+   .sort((a,b)=>ordCat(a.categoria)-ordCat(b.categoria)||a.nome.localeCompare(b.nome,'pt-BR'));
+ const grupos=[...new Set(noBau.map(it=>it.categoria))];
  c.innerHTML=`
-  <div class="prod-topo"><h2 class="page-title" style="margin:0">🏭 Produzir${ajuda('Cada linha é uma variedade, da compra até o Caixa. A linha nasce da receita marcada com 🏁 (produto final) e volta pelas receitas que fazem os insumos dela; a foto é a do produto no Catálogo. A cor do botão de cada etapa diz se dá para fazer agora (verde) ou só com produção em cascata (roxo 🔗); clique para escolher a quantidade e conferir o que entra e sai do Baú. Vermelho = estoque zerado ou no mínimo. Os nomes dos botões vêm das categorias de receitas (Configurações › Receitas).')}</h2>
+  <div class="prod-topo"><h2 class="page-title" style="margin:0">🏭 Produzir${ajuda('Cada linha é uma variedade, da compra até o Caixa: nasce da receita marcada com 🏁 (produto final) e volta pelas receitas que fazem os insumos dela; a foto é a do produto no Catálogo. Cada cartão mostra o que a etapa consome do Baú e o que gera. A cor do botão diz se dá para fazer agora (verde) ou só com produção em cascata (roxo 🔗); clique para escolher a quantidade e conferir antes de produzir. O saldo de cada item está no quadro "No Baú" (vermelho = zerado ou no mínimo). Os nomes dos botões vêm das categorias de receitas (Configurações › Receitas).')}</h2>
   <button class="btn btn-ghost btn-sm" onclick="fecharTelaBau()">← Voltar ao Baú</button></div>
-  ${apoio.length?`<div class="pl-apoio"><span class="muted">Insumos de apoio:</span>${apoio.map(it=>`<span class="pl-chip${baixo(it)?' bad':''}">${esc(it.nome)} <b>${fmtQtd(saldo[it.id]||0)}</b></span>`).join('')}</div>`:''}
-  ${cadeias.length?`<div class="pl-lista" style="--pl-n:${maxBlocos}">${linhasHTML.join('')}</div>`:'<div class="empty">Nenhuma receita ativa. Cadastre em Configurações › Receitas.</div>'}`;
+  ${noBau.length?`<div class="card pl-estoque"><div class="pl-estoque-tit">📦 No Baú</div>${grupos.map(g=>`<div class="pl-estoque-grp"><span class="pl-estoque-cat">${esc(catNome(g))}</span>${noBau.filter(it=>it.categoria===g).map(it=>`<span class="pl-chip${baixo(it)?' bad':''}" title="${baixo(it)?'Zerado ou no estoque mínimo':''}">${esc(it.nome)} <b>${fmtQtd(saldo[it.id]||0)} ${un(it)}</b></span>`).join('')}</div>`).join('')}</div>`:''}
+  ${cadeias.length?`<div class="pl-lista" style="--pl-cols:${colunas}">${linhas.map(l=>l.html).join('')}</div>`:'<div class="empty">Nenhuma receita ativa. Cadastre em Configurações › Receitas.</div>'}`;
 }
 function prodPainelHTML(r,i,saldo){
   const q=prodQtd,cat=catReceita(r.categoria_id);
