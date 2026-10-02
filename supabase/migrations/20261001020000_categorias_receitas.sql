@@ -10,13 +10,9 @@ create table if not exists public.categorias_receitas (
   criado_em  timestamptz not null default now()
 );
 alter table public.categorias_receitas enable row level security;
-drop policy if exists categorias_receitas_select on public.categorias_receitas;
 create policy categorias_receitas_select on public.categorias_receitas for select to authenticated using (true);
-drop policy if exists categorias_receitas_insert on public.categorias_receitas;
 create policy categorias_receitas_insert on public.categorias_receitas for insert to authenticated with check (public.eh_gerente_ou_acima());
-drop policy if exists categorias_receitas_update on public.categorias_receitas;
 create policy categorias_receitas_update on public.categorias_receitas for update to authenticated using (public.eh_gerente_ou_acima()) with check (public.eh_gerente_ou_acima());
-drop policy if exists categorias_receitas_delete on public.categorias_receitas;
 create policy categorias_receitas_delete on public.categorias_receitas for delete to authenticated using (public.eh_socio_ou_diretor());
 revoke all on public.categorias_receitas from anon;
 grant select, insert, update, delete on public.categorias_receitas to authenticated;

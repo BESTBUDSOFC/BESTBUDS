@@ -10,6 +10,10 @@
 --    Sem controle de estoque na categoria, nada muda. O saldo pode ficar negativo (escolha do dono).
 --    Vendas guardadas antes desta migração não mexem no Baú (vendas.baixa_bau = false).
 
+-- Categorias de receita usadas na loja (dados, aplicados junto na publicação):
+--   insert into categorias_receitas (nome, icone, ordem) values ('Dichavar','🌿',1),('Enrolar','🚬',2) on conflict (nome) do nothing;
+--   receitas '%dichavada%' → Dichavar; 'baseado%'/'badeado%' → Enrolar.
+
 -- ---------- estrutura ----------
 alter table public.itens add column if not exists produto_id uuid unique references public.produtos(id) on delete set null;
 alter table public.receitas add column if not exists produto_final boolean not null default false;
