@@ -64,11 +64,56 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - No Histórico, a venda guardada aparece na data em que foi guardada (`guardada_em`; vendas antigas sem lote usam `data`), com o lote na descrição.
   - Cancelar pendente: o vendedor pede com motivo (`pedir_cancelamento_venda`); a venda fica travada até um Gerente ou acima aprovar (vira `revertida`) ou recusar (volta a pendente) com `responder_cancelamento_venda`. Gerente ou acima também cancela direto (↩️).
   - Vendedor não altera `vendas` direto (RLS); tudo passa pelas rpc.
-- No Histórico Financeiro, o ajuste de caixa entra nos cards de cima: "+ Entrada" soma em Entradas e "− Saída" soma em Saídas (ajuste revertido não conta). Na tabela, a coluna Entrada mostra o valor do ajuste de entrada.
+- No Histórico Financeiro, a coluna "Entrada/Saída" mostra o que entrou no caixa (venda, ajuste +) e, negativo e em vermelho, o que saiu (compra e suas sublinhas, ajuste −). O dinheiro que sai fica só nessa coluna: "Valor" mostra apenas o total da venda (compra e ajuste ficam com "—"). O card Saídas soma a partir de Entrada/Saída.
+- No Histórico Financeiro, o ajuste de caixa entra nos cards de cima: "+ Entrada" soma em Entradas e "− Saída" soma em Saídas (ajuste revertido não conta). Na tabela, a coluna Entrada/Saída mostra o valor do ajuste (+ ou −).
+
+## Painel
+
+- Aba "Painel" logo abaixo do Histórico Financeiro, só para Gerente, Diretor e Sócio (o vendedor não vê). Todos abrem o sistema no Caixa de Balcão.
+- Alertas no topo, só estes: pedidos de cancelamento abertos, pedidos de nova senha, dinheiro na mão dos vendedores (vendas pendentes sem pedido de cancelamento; vermelho se a mais antiga tem 24 h ou mais) e itens no estoque mínimo (`itensComAlerta()`). Cada alerta leva à tela certa.
+- Filtro de período (Hoje, 7 dias, 30 dias, Este mês, Tudo, Personalizado), em dias de Brasília, sem comparação com período anterior. Vendas (`ativa` + `pendente`) contam pela data da venda.
+- Blocos: receita da loja por dia (semana acima de 62 dias; mês acima de ~1 ano), vendedores (ranking pela receita da loja já guardada; repasse recebido inclui auxílios), produtos (quantidade vendida e sem venda), avisos (quem ainda não viu cada aviso) e últimas ações da auditoria.
+- Últimas ações: paginação no banco (`registros` com `range` e `count`), sem filtro, 10/20/50/100 por página.
+- Gerente ou acima lê `avisos_vistos` de todos (migração `20261001010000_painel_avisos_vistos.sql`). O pop-up de aviso filtra pelo próprio usuário (`db.avisos_vistos`); `db.avisos_vistos_todos` é só para o Painel.
+- Gráficos em SVG/HTML próprios, sem biblioteca; cor das barras `#00A843` (um passo abaixo do verde da loja, validado no fundo escuro).
 
 ## Livro do Baú
 
+- Item no estoque mínimo: só a borda vermelha no cartão (não há faixa de aviso no topo do Baú).
+
 - Lançamentos com várias linhas mostram a etiqueta do tipo com cor própria: **Compra** em verde (só tem entradas, como as demais entradas) e **Produção** e **Produção em cascata** em roxo.
+
+## Produção
+
+- Categorias de receitas (`categorias_receitas`, migração `20261001020000_categorias_receitas.sql`) são cadastradas em Configurações › Receitas. Gerente ou acima cria e edita, e Sócio ou Diretor exclui. Excluir uma categoria deixa as receitas dela sem categoria.
+- **Receita 🏁 (produto final)** (`receitas.produto_final`, migração `20261002000000_produto_final_bau.sql`): é o último passo do processo produtivo. Com 🏁, o bloco "produz" tem **um** item, e só da categoria Produto Final (quantidade padrão 1). Sem 🏁, o bloco "produz" é obrigatório e não aceita Produto Final. Assim o processo pode ter quantas etapas quiser.
+- A tela Produzir (Baú › 🏭 Produzir) mostra **uma linha de produção por receita 🏁** (`prodCadeias()`):
+  - A linha volta pelas receitas que produzem os insumos de cada etapa (`receitaProdutora`), sem limite de etapas. Receitas que não levam a nenhuma 🏁 aparecem sozinhas.
+  - Fluxo da linha: cartão de cada receita → seta → … → cartão "🏁 Vende no Caixa". As setas ficam **fora** dos cartões, entre eles. **Não há blocos de quantidade nas linhas** (pedido do dono).
+  - Cartão da receita: nome da receita no topo, "⬇️ Consome" (−qtd item; em vermelho o que não tem o suficiente no Baú), "⬆️ Gera" (+qtd item) e o botão pequeno da etapa (`.pl-btn`).
+  - Foto e nome: do produto do Catálogo ligado ao item que a receita 🏁 produz (`itens.produto_id`). Não há mais adivinhação pelo nome.
+  - **Quadro "📦 No Baú"** no topo: saldo de tudo que as receitas usam ou geram (matéria-prima, insumos auxiliares, intermediários e, com controle, o produto final), agrupado por categoria; vermelho = zerado ou no mínimo.
+  - Cartões do mesmo tamanho: todas as linhas usam as colunas da linha mais longa (`--pl-cols`); altura mínima 178px. No celular ficam um abaixo do outro, com a seta para baixo.
+  - O botão de cada etapa usa o ícone e o nome da categoria da receita (sem categoria: "▶ nome da receita"), **sem quantidade** (pedido do dono). A cor diz se dá: **verde** (dá para fazer agora), **roxo com 🔗** (só com cascata) ou apagado (faltam insumos).
+- O botão abre a janela (`prodAbrir` → `#prod-painel`, `modal-prod`) com quantidade (− / +), atalhos "máximo" e "🔗 máximo com cascata" e o item limitante:
+  - O que muda no Baú vem em dois blocos separados: **⬇️ Sai do Baú** (Item / Tem agora / Usa / Fica) e **⬆️ Entra no Baú** (Item / Tem agora / Gera / Fica). Fica em vermelho no estoque mínimo. Produto final não entra no Baú, e o bloco "Entra" diz isso.
+  - Produção direta: botão verde (`#btn-produzir` → `produzirDireto`).
+  - Cascata: etapas e os mesmos dois blocos; botão roxo (`#btn-conf-cascata` → `confirmarCascata`).
+  - **Sem insumos (nem com cascata):** um aviso só no topo ("Falta X"; se vem da etapa anterior, diz também o que falta lá); tabela "⬇️ Sai do Baú" com **Tem / Precisa / Falta**; bloco "🚚 Para comprar" com a quantidade que falta, o **fornecedor vinculado mais barato** (`prodCompraSugerida`) e o total estimado (item sem fornecedor com valor fica avisado). O selo "faltam insumos" não existe mais e "limite: …" só aparece quando dá para fazer algo direto.
+  - Botão **"🚚 Comprar o que falta"** (`prodComprarFalta`): abre a Nova compra já preenchida (item, fornecedor mais barato, quantidade), com o aviso de para qual produção é e "← Voltar à produção". Depois de registrar, volta para a janela de produção na mesma quantidade (`_voltarProducao`).
+  - Falta = o que **esta** produção deixaria negativo (`planejarCascata`). Saldo que já estava negativo (venda sem estoque, permitido) não trava outras produções.
+- O vendedor produz direto. A cascata é só para Gerente ou acima: o vendedor vê as etapas, mas o botão fica desativado.
+- Os máximos usam `saldosBau()`, que calcula todos os saldos de uma vez, e `planejarCascata(rid,q,saldo)`. Não chame `saldoItem` item a item dentro de laços da tela.
+
+## Produto final e Baú
+
+- Cada produto do Catálogo tem um item na categoria **Produto Final** (`itens.produto_id`), criado e mantido pelo banco (trigger `trg_produto_item`): criar o produto cria o item; renomear, ativar ou inativar o produto faz o mesmo no item; excluir o produto inativa o item.
+- No Cadastro Central, o item do Catálogo tem a etiqueta "🔗 Catálogo": nome e categoria travados (o banco também bloqueia), sem ⏸️ e sem 🗑️; ali só se ajusta unidade e quantidade mínima. Não se cria item de Produto Final à mão.
+- O controle de Baú do produto final é **da categoria** Produto Final ("Controle de estoque"), para todos os produtos, inclusive os sem receita (ex.: CBD).
+- Com controle ligado: a produção põe o produto no Baú; a venda tira **quando é guardada no caixa** (`guardar_vendas` marca `vendas.baixa_bau`; o banco grava `saida_venda` com `venda_id`, trigger `trg_vendas_bau`). Pendente não mexe no Baú. O saldo **pode ficar negativo** (escolha do dono).
+- Reverter a venda devolve (as saídas viram "revertida"). Editar os itens de uma venda guardada refaz a baixa: a anterior fica revertida e entra a nova (nada é apagado). Vendas guardadas antes da migração não mexem no Baú.
+- No Livro do Baú, a saída de venda aparece como "Saída (Venda)" (lote = "Venda") e não tem ↩️: volta ao Baú quando a venda é revertida no Histórico Financeiro.
+- Supabase: o `apply_migration` cancela comandos com `drop trigger` e `delete` dentro de funções. Use `create or replace trigger` e evite `delete` (a baixa de venda só reverte e insere).
 
 ## Compras e preços
 
@@ -83,6 +128,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Vendedor registra compras e produções (grava só em nome próprio), mas não cadastra fornecedores, itens nem vínculos. Ajustes manuais de estoque (+ Entrada / − Saída) são de Gerente para cima.
 - No cadastro do fornecedor, os itens aparecem na ordem em que foram colocados (`fornecedor_itens.criado_em`); item novo vai sempre para o fim.
 - Toda lista suspensa tem o mesmo campo de pesquisa. Campos de texto com lista (`data-combo`) aceitam valores fora da lista.
+- Celular: o teclado, ao abrir, dispara `resize`/`scroll`; as listas **não fecham** por isso, só se reposicionam (`popPosicionar`/`popReposicionar`, também com `visualViewport`). No celular (tela estreita e toque) a lista suspensa com busca abre como painel no alto da área visível (`.ssel-folha`), acima do teclado. A busca usa fonte de 16px para o iPhone não dar zoom. Fecha ao escolher, com Esc ou tocando fora.
 
 ## Avisos
 
@@ -92,6 +138,11 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Imagens de avisos vencidos são apagadas pelo site (1 listagem + 1 remoção) quando alguém publica ou apaga um aviso.
 - O banco define o autor e a validade de 24 horas (trigger). Depois disso o aviso some da tela e o pg_cron o apaga de vez (a cada 10 minutos).
 - As janelas de cadastro usadas por atalho abrem na segunda camada (`modal2`), que é esvaziada ao fechar. As funções do cadastro de fornecedor procuram elementos só dentro da janela aberta.
+
+## Explicações na tela
+
+- Explicações de página e de seção não ficam na tela: vão para o "?" ao lado do título (`ajuda(texto)`), que mostra o texto ao passar o mouse ou tocar. Instruções dentro de janelas (antes de confirmar uma ação) continuam visíveis.
+- Os ícones continuam no site todo (o dono pediu para manter, depois de testar sem eles).
 
 ## Menu lateral e topo
 
