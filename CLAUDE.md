@@ -97,7 +97,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - O botão de cada etapa usa o ícone e o nome da categoria da receita (sem categoria: "▶ nome da receita"), **sem quantidade** (pedido do dono). A cor diz se dá: **verde** (dá para fazer agora), **roxo com 🔗** (só com cascata) ou apagado (faltam insumos).
 - O botão abre a janela (`prodAbrir` → `#prod-painel`, `modal-prod`) com quantidade (− / +), atalhos "máximo" e "🔗 máximo com cascata" e o item limitante:
   - O que muda no Baú vem em dois blocos separados: **⬇️ Sai do Baú** (Item / Tem agora / Usa / Fica) e **⬆️ Entra no Baú** (Item / Tem agora / Gera / Fica). Fica em vermelho no estoque mínimo. Produto final não entra no Baú, e o bloco "Entra" diz isso.
-  - Produção direta: botão verde (`#btn-produzir` → `produzirDireto`).
+  - Produção direta: botão verde (`#btn-produzir` → `produzirDireto`). Ao gravar, a janela fecha (até a v4.24 ficava aberta em "Produzindo…").
   - Cascata: etapas e os mesmos dois blocos; botão roxo (`#btn-conf-cascata` → `confirmarCascata`).
   - **Sem insumos (nem com cascata):** um aviso só no topo ("Falta X"; se vem da etapa anterior, diz também o que falta lá); tabela "⬇️ Sai do Baú" com **Tem / Precisa / Falta**; bloco "🚚 Para comprar" com a quantidade que falta, o **fornecedor vinculado mais barato** (`prodCompraSugerida`) e o total estimado (item sem fornecedor com valor fica avisado). O selo "faltam insumos" não existe mais e "limite: …" só aparece quando dá para fazer algo direto.
   - Botão **"🚚 Comprar o que falta"** (`prodComprarFalta`): abre a Nova compra já preenchida (item, fornecedor mais barato, quantidade), com o aviso de para qual produção é e "← Voltar à produção". Depois de registrar, volta para a janela de produção na mesma quantidade (`_voltarProducao`).
@@ -143,6 +143,15 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 - Explicações de página e de seção não ficam na tela: vão para o "?" ao lado do título (`ajuda(texto)`), que mostra o texto ao passar o mouse ou tocar. Instruções dentro de janelas (antes de confirmar uma ação) continuam visíveis.
 - Os ícones continuam no site todo (o dono pediu para manter, depois de testar sem eles).
+
+## Vídeos "Como fazer"
+
+- MP4 em `src/videos/` (servidos pela Vercel; o dono preferiu ao YouTube: sem anúncio, sem sugestões no fim, só quem entra no sistema vê e a troca é automática na publicação). Lista em `VIDEOS` (`src/index.html`): arquivo, título, duração e `ger` (só Gerente ou acima vê).
+- `ajuda(texto,[ids])` põe, no balão do "?", um botão "▶ Ver como fazer: título · duração" por vídeo. `verVideo(id)` abre o player na 2ª camada (`modal2`, classe `modal-video`); fechar esvazia a janela e o vídeo para. O vídeo só baixa quando a pessoa toca no botão.
+- Onde aparecem: Caixa de Balcão (caixa), Baú (compra, produção, cascata, falta), Nova compra (compra), Produzir (produção, cascata, falta), Histórico Financeiro (histórico). A cascata não aparece para o vendedor.
+- Gravação: dados reais (cadastros e histórico lidos da produção só para consulta), quadros PNG sem perda pelo screencast do Chrome, H.264 1920×1080 com `+faststart`, narração na tela (destaque, balão "Passo N de T", cursor). Navegador em português (`LANG=pt_BR.UTF-8`), senão o campo de data sai no formato americano.
+- **Regravar na publicação** os vídeos das telas que mudaram e atualizar a duração em `VIDEOS`.
+- O balão do "?" abre também com o foco dentro dele (`:focus-within`), para o toque no botão funcionar no celular. No celular ele vira um painel fixo acima da barra de baixo, sem empurrar a página para o lado.
 
 ## Menu lateral e topo
 

@@ -464,7 +464,18 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .ajuda{position:relative;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:8px;border:1px solid var(--border);border-radius:50%;color:var(--muted);font-size:11px;font-weight:700;line-height:1;cursor:help;vertical-align:middle;text-transform:none;letter-spacing:0;flex:none}
 .ajuda:hover,.ajuda:focus{color:var(--text);border-color:var(--muted);outline:none}
 .ajuda-txt{display:none;position:absolute;top:calc(100% + 8px);left:-8px;z-index:250;width:max-content;max-width:min(380px,80vw);padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5);color:var(--text);font-size:12px;font-weight:400;line-height:1.5;text-align:left;white-space:normal}
-.ajuda:hover .ajuda-txt,.ajuda:focus .ajuda-txt{display:block}
+.ajuda:hover .ajuda-txt,.ajuda:focus .ajuda-txt,.ajuda:focus-within .ajuda-txt{display:block}
+.ajuda-txt::before{content:'';position:absolute;left:0;right:0;top:-10px;height:10px}
+.ajuda-txt{cursor:auto}
+.ajuda-videos{display:flex;flex-direction:column;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.ajuda-video{display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface2,rgba(255,255,255,.04));color:var(--text);font:inherit;font-size:12px;font-weight:600;text-align:left;cursor:pointer}
+.ajuda-video:hover,.ajuda-video:focus-visible{border-color:var(--green);outline:none}
+.ajuda-video .pl{color:var(--green)}.ajuda-video small{margin-left:auto;color:var(--muted);font-weight:400}
+.modal.modal-video{max-width:980px;padding:18px}
+.modal-video video{display:block;width:100%;aspect-ratio:16/9;background:#000;border-radius:10px}
+/* celular: o balão do "?" ocupa a largura da tela (com 16px de margem), logo abaixo do "?", sem empurrar a página para o lado */
+@media(max-width:700px){.ajuda-txt{position:fixed;left:16px;right:16px;top:auto;bottom:84px;width:auto;max-width:none;max-height:60vh;overflow-y:auto;font-size:13px}.ajuda-txt::before{display:none}}
+body.video-aberto .ajuda-txt{display:none!important}
 .pn-colunas{width:100%;min-height:240px}
 .pn-colunas svg{display:block}
 .pn-col{fill:#00A843}
@@ -589,7 +600,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.24.1';
+const VERSAO='v4.25.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -615,7 +626,27 @@ function nowISO(){return new Date().toISOString()}
 async function nextOpId(){const{data,error}=await sb.rpc('proximo_id_operacao');if(error)throw error;return data}
 function fmt(n){return '$'+Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
 /* "?" ao lado de um título: a explicação aparece ao passar o mouse (ou ao tocar, no celular) */
-function ajuda(txt){return `<span class="ajuda" tabindex="0" role="button" aria-label="Ajuda: ${esc(txt)}">?<span class="ajuda-txt" role="tooltip">${esc(txt)}</span></span>`}
+/* Vídeos "Como fazer" (src/videos/, gravados com dados reais). Só baixam quando a pessoa toca em "▶ Ver como fazer". */
+const VIDEOS={
+  caixa:{arq:'caixa-vender-e-guardar.mp4',titulo:'Vender e guardar no caixa',dur:'1:13'},
+  compra:{arq:'compra.mp4',titulo:'Registrar uma compra',dur:'1:19'},
+  producao:{arq:'producao.mp4',titulo:'Produzir',dur:'0:43'},
+  cascata:{arq:'producao-cascata.mp4',titulo:'Produção em cascata',dur:'0:38',ger:true},
+  falta:{arq:'producao-comprar-falta.mp4',titulo:'Faltou insumo? Compre e produza',dur:'0:44'},
+  historico:{arq:'historico-financeiro.mp4',titulo:'Histórico: resumo, filtros e colunas',dur:'1:08'}
+};
+function ajuda(txt,videos){
+  const vs=(videos||[]).filter(k=>VIDEOS[k]&&(!VIDEOS[k].ger||isGerente()));
+  const lista=vs.length?`<span class="ajuda-videos">${vs.map(k=>`<button type="button" class="ajuda-video" onclick="event.stopPropagation();verVideo('${k}')"><span class="pl">▶</span>Ver como fazer: ${esc(VIDEOS[k].titulo)}<small>${VIDEOS[k].dur}</small></button>`).join('')}</span>`:'';
+  return `<span class="ajuda" tabindex="0" role="button" aria-label="Ajuda: ${esc(txt)}">?<span class="ajuda-txt" role="tooltip">${esc(txt)}${lista}</span></span>`;
+}
+function verVideo(k){
+  const v=VIDEOS[k];if(!v)return;
+  if(document.activeElement)document.activeElement.blur();
+  openModal2(`<h3>▶ ${esc(v.titulo)}</h3><video src="videos/${v.arq}" controls autoplay playsinline preload="metadata"></video>
+    <div class="modal-actions"><button class="btn btn-primary" onclick="closeModal2()">Fechar</button></div>`);
+  document.getElementById('modal2-box').classList.add('modal-video');document.body.classList.add('video-aberto');
+}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 /* ---- Data e hora: o site inteiro usa o horário de Brasília, seja qual for o fuso do aparelho ou do servidor ----
    O banco guarda o instante em UTC (correto). O erro clássico é tirar o DIA desse instante com toISOString().slice(0,10):
@@ -906,8 +937,8 @@ function render(){
 /* ================= MODAIS / CONFIRM ================= */
 function openModal(html){const mb=document.getElementById('modal-box');mb.classList.remove('modal-larga','modal-prod');mb.innerHTML=html;document.getElementById('modal-bg').classList.add('open')}
 function closeModal(){document.getElementById('modal-bg').classList.remove('open')}
-function openModal2(html){document.getElementById('modal2-box').innerHTML=html;document.getElementById('modal2-bg').classList.add('open')}
-function closeModal2(){document.getElementById('modal2-bg').classList.remove('open');document.getElementById('modal2-box').innerHTML=''}
+function openModal2(html){document.getElementById('modal2-box').classList.remove('modal-video');document.getElementById('modal2-box').innerHTML=html;document.getElementById('modal2-bg').classList.add('open')}
+function closeModal2(){document.body.classList.remove('video-aberto');document.getElementById('modal2-bg').classList.remove('open');document.getElementById('modal2-box').innerHTML=''}
 function closeConfirm(){document.getElementById('confirm-bg').classList.remove('open')}
 function confirmar(titulo,msg,cb){
   document.getElementById('confirm-title').textContent=titulo;
@@ -954,7 +985,7 @@ function calcCupom(){
 function renderPDV(c){
   const cup=calcCupom();
   c.innerHTML=`
-  <h2 class="page-title">Caixa de Balcão${ajuda('Registro de pedidos, descontos escalonados e partilha instantânea.')}</h2>
+  <h2 class="page-title">Caixa de Balcão${ajuda('Registro de pedidos, descontos escalonados e partilha instantânea.',['caixa'])}</h2>
   <div class="pdv-layout">
     <div>
       <div class="section-title">🛒 Catálogo</div>
@@ -1470,7 +1501,7 @@ function renderBau(c){
   const movs=[...db.estoque_bau].map(m=>({...m,item_nome:(db.itens.find(i=>i.id===m.item_id)||{}).nome||''}));const movsF=aplicarFiltros(movs,'bau');
   const gruposBau=agruparBau(movs,movsF);const paginaBau=pagina(gruposBau,'bau');
   c.innerHTML=`
-  <h2 class="page-title">Baú — Estoque de Insumos${ajuda('Estoque de insumos e produtos. Produto final só entra no Baú se a categoria Produto Final tiver controle de estoque: aí a produção põe o produto no Baú e a venda, ao ser guardada no caixa, tira. Reverter a venda devolve.')}</h2>
+  <h2 class="page-title">Baú — Estoque de Insumos${ajuda('Estoque de insumos e produtos. Produto final só entra no Baú se a categoria Produto Final tiver controle de estoque: aí a produção põe o produto no Baú e a venda, ao ser guardada no caixa, tira. Reverter a venda devolve.',['compra','producao','cascata','falta'])}</h2>
   <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
     <button class="btn btn-purple" onclick="telaNovaCompra()">🚚 Nova compra</button>
     <button class="btn btn-primary" onclick="telaProducao()">🏭 Produzir</button>
@@ -1828,7 +1859,7 @@ async function produzirDireto(rid,q,falha){
     if(error){solta();return falha('Erro ao gravar produção: '+error.message)}
     data.forEach(d=>db.estoque_bau.unshift({...d,quantidade:Number(d.quantidade),saldo_resultante:Number(d.saldo_resultante)}));
   }
-  reg('Produção executada',`${r.nome} — ID ${producaoId} — quantidade ${q}`);prodQtd=1;toast('✅ Produção executada.');render();
+  reg('Produção executada',`${r.nome} — ID ${producaoId} — quantidade ${q}`);prodQtd=1;closeModal();toast('✅ Produção executada.');render();
 }
 
 /* ================= COMPRAS ================= */
@@ -2137,7 +2168,7 @@ function telaProducao(){
 function fecharTelaBau(){bauTela=null;_voltarProducao=null;render()}
 function telaCompraHTML(c){
  c.innerHTML=`
-  <h2 class="page-title">🚚 Registrar compra${ajuda('Registro de despesa e entrada de insumos no Baú.')}</h2>
+  <h2 class="page-title">🚚 Registrar compra${ajuda('Registro de despesa e entrada de insumos no Baú.',['compra'])}</h2>
   ${_voltarProducao?`<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="voltarProducao()">← Voltar à produção</button>
   <div class="cmp-origem">🏭 Compra do que falta para produzir <b>${esc(_voltarProducao.nome)} × ${_voltarProducao.q}</b>. Itens já preenchidos com o fornecedor mais barato (dá para trocar). Depois de registrar, você volta para a produção.</div>`
   :`<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">← Voltar ao Baú</button>`}
@@ -2252,7 +2283,7 @@ function telaProducaoHTML(c){
    .sort((a,b)=>ordCat(a.categoria)-ordCat(b.categoria)||a.nome.localeCompare(b.nome,'pt-BR'));
  const grupos=[...new Set(noBau.map(it=>it.categoria))];
  c.innerHTML=`
-  <div class="prod-topo"><h2 class="page-title" style="margin:0">🏭 Produzir${ajuda('Cada linha é uma variedade, da compra até o Caixa: nasce da receita marcada com 🏁 (produto final) e volta pelas receitas que fazem os insumos dela; a foto é a do produto no Catálogo. Cada cartão mostra o que a etapa consome do Baú e o que gera. A cor do botão diz se dá para fazer agora (verde) ou só com produção em cascata (roxo 🔗); clique para escolher a quantidade e conferir antes de produzir. O saldo de cada item está no quadro "No Baú" (vermelho = zerado ou no mínimo). Os nomes dos botões vêm das categorias de receitas (Configurações › Receitas).')}</h2>
+  <div class="prod-topo"><h2 class="page-title" style="margin:0">🏭 Produzir${ajuda('Cada linha é uma variedade, da compra até o Caixa: nasce da receita marcada com 🏁 (produto final) e volta pelas receitas que fazem os insumos dela; a foto é a do produto no Catálogo. Cada cartão mostra o que a etapa consome do Baú e o que gera. A cor do botão diz se dá para fazer agora (verde) ou só com produção em cascata (roxo 🔗); clique para escolher a quantidade e conferir antes de produzir. O saldo de cada item está no quadro "No Baú" (vermelho = zerado ou no mínimo). Os nomes dos botões vêm das categorias de receitas (Configurações › Receitas).',['producao','cascata','falta'])}</h2>
   <button class="btn btn-ghost btn-sm" onclick="fecharTelaBau()">← Voltar ao Baú</button></div>
   ${noBau.length?`<div class="card pl-estoque"><div class="pl-estoque-tit">📦 No Baú</div>${grupos.map(g=>`<div class="pl-estoque-grp"><span class="pl-estoque-cat">${esc(catNome(g))}</span>${noBau.filter(it=>it.categoria===g).map(it=>`<span class="pl-chip${baixo(it)?' bad':''}" title="${baixo(it)?'Zerado ou no estoque mínimo':''}">${esc(it.nome)} <b>${fmtQtd(saldo[it.id]||0)} ${un(it)}</b></span>`).join('')}</div>`).join('')}</div>`:''}
   ${cadeias.length?`<div class="pl-lista" style="--pl-cols:${colunas}">${linhas.map(l=>l.html).join('')}</div>`:'<div class="empty">Nenhuma receita ativa. Cadastre em Configurações › Receitas.</div>'}`;
@@ -2446,7 +2477,7 @@ function renderFinanceiro(c){
   return '<td></td>';
  };
  c.innerHTML=`
-  <h2 class="page-title">Histórico Financeiro${ajuda('Livro de Registros Comerciais — vendas e compras. O caixa considera todas as entradas e saídas, independente dos filtros. Venda pendente (ainda não guardada no caixa) não entra nos totais; a venda guardada aparece na data em que o dinheiro foi guardado.')}</h2>
+  <h2 class="page-title">Histórico Financeiro${ajuda('Livro de Registros Comerciais — vendas e compras. O caixa considera todas as entradas e saídas, independente dos filtros. Venda pendente (ainda não guardada no caixa) não entra nos totais; a venda guardada aparece na data em que o dinheiro foi guardado.',['historico'])}</h2>
   <div class="sum-grid">
     <div class="sum-card"><div class="sl">Caixa atual</div><div class="sv money">${fmt(caixaAtual)}</div>
       ${ger?`<div style="margin-top:10px;display:flex;gap:6px">
