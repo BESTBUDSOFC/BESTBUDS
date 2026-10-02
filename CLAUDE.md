@@ -90,10 +90,10 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - A tela Produzir (Baú › 🏭 Produzir) mostra **uma linha de produção por receita 🏁** (`prodCadeias()`):
   - A linha volta pelas receitas que produzem os insumos de cada etapa (`receitaProdutora`), sem limite de etapas. Receitas que não levam a nenhuma 🏁 aparecem sozinhas.
   - Fluxo da linha: cartão de cada receita → seta → … → cartão "🏁 Vende no Caixa". As setas ficam **fora** dos cartões, entre eles. **Não há blocos de quantidade nas linhas** (pedido do dono).
-  - Cartão da receita: "⬇️ Consome" (−qtd item; em vermelho o que não tem o suficiente no Baú), "⬆️ Gera" (+qtd item) e o botão pequeno da etapa (`.pl-btn`).
+  - Cartão da receita: nome da receita no topo, "⬇️ Consome" (−qtd item; em vermelho o que não tem o suficiente no Baú), "⬆️ Gera" (+qtd item) e o botão pequeno da etapa (`.pl-btn`).
   - Foto e nome: do produto do Catálogo ligado ao item que a receita 🏁 produz (`itens.produto_id`). Não há mais adivinhação pelo nome.
   - **Quadro "📦 No Baú"** no topo: saldo de tudo que as receitas usam ou geram (matéria-prima, insumos auxiliares, intermediários e, com controle, o produto final), agrupado por categoria; vermelho = zerado ou no mínimo.
-  - Cartões do mesmo tamanho: todas as linhas usam as colunas da linha mais longa (`--pl-cols`); altura mínima 150px. No celular ficam um abaixo do outro, com a seta para baixo.
+  - Cartões do mesmo tamanho: todas as linhas usam as colunas da linha mais longa (`--pl-cols`); altura mínima 178px. No celular ficam um abaixo do outro, com a seta para baixo.
   - O botão de cada etapa usa o ícone e o nome da categoria da receita (sem categoria: "▶ nome da receita"), **sem quantidade** (pedido do dono). A cor diz se dá: **verde** (dá para fazer agora), **roxo com 🔗** (só com cascata) ou apagado (faltam insumos).
 - O botão abre a janela (`prodAbrir` → `#prod-painel`, `modal-prod`) com quantidade (− / +), atalhos "máximo" e "🔗 máximo com cascata" e o item limitante:
   - O que muda no Baú vem em dois blocos separados: **⬇️ Sai do Baú** (Item / Tem agora / Usa / Fica) e **⬆️ Entra no Baú** (Item / Tem agora / Gera / Fica). Fica em vermelho no estoque mínimo. Produto final não entra no Baú, e o bloco "Entra" diz isso.

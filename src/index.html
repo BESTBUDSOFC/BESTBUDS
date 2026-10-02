@@ -81,19 +81,20 @@ label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-wei
 .pl-cab{display:flex;align-items:center;gap:12px;width:200px;flex:none}.pl-cab img,.pl-sem-img{width:56px;height:56px;border-radius:10px;object-fit:cover;flex:none}.pl-sem-img{display:flex;align-items:center;justify-content:center;background:var(--input-bg);font-size:24px}.pl-cab b{font-size:16px}
 /* cartões da linha (receitas e vende no Caixa) do mesmo tamanho, com a seta entre eles */
 .pl-fluxo{flex:1;min-width:0;display:grid;grid-template-columns:var(--pl-cols,1fr);align-items:stretch}
-.pl-box{border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-height:150px;background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:8px;min-width:0}
+.pl-box{border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-height:178px;background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:8px;min-width:0}
 .pl-etapa.ok{border-color:rgba(0,204,82,.35)}.pl-final{justify-content:center;gap:2px;border-color:rgba(0,204,82,.25)}
+.pl-et-nome{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-bottom:6px;border-bottom:1px solid var(--border)}
 .pl-io{display:flex;flex-direction:column;gap:2px;min-width:0}
 .pl-io-tit{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.pl-io-tit.sai{color:var(--warning-light)}.pl-io-tit.ent{color:var(--green)}
 .pl-io-l{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pl-io-l b{display:inline-block;min-width:30px;font-weight:700}
-.pl-io:first-child .pl-io-l b{color:var(--warning-light)}.pl-io:nth-child(2) .pl-io-l b{color:var(--green)}
+.pl-io.sai .pl-io-l b{color:var(--warning-light)}.pl-io.ent .pl-io-l b{color:var(--green)}
 .pl-io-l.falta{color:#F87171}.pl-io-l.falta b{color:#F87171!important}
 .pl-nome{font-size:15px;font-weight:800}.pl-sub{font-size:11px;color:var(--muted)}
 .pl-seta{display:flex;align-items:center;justify-content:center;color:#4a4a5a;font-size:16px}
 .pl-btn{margin-top:auto;align-self:center;padding:5px 14px;font-size:13px;font-weight:700}
 .pl-btn.pl-off{border:1px dashed #3a3a4a;color:var(--muted);background:transparent}
 @media(max-width:1100px){.pl-linha{flex-direction:column;align-items:stretch}.pl-cab{width:auto}.pl-fluxo{width:100%}}
-@media(max-width:700px){.pl-fluxo{grid-template-columns:1fr}.pl-box{min-height:0}.pl-seta{transform:rotate(90deg);height:24px}.pl-estoque-cat{min-width:0;flex-basis:100%}.pl-io-l{white-space:normal}}
+@media(max-width:700px){.pl-et-nome{white-space:normal}.pl-fluxo{grid-template-columns:1fr}.pl-box{min-height:0}.pl-seta{transform:rotate(90deg);height:24px}.pl-estoque-cat{min-width:0;flex-basis:100%}.pl-io-l{white-space:normal}}
 .prod-painel{display:flex;flex-direction:column;gap:16px;min-width:0}
 .prod-cat{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .prod-nome{font-size:20px;font-weight:800}
@@ -583,7 +584,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.23.0';
+const VERSAO='v4.23.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -2215,9 +2216,10 @@ function telaProducaoHTML(c){
    const falta=y=>controlaEstoque(y.it.categoria)&&(saldo[y.it.id]||0)<y.x.quantidade;
    const nome=cat?`${cat.icone?esc(cat.icone)+' ':''}${esc(cat.nome)}`:'▶ '+esc(r.nome);
    const [cls,extra,dica]=i.max>0?['btn-primary','','dá para fazer agora']:i.cascata>0?['btn-purple','🔗 ','só com produção em cascata']:['btn-ghost pl-off','','faltam insumos'];
-   return `<div class="pl-box pl-etapa${i.max>0?' ok':''}" title="${esc(r.nome)}">
-     <div class="pl-io"><div class="pl-io-tit sai">⬇️ Consome</div>${cons.map(y=>`<div class="pl-io-l${falta(y)?' falta':''}" title="${falta(y)?'Não há o suficiente no Baú':''}"><b>−${fmtQtd(y.x.quantidade)}</b> ${esc(y.it.nome)}</div>`).join('')||'<div class="pl-io-l muted">—</div>'}</div>
-     <div class="pl-io"><div class="pl-io-tit ent">⬆️ Gera</div>${ger.map(y=>`<div class="pl-io-l"><b>+${fmtQtd(y.x.quantidade)}</b> ${esc(y.it.nome)}</div>`).join('')||'<div class="pl-io-l muted">produto final</div>'}</div>
+   return `<div class="pl-box pl-etapa${i.max>0?' ok':''}">
+     <div class="pl-et-nome" title="${esc(r.nome)}">${esc(r.nome)}</div>
+     <div class="pl-io sai"><div class="pl-io-tit sai">⬇️ Consome</div>${cons.map(y=>`<div class="pl-io-l${falta(y)?' falta':''}" title="${falta(y)?'Não há o suficiente no Baú':''}"><b>−${fmtQtd(y.x.quantidade)}</b> ${esc(y.it.nome)}</div>`).join('')||'<div class="pl-io-l muted">—</div>'}</div>
+     <div class="pl-io ent"><div class="pl-io-tit ent">⬆️ Gera</div>${ger.map(y=>`<div class="pl-io-l"><b>+${fmtQtd(y.x.quantidade)}</b> ${esc(y.it.nome)}</div>`).join('')||'<div class="pl-io-l muted">produto final</div>'}</div>
      <button class="btn btn-sm pl-btn ${cls}" data-rec="${r.id}" onclick="prodAbrir('${r.id}')" title="${esc(r.nome)} — ${dica}">${extra}${nome}</button></div>`;
  };
  const seta='<div class="pl-seta" aria-hidden="true">➜</div>';
