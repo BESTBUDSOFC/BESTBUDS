@@ -615,7 +615,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.27.2';
+const VERSAO='v4.27.4';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -650,7 +650,7 @@ const VIDEOS={
   falta:{arq:'producao-comprar-falta.mp4',titulo:'Faltou insumo? Compre e produza',dur:'0:45'},
   historico:{arq:'historico-financeiro.mp4',titulo:'Histórico: resumo, filtros e colunas',dur:'1:08'},
   cfg_usuarios:{arq:'cfg-usuarios.mp4',titulo:'Usuários',dur:'0:54',ger:true},
-  cfg_catalogo:{arq:'cfg-catalogo.mp4',titulo:'Catálogo PDV',dur:'0:45',ger:true},
+  cfg_catalogo:{arq:'cfg-catalogo.mp4',titulo:'Catálogo PDV',dur:'0:46',ger:true},
   cfg_itens:{arq:'cfg-itens.mp4',titulo:'Cadastro Central de Itens',dur:'0:55',ger:true},
   cfg_receitas:{arq:'cfg-receitas.mp4',titulo:'Receitas',dur:'0:44',ger:true},
   cfg_fornecedores:{arq:'cfg-fornecedores.mp4',titulo:'Fornecedores',dur:'0:32',ger:true},
@@ -1006,13 +1006,21 @@ function calcCupom(){
   const taxaValor=taxa?taxa.valor:0;
   const total=Math.max(0,subtotal-desconto+taxaValor);
   // o repasse parte do valor já com o desconto arredondado (o mesmo desconto que o cliente paga) e também vai para inteiro.
-  // O custo do produto (Catálogo) sai antes de dividir: a equipe recebe a parte dela do lucro, não do preço
-  // (ex.: CBD $100, 100% Equipe, custo $75 → repasse $25; a loja fica com $75, que cobre o custo).
+  // O custo do produto (Catálogo) sai antes de dividir: o repasse é a parte da equipe no lucro, não no preço.
+  // No 100% Equipe o custo some da conta: não entra no caixa nem no repasse (o vendedor comprou o produto por esse valor).
+  // Ex.: CBD $100, 100% Equipe, custo $75 → cliente paga $100, repasse $25 (o lucro real), caixa $0; os $75 não aparecem em lugar nenhum.
+  // Nos outros rateios, o custo fica com a loja (entra no caixa).
   const fatorLiquido=subtotal>0?(subtotal-desconto)/subtotal:0;
-  const custo=itens.reduce((s,x)=>s+x.qtd*(x.prod.custo||0),0);
-  const cota=inteiroMaisProximo(itens.reduce((s,x)=>s+Math.max(0,x.qtd*x.prod.preco*fatorLiquido-x.qtd*(x.prod.custo||0))*fatorRateio(x.prod),0)+(taxaValor*(db.aliquota_taxa_deslocamento||0)/100));
-  const loja=total-cota;
-  return {itens,qtdItens,parceria,taxa,pct,subtotal,desconto,taxaValor,total,custo,cota,loja};
+  let custo=0,custoEquipe=0,cotaItens=0;
+  itens.forEach(x=>{
+    const liq=x.qtd*x.prod.preco*fatorLiquido,c=x.qtd*(x.prod.custo||0);
+    custo+=c;cotaItens+=Math.max(0,liq-c)*fatorRateio(x.prod);
+    if(x.prod.rateio==='100% Equipe')custoEquipe+=Math.min(c,liq);   // com desconto maior que o lucro, a equipe recupera só o que o cliente pagou
+  });
+  custoEquipe=inteiroMaisProximo(custoEquipe);
+  const cota=inteiroMaisProximo(cotaItens+(taxaValor*(db.aliquota_taxa_deslocamento||0)/100));
+  const loja=Math.max(0,total-cota-custoEquipe);
+  return {itens,qtdItens,parceria,taxa,pct,subtotal,desconto,taxaValor,total,custo,custoEquipe,cota,loja};
 }
 function renderPDV(c){
   const cup=calcCupom();
@@ -1072,7 +1080,8 @@ function renderPDV(c){
         <div class="tot-line"><span>Subtotal (${cup.qtdItens} ${cup.qtdItens===1?'item':'itens'})</span><b>${fmt(cup.subtotal)}</b></div>
         <div class="tot-line"><span>Desconto ${cup.parceria?esc(cup.parceria.nome):''} (${cup.pct}%)</span><b style="color:var(--danger)">−${fmt(cup.desconto)}</b></div>
         <div class="tot-line"><span>Taxa de deslocamento</span><b>+${fmt(cup.taxaValor)}</b></div>
-        ${cup.custo>0?`<div class="tot-line" title="Custo dos produtos (Catálogo): sai antes de calcular o repasse e fica com a loja"><span>Custo dos produtos <small class="muted">(sai antes do repasse)</small></span><b class="muted">${fmt(cup.custo)}</b></div>`:''}
+        ${cup.custoEquipe>0?`<div class="tot-line" title="Custo do produto 100% Equipe: o vendedor já pagou por ele. Não entra no caixa nem no repasse"><span>Custo do produto <small class="muted">(não entra no repasse nem no caixa)</small></span><b class="muted">−${fmt(cup.custoEquipe)}</b></div>`:''}
+        ${cup.custo-cup.custoEquipe>0.005?`<div class="tot-line" title="Custo dos produtos da loja: sai antes de calcular o repasse e fica com a loja"><span>Custo <small class="muted">(fica com a loja)</small></span><b class="muted">${fmt(cup.custo-cup.custoEquipe)}</b></div>`:''}
         <div class="tot-line"><span>Repasse equipe</span><b style="color:var(--purple)">${fmt(cup.cota)}</b></div>
         <div class="tot-line"><span>Receita líquida da loja</span><b style="color:var(--green)">${fmt(cup.loja)}</b></div>
         <div class="tot-line grande"><span>Valor Total</span><b>${fmt(cup.total)}</b></div>
@@ -1338,11 +1347,13 @@ function redesenharPendentes(){const el=document.getElementById('pend-card');if(
 function alternarPend(id,marcado){if(marcado)selPend.add(id);else selPend.delete(id);redesenharPendentes()}
 function alternarPendTodas(marcado){const l=vendasPendentesVisiveis().filter(pendenteSelecionavel);if(marcado)l.forEach(v=>selPend.add(v.id));else selPend.clear();redesenharPendentes()}
 /* Resumo antes de guardar: total vendido, descontos, repasse por pessoa e, em destaque, o valor que vai para o caixa */
+/* Custo que ficou com a equipe numa venda gravada (produto 100% Equipe com custo): total − repasse − caixa */
+function custoEquipeDaVenda(v){return Math.max(0,Math.round(((v.total||0)-(v.cota_funcionario||0)-(v.receita_loja||0))*100)/100)}
 function resumoGuardar(vendas){
-  const r={n:vendas.length,subtotal:0,desconto:0,taxa:0,total:0,repasse:0,caixa:0,pessoas:{}};
+  const r={n:vendas.length,subtotal:0,desconto:0,taxa:0,total:0,repasse:0,custoEquipe:0,caixa:0,pessoas:{}};
   const soma=(nome,valor,papel)=>{const p=(r.pessoas[nome]=r.pessoas[nome]||{valor:0,papeis:new Set()});p.valor+=valor;p.papeis.add(papel)};
   vendas.forEach(v=>{
-    r.subtotal+=v.subtotal||0;r.desconto+=v.desconto||0;r.taxa+=v.taxa_valor||0;r.total+=v.total||0;r.repasse+=v.cota_funcionario||0;r.caixa+=v.receita_loja||0;
+    r.subtotal+=v.subtotal||0;r.desconto+=v.desconto||0;r.taxa+=v.taxa_valor||0;r.total+=v.total||0;r.repasse+=v.cota_funcionario||0;r.custoEquipe+=custoEquipeDaVenda(v);r.caixa+=v.receita_loja||0;
     const rp=repasseDaVenda(v);soma(v.usuario_nome||'—',rp.principal,'vendedor');rp.aux.forEach(a=>soma(a.nome||'?',a.valor,'auxiliar'));
   });
   return r;
@@ -1362,6 +1373,7 @@ function modalGuardarCaixa(){
     <div class="tot-line"><span>Total vendido</span><b>${fmt(r.total)}</b></div>
     <div class="tot-line"><span>Repasse da equipe (fica fora do caixa)</span><b style="color:var(--purple)">−${fmt(r.repasse)}</b></div>
     ${Object.entries(r.pessoas).map(([nome,p])=>`<div class="tot-line pend-pessoa"><span>↳ ${esc(nome)}${nome===eu?' (você)':''}${p.papeis.has('auxiliar')&&!p.papeis.has('vendedor')?' · auxiliar':''}</span><b style="color:var(--purple)">${fmt(p.valor)}</b></div>`).join('')}
+    ${r.custoEquipe>0?`<div class="tot-line"><span>Custo dos produtos (não entra no repasse nem no caixa)</span><b class="muted">−${fmt(r.custoEquipe)}</b></div>`:''}
   </div>
   ${auxDe.length?`<p class="muted" style="font-size:12px;margin-top:8px">Pague aos auxiliares: ${auxDe.map(a=>esc(a.pagador)+' → '+esc(a.nome)+' '+fmt(a.valor)).join(' · ')}</p>`:''}
   <div class="pend-destaque"><span>VALOR PARA O CAIXA</span><b>${fmt(r.caixa)}</b></div>
@@ -2666,7 +2678,8 @@ async function salvarEdicaoVendaFin(id){
  if(entrada+repasse<0){e.textContent='Valores inválidos.';e.style.display='block';return}
  const parceria=db.parcerias.find(x=>x.id===pid)||null;
  const taxa=db.taxas_deslocamento.find(x=>x.id===tid)||null;
- const patch={parceria_id:pid,parceria_nome:parceria?parceria.nome:null,taxa_id:tid,taxa_nome:taxa?taxa.nome:null,taxa_valor:taxa?taxa.valor:0,receita_loja:entrada,cota_funcionario:repasse,total:entrada+repasse,custo_total:itens.reduce((t,i)=>t+i.qtd*i.custo_unit,0)};
+ const patch={parceria_id:pid,parceria_nome:parceria?parceria.nome:null,taxa_id:tid,taxa_nome:taxa?taxa.nome:null,taxa_valor:taxa?taxa.valor:0,receita_loja:entrada,cota_funcionario:repasse,custo_total:itens.reduce((t,i)=>t+i.qtd*i.custo_unit,0),
+   total:entrada+repasse+itens.filter(i=>i.rateio==='100% Equipe').reduce((t,i)=>t+i.qtd*i.custo_unit,0)};   // custo 100% Equipe: fora do caixa e do repasse
  const{error:e1}=await sb.from('vendas').update(patch).eq('id',id);
  if(e1){e.textContent='Erro ao salvar: '+e1.message;e.style.display='block';return}
  await sb.from('venda_itens').delete().eq('venda_id',id);
@@ -2911,7 +2924,7 @@ function excluirUsuario(id){
 function cfgProdutos(b){
   const T='cfg_produtos',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.produtos]),{nome:p=>p.nome,preco:p=>fmt(p.preco),custo:p=>fmt(p.custo||0),rateio:p=>p.rateio,status:p=>p.status,data:p=>p.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">🏷️ Catálogo de Venda (PDV)${ajuda('Produtos vendidos no Caixa de Balcão: foto, preço, custo e rateio. O custo sai do valor da venda antes de calcular o repasse da equipe. Rateio Padrão usa a alíquota global; 100% Equipe e 100% Loja ignoram a alíquota. Cada produto cria sozinho o seu item de Produto Final no Cadastro Central.',['cfg_catalogo'])}</div>
+    <div class="section-title" style="margin:0">🏷️ Catálogo de Venda (PDV)${ajuda('Produtos vendidos no Caixa de Balcão: foto, preço, custo e rateio. O custo sai do valor da venda: no 100% Equipe o repasse é só o lucro e o custo não entra no caixa. Rateio Padrão usa a alíquota global; 100% Equipe e 100% Loja ignoram a alíquota. Cada produto cria sozinho o seu item de Produto Final no Cadastro Central.',['cfg_catalogo'])}</div>
     <button class="btn btn-purple btn-sm" onclick="modalProduto()">+ Novo produto</button></div>
   <div class="card" style="margin-bottom:16px;max-width:420px">
     <label>Alíquota global de rateio (% repassado ao vendedor, itens "Padrão")</label>
@@ -2959,7 +2972,7 @@ function modalProduto(id){
     <div class="field"><label>Preço unitário ($)</label><input id="p-preco" type="number" min="0" step="0.01" value="${p?p.preco:''}"></div>
     <div class="field"><label>Custo ($)</label><input id="p-custo" type="number" min="0" step="0.01" value="${p?p.custo||0:0}"></div>
   </div>
-  <p class="muted" style="font-size:12px;margin:-4px 0 12px">O custo sai do valor da venda antes de calcular o repasse da equipe (a equipe recebe a parte dela do lucro). Ex.: preço $100, custo $75, 100% Equipe → repasse $25.</p>
+  <p class="muted" style="font-size:12px;margin:-4px 0 12px">O custo sai do valor antes de calcular o repasse: a equipe recebe só o lucro. Ex.: preço $100, custo $75, 100% Equipe → cliente paga $100, repasse $25, caixa $0 (o custo não entra em lugar nenhum).</p>
   <div class="row2">
     <div class="field"><label>Rateio</label><select id="p-rateio">
       <option value="Padrão (Rateio Global)" ${p&&p.rateio.includes('Padrão')?'selected':''}>Padrão (Rateio Global)</option>
