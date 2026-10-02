@@ -25,7 +25,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 ## Guia do usuário (descontinuado)
 
 - O guia em PowerPoint (`docs/Guia_do_Sistema_Best_Buds.pptx`) foi removido na v4.26, a pedido do dono: as instruções ficam dentro do site, no "?" de cada tela e nos vídeos "Como fazer". A última versão (v4.24) está no histórico do git. Não recrie o guia.
-- O que antes ia para o guia agora vai para o site: na publicação, atualize os textos do "?" e regrave os vídeos das telas que mudaram (ver "Vídeos \"Como fazer\"").
+- O que antes ia para o guia agora vai para o site: na publicação, atualize os textos do "?" e regrave os vídeos das telas que mudaram (seção Vídeos "Como fazer").
 
 ## Senhas
 
