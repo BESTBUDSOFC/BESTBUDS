@@ -589,7 +589,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.24.0';
+const VERSAO='v4.24.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -1006,7 +1006,7 @@ function renderPDV(c){
           <button class="iconbtn" onclick="rmCupom('${x.prod.id}')">✕</button>
         </div>`).join(''):'<div class="empty" style="padding:16px">Cupom vazio — toque em um produto.</div>'}</div>
       <div style="margin-top:14px">
-        <div class="tot-line"><span>Subtotal (${cup.qtdItens} itens)</span><b>${fmt(cup.subtotal)}</b></div>
+        <div class="tot-line"><span>Subtotal (${cup.qtdItens} ${cup.qtdItens===1?'item':'itens'})</span><b>${fmt(cup.subtotal)}</b></div>
         <div class="tot-line"><span>Desconto ${cup.parceria?esc(cup.parceria.nome):''} (${cup.pct}%)</span><b style="color:var(--danger)">−${fmt(cup.desconto)}</b></div>
         <div class="tot-line"><span>Taxa de deslocamento</span><b>+${fmt(cup.taxaValor)}</b></div>
         <div class="tot-line"><span>Repasse equipe</span><b style="color:var(--purple)">${fmt(cup.cota)}</b></div>
