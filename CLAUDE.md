@@ -99,7 +99,9 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - O que muda no Baú vem em dois blocos separados: **⬇️ Sai do Baú** (Item / Tem agora / Usa / Fica) e **⬆️ Entra no Baú** (Item / Tem agora / Gera / Fica). Fica em vermelho no estoque mínimo. Produto final não entra no Baú, e o bloco "Entra" diz isso.
   - Produção direta: botão verde (`#btn-produzir` → `produzirDireto`).
   - Cascata: etapas e os mesmos dois blocos; botão roxo (`#btn-conf-cascata` → `confirmarCascata`).
-  - Sem insumos nem com cascata: mostra o que falta e trava o botão.
+  - **Sem insumos (nem com cascata):** um aviso só no topo ("Falta X"; se vem da etapa anterior, diz também o que falta lá); tabela "⬇️ Sai do Baú" com **Tem / Precisa / Falta**; bloco "🚚 Para comprar" com a quantidade que falta, o **fornecedor vinculado mais barato** (`prodCompraSugerida`) e o total estimado (item sem fornecedor com valor fica avisado). O selo "faltam insumos" não existe mais e "limite: …" só aparece quando dá para fazer algo direto.
+  - Botão **"🚚 Comprar o que falta"** (`prodComprarFalta`): abre a Nova compra já preenchida (item, fornecedor mais barato, quantidade), com o aviso de para qual produção é e "← Voltar à produção". Depois de registrar, volta para a janela de produção na mesma quantidade (`_voltarProducao`).
+  - Falta = o que **esta** produção deixaria negativo (`planejarCascata`). Saldo que já estava negativo (venda sem estoque, permitido) não trava outras produções.
 - O vendedor produz direto. A cascata é só para Gerente ou acima: o vendedor vê as etapas, mas o botão fica desativado.
 - Os máximos usam `saldosBau()`, que calcula todos os saldos de uma vez, e `planejarCascata(rid,q,saldo)`. Não chame `saldoItem` item a item dentro de laços da tela.
 

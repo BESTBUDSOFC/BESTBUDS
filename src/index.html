@@ -111,6 +111,11 @@ label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-wei
 .prod-cascata{border:1px dashed var(--purple);border-radius:10px;padding:12px}.prod-cas-tit{font-weight:800;color:var(--purple-light);margin-bottom:4px}
 .prod-passo{border-left:3px solid var(--purple);background:rgba(var(--purple-rgb),.06);border-radius:6px;padding:8px 10px;margin-top:8px}.prod-passo.pedida{border-left-color:var(--green);background:rgba(0,204,82,.06)}
 .prod-passo-tag{font-size:11px;color:var(--purple-light)}.prod-passo.pedida .prod-passo-tag{color:var(--green)}.prod-passo-mov{font-size:12px;margin-top:4px}
+.prod-alerta{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.35);border-radius:10px;padding:10px 12px;font-size:13px}
+.prod-bloco.compra{border-left-color:var(--purple)}.prod-bloco.compra .prod-bloco-tit{color:var(--purple-light)}
+.prod-compra-l{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:baseline;padding:6px 0;border-top:1px solid var(--border);font-size:13px}.prod-compra-l:first-of-type{border-top:none}
+.prod-compra-l.total{border-top:1px solid var(--border);font-weight:700}
+.cmp-origem{background:rgba(var(--purple-rgb),.1);border:1px solid rgba(var(--purple-rgb),.4);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px}
 .prod-falta{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.35);border-radius:10px;padding:12px;font-size:13px}
 .prod-rodape{display:flex;flex-direction:column;gap:6px}.prod-acao{width:100%;justify-content:center;padding:12px;font-size:14px}
 .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
@@ -584,7 +589,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.23.1';
+const VERSAO='v4.24.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -1768,7 +1773,10 @@ function planejarCascata(rid,q,base){
     passos.push({r,qtd,mov});
   };
   produzir(db.receitas.find(x=>x.id===rid),q,[]);
-  const faltas=db.itens.filter(i=>saldo[i.id]<-1e-9).map(i=>({it:i,falta:-saldo[i.id]}));
+  // falta = o que esta produção deixaria negativo. Saldo que já estava negativo (venda sem estoque, permitido) não trava
+  // outras produções; só conta o que a produção tiraria a mais dele.
+  const faltaDe=i=>Math.min(0,inicial[i.id])-saldo[i.id];
+  const faltas=db.itens.filter(i=>faltaDe(i)>1e-9).map(i=>({it:i,falta:faltaDe(i)}));
   const efeito=db.itens.filter(i=>Math.abs(saldo[i.id]-inicial[i.id])>1e-9).map(i=>({it:i,antes:inicial[i.id],depois:saldo[i.id]}));
   return{passos,faltas,efeito,possivel:!faltas.length,temCascata:passos.length>1};
 }
@@ -2116,21 +2124,23 @@ async function efetivarCompra(){
   reg('Compra registrada',`${k.fornecedor_nome} — ${fmt(f.total)}${movimentos.length?` (${movimentos.length} insumo(s) entraram no Baú)`:''}`);
   _compraPendente=null;closeModal2();bauTela=null;
   toast('✅ Compra registrada!'+(movimentos.length?' Entrada de insumos no Baú.':''));
-  render();
+  if(_voltarProducao)voltarProducao();else render();
 }
 /* ================= TELAS DE COMPRA E PRODUÇÃO (dentro do Baú) ================= */
 let bauTela=null;
 function telaNovaCompra(){
- bauTela='compra';render();
+ _voltarProducao=null;bauTela='compra';render();
 }
 function telaProducao(){
  bauTela='producao';render();
 }
-function fecharTelaBau(){bauTela=null;render()}
+function fecharTelaBau(){bauTela=null;_voltarProducao=null;render()}
 function telaCompraHTML(c){
  c.innerHTML=`
   <h2 class="page-title">🚚 Registrar compra${ajuda('Registro de despesa e entrada de insumos no Baú.')}</h2>
-  <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">← Voltar ao Baú</button>
+  ${_voltarProducao?`<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="voltarProducao()">← Voltar à produção</button>
+  <div class="cmp-origem">🏭 Compra do que falta para produzir <b>${esc(_voltarProducao.nome)} × ${_voltarProducao.q}</b>. Itens já preenchidos com o fornecedor mais barato (dá para trocar). Depois de registrar, você volta para a produção.</div>`
+  :`<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fecharTelaBau()">← Voltar ao Baú</button>`}
   <div class="card cmp-card">
     <div class="row2">
       <div class="field"><label>Data</label><input id="c-data" type="date" value="${todayISO()}"></div>
@@ -2247,6 +2257,26 @@ function telaProducaoHTML(c){
   ${noBau.length?`<div class="card pl-estoque"><div class="pl-estoque-tit">📦 No Baú</div>${grupos.map(g=>`<div class="pl-estoque-grp"><span class="pl-estoque-cat">${esc(catNome(g))}</span>${noBau.filter(it=>it.categoria===g).map(it=>`<span class="pl-chip${baixo(it)?' bad':''}" title="${baixo(it)?'Zerado ou no estoque mínimo':''}">${esc(it.nome)} <b>${fmtQtd(saldo[it.id]||0)} ${un(it)}</b></span>`).join('')}</div>`).join('')}</div>`:''}
   ${cadeias.length?`<div class="pl-lista" style="--pl-cols:${colunas}">${linhas.map(l=>l.html).join('')}</div>`:'<div class="empty">Nenhuma receita ativa. Cadastre em Configurações › Receitas.</div>'}`;
 }
+/* Compra sugerida para o que falta: para cada item, o fornecedor vinculado mais barato (fornecedor_itens.preco_unitario) */
+function prodCompraSugerida(faltas){
+  return faltas.map(f=>{
+    const opc=fornecedoresDoItem(f.it.id).map(fo=>({fo,preco:precoFornItem(fo.id,f.it.id)})).filter(x=>x.preco>0).sort((a,b)=>a.preco-b.preco||a.fo.nome.localeCompare(b.fo.nome,'pt-BR'));
+    return {it:f.it,qtd:Math.ceil(f.falta*100-1e-6)/100,melhor:opc[0]||null,opcoes:opc.length};
+  });
+}
+/* "Comprar o que falta": abre a Nova compra já preenchida; depois de registrar, volta para a janela de produção */
+let _voltarProducao=null;
+function prodComprarFalta(rid,q){
+  const r=db.receitas.find(x=>x.id===rid);if(!r)return;
+  const sug=prodCompraSugerida(planejarCascata(rid,q).faltas).filter(x=>x.melhor);
+  if(!sug.length)return toast('⚠️ Nenhum item que falta tem fornecedor com valor. Vincule em Configurações › Fornecedores.');
+  closeModal();_voltarProducao={rid,q,nome:r.nome};
+  bauTela='compra';render();
+  document.getElementById('c-linhas').innerHTML='';
+  sug.forEach(x=>addLinhaCompra('c',{item_id:x.it.id,fornecedor_id:x.melhor.fo.id,quantidade:x.qtd}));
+  recalcCompra('c');
+}
+function voltarProducao(){const v=_voltarProducao;_voltarProducao=null;bauTela='producao';render();if(v&&db.receitas.some(r=>r.id===v.rid)){prodAbrir(v.rid);prodSetQtd(v.q)}}
 function prodPainelHTML(r,i,saldo){
   const q=prodQtd,cat=catReceita(r.categoria_id);
   const prd=(r.insumos||[]).filter(x=>x.papel==='produzido').map(ri=>({ri,it:db.itens.find(it=>it.id===ri.item_id)})).filter(x=>x.it);
@@ -2255,8 +2285,7 @@ function prodPainelHTML(r,i,saldo){
   const chips=[
     i.max>0?`<button class="chip-max ok" onclick="prodSetQtd(${Math.min(i.max,PROD_LIMITE)})" title="Usar o máximo">máximo ${fmtMax(i.max)}</button>`:'',
     i.cascata>i.max?`<button class="chip-max cas" onclick="prodSetQtd(${i.cascata})" title="Usar o máximo com cascata">🔗 máximo ${fmtMax(i.cascata)} com cascata</button>`:'',
-    !i.max&&!(i.cascata>i.max)?'<span class="chip-max zero">faltam insumos</span>':'',
-    i.limite&&i.max<PROD_LIMITE?`<span class="muted" style="font-size:12px">limite: <b style="color:var(--text)">${esc(i.limite.nome)}</b></span>`:''].join('');
+    i.limite&&i.max>0&&i.max<PROD_LIMITE?`<span class="muted" style="font-size:12px">limite: <b style="color:var(--text)">${esc(i.limite.nome)}</b></span>`:''].join('');
   const topo=`<div class="prod-cab">${cat?`<div class="prod-cat" style="margin:0 0 2px">${rotuloCatReceita(cat.id)}</div>`:''}
       <div class="prod-nome">${esc(r.nome)}</div><div class="muted" style="font-size:13px">Cada vez gera: ${gera}</div></div>
     <div class="prod-qtd"><span class="muted">Quantidade</span>
@@ -2288,10 +2317,25 @@ function prodPainelHTML(r,i,saldo){
     botao=ger?`<button class="btn btn-purple prod-acao" id="btn-conf-cascata" onclick="confirmarCascata('${r.id}',${q})">🔗 Produzir em cascata · ${n} etapas</button>`
       :`<button class="btn btn-purple prod-acao" disabled>🔗 Produzir em cascata · ${n} etapas</button><div class="muted" style="font-size:12px;text-align:center">A produção em cascata é feita por Gerente, Diretor ou Sócio. Você pode produzir até ${i.max} direto.</div>`;
   }else{
-    corpo=`<div class="prod-falta"><b>Não dá para produzir ${q}.</b> Falta${pl.faltas.length>1?'m':''}: ${pl.faltas.map(f=>`<b>${fmtQtd(f.falta)} ${esc(f.it.unidade_medida||'')} de ${esc(f.it.nome)}</b>`).join(', ')}${pl.temCascata?' (já contando a produção em cascata)':''}. ${i.max>0||i.cascata>0?'Reduza a quantidade.':'Compre os insumos antes de produzir.'}</div>`;
-    botao=`<button class="btn btn-ghost prod-acao" disabled>▶ Produzir ${q} × ${esc(r.nome)}</button>`;
+    const unid=it=>esc(it.unidade_medida||'');
+    const cons=prodConsumos(r).map(x=>{const precisa=x.ri.quantidade*q,tem=saldo[x.it.id]||0;return {it:x.it,tem,precisa,falta:Math.max(0,precisa-tem)}});
+    const sug=prodCompraSugerida(pl.faltas),compraveis=sug.filter(x=>x.melhor),total=compraveis.reduce((t,x)=>t+x.qtd*x.melhor.preco,0);
+    const daEtapaAnterior=sug.some(x=>!cons.some(c=>c.it.id===x.it.id));
+    // aviso: o que falta nesta etapa; se vem da etapa anterior, diz também o que falta lá (o que se compra)
+    const lista=fs=>fs.map(f=>`<b>${fmtQtd(f.falta)} ${unid(f.it)} de ${esc(f.it.nome)}</b>`).join(', ');
+    const diretas=cons.filter(c=>c.falta>0);
+    corpo=`<div class="prod-alerta">⚠️ Falta${diretas.length>1?'m':''} ${lista(diretas)}${q>1?` para produzir ${q}`:''}.${daEtapaAnterior?` Para fazer na etapa anterior, falta${pl.faltas.length>1?'m':''} ${lista(pl.faltas)}.`:''}${i.max>0?` Dá para fazer até <b>${i.max}</b> agora.`:''}</div>
+      <div class="prod-bloco sai"><div class="prod-bloco-tit">⬇️ Sai do Baú</div><table class="prod-tab"><thead><tr><th>Item</th><th>Tem</th><th>Precisa</th><th>Falta</th></tr></thead><tbody>
+        ${cons.map(c=>`<tr><td>${esc(c.it.nome)}</td><td>${fmtQtd(c.tem)}</td><td>${fmtQtd(c.precisa)}</td><td class="${c.falta>0?'prod-baixo':'prod-ent'}">${c.falta>0?'−'+fmtQtd(c.falta)+' '+unid(c.it):'ok'}</td></tr>`).join('')}</tbody></table></div>
+      <div class="prod-bloco compra"><div class="prod-bloco-tit">🚚 Para comprar${daEtapaAnterior?' <span class="muted" style="font-weight:400">(insumo da etapa anterior)</span>':''}</div>
+        ${sug.map(x=>x.melhor
+          ?`<div class="prod-compra-l"><span><b>${fmtQtd(x.qtd)} ${unid(x.it)}</b> ${esc(x.it.nome)}</span><span class="muted">${esc(x.melhor.fo.nome)}${x.opcoes>1?' · mais barato':''}</span><b>${fmt(x.qtd*x.melhor.preco)}</b></div>`
+          :`<div class="prod-compra-l"><span><b>${fmtQtd(x.qtd)} ${unid(x.it)}</b> ${esc(x.it.nome)}</span><span class="prod-baixo">sem fornecedor com valor — vincule em Configurações › Fornecedores</span><span></span></div>`).join('')}
+        ${compraveis.length?`<div class="prod-compra-l total"><span>Total estimado</span><span></span><b>≈ ${fmt(total)}</b></div>`:''}</div>`;
+    botao=compraveis.length?`<button class="btn btn-purple prod-acao" id="btn-comprar-falta" onclick="prodComprarFalta('${r.id}',${q})">🚚 Comprar o que falta</button>`:'';
   }
-  return `${topo}${corpo}<p id="prod-err" style="color:var(--danger);font-size:13px;display:none"></p><div class="prod-rodape">${botao}<button class="btn btn-ghost prod-acao" onclick="closeModal()">Cancelar</button></div>`;
+  const fechar=pl.possivel?'Cancelar':'Fechar';
+  return `${topo}${corpo}<p id="prod-err" style="color:var(--danger);font-size:13px;display:none"></p><div class="prod-rodape">${botao}<button class="btn btn-ghost prod-acao" onclick="closeModal()">${fechar}</button></div>`;
 }
 
 /* ================= HISTÓRICO FINANCEIRO ================= */
