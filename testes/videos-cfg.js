@@ -27,7 +27,7 @@ async catalogo(p){const T=8;
   await passo(p,'#cfg-body .table-wrap',2,T,'Os produtos vendidos no <b>Caixa de Balcão</b>: foto, preço, <b>custo</b> e rateio.','↑↓ mudam a ordem no Caixa. ⏸️ tira o produto do Caixa.');
   await passo(p,'#cfg-body .card:has(#al-global)',3,T,'<b>Alíquota global</b>: a % do lucro que vai para a equipe nos produtos de rateio <b>Padrão</b>.');
   await passo(p,'#cfg-body tr:has-text("CBD") button[onclick^="modalProduto"]',4,T,'Toque em ✏️ para editar um produto.',null,{clicar:true});
-  await passo(p,['#p-preco','#p-custo'],5,T,'<b>Preço</b> e <b>custo</b>. O custo sai do valor antes de calcular o repasse.','Ex.: CBD $100 com custo $75 e 100% Equipe → repasse de $25; a loja fica com $75.');
+  await passo(p,['#p-preco','#p-custo'],5,T,'<b>Preço</b> e <b>custo</b>. O custo sai do valor antes de calcular o repasse.','No 100% Equipe o custo fica com a equipe: CBD $100, custo $75 → repasse $25 e os $75 ficam com quem vendeu; o caixa não recebe nada.');
   await passo(p,'#p-rateio + .ssel-btn',6,T,'<b>Rateio</b>: Padrão (usa a alíquota global), 100% Equipe ou 100% Loja.');
   await passo(p,'#modal-box .field:has(#p-img-file)',7,T,'<b>Foto quadrada</b>: aparece no Caixa e na tela Produzir.');
   await passo(p,salvar,8,T,'Toque em <b>Salvar</b>.','Produto novo cria sozinho o item de Produto Final no Cadastro Central.',{clicar:true});
