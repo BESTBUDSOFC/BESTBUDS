@@ -615,7 +615,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.27.0';
+const VERSAO='v4.27.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -4437,24 +4437,24 @@ function precisaTutorial(){
   return true;
 }
 const TUT_MOD={
-  pdv:'Aqui você vende: toque nos produtos para montar o cupom, escolha desconto e deslocamento e finalize. A venda fica pendente até você guardar o dinheiro em "Vendas a guardar no caixa".',
-  bau:'O estoque de insumos. Daqui você registra uma Nova compra e entra em Produzir para dichavar e enrolar.',
-  financeiro:'Todas as vendas guardadas, compras e ajustes do caixa, com os resumos no topo e um filtro em cada coluna.',
-  painel:'Alertas que pedem ação (cancelamentos, senhas, dinheiro na mão, estoque mínimo) e os números da loja por período.',
-  config:'Cadastros do sistema: usuários, catálogo, itens, receitas, fornecedores, descontos, deslocamento e identidade visual. Cada aba tem o vídeo dela no "?".'
+  pdv:'Onde você registra as vendas.',
+  bau:'O estoque. Daqui você faz compras e produz.',
+  financeiro:'Todas as entradas e saídas do caixa.',
+  painel:'Alertas e números da loja.',
+  config:'Os cadastros do sistema.'
 };
 function tutVisivel(sel){return [...document.querySelectorAll(sel)].find(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!=='hidden'})||null}
 function tutPassos(){
   const u=sessionUser(),mods=MODULOS.filter(m=>m.perfis.includes(u.perfil));
-  const P=[{titulo:`Olá, ${esc(String(u.nome||'').split(' ')[0])}! 👋`,texto:'Este é um tour rápido pelo sistema. Leva menos de um minuto.'},
-    {alvo:()=>tutVisivel('#sidebar-nav')||tutVisivel('#bottom-nav'),titulo:'O menu',texto:`Aqui ficam as abas. Você vê só as do seu perfil (${esc(PERFIL_LABEL[u.perfil]||u.perfil)}).`}];
+  const P=[{titulo:`Olá, ${esc(String(u.nome||'').split(' ')[0])}! 👋`,texto:'Um tour rápido pelo sistema.'},
+    {alvo:()=>tutVisivel('#sidebar-nav')||tutVisivel('#bottom-nav'),titulo:'O menu',texto:'Aqui ficam as abas do sistema.'}];
   mods.forEach(m=>P.push({antes:()=>go(m.id),alvo:()=>tutVisivel(`.nav-item[onclick="go('${m.id}')"]`),titulo:`${m.ic} ${m.nome}`,texto:TUT_MOD[m.id]||''}));
   P.push({antes:()=>go('pdv'),alvo:()=>tutVisivel('#main-content .page-title .ajuda'),titulo:'O ponto de interrogação',
-    texto:'Onde aparece um <b>?</b>, tem a explicação da tela e um vídeo de como fazer. <b>Toque no ? agora.</b>',espera:'ajuda'});
+    texto:'Onde tem <b>?</b>, tem um vídeo de como fazer. <b>Toque no ?</b>',espera:'ajuda'});
   P.push({alvo:()=>tutVisivel('#main-content .page-title .ajuda.aberta .ajuda-txt'),titulo:'Vídeo "Como fazer"',
-    texto:'Toque em <b>▶ Ver como fazer</b> para assistir agora (o tour continua quando você fechar o vídeo), ou em Próximo.',livre:true});
-  P.push({antes:()=>tutFecharAjuda(),alvo:()=>tutVisivel('#btn-tutorial'),titulo:'Rever o tutorial',texto:'Quer ver de novo? Toque em <b>🎓</b> aqui no topo, quando quiser.'});
-  P.push({titulo:'Pronto! ✅',texto:'Agora é com você. Bom trabalho!',fim:true});
+    texto:'Toque em <b>▶ Ver como fazer</b> para assistir.',livre:true});
+  P.push({antes:()=>tutFecharAjuda(),alvo:()=>tutVisivel('#btn-tutorial'),titulo:'Rever o tutorial',texto:'Toque em <b>🎓</b> para ver este tour de novo.'});
+  P.push({titulo:'Pronto! ✅',texto:'Bom trabalho!',fim:true});
   return P;
 }
 function iniciarTutorial(){
@@ -4472,7 +4472,7 @@ function tutMostrar(){
   if(p.antes)p.antes();
   const bal=document.getElementById('tut-bal');
   bal.innerHTML=`<span class="tut-p">${_tut.i+1} de ${n}</span><h4>${p.titulo}</h4><p>${p.texto}</p>
-    ${p.espera?'<div class="tut-espera" id="tut-espera">👆 Toque no ? destacado para continuar.</div>':''}
+    ${p.espera?'<div class="tut-espera" id="tut-espera">👆 Toque no ? para continuar.</div>':''}
     <div class="tut-acoes">${p.fim?'':'<button class="tut-pular" onclick="tutFechar(true)">Pular tutorial</button>'}
       ${_tut.i>0&&!p.fim?'<button class="btn btn-ghost btn-sm" onclick="tutIr(-1)">Voltar</button>':''}
       <button class="btn btn-primary btn-sm" id="tut-prox" onclick="${p.fim?'tutFechar(true)':'tutIr(1)'}" ${p.espera?'disabled':''} style="${p.fim?'margin-left:auto':''}">${p.fim?'Concluir':'Próximo'}</button></div>`;
