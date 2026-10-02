@@ -22,17 +22,10 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Mudança de banco: aplique primeiro no teste, junto com a branch. Na produção, só depois do "aprovado", com a mesma migração de `supabase/migrations/`.
 - O projeto grátis pausa após 7 dias sem uso. Para reativar, use o painel do Supabase ou `restore_project`.
 
-## Guia do usuário
+## Guia do usuário (descontinuado)
 
-- O guia é `docs/Guia_do_Sistema_Best_Buds.pptx`.
-- **O guia só é atualizado depois do "aprovado"**, na mesma publicação que leva a mudança para produção. Nunca atualize o guia na branch antes da aprovação.
-- Na publicação, atualize tudo o que mudou e que o usuário vê: textos, telas, regras e permissões.
-  - Troque os prints das telas que mudaram, mantendo a proporção do quadro da imagem.
-  - Ajuste os textos e as notas do apresentador.
-  - Atualize a versão no slide 1.
-- **Os prints são reais.** Use os produtos, itens, receitas, fornecedores, fotos e identidade visual que estão cadastrados no site.
-  - Leia os dados de produção só para consulta, sem gravar nada.
-  - As fotos vêm do Storage do Supabase (`*.supabase.co`). A rede do ambiente precisa liberar esse domínio.
+- O guia em PowerPoint (`docs/Guia_do_Sistema_Best_Buds.pptx`) foi removido na v4.26, a pedido do dono: as instruções ficam dentro do site, no "?" de cada tela e nos vídeos "Como fazer". A última versão (v4.24) está no histórico do git. Não recrie o guia.
+- O que antes ia para o guia agora vai para o site: na publicação, atualize os textos do "?" e regrave os vídeos das telas que mudaram (ver "Vídeos \"Como fazer\"").
 
 ## Senhas
 
