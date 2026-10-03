@@ -475,8 +475,8 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .pn-card{margin-bottom:16px}
 .pn-card-tit{font-weight:700;font-size:14px;margin-bottom:12px}
 .pn-card-tit .muted{font-weight:400;font-size:12px}
-.ajuda{position:relative;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:8px;border:1px solid var(--border);border-radius:50%;color:var(--muted);font-size:11px;font-weight:700;line-height:1;cursor:help;vertical-align:middle;text-transform:none;letter-spacing:0;flex:none}
-.ajuda:hover,.ajuda:focus{color:var(--text);border-color:var(--muted);outline:none}
+.ajuda{position:relative;display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;margin-left:8px;border:1.5px solid rgba(var(--green-rgb),.55);border-radius:50%;background:rgba(var(--green-rgb),.12);color:var(--green);font-size:12px;font-weight:800;line-height:1;cursor:pointer;vertical-align:middle;text-transform:none;letter-spacing:0;flex:none;transition:background .15s,border-color .15s,box-shadow .15s}
+.ajuda:hover,.ajuda:focus{background:rgba(var(--green-rgb),.22);border-color:var(--green);box-shadow:0 0 0 3px rgba(var(--green-rgb),.15);outline:none}
 .ajuda-txt{display:none;position:absolute;top:calc(100% + 8px);left:-8px;z-index:250;width:max-content;max-width:min(380px,80vw);padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5);color:var(--text);font-size:12px;font-weight:400;line-height:1.5;text-align:left;white-space:normal}
 .ajuda:hover .ajuda-txt,.ajuda:focus .ajuda-txt,.ajuda:focus-within .ajuda-txt{display:block}
 .ajuda-txt::before{content:'';position:absolute;left:0;right:0;top:-10px;height:10px}
@@ -615,7 +615,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.28.0';
+const VERSAO='v4.28.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */

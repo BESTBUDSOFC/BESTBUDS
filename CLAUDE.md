@@ -152,6 +152,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 ## Explicações na tela
 
+- O "?" tem a cor da loja (verde): círculo de 21 px com fundo verde suave, borda e "?" verdes; ao passar o mouse ou tocar, o fundo fica mais forte com um anel leve (pedido do dono, v4.28.1: mais visível sem roubar a atenção).
 - **Só existe "?" onde há vídeo** (pedido do dono, v4.27): `ajuda(texto,[vídeos])` não desenha nada sem vídeo. O "?" fica ao lado do título da tela (ou da aba de Configurações), com a explicação e o botão do vídeo. Painel não tem "?". Instruções dentro de janelas (antes de confirmar uma ação) continuam visíveis.
 - Os ícones continuam no site todo (o dono pediu para manter, depois de testar sem eles).
 
