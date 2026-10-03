@@ -541,6 +541,9 @@ tr.pend-sel td{background:rgba(var(--green-rgb),.06)}
 #faixa-teste{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:1000;pointer-events:none;background:#F59E0B;color:#111;font:800 10px/1 system-ui,sans-serif;letter-spacing:.06em;padding:3px 12px 4px;border-radius:0 0 8px 8px;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 @media(max-width:700px){#faixa-teste span{display:none}}
 body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F59E0B;pointer-events:none;z-index:999}
+.img-form{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.img-form .img-largo{grid-column:1/-1}
+.img-prods{display:flex;flex-wrap:wrap;gap:6px 14px}.img-chk{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;text-transform:none;letter-spacing:0;color:var(--text)}.img-chk input{width:auto}
+@media(max-width:600px){.img-form{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -615,7 +618,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.29.1';
+const VERSAO='v4.30.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -2924,7 +2927,7 @@ function excluirUsuario(id){
 function cfgProdutos(b){
   const T='cfg_produtos',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.produtos]),{nome:p=>p.nome,preco:p=>fmt(p.preco),custo:p=>fmt(p.custo||0),rateio:p=>p.rateio,status:p=>p.status,data:p=>p.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">🏷️ Catálogo de Venda (PDV)${ajuda('Produtos vendidos no Caixa de Balcão: foto, preço, custo e rateio. O custo sai do valor da venda: no 100% Equipe o repasse é só o lucro e o custo não entra no caixa. Rateio Padrão usa a alíquota global; 100% Equipe e 100% Loja ignoram a alíquota. Cada produto cria sozinho o seu item de Produto Final no Cadastro Central. 🖼️ Imagem do cardápio gera um card promocional com os produtos ativos e os preços.',['cfg_catalogo'])}</div>
+    <div class="section-title" style="margin:0">🏷️ Catálogo de Venda (PDV)${ajuda('Produtos vendidos no Caixa de Balcão: foto, preço, custo e rateio. O custo sai do valor da venda: no 100% Equipe o repasse é só o lucro e o custo não entra no caixa. Rateio Padrão usa a alíquota global; 100% Equipe e 100% Loja ignoram a alíquota. Cada produto cria sozinho o seu item de Produto Final no Cadastro Central. 🖼️ Imagem do cardápio gera um card promocional com os produtos e os preços; 🏷️ gera a imagem de novo preço (preço antigo → novo).',['cfg_catalogo'])}</div>
     <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" title="Gerar imagem promocional com os produtos ativos" onclick="modalImagemCardapio()">🖼️ Imagem do cardápio</button>
     <button class="btn btn-purple btn-sm" onclick="modalProduto()">+ Novo produto</button></div></div>
   <div class="card" style="margin-bottom:16px;max-width:420px">
@@ -2942,7 +2945,8 @@ function cfgProdutos(b){
     <td class="money">${fmt(p.preco)}</td><td style="color:${p.custo>0?'var(--text)':'var(--muted)'}">${fmt(p.custo||0)}</td><td><span class="tag">${esc(p.rateio)}</span></td>
     <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
     <td style="color:var(--muted)">${dataHoraBR(p.criado_em)}</td>
-    <td><button class="iconbtn" onclick="modalProduto('${p.id}')">✏️</button>
+    <td><button class="iconbtn" title="Imagem de novo preço" onclick="modalImagemPreco('${p.id}')">🏷️</button>
+      <button class="iconbtn" onclick="modalProduto('${p.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleProduto('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>
       ${isSocioOuDiretor()&&p.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirProduto('${p.id}')">🗑️</button>`:''}</td>
   </tr>`).join('')||linhaSemResultado(9,T)}</table></div>`;
@@ -3010,8 +3014,10 @@ async function salvarProduto(id){
   if(id){
     const{error}=await sb.from('produtos').update(campos).eq('id',id);
     if(error){e.textContent='Erro ao salvar: '+error.message;e.style.display='block';return}
+    const precoAntes=Number((db.produtos.find(x=>x.id===id)||{}).preco);
     Object.assign(db.produtos.find(x=>x.id===id),{nome,preco,custo,rateio,imagem:imagemUrl});
-    reg('Produto editado',nome);
+    reg('Produto editado',nome+(precoAntes!==preco?' (preço '+precoCurto(precoAntes)+' → '+precoCurto(preco)+')':''));
+    if(precoAntes!==preco)window._precoMudou={id,antes:precoAntes,depois:preco};
   }else{
     const{data,error}=await sb.from('produtos').insert({...campos,ordem:proximaOrdem(db.produtos),criado_por:sessionUser().id}).select().single();
     if(error){e.textContent='Erro ao salvar: '+error.message;e.style.display='block';return}
@@ -3019,6 +3025,8 @@ async function salvarProduto(id){
     reg('Produto criado',nome);
   }
   window._pImgFile=null;closeModal();render();agendarSincronizacao(); // o item "Produto Final" do produto é criado/atualizado pelo banco
+  // o banco guarda o preço antigo em produtos_precos; aqui só oferece a imagem para divulgar
+  const pm=window._precoMudou;window._precoMudou=null;if(pm)oferecerImagemPreco(pm.id,pm.antes,pm.depois);
 }
 async function toggleProduto(id){
   const p=db.produtos.find(x=>x.id===id);
@@ -3502,23 +3510,38 @@ function imgPilula(x,txt,y){const{g,W,verde,escuro}=x;g.font=IMG_MO(800,26);imgE
   g.fillStyle=escuro;g.textAlign='center';g.fillText(txt,W/2+3,y+35);imgEspaco(g,0)}
 function imgFoto(g,im,x,y,l){if(!im){g.font=IMG_AN(l*.4);g.textAlign='center';g.fillStyle='#fff';g.fillText('🌿',x+l/2,y+l*.65);return}
   const r=Math.max(l/im.width,l/im.height),sw=l/r,sh=l/r;g.save();g.globalCompositeOperation='lighten';g.drawImage(im,(im.width-sw)/2,(im.height-sh)/2,sw,sh,x,y,l,l);g.restore()}
-async function desenharImagemDesconto(p){
+const imgLoja=()=>(nomeLojaAtual()||'').toUpperCase().trim();
+const imgSlug=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()||'imagem';
+const imgTxt=v=>String(v==null?'':v).trim().toUpperCase();
+// título de até 2 linhas: só branco (nome do parceiro) ou com a última linha em verde com brilho (frases); devolve o y final
+function imgTitulo(x,txt,y,px0,destacar){
+  const{g,W,verde}=x;if(!txt)return y;const{px,ln}=imgCaber(g,txt,IMG_AN,W-150,2,px0,52);g.textAlign='center';
+  ln.forEach((l,i)=>{y+=px*.98;g.save();g.font=IMG_AN(px);if(destacar&&i===ln.length-1){g.fillStyle=verde;g.shadowColor=verde;g.shadowBlur=30}else g.fillStyle='#fff';g.fillText(l,W/2,y);g.restore()});
+  return y;
+}
+const FRASES_OFERTA=()=>['Aproveite enquanto dura!','Hoje tem desconto!','Leve mais, pague menos.','Oferta imperdível!','Só na '+(nomeLojaAtual()||'loja')+'!'];
+const FRASES_RODAPE=()=>{const L=imgLoja();return['Entregas de pacote sem deslocamento','Apresente no balcão da '+L,'Válido no balcão da '+L,'Peça já no balcão da '+L]};
+function textosPadraoDesconto(p){const t=imagemDescontoTextos(p),of=!t.nome;
+  return{selo:of?'OFERTA ESPECIAL':'PARCERIA OFICIAL',titulo:of?FRASES_OFERTA()[0]:t.nome,sub:t.tipo==='fixa'?'EM TODA A COMPRA':'QUANTO MAIS LEVA, MAIS ECONOMIZA',rodape:of?'VÁLIDO NO BALCÃO DA '+imgLoja():'ENTREGAS DE PACOTE SEM DESLOCAMENTO'}}
+async function desenharImagemDesconto(p,tx){
   const x=imgCtx(),{c,g,W,H,verde,escuro}=x;await carregarFontesImagem();
   await imgFundo(x,await carregarImagemCors(db.identidade_visual&&db.identidade_visual.logotipo));
-  const t=imagemDescontoTextos(p);g.textAlign='center';
-  imgPilula(x,t.nome?'PARCERIA OFICIAL':'OFERTA ESPECIAL',238);let y=300;
-  if(t.nome){const{px,ln}=imgCaber(g,t.nome.toUpperCase(),IMG_AN,W-160,2,130,60);g.fillStyle='#fff';ln.forEach(l=>{y+=px;g.font=IMG_AN(px);g.fillText(l,W/2,y)});y+=20}
+  const t=imagemDescontoTextos(p),v={...textosPadraoDesconto(p),...(tx||{})},of=!t.nome;g.textAlign='center';
+  if(imgTxt(v.selo))imgPilula(x,imgTxt(v.selo),238);
+  // nome do parceiro em branco; na oferta, a mensagem com a última linha em verde
+  let y=imgTitulo(x,imgTxt(v.titulo),300,of?118:130,of);if(imgTxt(v.titulo))y+=20;
   if(t.tipo==='fixa'){
-    y+=Math.max(0,(H-170-y-680)/2);
-    let px=460;g.font=IMG_AN(px);while(g.measureText(t.destaque).width>W-260&&px>200){px-=10;g.font=IMG_AN(px)}
+    // o bloco do % encolhe para caber entre o título e o rodapé
+    const k=Math.min(1,(H-190-y)/680);y+=Math.max(0,(H-170-y-680*k)/2);
+    let px=Math.round(460*k);g.font=IMG_AN(px);while(g.measureText(t.destaque).width>W-260&&px>160){px-=10;g.font=IMG_AN(px)}
     const larg=g.measureText(t.destaque).width;
-    g.save();g.fillStyle=verde;g.shadowColor=verde;g.shadowBlur=70;g.fillText(t.destaque,W/2-40,y+560);g.restore();
-    imgEtiqueta(g,'OFF',Math.min(W-130,W/2-40+larg/2+20),y+190,110,'#fff',escuro,.12);
-    g.fillStyle='#fff';g.font=IMG_MO(800,40);imgEspaco(g,8);g.fillText('EM TODA A COMPRA',W/2,y+660);imgEspaco(g,0);
+    g.save();g.fillStyle=verde;g.shadowColor=verde;g.shadowBlur=70;g.fillText(t.destaque,W/2-40,y+560*k);g.restore();
+    imgEtiqueta(g,'OFF',Math.min(W-130,W/2-40+larg/2+20),y+190*k,Math.round(110*Math.max(k,.75)),'#fff',escuro,.12);
+    if(imgTxt(v.sub)){g.fillStyle='#fff';imgEspaco(g,8);let f=40;g.font=IMG_MO(800,f);while(g.measureText(imgTxt(v.sub)).width>W-140&&f>22){f-=2;g.font=IMG_MO(800,f)}g.fillText(imgTxt(v.sub),W/2,y+560*k+100);imgEspaco(g,0)}
   }else{
     // escada: quanto maior a faixa, maior a barra
-    g.fillStyle=verde;g.font=IMG_MO(800,34);imgEspaco(g,5);g.fillText('QUANTO MAIS LEVA, MAIS ECONOMIZA',W/2,y+50);imgEspaco(g,0);
-    const n=Math.max(1,t.linhas.length),gap=n>4?20:40,bw=Math.min(230,(W-140-(n-1)*gap)/n),x0=W/2-(n*bw+(n-1)*gap)/2,chao=H-250,hmax=chao-(y+260);
+    if(imgTxt(v.sub)){g.fillStyle=verde;imgEspaco(g,5);let f=34;g.font=IMG_MO(800,f);while(g.measureText(imgTxt(v.sub)).width>W-140&&f>20){f-=2;g.font=IMG_MO(800,f)}g.fillText(imgTxt(v.sub),W/2,y+50);imgEspaco(g,0)}
+    const n=Math.max(1,t.linhas.length),gap=n>4?20:40,bw=Math.min(230,(W-140-(n-1)*gap)/n),x0=W/2-(n*bw+(n-1)*gap)/2,chao=H-250,hmax=Math.max(160,chao-(y+260));
     const pf=Math.round(Math.min(120,bw*.5)),ff=Math.round(Math.min(28,bw*.13));
     t.linhas.forEach((l,k)=>{const h=hmax*(0.45+0.55*k/(n-1||1)),bx=x0+k*(bw+gap),gr=g.createLinearGradient(0,chao-h,0,chao);
       gr.addColorStop(0,imgRgba(verde,.95));gr.addColorStop(1,imgRgba(verde,.15));g.save();g.shadowColor=verde;g.shadowBlur=k===n-1?50:20;g.fillStyle=gr;imgRet(g,bx,chao-h,bw,h,[22,22,0,0]);g.fill();g.restore();
@@ -3526,25 +3549,47 @@ async function desenharImagemDesconto(p){
       g.fillStyle='#fff';g.font=IMG_MO(700,ff);g.fillText(l.faixa,bx+bw/2,chao+42)});
     if(!t.linhas.length){g.fillStyle='#9CA3AF';g.font=IMG_MO(600,32);g.fillText('Sem faixas cadastradas.',W/2,y+300)}
   }
-  imgRodape(x,t.nome?'ENTREGAS DE PACOTE SEM DESLOCAMENTO':'VÁLIDO NO BALCÃO DA '+(nomeLojaAtual()||'').toUpperCase());
+  imgRodape(x,imgTxt(v.rodape));
   return c;
 }
-let _imgDesconto=null;   // última imagem gerada (parceria ou cardápio): Baixar e Copiar usam esta
-async function modalImagemDesconto(id){
-  const p=db.parcerias.find(x=>x.id===id);if(!p)return;
-  openModal(`<h3>🖼️ Imagem da parceria</h3><div id="img-desc-prev" class="muted" style="text-align:center;padding:30px">Gerando…</div>
+/* ---- Janela das imagens (parceria, oferta, cardápio, novo preço): todos os textos editáveis, prévia, Baixar e Copiar ---- */
+let _imgDesconto=null;   // última imagem gerada: Baixar e Copiar usam esta
+let _imgM=null,_imgTimer=null;   // janela aberta: {tipo,titulo,campos,v,desenhar,arquivo,registro}
+// textos que a pessoa escreveu ficam lembrados neste aparelho, por tipo de imagem
+function imgTextosSalvos(tipo){try{return JSON.parse(localStorage.getItem('bb_img_'+tipo)||'{}')||{}}catch(e){return{}}}
+function imgLembrar(tipo,id,v){try{const s=imgTextosSalvos(tipo);s[id]=v;localStorage.setItem('bb_img_'+tipo,JSON.stringify(s))}catch(e){}}
+function abrirModalImagem(m){
+  const salvos=imgTextosSalvos(m.tipo);
+  m.campos.forEach(c=>{if(m.v[c.id]===undefined)m.v[c.id]=c.lembrar&&salvos[c.id]!=null?salvos[c.id]:c.padrao});
+  _imgM=m;
+  openModal(`<h3>🖼️ ${esc(m.titulo)}</h3>${m.topo||''}
+    <div class="img-form">${m.campos.map(c=>`<div class="field${c.largo?' img-largo':''}"><label>${esc(c.label)}</label><div style="display:flex;gap:8px">
+      <input id="imgc-${c.id}" ${c.num?'type="number" min="0" step="1" inputmode="numeric"':`maxlength="${c.max||60}"`} value="${esc(m.v[c.id]==null?'':m.v[c.id])}" placeholder="${esc(c.ph||'')}" oninput="imgCampo('${c.id}',this.value)">
+      ${c.frases?`<button class="btn btn-ghost btn-sm" title="Sortear outra frase" onclick="imgSortear('${c.id}')">🎲</button>`:''}</div>${c.dica!==undefined?`<div class="muted" style="font-size:12px;margin-top:4px" id="imgd-${c.id}">${c.dica}</div>`:''}</div>`).join('')}${m.extra||''}</div>
+    <div id="img-desc-prev" class="muted" style="text-align:center;padding:30px">Gerando…</div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
     <button class="btn btn-ghost" id="btn-copiar-img" onclick="copiarImagemDesconto()" style="display:none">📋 Copiar</button>
     <button class="btn btn-primary" id="btn-baixar-img" onclick="baixarImagemDesconto()" disabled>⬇ Baixar PNG</button></div>`);
-  const c=await desenharImagemDesconto(p);
+  return imgGerar().then(()=>{if(_imgDesconto&&_imgM===m&&m.registro)reg(...m.registro(m.v))});
+}
+function imgCampo(id,valor){
+  const m=_imgM;if(!m)return;m.v[id]=valor;const c=m.campos.find(x=>x.id===id);if(c&&c.lembrar)imgLembrar(m.tipo,id,valor);
+  clearTimeout(_imgTimer);_imgTimer=setTimeout(imgGerar,350);
+}
+function imgSortear(id){
+  const m=_imgM,c=m&&m.campos.find(x=>x.id===id);if(!c||!c.frases)return;const fr=typeof c.frases==='function'?c.frases():c.frases;
+  const i=fr.findIndex(f=>imgTxt(f)===imgTxt(m.v[id])),v=fr[(i+1)%fr.length];const inp=document.getElementById('imgc-'+id);if(inp)inp.value=v;
+  imgCampo(id,v);clearTimeout(_imgTimer);imgGerar();
+}
+async function imgGerar(){
+  const m=_imgM;if(!m)return;const c=await m.desenhar(m.v);if(_imgM!==m)return;
   let url;try{url=c.toDataURL('image/png')}catch(e){url=null}
-  if(!url){document.getElementById('img-desc-prev').textContent='Não foi possível gerar a imagem.';return}
-  _imgDesconto={canvas:c,url,arquivo:'parceria-'+nomeParceiroLimpo(p.nome).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+'.png'};
   const prev=document.getElementById('img-desc-prev');if(!prev)return;
-  prev.innerHTML=`<img src="${url}" alt="Imagem da parceria ${esc(p.nome)}" style="width:100%;max-width:360px;border-radius:12px;border:1px solid var(--border)">`;prev.style.padding='0';
+  if(!url){prev.textContent='Não foi possível gerar a imagem.';return}
+  _imgDesconto={canvas:c,url,arquivo:m.arquivo(m.v)};
+  prev.innerHTML=`<img src="${url}" alt="${esc(m.titulo)}" style="width:100%;max-width:min(300px,42vh);border-radius:12px;border:1px solid var(--border)">`;prev.style.padding='0';
   document.getElementById('btn-baixar-img').disabled=false;
   if(navigator.clipboard&&window.ClipboardItem)document.getElementById('btn-copiar-img').style.display='';
-  reg('Imagem de parceria gerada',p.nome);
 }
 function baixarImagemDesconto(){if(!_imgDesconto)return;const a=document.createElement('a');a.href=_imgDesconto.url;a.download=_imgDesconto.arquivo;document.body.appendChild(a);a.click();a.remove()}
 async function copiarImagemDesconto(){
@@ -3552,39 +3597,59 @@ async function copiarImagemDesconto(){
   try{const blob=await new Promise(r=>_imgDesconto.canvas.toBlob(r,'image/png'));await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('✅ Imagem copiada. É só colar (Ctrl+V).')}
   catch(e){toast('⚠️ Não deu para copiar neste navegador. Use ⬇ Baixar PNG.')}
 }
-/* ---- Imagem do cardápio (🖼️ em Configurações › Catálogo PDV): card 1080×1350 com os produtos ativos e o preço ---- */
+function modalImagemDesconto(id){
+  const p=db.parcerias.find(x=>x.id===id);if(!p)return;const t=imagemDescontoTextos(p),of=!t.nome,d=textosPadraoDesconto(p);
+  return abrirModalImagem({tipo:(of?'oferta_':'parceria_')+t.tipo,titulo:of?'Imagem da oferta':'Imagem da parceria',v:{},
+    topo:`<p class="muted" style="font-size:12px;margin:-4px 0 10px">${of?'Desconto sem nome de parceiro: sai como oferta. ':''}Todos os textos podem ser trocados; o desconto vem do cadastro.</p>`,
+    campos:[
+      {id:'titulo',label:of?'Mensagem em cima do desconto':'Nome do parceiro',padrao:d.titulo,max:60,frases:of?FRASES_OFERTA:null,lembrar:of,largo:true},
+      {id:'selo',label:'Selo',padrao:d.selo,max:30,lembrar:true},
+      {id:'sub',label:t.tipo==='fixa'?'Texto abaixo do desconto':'Texto acima das faixas',padrao:d.sub,max:45,lembrar:true},
+      {id:'rodape',label:'Rodapé',padrao:d.rodape,max:50,frases:FRASES_RODAPE,lembrar:true,largo:true}],
+    desenhar:v=>desenharImagemDesconto(p,v),arquivo:()=>'parceria-'+imgSlug(nomeParceiroLimpo(p.nome))+'.png',registro:()=>['Imagem de parceria gerada',p.nome]});
+}
+/* ---- Imagem do cardápio (🖼️ em Configurações › Catálogo PDV): produtos escolhidos (padrão: todos os ativos) e o preço ---- */
 const FRASES_CARDAPIO=['O melhor da cidade está aqui.','Qualidade que você sente na primeira.','Seleção premium, preço justo.','Seu próximo favorito está aqui.','Chegou, escolheu, levou.'];
 const precoCurto=v=>'$'+Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2});
 // produto de maior preço = destaque da casa (empate: o primeiro na ordem do Catálogo)
 function destaqueCardapio(prods){return prods.reduce((a,p,i)=>Number(p.preco)>Number(prods[a].preco)?i:a,0)}
-async function desenharImagemCardapio(frase){
+async function desenharImagemCardapio(o){
+  if(typeof o!=='object'||!o)o={frase:o};
   const x=imgCtx(),{c,g,W,H,verde,escuro}=x;await carregarFontesImagem();
-  const prods=prodAtivos();
+  const prods=o.prods?prodAtivos().filter(p=>o.prods.includes(p.id)):prodAtivos();
+  const seloDest=o.selo_destaque===undefined?'★ DESTAQUE DA CASA ★':imgTxt(o.selo_destaque);
   const [logo,...fotos]=await Promise.all([carregarImagemCors(db.identidade_visual&&db.identidade_visual.logotipo),...prods.map(p=>carregarImagemCors(imgSrc(p.imagem)))]);
   await imgFundo(x,logo);g.textAlign='center';
-  let y=222;const fr=String(frase||'').trim().toUpperCase();
+  let y=222;const fr=imgTxt(o.frase);
   if(fr){const{px,ln}=imgCaber(g,fr,IMG_AN,W-140,2,prods.length>5?92:110,56);
     ln.forEach((l,i)=>{y+=px*.98;g.save();g.font=IMG_AN(px);if(i===ln.length-1){g.fillStyle=verde;g.shadowColor=verde;g.shadowBlur=30}else g.fillStyle='#fff';g.fillText(l,W/2,y);g.restore()})}
-  imgPilula(x,'CARDÁPIO',y+26);
+  const selo=o.selo===undefined?'CARDÁPIO':imgTxt(o.selo);if(selo)imgPilula(x,selo,y+26);
   const topo=y+110,base=H-170,n=prods.length,cores=fotos.map(f=>f?imgCorFoto(f,verde):verde);
   const nomeCabe=(txt,px0,max)=>{let f=px0;g.font=IMG_AN(f);while(g.measureText(txt).width>max&&f>20){f-=2;g.font=IMG_AN(f)}return f};
-  const selo=(cx,yy)=>{g.fillStyle=verde;g.font=IMG_MO(800,22);imgEspaco(g,6);g.textAlign='center';g.fillText('★ DESTAQUE DA CASA ★',cx,yy);imgEspaco(g,0)};
+  const seloD=(cx,yy)=>{if(!seloDest)return;g.fillStyle=verde;g.font=IMG_MO(800,22);imgEspaco(g,6);g.textAlign='center';g.fillText(seloDest,cx,yy);imgEspaco(g,0)};
+  // cartão comum: foto com brilho, nome e etiqueta de preço
+  const comum=(i,cx,yy,l,nf,pf)=>{imgBrilho(g,cx,yy+l/2,l*.75,cores[i],.55);imgFoto(g,fotos[i],cx-l/2,yy,l);
+    const nm=prods[i].nome.toUpperCase();g.fillStyle='#fff';g.textAlign='center';g.font=IMG_AN(nomeCabe(nm,nf,l+60));g.fillText(nm,cx,yy+l+nf+8);
+    imgEtiqueta(g,precoCurto(prods[i].preco),cx,yy+l+nf+18+pf*.6,pf,cores[i],escuro,-.06)};
   if(!n){g.fillStyle='#9CA3AF';g.font=IMG_MO(600,32);g.fillText('Nenhum produto ativo no momento.',W/2,topo+120)}
-  else{
-    const hi=destaqueCardapio(prods),hp=prods[hi],hc=cores[hi],outros=prods.map((p,i)=>i).filter(i=>i!==hi),m=outros.length;
-    // cartão comum: foto com brilho, nome e etiqueta de preço
-    const comum=(i,cx,yy,l,nf,pf)=>{imgBrilho(g,cx,yy+l/2,l*.75,cores[i],.55);imgFoto(g,fotos[i],cx-l/2,yy,l);
-      const nm=prods[i].nome.toUpperCase();g.fillStyle='#fff';g.textAlign='center';g.font=IMG_AN(nomeCabe(nm,nf,l+60));g.fillText(nm,cx,yy+l+nf+8);
-      imgEtiqueta(g,precoCurto(prods[i].preco),cx,yy+l+nf+18+pf*.6,pf,cores[i],escuro,-.06)};
+  else if(o.destaque==='nenhum'){
+    // sem destaque: grade igual para todos
+    const cols=n<=1?1:n<=4?2:3,lin=Math.ceil(n/cols),cw=(W-100)/cols,ch=(base-topo)/lin;
+    const nf=Math.round(Math.min(44,cw*.11)),pf=Math.round(Math.min(54,cw*.14)),l=Math.max(40,Math.min(cw-40,ch-nf-pf*1.2-34,380));
+    prods.forEach((p,k)=>{const lr=Math.floor(k/cols),naLinha=lr===lin-1?n-lr*cols:cols,cx=W/2+((k%cols)-(naLinha-1)/2)*cw;
+      comum(k,cx,topo+lr*ch+(ch-(l+nf+18+pf*1.2))/2,l,nf,pf)});
+  }else{
+    let hi=o.destaque&&o.destaque!=='auto'?prods.findIndex(p=>p.id===o.destaque):-1;if(hi<0)hi=destaqueCardapio(prods);
+    const hp=prods[hi],hc=cores[hi],outros=prods.map((p,i)=>i).filter(i=>i!==hi),m=outros.length;
     if(m===0){const l=Math.min(520,base-topo-170),cx=W/2;
       imgBrilho(g,cx,topo+l/2,l*.75,hc,.6);imgFoto(g,fotos[hi],cx-l/2,topo,l);imgEtiqueta(g,precoCurto(hp.preco),cx+l/2-20,topo+40,80,hc,escuro,-.08);
-      const nm=hp.nome.toUpperCase();g.fillStyle='#fff';g.textAlign='center';g.font=IMG_AN(nomeCabe(nm,64,W-200));g.fillText(nm,cx,topo+l+66);selo(cx,topo+l+110)}
+      const nm=hp.nome.toUpperCase();g.fillStyle='#fff';g.textAlign='center';g.font=IMG_AN(nomeCabe(nm,64,W-200));g.fillText(nm,cx,topo+l+66);seloD(cx,topo+l+110)}
     else if(m<=4){
       // destaque grande à esquerda; os outros numa coluna à direita
       const l=Math.min(470,base-topo-140),hx=40+(520-l)/2,hcx=300;
       imgBrilho(g,hcx,topo+l/2,l*.75,hc,.6);imgFoto(g,fotos[hi],hx,topo,l);
       imgEtiqueta(g,precoCurto(hp.preco),hx+l-70,topo+30,78,hc,escuro,-.08);
-      const nm=hp.nome.toUpperCase();g.fillStyle='#fff';g.textAlign='center';g.font=IMG_AN(nomeCabe(nm,60,500));g.fillText(nm,hcx,topo+l+62);selo(hcx,topo+l+104);
+      const nm=hp.nome.toUpperCase();g.fillStyle='#fff';g.textAlign='center';g.font=IMG_AN(nomeCabe(nm,60,500));g.fillText(nm,hcx,topo+l+62);seloD(hcx,topo+l+104);
       const x0=600,rh=Math.min(250,(base-topo)/m),t0=topo+((base-topo)-rh*m)/2;
       outros.forEach((i,k)=>{const yy=t0+k*rh,d=Math.min(rh-30,190),cy=yy+rh/2,cor=cores[i];
         imgBrilho(g,x0+d/2,cy,d*.75,cor,.5);imgFoto(g,fotos[i],x0,cy-d/2,d);
@@ -3596,40 +3661,91 @@ async function desenharImagemCardapio(frase){
       const L=Math.min(2*cw-40,2*ch-120),hcx=x0+cw;
       imgBrilho(g,hcx,topo+L/2,L*.75,hc,.6);imgFoto(g,fotos[hi],hcx-L/2,topo,L);
       imgEtiqueta(g,precoCurto(hp.preco),hcx+L/2-30,topo+36,Math.round(Math.min(78,L*.18)),hc,escuro,-.08);
-      const nm=hp.nome.toUpperCase();g.fillStyle='#fff';g.textAlign='center';g.font=IMG_AN(nomeCabe(nm,56,2*cw-30));g.fillText(nm,hcx,topo+L+56);selo(hcx,topo+L+94);
+      const nm=hp.nome.toUpperCase();g.fillStyle='#fff';g.textAlign='center';g.font=IMG_AN(nomeCabe(nm,56,2*cw-30));g.fillText(nm,hcx,topo+L+56);seloD(hcx,topo+L+94);
       const livres=[];for(let r=0;r<lin;r++)for(let k=0;k<cols;k++)if(!(r<2&&k<2))livres.push([r,k]);
       const nf=Math.round(Math.min(32,cw*.11)),pf=Math.round(Math.min(44,cw*.15)),l=Math.max(40,Math.min(cw-30,ch-nf-pf*1.2-34));
       outros.forEach((i,n2)=>{const[r,k]=livres[n2];comum(i,x0+k*cw+cw/2,topo+r*ch+(ch-(l+nf+18+pf*1.2))/2,l,nf,pf)});
     }
   }
-  imgRodape(x,'PEÇA JÁ NO BALCÃO DA '+(nomeLojaAtual()||'').toUpperCase());
+  imgRodape(x,o.rodape===undefined?'PEÇA JÁ NO BALCÃO DA '+imgLoja():imgTxt(o.rodape));
   return c;
 }
-let _cardFrase=FRASES_CARDAPIO[0],_cardTimer=null;
 function modalImagemCardapio(){
-  openModal(`<h3>🖼️ Imagem do cardápio</h3>
-    <div class="field"><label>Frase de efeito</label><div style="display:flex;gap:8px"><input id="card-frase" maxlength="70" value="${esc(_cardFrase)}" oninput="_cardFrase=this.value;clearTimeout(_cardTimer);_cardTimer=setTimeout(gerarImagemCardapio,350)">
-      <button class="btn btn-ghost btn-sm" title="Sortear outra frase" onclick="sortearFraseCardapio()">🎲</button></div></div>
-    <p class="muted" style="font-size:12px;margin:-6px 0 10px">Sai com todos os produtos ativos do Catálogo e o preço de cada um.</p>
-    <div id="img-desc-prev" class="muted" style="text-align:center;padding:30px">Gerando…</div>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
-    <button class="btn btn-ghost" id="btn-copiar-img" onclick="copiarImagemDesconto()" style="display:none">📋 Copiar</button>
-    <button class="btn btn-primary" id="btn-baixar-img" onclick="baixarImagemDesconto()" disabled>⬇ Baixar PNG</button></div>`);
-  gerarImagemCardapio().then(()=>{if(_imgDesconto)reg('Imagem do cardápio gerada',prodAtivos().length+' produto(s)')});
+  const ativos=prodAtivos();
+  return abrirModalImagem({tipo:'cardapio',titulo:'Imagem do cardápio',v:{prods:ativos.map(p=>p.id),destaque:'auto'},
+    campos:[
+      {id:'frase',label:'Frase de efeito',padrao:FRASES_CARDAPIO[0],max:70,frases:FRASES_CARDAPIO,lembrar:true,largo:true},
+      {id:'selo',label:'Selo',padrao:'CARDÁPIO',max:30,lembrar:true},
+      {id:'selo_destaque',label:'Texto do destaque',padrao:'★ DESTAQUE DA CASA ★',max:40,lembrar:true},
+      {id:'rodape',label:'Rodapé',padrao:'PEÇA JÁ NO BALCÃO DA '+imgLoja(),max:50,frases:FRASES_RODAPE,lembrar:true,largo:true}],
+    extra:`<div class="field img-largo"><label>Produtos na imagem</label><div class="img-prods">${ativos.map(p=>`<label class="img-chk"><input type="checkbox" checked value="${p.id}" onchange="imgProdutos()"> ${esc(p.nome)} <span class="muted">${precoCurto(p.preco)}</span></label>`).join('')||'<span class="muted">Nenhum produto ativo.</span>'}</div></div>
+      <div class="field img-largo"><label>Destaque da casa</label><select id="imgc-destaque" onchange="imgCampo('destaque',this.value)"><option value="auto">Automático: o mais caro</option>${ativos.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('')}<option value="nenhum">Sem destaque (todos iguais)</option></select></div>`,
+    desenhar:v=>desenharImagemCardapio(v),arquivo:()=>'cardapio-'+imgSlug(nomeLojaAtual())+'.png',registro:v=>['Imagem do cardápio gerada',v.prods.length+' produto(s)']});
 }
-function sortearFraseCardapio(){
-  const i=FRASES_CARDAPIO.indexOf(_cardFrase);_cardFrase=FRASES_CARDAPIO[(i+1)%FRASES_CARDAPIO.length];
-  const inp=document.getElementById('card-frase');if(inp)inp.value=_cardFrase;gerarImagemCardapio();
+function imgProdutos(){const ids=[...document.querySelectorAll('.img-prods input:checked')].map(i=>i.value);imgCampo('prods',ids)}
+/* ---- Imagem de novo preço (🏷️ em Catálogo PDV e ao salvar um preço novo): preço antigo → preço novo ---- */
+const FRASES_PRECO_BAIXOU=['Ficou ainda melhor!','Mais barato, mesma qualidade.','Agora cabe no seu bolso.','Baixou! Corre pro balcão.'];
+const FRASES_PRECO_NOVO=['Preço atualizado.','Mesma qualidade de sempre.','Confira o novo valor.'];
+// preço anterior: 1º o histórico de preços do banco (produtos_precos); 2º o último preço vendido diferente do atual
+async function precoAnteriorProduto(p){
+  try{
+    const{data,error}=await sb.from('produtos_precos').select('preco,preco_anterior,alterado_em').eq('produto_id',p.id).order('alterado_em',{ascending:false}).limit(20);
+    if(!error&&data){const r=[...data].sort((a,b)=>String(b.alterado_em).localeCompare(String(a.alterado_em))).find(h=>h.preco_anterior!=null&&Number(h.preco_anterior)!==Number(p.preco));
+      if(r)return{valor:Number(r.preco_anterior),fonte:'historico',em:r.alterado_em}}
+  }catch(e){}
+  let ult=null;
+  db.vendas.forEach(v=>{if(v.status==='excluida')return;(v.itens||[]).forEach(i=>{if(i.produto_id===p.id&&Number(i.preco_unit)!==Number(p.preco)&&(!ult||String(v.data)>String(ult.em)))ult={valor:Number(i.preco_unit),fonte:'vendas',em:v.data}})});
+  return ult;
 }
-async function gerarImagemCardapio(){
-  const c=await desenharImagemCardapio(_cardFrase);
-  let url;try{url=c.toDataURL('image/png')}catch(e){url=null}
-  const prev=document.getElementById('img-desc-prev');if(!prev)return;
-  if(!url){prev.textContent='Não foi possível gerar a imagem.';return}
-  _imgDesconto={canvas:c,url,arquivo:'cardapio-'+nomeLojaAtual().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+'.png'};
-  prev.innerHTML=`<img src="${url}" alt="Imagem do cardápio" style="width:100%;max-width:min(300px,42vh);border-radius:12px;border:1px solid var(--border)">`;prev.style.padding='0';
-  document.getElementById('btn-baixar-img').disabled=false;
-  if(navigator.clipboard&&window.ClipboardItem)document.getElementById('btn-copiar-img').style.display='';
+function imgPrecoDica(r){
+  if(!r)return'Não achei o preço anterior no histórico: digite o valor antigo.';
+  if(r.fonte==='agora')return'Preço que estava antes de salvar.';
+  return(r.fonte==='historico'?'Do histórico de preços':'Do último preço vendido')+' ('+dataHoraBR(r.em)+'). Pode corrigir.';
+}
+async function desenharImagemPreco(o){
+  const x=imgCtx(),{c,g,W,H,verde,escuro}=x;await carregarFontesImagem();
+  const p=db.produtos.find(z=>z.id===o.pid)||{nome:'?',preco:0},novo=Number(p.preco),antigo=o.antigo===''||o.antigo==null?NaN:Number(o.antigo),tem=antigo>=0&&antigo!==novo;
+  const [logo,foto]=await Promise.all([carregarImagemCors(db.identidade_visual&&db.identidade_visual.logotipo),carregarImagemCors(imgSrc(p.imagem))]);
+  await imgFundo(x,logo);g.textAlign='center';
+  if(imgTxt(o.selo))imgPilula(x,imgTxt(o.selo),238);
+  let y=imgTitulo(x,imgTxt(o.titulo),300,104,true);
+  const cor=foto?imgCorFoto(foto,verde):verde,base=H-170,l=Math.max(220,Math.min(480,base-y-40-280)),top=y+40+Math.max(0,(base-y-40-(l+280))/2),cx=W/2;
+  imgBrilho(g,cx,top+l/2,l*.8,cor,.6);imgFoto(g,foto,cx-l/2,top,l);
+  if(tem&&novo<antigo)imgEtiqueta(g,'-'+Math.round((1-novo/antigo)*100)+'%',cx+l/2+10,top+50,70,'#fff',escuro,.1);
+  const nm=String(p.nome).toUpperCase();let f=64;g.font=IMG_AN(f);while(g.measureText(nm).width>W-160&&f>30){f-=2;g.font=IMG_AN(f)}
+  g.fillStyle='#fff';g.textAlign='center';g.fillText(nm,cx,top+l+70);
+  const yp=top+l+190;
+  if(tem){
+    // de (riscado) → por
+    const de=precoCurto(antigo);g.font=IMG_AN(78);const wd=g.measureText(de).width;const xd=cx-190;
+    g.fillStyle='#9CA3AF';g.font=IMG_MO(800,22);imgEspaco(g,6);g.fillText(novo<antigo?'DE':'ANTES',xd,yp-70);g.fillText(novo<antigo?'POR':'AGORA',cx+170,yp-86);imgEspaco(g,0);
+    g.font=IMG_AN(78);g.fillStyle='#9CA3AF';g.fillText(de,xd,yp+6);g.strokeStyle='#E5484D';g.lineWidth=7;g.beginPath();g.moveTo(xd-wd/2-8,yp-12);g.lineTo(xd+wd/2+8,yp-34);g.stroke();
+    g.strokeStyle='#fff';g.lineWidth=6;g.beginPath();g.moveTo(cx-70,yp-20);g.lineTo(cx-10,yp-20);g.stroke();g.fillStyle='#fff';g.beginPath();g.moveTo(cx-2,yp-20);g.lineTo(cx-26,yp-38);g.lineTo(cx-26,yp-2);g.fill();
+    imgEtiqueta(g,precoCurto(novo),cx+170,yp-20,104,cor,escuro,-.06);
+  }else{g.fillStyle='#9CA3AF';g.font=IMG_MO(800,22);imgEspaco(g,6);g.fillText('AGORA',cx,yp-86);imgEspaco(g,0);imgEtiqueta(g,precoCurto(novo),cx,yp-20,110,cor,escuro,-.06)}
+  imgRodape(x,imgTxt(o.rodape));
+  return c;
+}
+async function modalImagemPreco(pid,antigoConhecido){
+  const p=db.produtos.find(z=>z.id===pid);if(!p)return;
+  const r=antigoConhecido!=null?{valor:Number(antigoConhecido),fonte:'agora'}:await precoAnteriorProduto(p);
+  const antigo=r?r.valor:'',baixou=r&&Number(p.preco)<r.valor;
+  return abrirModalImagem({tipo:'preco',titulo:'Imagem de novo preço',v:{pid,antigo},
+    topo:`<p class="muted" style="font-size:12px;margin:-4px 0 10px"><b>${esc(p.nome)}</b> · preço atual <b>${precoCurto(p.preco)}</b> (do Catálogo).</p>`,
+    campos:[
+      {id:'titulo',label:'Mensagem',padrao:(baixou?FRASES_PRECO_BAIXOU:FRASES_PRECO_NOVO)[0],max:60,frases:()=>Number(p.preco)<Number(_imgM.v.antigo)?FRASES_PRECO_BAIXOU:FRASES_PRECO_NOVO,largo:true},
+      {id:'antigo',label:'Preço antigo ($)',padrao:antigo,num:true,dica:imgPrecoDica(r)},
+      {id:'selo',label:'Selo',padrao:baixou?'BAIXOU O PREÇO':'NOVO PREÇO',max:30},
+      {id:'rodape',label:'Rodapé',padrao:'PEÇA JÁ NO BALCÃO DA '+imgLoja(),max:50,frases:FRASES_RODAPE,lembrar:true,largo:true}],
+    desenhar:v=>desenharImagemPreco(v),arquivo:()=>'novo-preco-'+imgSlug(p.nome)+'.png',
+    registro:v=>['Imagem de novo preço gerada',p.nome+': '+(v.antigo!==''?precoCurto(v.antigo)+' → ':'')+precoCurto(p.preco)]});
+}
+// depois de salvar um preço novo: oferece a imagem para divulgar
+function oferecerImagemPreco(id,antigo,novo){
+  const p=db.produtos.find(z=>z.id===id);if(!p||p.status!=='ativo')return;
+  openModal(`<h3>🏷️ Preço alterado</h3><p><b>${esc(p.nome)}</b>: ${precoCurto(antigo)} → <b>${precoCurto(novo)}</b></p>
+    <p class="muted" style="font-size:13px">Quer gerar a imagem de novo preço para divulgar?</p>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Agora não</button><button class="btn btn-primary" id="btn-img-preco" onclick="modalImagemPreco('${id}',${Number(antigo)})">🖼️ Gerar imagem</button></div>`);
 }
 function descontoResumo(p){return p.tipo==='fixa'?p.desconto_fixo+'%':(p.faixas||[]).map(fx=>`${fx.quantidade_min}–${fx.quantidade_max===null?'∞':fx.quantidade_max}: ${fx.percentual_desconto}%`).join(' · ')||'—'}
 function cfgDescontos(b){
