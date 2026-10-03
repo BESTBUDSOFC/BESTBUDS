@@ -73,6 +73,15 @@ const prevPronta=p=>p.waitForFunction(()=>document.querySelector('#img-desc-prev
   // limite garantido mesmo numa arte pesada: ruído em tela cheia força a descer a qualidade/tamanho
   const pesada=await t(p,`(async()=>{const c=document.createElement('canvas');c.width=1080;c.height=1350;const g=c.getContext('2d'),d=g.createImageData(1080,1350);for(let i=0;i<d.data.length;i++)d.data[i]=Math.random()*255;g.putImageData(d,0,0);const r=await imgComprimir(c);return r&&{b:r.blob.size,w:r.w,t:r.blob.type}})()`);
   ok(pesada&&pesada.b<=512000&&pesada.t==='image/jpeg','arte pesada também fica com até 512 KB: '+JSON.stringify(pesada));
+  // 📋 Copiar (v4.30.3): PNG até 512 KB na área de transferência
+  // a página de teste é http (sem área de transferência); simula a do navegador, como no https da produção
+  await t(p,`(async()=>{window.ClipboardItem=window.ClipboardItem||class{constructor(o){this.o=o}async getType(k){return await this.o[k]}};Object.defineProperty(navigator,'clipboard',{configurable:true,value:{write:async itens=>{const b=await itens[0].getType('image/png');window.__copiado={t:b.type,b:b.size}}}});await imgGerar()})()`);
+  ok(await t(p,`getComputedStyle(document.getElementById('btn-copiar-img')).display!=='none'`),'botão 📋 Copiar aparece');
+  await p.click('#btn-copiar-img');await p.waitForFunction(()=>window.__copiado,null,{timeout:15000});
+  const cop=await t(p,`window.__copiado`);
+  ok(cop.t==='image/png'&&cop.b>10000&&cop.b<=512000&&(await p.$eval('#toast',e=>e.textContent)).includes('copiada'),'copia a imagem em PNG até 512 KB: '+JSON.stringify(cop));
+  const pp=await t(p,`(async()=>{const c=document.createElement('canvas');c.width=1080;c.height=1350;const g=c.getContext('2d'),d=g.createImageData(1080,1350);for(let i=0;i<d.data.length;i++)d.data[i]=Math.random()*255;g.putImageData(d,0,0);const r=await imgPngAteLimite(c);return r&&{b:r.blob.size,w:r.w}})()`);
+  ok(pp&&pp.b<=512000&&pp.w<1080,'copiar arte pesada: o PNG diminui até caber em 512 KB: '+JSON.stringify(pp));
   ok(await t(p,`window.__DB.registros.some(r=>r.acao==='Imagem de novo preço gerada'&&r.detalhe==='Purple Haze: $180 → $150')`),'fica nas Últimas ações');
   // ---- 🏷️ depois: lê o histórico ----
   await t(p,`closeModal();cfgTabAtual='produtos';go('config')`);
