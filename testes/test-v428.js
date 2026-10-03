@@ -26,12 +26,12 @@ const t=(p,js)=>p.evaluate(js);
   ok((await p.$$('#cfg-body button[onclick^="modalImagemDesconto"]')).length===await t(p,`db.parcerias.length`),'um botão 🖼️ por desconto');
   await p.click('#cfg-body tr:has-text("Escalonada") button[onclick^="modalImagemDesconto"]');
   await p.waitForFunction(()=>document.querySelector('#img-desc-prev img'),null,{timeout:10000});
-  const img=await t(p,`(()=>{const i=document.querySelector('#img-desc-prev img');return {w:i.naturalWidth,h:i.naturalHeight,png:i.src.startsWith('data:image/png'),tam:i.src.length,btn:!document.getElementById('btn-baixar-img').disabled}})()`);
-  ok(img.w===1080&&img.h===1350&&img.png&&img.tam>50000&&img.btn,'gera PNG 1080×1350 e libera o Baixar: '+JSON.stringify(img));
+  const img=await t(p,`(()=>{const i=document.querySelector('#img-desc-prev img');return {w:i.naturalWidth,h:i.naturalHeight,jpg:i.src.startsWith('data:image/jpeg'),bytes:_imgDesconto.bytes,btn:!document.getElementById('btn-baixar-img').disabled}})()`);
+  ok(img.w===1080&&img.h===1350&&img.jpg&&img.bytes>50000&&img.bytes<=512000&&img.btn,'gera JPG 1080×1350 até 512 KB e libera o Baixar: '+JSON.stringify(img));
   const [dl]=await Promise.all([p.waitForEvent('download'),p.click('#btn-baixar-img')]);
-  ok(dl.suggestedFilename()==='parceria-escalonada.png','baixa o arquivo "'+dl.suggestedFilename()+'"');
-  const salvo=path.join(SP,'saida','parceria-teste.png');await dl.saveAs(salvo);
-  const head=fs.readFileSync(salvo).subarray(0,8).toString('hex');ok(head==='89504e470d0a1a0a','o arquivo baixado é um PNG de verdade');
+  ok(dl.suggestedFilename()==='parceria-escalonada.jpg','baixa o arquivo "'+dl.suggestedFilename()+'"');
+  const salvo=path.join(SP,'saida','parceria-teste.jpg');await dl.saveAs(salvo);
+  const arq=fs.readFileSync(salvo);ok(arq.subarray(0,3).toString('hex')==='ffd8ff'&&arq.length<=512000,'o arquivo baixado é um JPG de verdade com até 512 KB ('+Math.round(arq.length/1024)+' KB)');
   ok(await t(p,`window.__DB.registros.some(r=>r.acao==='Imagem de parceria gerada')`),'fica nas Últimas ações');
   ok(p._errs.length===0,'sem erros no console: '+p._errs.join(' | '));
   // ---- imagem do cardápio (Catálogo PDV) ----
@@ -50,7 +50,7 @@ const t=(p,js)=>p.evaluate(js);
   const ativos=await t(p,`prodAtivos().map(x=>x.nome)`);
   ok(ativos.length>0&&ativos.every(n=>!['Skank','Amnesia Haze'].includes(n)||true),'produtos ativos: '+ativos.join(', '));
   const [dl2]=await Promise.all([p.waitForEvent('download'),p.click('#btn-baixar-img')]);
-  ok(dl2.suggestedFilename()==='cardapio-best-buds.png','baixa "'+dl2.suggestedFilename()+'"');
+  ok(dl2.suggestedFilename()==='cardapio-best-buds.jpg','baixa "'+dl2.suggestedFilename()+'"');
   ok(await t(p,`window.__DB.registros.some(r=>r.acao==='Imagem do cardápio gerada')`),'cardápio fica nas Últimas ações');
   // sem produto ativo: imagem sai com aviso, sem erro
   const vazio=await t(p,`(async()=>{const st=db.produtos.map(x=>x.status);db.produtos.forEach(x=>x.status='inativo');const c=await desenharImagemCardapio('x');db.produtos.forEach((x,k)=>x.status=st[k]);return c.width})()`);
