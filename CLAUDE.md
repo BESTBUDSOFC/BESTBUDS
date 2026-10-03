@@ -135,6 +135,12 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Toda lista suspensa tem o mesmo campo de pesquisa. Campos de texto com lista (`data-combo`) aceitam valores fora da lista.
 - Celular: o teclado, ao abrir, dispara `resize`/`scroll`; as listas **não fecham** por isso, só se reposicionam (`popPosicionar`/`popReposicionar`, também com `visualViewport`). No celular (tela estreita e toque) a lista suspensa com busca abre como painel no alto da área visível (`.ssel-folha`), acima do teclado. A busca usa fonte de 16px para o iPhone não dar zoom. Fecha ao escolher, com Esc ou tocando fora.
 
+## Imagem da parceria (Descontos)
+
+- Em Configurações › Descontos, o 🖼️ de cada linha gera um card PNG 1080×1350 para divulgar (pedido do dono, v4.28): logo e nome da loja, "PARCERIA OFICIAL", nome do parceiro e o desconto (fixa: o % grande; escalonada: uma faixa por linha, "1 a 24 itens · 5% OFF", a última "50+ itens").
+- Feito no navegador (`desenharImagemDesconto`, canvas; o logo vem do Storage com `crossOrigin`, que libera CORS). A janela mostra a prévia, "⬇ Baixar PNG" (`parceria-<nome>.png`) e "📋 Copiar" quando o navegador permite. Gerar fica nas Últimas ações.
+- O nome perde o "(5,10,15)" do fim (`nomeParceiroLimpo`). Desconto sem nome de parceiro (ex.: "10%") sai como "OFERTA ESPECIAL", sem repetir o percentual.
+
 ## Avisos
 
 - Gerente, Diretor ou Sócio publica um aviso (título até 80 caracteres, mensagem até 1000) pelo botão 📢 no topo.
