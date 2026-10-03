@@ -141,6 +141,12 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Feito no navegador (`desenharImagemDesconto`, canvas; o logo vem do Storage com `crossOrigin`, que libera CORS). A janela mostra a prévia, "⬇ Baixar PNG" (`parceria-<nome>.png`) e "📋 Copiar" quando o navegador permite. Gerar fica nas Últimas ações.
 - O nome perde o "(5,10,15)" do fim (`nomeParceiroLimpo`). Desconto sem nome de parceiro (ex.: "10%") sai como "OFERTA ESPECIAL", sem repetir o percentual.
 
+## Imagem do cardápio (Catálogo PDV)
+
+- Em Configurações › Catálogo PDV, o botão "🖼️ Imagem do cardápio" gera um card PNG 1080×1350 promocional (pedido do dono, v4.29): logo e nome da loja, uma frase de efeito, "CARDÁPIO" e a grade com **todos os produtos ativos** (foto, nome e preço sem centavos, `precoCurto`), e no rodapé "Peça já no balcão da <loja>".
+- A frase é editável (até 70 caracteres; a imagem refaz sozinha) e o 🎲 sorteia outra de `FRASES_CARDAPIO`.
+- Mesmo desenho e mesma janela da imagem da parceria (`desenharImagemCardapio`, prévia, "⬇ Baixar PNG" = `cardapio-<loja>.png`, "📋 Copiar"; estado em `_imgDesconto`). Gerar fica nas Últimas ações. Sem produto ativo, o card sai com o aviso "Nenhum produto ativo no momento."
+
 ## Avisos
 
 - Gerente, Diretor ou Sócio publica um aviso (título até 80 caracteres, mensagem até 1000) pelo botão 📢 no topo.

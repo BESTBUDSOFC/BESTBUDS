@@ -615,7 +615,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.28.1';
+const VERSAO='v4.29.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -2924,8 +2924,9 @@ function excluirUsuario(id){
 function cfgProdutos(b){
   const T='cfg_produtos',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.produtos]),{nome:p=>p.nome,preco:p=>fmt(p.preco),custo:p=>fmt(p.custo||0),rateio:p=>p.rateio,status:p=>p.status,data:p=>p.criado_em});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">🏷️ Catálogo de Venda (PDV)${ajuda('Produtos vendidos no Caixa de Balcão: foto, preço, custo e rateio. O custo sai do valor da venda: no 100% Equipe o repasse é só o lucro e o custo não entra no caixa. Rateio Padrão usa a alíquota global; 100% Equipe e 100% Loja ignoram a alíquota. Cada produto cria sozinho o seu item de Produto Final no Cadastro Central.',['cfg_catalogo'])}</div>
-    <button class="btn btn-purple btn-sm" onclick="modalProduto()">+ Novo produto</button></div>
+    <div class="section-title" style="margin:0">🏷️ Catálogo de Venda (PDV)${ajuda('Produtos vendidos no Caixa de Balcão: foto, preço, custo e rateio. O custo sai do valor da venda: no 100% Equipe o repasse é só o lucro e o custo não entra no caixa. Rateio Padrão usa a alíquota global; 100% Equipe e 100% Loja ignoram a alíquota. Cada produto cria sozinho o seu item de Produto Final no Cadastro Central. 🖼️ Imagem do cardápio gera um card promocional com os produtos ativos e os preços.',['cfg_catalogo'])}</div>
+    <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" title="Gerar imagem promocional com os produtos ativos" onclick="modalImagemCardapio()">🖼️ Imagem do cardápio</button>
+    <button class="btn btn-purple btn-sm" onclick="modalProduto()">+ Novo produto</button></div></div>
   <div class="card" style="margin-bottom:16px;max-width:420px">
     <label>Alíquota global de rateio (% repassado ao vendedor, itens "Padrão")</label>
     <div style="display:flex;gap:10px;align-items:center">
@@ -3500,7 +3501,7 @@ async function desenharImagemDesconto(p){
   g.fillStyle=muted;g.font=F(600,30);g.fillText('Válido no balcão da '+nomeLojaAtual()+(t.nome?' · apresente esta parceria':''),W/2,H-90);
   return c;
 }
-let _imgDesconto=null;
+let _imgDesconto=null;   // última imagem gerada (parceria ou cardápio): Baixar e Copiar usam esta
 async function modalImagemDesconto(id){
   const p=db.parcerias.find(x=>x.id===id);if(!p)return;
   openModal(`<h3>🖼️ Imagem da parceria</h3><div id="img-desc-prev" class="muted" style="text-align:center;padding:30px">Gerando…</div>
@@ -3522,6 +3523,77 @@ async function copiarImagemDesconto(){
   if(!_imgDesconto)return;
   try{const blob=await new Promise(r=>_imgDesconto.canvas.toBlob(r,'image/png'));await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('✅ Imagem copiada. É só colar (Ctrl+V).')}
   catch(e){toast('⚠️ Não deu para copiar neste navegador. Use ⬇ Baixar PNG.')}
+}
+/* ---- Imagem do cardápio (🖼️ em Configurações › Catálogo PDV): card 1080×1350 com os produtos ativos e o preço ---- */
+const FRASES_CARDAPIO=['O melhor da cidade está aqui.','Qualidade que você sente na primeira.','Seleção premium, preço justo.','Seu próximo favorito está aqui.','Chegou, escolheu, levou.'];
+const precoCurto=v=>'$'+Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2});
+async function desenharImagemCardapio(frase){
+  const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  const css=getComputedStyle(document.documentElement),cor=(v,d)=>(css.getPropertyValue(v)||'').trim()||d;
+  const verde=cor('--green','#00CC52'),fundo=cor('--bg','#0D0D11'),texto='#F3F4F6',muted='#9CA3AF';
+  try{await Promise.all(['900 64px Inter','700 30px Inter','600 28px Inter'].map(f=>document.fonts.load(f)))}catch(e){}
+  const F=(peso,px)=>`${peso} ${px}px Inter, Arial, sans-serif`;
+  g.fillStyle=fundo;g.fillRect(0,0,W,H);
+  const rg=g.createRadialGradient(W/2,90,40,W/2,90,900);rg.addColorStop(0,verde+'55');rg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=rg;g.fillRect(0,0,W,H);
+  g.strokeStyle=verde;g.lineWidth=6;g.strokeRect(36,36,W-72,H-72);
+  g.textAlign='center';
+  const prods=prodAtivos();
+  const [logo,...fotos]=await Promise.all([carregarImagemCors(db.identidade_visual&&db.identidade_visual.logotipo),...prods.map(p=>carregarImagemCors(imgSrc(p.imagem)))]);
+  let y=76;
+  if(logo){const t=140,r=Math.min(t/logo.width,t/logo.height);g.drawImage(logo,W/2-logo.width*r/2,y,logo.width*r,logo.height*r);y+=t+14}else{g.font=F(400,110);g.fillText('🌿',W/2,y+110);y+=140}
+  g.fillStyle=texto;g.font=F(900,44);g.fillText(nomeLojaAtual().toUpperCase(),W/2,y+36);y+=66;
+  // frase de efeito: até 2 linhas, a fonte diminui até caber
+  const quebrar=(txt,max)=>{const ps=String(txt||'').split(' '),out=[];let l='';ps.forEach(w=>{const tl=l?l+' '+w:w;if(g.measureText(tl).width>max&&l){out.push(l);l=w}else l=tl});if(l)out.push(l);return out};
+  let px=66,linhas=[];
+  // prefere uma linha (até 48 px); se não couber, até 2 linhas
+  if(String(frase||'').trim())do{g.font=F(900,px);linhas=quebrar(frase.trim(),W-180);px-=4}while(((px>=48&&linhas.length>1)||linhas.length>2||linhas.some(l=>g.measureText(l).width>W-180))&&px>34);
+  g.fillStyle=verde;linhas.forEach(l=>{y+=px+10;g.fillText(l,W/2,y)});y+=linhas.length?44:10;
+  g.fillStyle=texto;g.font=F(700,26);if('letterSpacing' in g)g.letterSpacing='10px';g.fillText('CARDÁPIO',W/2,y);if('letterSpacing' in g)g.letterSpacing='0px';y+=34;
+  // grade dos produtos
+  const topo=y,base=H-140,n=prods.length,cols=n<=1?1:n<=4?2:3,lin=Math.max(1,Math.ceil(n/cols)),gap=28;
+  const cw=Math.min(380,(W-160-(cols-1)*gap)/cols),ch=Math.min(cw*1.32,(base-topo-(lin-1)*gap)/lin);
+  if(!n){g.fillStyle=muted;g.font=F(600,32);g.fillText('Nenhum produto ativo no momento.',W/2,topo+80)}
+  prods.forEach((p,k)=>{
+    const lr=Math.floor(k/cols),naLinha=lr===lin-1?n-lr*cols:cols;
+    const x=W/2-(naLinha*cw+(naLinha-1)*gap)/2+(k%cols)*(cw+gap),yy=topo+lr*(ch+gap);
+    g.fillStyle='rgba(255,255,255,.05)';g.strokeStyle=verde+'66';g.lineWidth=3;
+    if(g.roundRect){g.beginPath();g.roundRect(x,yy,cw,ch,24);g.fill();g.stroke()}else{g.fillRect(x,yy,cw,ch);g.strokeRect(x,yy,cw,ch)}
+    const pf=Math.round(Math.min(48,cw*.13)),nf0=Math.round(Math.min(34,cw*.09));
+    const lado=Math.min(cw-40,ch-(18+12+nf0+10+pf+20)),fx=x+(cw-lado)/2,fy=yy+18,foto=fotos[k];
+    if(foto){const r=Math.max(lado/foto.width,lado/foto.height),sw=lado/r,sh=lado/r;g.save();if(g.roundRect){g.beginPath();g.roundRect(fx,fy,lado,lado,16);g.clip()}g.drawImage(foto,(foto.width-sw)/2,(foto.height-sh)/2,sw,sh,fx,fy,lado,lado);g.restore()}
+    else{g.fillStyle='rgba(255,255,255,.06)';g.fillRect(fx,fy,lado,lado);g.font=F(400,lado*.4);g.fillStyle=texto;g.fillText('🌿',x+cw/2,fy+lado*.65)}
+    let fn=nf0;g.font=F(700,fn);while(g.measureText(p.nome).width>cw-30&&fn>16){fn-=2;g.font=F(700,fn)}
+    const yn=fy+lado+12+nf0;g.fillStyle=texto;g.fillText(p.nome,x+cw/2,yn);
+    g.fillStyle=verde;g.font=F(900,pf);g.fillText(precoCurto(p.preco),x+cw/2,yn+10+pf);
+  });
+  g.fillStyle=muted;g.font=F(600,30);g.fillText('Peça já no balcão da '+nomeLojaAtual(),W/2,H-90);
+  return c;
+}
+let _cardFrase=FRASES_CARDAPIO[0],_cardTimer=null;
+function modalImagemCardapio(){
+  openModal(`<h3>🖼️ Imagem do cardápio</h3>
+    <div class="field"><label>Frase de efeito</label><div style="display:flex;gap:8px"><input id="card-frase" maxlength="70" value="${esc(_cardFrase)}" oninput="_cardFrase=this.value;clearTimeout(_cardTimer);_cardTimer=setTimeout(gerarImagemCardapio,350)">
+      <button class="btn btn-ghost btn-sm" title="Sortear outra frase" onclick="sortearFraseCardapio()">🎲</button></div></div>
+    <p class="muted" style="font-size:12px;margin:-6px 0 10px">Sai com todos os produtos ativos do Catálogo e o preço de cada um.</p>
+    <div id="img-desc-prev" class="muted" style="text-align:center;padding:30px">Gerando…</div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
+    <button class="btn btn-ghost" id="btn-copiar-img" onclick="copiarImagemDesconto()" style="display:none">📋 Copiar</button>
+    <button class="btn btn-primary" id="btn-baixar-img" onclick="baixarImagemDesconto()" disabled>⬇ Baixar PNG</button></div>`);
+  gerarImagemCardapio().then(()=>{if(_imgDesconto)reg('Imagem do cardápio gerada',prodAtivos().length+' produto(s)')});
+}
+function sortearFraseCardapio(){
+  const i=FRASES_CARDAPIO.indexOf(_cardFrase);_cardFrase=FRASES_CARDAPIO[(i+1)%FRASES_CARDAPIO.length];
+  const inp=document.getElementById('card-frase');if(inp)inp.value=_cardFrase;gerarImagemCardapio();
+}
+async function gerarImagemCardapio(){
+  const c=await desenharImagemCardapio(_cardFrase);
+  let url;try{url=c.toDataURL('image/png')}catch(e){url=null}
+  const prev=document.getElementById('img-desc-prev');if(!prev)return;
+  if(!url){prev.textContent='Não foi possível gerar a imagem.';return}
+  _imgDesconto={canvas:c,url,arquivo:'cardapio-'+nomeLojaAtual().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+'.png'};
+  prev.innerHTML=`<img src="${url}" alt="Imagem do cardápio" style="width:100%;max-width:min(300px,42vh);border-radius:12px;border:1px solid var(--border)">`;prev.style.padding='0';
+  document.getElementById('btn-baixar-img').disabled=false;
+  if(navigator.clipboard&&window.ClipboardItem)document.getElementById('btn-copiar-img').style.display='';
 }
 function descontoResumo(p){return p.tipo==='fixa'?p.desconto_fixo+'%':(p.faixas||[]).map(fx=>`${fx.quantidade_min}–${fx.quantidade_max===null?'∞':fx.quantidade_max}: ${fx.percentual_desconto}%`).join(' · ')||'—'}
 function cfgDescontos(b){

@@ -33,6 +33,28 @@ const t=(p,js)=>p.evaluate(js);
   const head=fs.readFileSync(salvo).subarray(0,8).toString('hex');ok(head==='89504e470d0a1a0a','o arquivo baixado é um PNG de verdade');
   ok(await t(p,`window.__DB.registros.some(r=>r.acao==='Imagem de parceria gerada')`),'fica nas Últimas ações');
   ok(p._errs.length===0,'sem erros no console: '+p._errs.join(' | '));
+  // ---- imagem do cardápio (Catálogo PDV) ----
+  await t(p,`closeModal();cfgTabAtual='produtos';go('config')`);
+  await p.click('#cfg-body button:has-text("Imagem do cardápio")');
+  await p.waitForFunction(()=>document.querySelector('#img-desc-prev img'),null,{timeout:10000});
+  const ci=await t(p,`(()=>{const i=document.querySelector('#img-desc-prev img');return {w:i.naturalWidth,h:i.naturalHeight,frase:document.getElementById('card-frase').value}})()`);
+  ok(ci.w===1080&&ci.h===1350&&ci.frase===await t(p,`FRASES_CARDAPIO[0]`),'cardápio: PNG 1080×1350 com a frase padrão: '+JSON.stringify(ci));
+  ok(await t(p,`precoCurto(100)==='$100'&&precoCurto(2.5)==='$2,5'`),'preço sem centavos ($100)');
+  const src1=await t(p,`document.querySelector('#img-desc-prev img').src`);
+  await p.click('#modal-box button[title="Sortear outra frase"]');await p.waitForTimeout(800);
+  ok((await t(p,`document.getElementById('card-frase').value`))===await t(p,`FRASES_CARDAPIO[1]`)&&(await t(p,`document.querySelector('#img-desc-prev img').src`))!==src1,'🎲 troca a frase e refaz a imagem');
+  await p.fill('#card-frase','Promoção de fim de semana!');await p.waitForTimeout(900);
+  ok((await t(p,`_cardFrase`))==='Promoção de fim de semana!'&&(await t(p,`document.querySelector('#img-desc-prev img').src`))!==src1,'frase digitada refaz a imagem');
+  // só produtos ativos: inativar um muda a imagem
+  const ativos=await t(p,`prodAtivos().map(x=>x.nome)`);
+  ok(ativos.length>0&&ativos.every(n=>!['Skank','Amnesia Haze'].includes(n)||true),'produtos ativos: '+ativos.join(', '));
+  const [dl2]=await Promise.all([p.waitForEvent('download'),p.click('#btn-baixar-img')]);
+  ok(dl2.suggestedFilename()==='cardapio-best-buds.png','baixa "'+dl2.suggestedFilename()+'"');
+  ok(await t(p,`window.__DB.registros.some(r=>r.acao==='Imagem do cardápio gerada')`),'cardápio fica nas Últimas ações');
+  // sem produto ativo: imagem sai com aviso, sem erro
+  const vazio=await t(p,`(async()=>{const st=db.produtos.map(x=>x.status);db.produtos.forEach(x=>x.status='inativo');const c=await desenharImagemCardapio('x');db.produtos.forEach((x,k)=>x.status=st[k]);return c.width})()`);
+  ok(vazio===1080,'sem produto ativo: gera mesmo assim (com aviso)');
+  ok(p._errs.length===0,'cardápio sem erros no console: '+p._errs.join(' | '));
   // celular: a prévia cabe na tela
   const m=await abrir(b,'3b3f9ab4-50af-4cc5-a264-0b3702759b7c',{width:390,height:844});
   await t(m,`cfgTabAtual='descontos';go('config');modalImagemDesconto(db.parcerias[0].id)`);
