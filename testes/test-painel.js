@@ -49,7 +49,52 @@ const U=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
  ok(txt.includes('Receita da loja por')&&!!(await p.$('#pn-colunas svg')),'mantém o gráfico de receita da loja');
  ok(txt.includes('Vendedores')&&txt.includes('Produtos')&&txt.includes('Avisos')&&txt.includes('Últimas ações'),'mantém vendedores, produtos, avisos e últimas ações');
  const vend=await p.$$eval('.pn-tab table',t=>[...t[0].querySelectorAll('tr')].slice(1).map(r=>[...r.cells].map(c=>c.innerText.trim())));
- ok(vend[0][0].startsWith('Zeca')&&vend[0][3]==='$40,00'&&vend[0][4]==='$20,00','ranking de vendedores: '+vend[0].join(' / '));
+ const zr=vend.find(r=>r[0].includes('Zeca'));ok(zr&&zr[9]==='$40,00'&&zr[10].startsWith('$2'),'vendedores da semana: Zeca com a receita guardada e o não guardado: '+(zr||[]).join(' / '));
+ // v4.31: comparar vendedor no gráfico (linha por cima das barras)
+ ok((await p.$$('.pn-vsel button')).length>=1&&!(await p.$('#pn-colunas .pn-linha')),'botões dos vendedores, sem linha até escolher');
+ await p.click('.pn-vsel button:has-text("Zeca")');await p.waitForTimeout(200);
+ ok((await p.$$('#pn-colunas .pn-linha')).length===1&&(await p.$eval('.pn-vsel button:has-text("Zeca")',e=>e.classList.contains('ativo'))),'clicar no Zeca desenha a linha dele');
+ await p.hover('#pn-colunas .pn-hit >> nth=-1');await p.waitForTimeout(150);
+ const tipV=await p.$eval('#pn-tip',e=>e.innerText.replace(/\s+/g,' '));
+ ok(tipV.includes('Zeca: $60,00')&&tipV.includes('100% do dia'),'dica mostra quanto o Zeca trouxe e o % do dia: '+tipV);
+ ok((await p.$eval('.pn-tabela-det table',e=>e.textContent)).includes('Zeca'),'tabela do gráfico ganha a coluna do vendedor');
+ await p.click('.pn-vsel button:has-text("Zeca")');await p.waitForTimeout(200);
+ ok(!(await p.$('#pn-colunas .pn-linha')),'clicar de novo tira a linha');
+ // v4.31: ranking semanal (seg 06:00 a seg 05:59) com pontuação 50% resultado (teto por venda) + 25% volume + 25% constância; medalha com 5+ vendas
+ await t(`window.__bk=db.vendas;(()=>{const I=pnSemanaTrabalho(0).ini.getTime(),H=h=>new Date(I+h*36e5).toISOString();let n=0;
+  const V=(nome,uid,h,loja,total)=>({id:'w'+(n++),data:H(h),status:'ativa',usuario_id:uid,usuario_nome:nome,total,subtotal:total,desconto:0,cota_funcionario:total-loja,receita_loja:loja,itens:[],auxiliares:[]});
+  db.vendas=[...[1,23.5,25,49,50,73,74,75].map(h=>V('Persistente','p1',h,100,200)),...[2,3,26,27,28].map(h=>V('Regular','r1',h,300,600)),V('Sortudo','s1',4,3000,5000),
+   V('Antes','a1',-1/60,999,999)]})();painelRank='pont';painelSemana=0;render()`);
+ const rs=await t(`(()=>{const r=pnRankingSemana(0);return{teto:r.teto,l:r.lista.map(p=>({n:p.nome,pont:p.pont,dias:p.dias,el:p.elegivel,res:Math.round(p.pRes*10)/10}))}})()`);
+ const P=rs.l.find(x=>x.n==='Persistente'),R=rs.l.find(x=>x.n==='Regular'),S=rs.l.find(x=>x.n==='Sortudo');
+ ok(rs.teto===300&&S.res===20,'teto por venda = 10% maiores da semana ($300): a venda de $3.000 do Sortudo conta como $300');
+ ok(P.dias===4,'dia de trabalho vira às 06:00: venda de terça 05:30 conta na segunda (Persistente: 4 dias)');
+ ok(R.pont===78.1&&P.pont===76.7&&S.pont===19.4,'pontuação 50/25/25: Regular 78,1 · Persistente 76,7 · Sortudo 19,4: '+JSON.stringify(rs.l));
+ ok(!rs.l.some(x=>x.n==='Antes'),'segunda 05:59 fica na semana anterior');
+ ok(await t(`pnRankingSemana(-1).lista.some(p=>p.nome==='Antes')`),'… e aparece na semana anterior');
+ ok(!S.el&&P.el&&R.el,'menos de 5 vendas: sem medalha (Sortudo)');
+ const linhas=await p.$$eval('.pn-tab table',t=>[...t[0].querySelectorAll('tr')].slice(1).map(r=>r.cells[0].innerText.trim()));
+ ok(linhas[0].includes('🥇')&&linhas[0].includes('Regular')&&linhas[1].includes('🥈')&&linhas[1].includes('Persistente')&&linhas[2].includes('Sortudo')&&!linhas[2].includes('🥉')&&linhas[2].includes('poucas vendas'),'tabela: 🥇 Regular, 🥈 Persistente, Sortudo sem medalha e com "poucas vendas": '+linhas.join(' / '));
+ const tit=await p.$eval('.pn-rank-tog',e=>e.innerText.replace(/\s+/g,' '));
+ ok(/Semana \d\d\/\d\d a \d\d\/\d\d/.test(tit)&&tit.includes('segunda 06:00 até segunda 05:59')&&(await p.$eval('.pn-rank-tog button[title="Próxima semana"]',e=>e.disabled)),'cabeçalho da semana; "próxima" travada na semana atual: '+tit);
+ await p.click('.pn-rank-tog button[title="Semana anterior"]');await p.waitForTimeout(150);
+ ok((await t('painelSemana'))===-1&&(await p.$eval('.pn-tab table',e=>e.innerText)).includes('Antes'),'‹ volta uma semana');
+ await p.click('.pn-rank-tog button:has-text("Receita da loja")');await p.waitForTimeout(150);
+ await t(`painelSemana=0;render()`);
+ const ordemL=await p.$$eval('.pn-tab table',t=>[...t[0].querySelectorAll('tr')].slice(1).map(r=>r.cells[0].innerText.trim()));
+ ok(ordemL[0].includes('Sortudo')&&!ordemL[0].includes('🥇'),'ranking por receita da loja: Sortudo primeiro, sem medalha: '+ordemL.join(' / '));
+ await t(`db.vendas=window.__bk;painelRank='pont';painelSemana=0;render()`);
+ // v4.31: datas do Personalizado aceitam a data inteira (antes redesenhava a cada dígito e saía do campo)
+ await p.click('.pn-filtros button:has-text("Personalizado")');await p.waitForTimeout(150);
+ await p.click('#pn-de',{position:{x:12,y:12}});await p.keyboard.type('01');await p.waitForTimeout(150);
+ ok(await t(`document.activeElement&&document.activeElement.id==='pn-de'`),'digitar na data não tira o foco do campo');
+ await p.keyboard.type('152026');   // navegador de teste em inglês: mês/dia/anoawait p.waitForTimeout(150);
+ const vDe=await t(`document.getElementById('pn-de').value`);
+ ok(await t(`document.activeElement&&document.activeElement.id==='pn-de'`)&&vDe==='2026-01-15','data inteira digitada: '+vDe);
+ await p.keyboard.press('Enter');await p.waitForTimeout(200);
+ ok((await t(`painelPer.de`))==='2026-01-15'&&(await p.$eval('.pn-per',e=>e.textContent)).startsWith('15/01/2026'),'Enter aplica o período');
+ await p.click('#pn-ate');await p.keyboard.press('Tab');await p.waitForTimeout(100);
+ ok(await t(`!!document.getElementById('pn-ate')`),'andar entre os campos de data não redesenha à toa');
  ok((await p.$$eval('.pn-aviso',x=>x.map(e=>e.innerText.replace(/\s+/g,' ')))).some(a=>a.includes('2 de 6 viram')&&a.includes('faltam')),'avisos: quem viu e quem falta');
  // últimas ações paginadas
  await p.waitForTimeout(200);
