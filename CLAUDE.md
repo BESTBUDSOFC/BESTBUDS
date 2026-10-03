@@ -118,6 +118,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Reverter a venda devolve (as saídas viram "revertida"). Editar os itens de uma venda guardada refaz a baixa: a anterior fica revertida e entra a nova (nada é apagado). Vendas guardadas antes da migração não mexem no Baú.
 - No Livro do Baú, a saída de venda aparece como "Saída (Venda)" (lote = "Venda") e não tem ↩️: volta ao Baú quando a venda é revertida no Histórico Financeiro.
 - Supabase: o `apply_migration` cancela comandos com `drop trigger` e `delete` dentro de funções. Use `create or replace trigger` e evite `delete` (a baixa de venda só reverte e insere).
+- Ferramentas do Supabase (`apply_migration` e `execute_sql`): qualquer comando com a palavra `drop` (até `drop policy if exists` ou num comentário) trava até o tempo esgotar e não aplica nada. Para política, use `do $$ ... if not exists (select 1 from pg_policies ...) then create policy ... end if; end $$`.
 
 ## Compras e preços
 
@@ -135,11 +136,30 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Toda lista suspensa tem o mesmo campo de pesquisa. Campos de texto com lista (`data-combo`) aceitam valores fora da lista.
 - Celular: o teclado, ao abrir, dispara `resize`/`scroll`; as listas **não fecham** por isso, só se reposicionam (`popPosicionar`/`popReposicionar`, também com `visualViewport`). No celular (tela estreita e toque) a lista suspensa com busca abre como painel no alto da área visível (`.ssel-folha`), acima do teclado. A busca usa fonte de 16px para o iPhone não dar zoom. Fecha ao escolher, com Esc ou tocando fora.
 
-## Imagem da parceria (Descontos)
+## Imagens promocionais (Descontos e Catálogo PDV)
 
-- Em Configurações › Descontos, o 🖼️ de cada linha gera um card PNG 1080×1350 para divulgar (pedido do dono, v4.28): logo e nome da loja, "PARCERIA OFICIAL", nome do parceiro e o desconto (fixa: o % grande; escalonada: uma faixa por linha, "1 a 24 itens · 5% OFF", a última "50+ itens").
-- Feito no navegador (`desenharImagemDesconto`, canvas; o logo vem do Storage com `crossOrigin`, que libera CORS). A janela mostra a prévia, "⬇ Baixar PNG" (`parceria-<nome>.png`) e "📋 Copiar" quando o navegador permite. Gerar fica nas Últimas ações.
-- O nome perde o "(5,10,15)" do fim (`nomeParceiroLimpo`). Desconto sem nome de parceiro (ex.: "10%") sai como "OFERTA ESPECIAL", sem repetir o percentual.
+- Visual "neon de rua" escolhido pelo dono (v4.29.1) para as duas imagens (PNG 1080×1350): fundo escuro com brilho verde, nome da loja vazado e inclinado ao fundo (contorno branco a 7,5%: visível sem atrapalhar a frente), logo com brilho e faixa verde inclinada no rodapé.
+- Fontes próprias em `src/fonts/` (Anton e Montserrat, licença OFL), carregadas só ao gerar a imagem (`carregarFontesImagem`, nomes "BB Anton" e "BB Montserrat"). Auxiliares de desenho com prefixo `img` (`imgFundo`, `imgRodape`, `imgPilula`, `imgEtiqueta`, `imgFoto`, `imgCorFoto`).
+- As fotos dos produtos entram soltas (modo `lighten`: o fundo preto da foto some), com um brilho da cor da própria foto (`imgCorFoto`); a etiqueta de preço inclinada usa essa cor.
+- Uma janela só para todas (`abrirModalImagem`, estado em `_imgM`): **todos os textos são editáveis** (pedido do dono, v4.30: "o mais personalizadas possíveis"), a imagem refaz sozinha ao digitar, 🎲 sorteia frases prontas e campo vazio tira o texto da imagem. Os textos ficam lembrados neste aparelho, por tipo de imagem (`localStorage` `bb_img_<tipo>`). Prévia, "⬇ Baixar PNG", "📋 Copiar" quando o navegador permite (`_imgDesconto`). Gerar fica nas Últimas ações.
+
+### Imagem da parceria (Descontos)
+
+- Em Configurações › Descontos, o 🖼️ de cada linha gera o card (pedido do dono, v4.28). Campos: nome do parceiro (vem do cadastro) ou, na oferta, **mensagem em cima do desconto** (v4.30, 🎲 `FRASES_OFERTA`), selo, texto do desconto e rodapé (🎲 `FRASES_RODAPE`). Padrão: pílula "PARCERIA OFICIAL" e o nome do parceiro; fixa: o % gigante em verde com a etiqueta "OFF" e "EM TODA A COMPRA"; escalonada: escada de barras ("QUANTO MAIS LEVA, MAIS ECONOMIZA"), uma por faixa, "1 a 24 itens", a última "50+ itens".
+- Rodapé: parceria com nome = **"ENTREGAS DE PACOTE SEM DESLOCAMENTO"** (benefício do parceiro, pedido do dono, v4.29.1); sem nome = "VÁLIDO NO BALCÃO DA <LOJA>". O Caixa não aplica o benefício sozinho: na venda ao parceiro, o vendedor deixa a taxa de deslocamento sem escolher.
+- O nome perde o "(5,10,15)" do fim (`nomeParceiroLimpo`). Desconto sem nome de parceiro (ex.: "10%") sai como "OFERTA ESPECIAL", sem repetir o percentual. Arquivo `parceria-<nome>.png`.
+
+### Imagem do cardápio (Catálogo PDV)
+
+- Em Configurações › Catálogo PDV, o botão "🖼️ Imagem do cardápio" gera o card com **todos os produtos ativos** (foto, nome e preço sem centavos, `precoCurto`), a frase de efeito (2 linhas, a última em verde), a pílula "CARDÁPIO" e o rodapé "PEÇA JÁ NO BALCÃO DA <LOJA>". Arquivo `cardapio-<loja>.png`.
+- **Destaque da casa** (pedido do dono, v4.29.1): o produto ativo de **maior preço** (empate: o primeiro na ordem do Catálogo; `destaqueCardapio`) sai grande, com "★ DESTAQUE DA CASA ★". Até 5 produtos: destaque à esquerda e os outros numa coluna à direita; 6 ou mais: mosaico (destaque em 2×2, os outros em 3 ou 4 colunas).
+- Campos: frase de efeito (🎲 `FRASES_CARDAPIO`), selo, texto do destaque e rodapé. **Produtos na imagem:** caixas de marcar com os ativos (todos marcados ao abrir). **Destaque da casa:** automático (o mais caro), um produto escolhido ou "Sem destaque" (grade com todos iguais). Sem produto ativo, o card sai com o aviso "Nenhum produto ativo no momento."
+
+### Imagem de novo preço (Catálogo PDV)
+
+- Pedido do dono (v4.30): imagem "preço antigo → preço novo" para divulgar. Abre pelo 🏷️ de cada produto no Catálogo PDV e, ao salvar um produto com preço diferente, a janela "Preço alterado" oferece "🖼️ Gerar imagem" (`oferecerImagemPreco`, só produto ativo). "Produto editado" nas Últimas ações leva "(preço $X → $Y)".
+- **Preço antigo** (`precoAnteriorProduto`): 1º o histórico de preços do banco (`produtos_precos`, migração `20261004000000_historico_precos.sql`: a trigger `trg_produto_preco` grava uma linha a cada produto criado e a cada mudança de preço, com o preço anterior; só leitura para o site); 2º o último preço vendido diferente do atual (`venda_itens.preco_unit`); se não achar, o campo fica vazio e pede o valor. O campo é sempre editável e diz de onde veio.
+- Desenho (`desenharImagemPreco`): selo, mensagem, foto grande com brilho, nome, "DE $antigo" riscado → "POR $novo" na etiqueta da cor do produto e selo "-X%" quando baixou. Quando subiu: "ANTES/AGORA", sem %; padrões "NOVO PREÇO" e frases neutras (`FRASES_PRECO_NOVO`). Sem preço antigo: só "AGORA $novo". Arquivo `novo-preco-<produto>.png`.
 
 ## Avisos
 

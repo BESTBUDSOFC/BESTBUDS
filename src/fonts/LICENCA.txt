@@ -1,0 +1,4 @@
+Fontes usadas só nas imagens promocionais (cardápio e parceria):
+- anton.woff2: Anton (Vernon Adams), SIL Open Font License 1.1
+- montserrat.woff2: Montserrat (Julieta Ulanovsky e colaboradores), SIL Open Font License 1.1
+https://openfontlicense.org

@@ -97,7 +97,10 @@
           if(ex){Object.assign(ex,r);data.push(ex)}else{const n={id:'gen-'+(seq++),...r};T.push(n);data.push(n)}
         }
       }else if(st.op==='update'){
-        data=T.filter(match);data.forEach(r=>Object.assign(r,st.payload));
+        data=T.filter(match);
+        // trigger trg_produto_preco: cada mudança de preço vira uma linha em produtos_precos, com o preço anterior
+        if(table==='produtos'&&st.payload&&'preco' in st.payload)data.forEach(r=>{if(Number(r.preco)!==Number(st.payload.preco))(DB.produtos_precos=DB.produtos_precos||[]).push({id:'gen-'+(seq++),produto_id:r.id,preco:Number(st.payload.preco),preco_anterior:Number(r.preco),alterado_em:new Date().toISOString()})});
+        data.forEach(r=>Object.assign(r,st.payload));
       }else if(st.op==='delete'){
         data=T.filter(match);
         if(table==='itens'){const ids=data.map(r=>r.id);if(DB.receita_insumos.some(r=>ids.includes(r.item_id)))return{data:null,error:{message:'violates foreign key constraint'}}}
