@@ -525,6 +525,9 @@ body.video-aberto .ajuda-txt{display:none!important}
 .pend-resumo{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .pend-chip{display:flex;flex-direction:column;gap:2px;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:8px 12px;min-width:150px}
 .pend-chip small{color:var(--muted);font-size:11px}
+button.pend-chip{font:inherit;color:inherit;text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+button.pend-chip:hover{border-color:rgba(var(--green-rgb),.6)}
+button.pend-chip.ativo{border-color:var(--green);background:rgba(var(--green-rgb),.12)}
 .pend-motivo{color:var(--muted);font-size:11px;margin-top:3px;max-width:220px;white-space:normal}
 .pend-card td .tag{white-space:nowrap}
 .pend-data{white-space:nowrap}
@@ -618,7 +621,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.30.0';
+const VERSAO='v4.30.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -1300,18 +1303,23 @@ function idadeVenda(v){
   const txt=h<1?'há '+Math.max(1,Math.round(h*60))+' min':h<24?'há '+Math.floor(h)+' h':'há '+Math.floor(h/24)+' d';
   return `<span class="tag ${h>=24?'r':'y'}" title="Registrada em ${dataHoraBR(v.data)}">${txt}</span>`;
 }
+function situacaoPend(v){return v.cancelamento_status==='pedido'?'Cancelamento pedido':v.cancelamento_status==='recusado'?'Cancelamento recusado':'Pendente'}
 function htmlPendentes(){
-  const ger=isGerente(),lista=vendasPendentesVisiveis();
-  [...selPend].forEach(id=>{if(!pendenteSelecionavel(lista.find(v=>v.id===id)))selPend.delete(id)});
-  const selecionaveis=lista.filter(pendenteSelecionavel);
+  const T='pendentes',ger=isGerente(),todas=vendasPendentesVisiveis();
+  [...selPend].forEach(id=>{if(!pendenteSelecionavel(todas.find(v=>v.id===id)))selPend.delete(id)});
+  const F=tabelaFiltravel(T,vendasPendentesVisiveis,{data:v=>v.data,operacao_id:v=>v.operacao_id||'—',usuario_nome:v=>v.usuario_nome||'—',situacao:situacaoPend});
+  const lista=F.rows,selecionaveis=lista.filter(pendenteSelecionavel);
   const todasMarcadas=selecionaveis.length>0&&selecionaveis.every(v=>selPend.has(v.id));
-  const escolhidas=lista.filter(v=>selPend.has(v.id));
+  const escolhidas=todas.filter(v=>selPend.has(v.id)),foraDoFiltro=escolhidas.filter(v=>!lista.includes(v)).length;
   const valorSel=escolhidas.reduce((s,v)=>s+(v.receita_loja||0),0);
   // gerência: quanto dinheiro de venda ainda está na mão de cada vendedor
   let porVendedor='';
-  if(ger&&lista.length){
-    const m={};lista.filter(v=>v.cancelamento_status!=='pedido').forEach(v=>{const k=v.usuario_nome||'—';(m[k]=m[k]||{n:0,val:0,antiga:v}).n++;m[k].val+=v.receita_loja||0});
-    porVendedor=`<div class="pend-resumo">${Object.entries(m).sort((a,b)=>b[1].val-a[1].val).map(([nome,x])=>`<div class="pend-chip"><b>${esc(nome)}</b><span class="money">${fmt(x.val)}</span><small>${x.n} venda(s) · mais antiga ${idadeVenda(x.antiga)}</small></div>`).join('')}</div>`;
+  // clicar no cartão marca (ou desmarca) todas as vendas daquele vendedor
+  if(ger&&todas.length){
+    const m={};todas.filter(pendenteSelecionavel).forEach(v=>{const k=v.usuario_id||v.usuario_nome||'—';(m[k]=m[k]||{nome:v.usuario_nome||'—',n:0,val:0,antiga:v,ids:[]}).n++;m[k].val+=v.receita_loja||0;m[k].ids.push(v.id)});
+    const ordem=Object.entries(m).sort((a,b)=>b[1].val-a[1].val);_pendChaves=ordem.map(([k])=>k);
+    porVendedor=`<div class="pend-resumo">${ordem.map(([k,x],i)=>{const todasDele=x.ids.every(id=>selPend.has(id));
+      return `<button type="button" class="pend-chip${todasDele?' ativo':''}" title="${todasDele?'Desmarcar':'Marcar'} todas as vendas de ${esc(x.nome)}" onclick="marcarVendedorPend(${i})"><b>${todasDele?'☑':'☐'} ${esc(x.nome)}</b><span class="money">${fmt(x.val)}</span><small>${x.n} venda(s) · mais antiga ${idadeVenda(x.antiga)}</small></button>`}).join('')}</div>`;
   }
   const linha=v=>{
     const rp=repasseDaVenda(v),pedido=v.cancelamento_status==='pedido',meu=v.usuario_id===sessionUser().id;
@@ -1340,15 +1348,23 @@ function htmlPendentes(){
       <button class="btn btn-primary" ${escolhidas.length?'':'disabled'} onclick="modalGuardarCaixa()">💰 Guardar no caixa${escolhidas.length?` (${escolhidas.length}) · ${fmt(valorSel)}`:''}</button>
     </div>
     ${porVendedor}
-    ${lista.length?`<div class="table-wrap"><table>
-      <tr><th><input type="checkbox" style="width:auto" title="Marcar todas" ${todasMarcadas?'checked':''} ${selecionaveis.length?'':'disabled'} onchange="alternarPendTodas(this.checked)"></th><th>ID</th><th>Data/hora</th>${ger?'<th>Vendedor</th>':''}<th class="pend-opc">Itens</th><th class="pend-opc">Total</th><th class="pend-opc">Repasse</th><th>Para o caixa</th><th>Situação</th><th></th></tr>
-      ${lista.map(linha).join('')}
+    ${F.barra}${foraDoFiltro?`<div class="muted" style="font-size:12px;margin-bottom:8px">${foraDoFiltro} venda(s) marcada(s) fora do filtro também vão ser guardadas.</div>`:''}
+    ${todas.length?`<div class="table-wrap"><table>
+      <tr><th><input type="checkbox" style="width:auto" title="Marcar todas (as que aparecem)" ${todasMarcadas?'checked':''} ${selecionaveis.length?'':'disabled'} onchange="alternarPendTodas(this.checked)"></th>${thCol(T,'operacao_id','ID')}${thCol(T,'data','Data/hora')}${ger?thCol(T,'usuario_nome','Vendedor'):''}<th class="pend-opc">Itens</th>${thCol(T,'total','Total').replace('<th class="','<th class="pend-opc ')}${thCol(T,'repasse','Repasse').replace('<th class="','<th class="pend-opc ')}${thCol(T,'caixa','Para o caixa')}${thCol(T,'situacao','Situação')}<th></th></tr>
+      ${lista.map(linha).join('')||linhaSemResultado(ger?10:9,T)}
     </table></div>`:`<div class="empty" style="padding:16px">Nenhuma venda esperando para ser guardada.</div>`}
   </div>`;
 }
 function redesenharPendentes(){const el=document.getElementById('pend-card');if(!el)return;const d=document.createElement('div');d.innerHTML=htmlPendentes();el.replaceWith(d.firstElementChild)}
 function alternarPend(id,marcado){if(marcado)selPend.add(id);else selPend.delete(id);redesenharPendentes()}
-function alternarPendTodas(marcado){const l=vendasPendentesVisiveis().filter(pendenteSelecionavel);if(marcado)l.forEach(v=>selPend.add(v.id));else selPend.clear();redesenharPendentes()}
+function alternarPendTodas(marcado){const l=pendentesFiltradas().filter(pendenteSelecionavel);l.forEach(v=>marcado?selPend.add(v.id):selPend.delete(v.id));redesenharPendentes()}
+function pendentesFiltradas(){return regConsulta.pendentes?aplicarFiltros(vendasPendentesVisiveis(),'pendentes'):vendasPendentesVisiveis()}
+let _pendChaves=[];   // cartões de "dinheiro na mão", na ordem em que aparecem
+function marcarVendedorPend(i){
+  const k=_pendChaves[i];if(k===undefined)return;
+  const dele=vendasPendentesVisiveis().filter(v=>pendenteSelecionavel(v)&&(v.usuario_id||v.usuario_nome||'—')===k);if(!dele.length)return;
+  const todasDele=dele.every(v=>selPend.has(v.id));dele.forEach(v=>todasDele?selPend.delete(v.id):selPend.add(v.id));redesenharPendentes();
+}
 /* Resumo antes de guardar: total vendido, descontos, repasse por pessoa e, em destaque, o valor que vai para o caixa */
 /* Custo que ficou com a equipe numa venda gravada (produto 100% Equipe com custo): total − repasse − caixa */
 function custoEquipeDaVenda(v){return Math.max(0,Math.round(((v.total||0)-(v.cota_funcionario||0)-(v.receita_loja||0))*100)/100)}
@@ -3017,7 +3033,6 @@ async function salvarProduto(id){
     const precoAntes=Number((db.produtos.find(x=>x.id===id)||{}).preco);
     Object.assign(db.produtos.find(x=>x.id===id),{nome,preco,custo,rateio,imagem:imagemUrl});
     reg('Produto editado',nome+(precoAntes!==preco?' (preço '+precoCurto(precoAntes)+' → '+precoCurto(preco)+')':''));
-    if(precoAntes!==preco)window._precoMudou={id,antes:precoAntes,depois:preco};
   }else{
     const{data,error}=await sb.from('produtos').insert({...campos,ordem:proximaOrdem(db.produtos),criado_por:sessionUser().id}).select().single();
     if(error){e.textContent='Erro ao salvar: '+error.message;e.style.display='block';return}
@@ -3025,8 +3040,6 @@ async function salvarProduto(id){
     reg('Produto criado',nome);
   }
   window._pImgFile=null;closeModal();render();agendarSincronizacao(); // o item "Produto Final" do produto é criado/atualizado pelo banco
-  // o banco guarda o preço antigo em produtos_precos; aqui só oferece a imagem para divulgar
-  const pm=window._precoMudou;window._precoMudou=null;if(pm)oferecerImagemPreco(pm.id,pm.antes,pm.depois);
 }
 async function toggleProduto(id){
   const p=db.produtos.find(x=>x.id===id);
@@ -3740,13 +3753,6 @@ async function modalImagemPreco(pid,antigoConhecido){
     desenhar:v=>desenharImagemPreco(v),arquivo:()=>'novo-preco-'+imgSlug(p.nome)+'.png',
     registro:v=>['Imagem de novo preço gerada',p.nome+': '+(v.antigo!==''?precoCurto(v.antigo)+' → ':'')+precoCurto(p.preco)]});
 }
-// depois de salvar um preço novo: oferece a imagem para divulgar
-function oferecerImagemPreco(id,antigo,novo){
-  const p=db.produtos.find(z=>z.id===id);if(!p||p.status!=='ativo')return;
-  openModal(`<h3>🏷️ Preço alterado</h3><p><b>${esc(p.nome)}</b>: ${precoCurto(antigo)} → <b>${precoCurto(novo)}</b></p>
-    <p class="muted" style="font-size:13px">Quer gerar a imagem de novo preço para divulgar?</p>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Agora não</button><button class="btn btn-primary" id="btn-img-preco" onclick="modalImagemPreco('${id}',${Number(antigo)})">🖼️ Gerar imagem</button></div>`);
-}
 function descontoResumo(p){return p.tipo==='fixa'?p.desconto_fixo+'%':(p.faixas||[]).map(fx=>`${fx.quantidade_min}–${fx.quantidade_max===null?'∞':fx.quantidade_max}: ${fx.percentual_desconto}%`).join(' · ')||'—'}
 function cfgDescontos(b){
   const T='cfg_descontos',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.parcerias]),{nome:p=>p.nome,tipo:p=>p.tipo==='fixa'?'Fixa':'Escalonada',desconto:p=>descontoResumo(p),status:p=>p.status});
@@ -4247,7 +4253,8 @@ const NUMERICOS={
  cfg_produtos:{preco:{get:p=>p.preco,moeda:1},custo:{get:p=>p.custo||0,moeda:1}},
  cfg_itens:{qtd_minima:{get:i=>i.qtd_minima||0},saldo:{get:i=>controlaEstoque(i.categoria)?saldoItem(i.id):null}},
  cfg_categorias:{itens:{get:c=>db.itens.filter(i=>i.categoria===c.codigo).length}},
- cfg_deslocamento:{valor:{get:t=>t.valor,moeda:1}}
+ cfg_deslocamento:{valor:{get:t=>t.valor,moeda:1}},
+ pendentes:{total:{get:v=>v.total||0,moeda:1},repasse:{get:v=>v.cota_funcionario||0,moeda:1},caixa:{get:v=>v.receita_loja||0,moeda:1}}
 };
 function colunaNumerica(tipo,key){return NUMERICOS[tipo]&&NUMERICOS[tipo][key]}
 function ehFaixa(v){return v&&!Array.isArray(v)&&typeof v==='object'&&('min' in v||'max' in v)}

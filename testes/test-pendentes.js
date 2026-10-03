@@ -64,6 +64,27 @@ const U=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
  linhas=await p.$$eval('#pend-card table tr',x=>x.length-1);ok(linhas===3,'gerente vê pendentes de todos: '+linhas);
  const chips=await p.$$eval('#pend-card .pend-chip',x=>x.map(e=>e.innerText.replace(/\s+/g,' ')));
  ok(chips.length===2&&chips[0].includes('Zeca')&&chips[0].includes('$50,00')&&chips.some(c=>c.includes('Bruno')&&c.includes('$20,00')),'dinheiro na mão por vendedor (sem o pedido de cancelamento): '+chips.join(' / '));
+ // v4.30.1: clicar no cartão do vendedor marca todas as vendas dele (de novo: desmarca)
+ const chipDe=n=>p.evaluate(n=>[...document.querySelectorAll('#pend-card .pend-chip')].findIndex(e=>e.innerText.includes(n)),n);
+ await p.click(`#pend-card .pend-chip >> nth=${await chipDe('Bruno')}`);
+ ok((await g('[...selPend].sort().join()'))==='pb','cartão do Bruno marca as vendas dele (sem a com pedido de cancelamento)');
+ ok(await p.evaluate(()=>[...document.querySelectorAll('#pend-card .pend-chip')].find(e=>e.innerText.includes('Bruno')).classList.contains('ativo')),'cartão fica destacado');
+ await p.click(`#pend-card .pend-chip >> nth=${await chipDe('Zeca')}`);
+ ok((await g('[...selPend].sort().join()'))==='pb,pz','cartão do Zeca soma as dele à seleção');
+ await p.click(`#pend-card .pend-chip >> nth=${await chipDe('Bruno')}`);
+ ok((await g('[...selPend].sort().join()'))==='pz','clicar de novo desmarca as do Bruno');
+ // filtros na tabela
+ ok((await p.$$('#pend-card .filter-funnel')).length===7,'filtros em ID, data, vendedor, total, repasse, caixa e situação');
+ await g(`regConsulta.pendentes.filtros={usuario_nome:['Bruno']};render()`);
+ linhas=await p.$$eval('#pend-card table tr',x=>x.length-1);ok(linhas===2,'filtro de vendedor: só as do Bruno: '+linhas);
+ ok((await p.$eval('#pend-card',e=>e.innerText)).includes('1 venda(s) marcada(s) fora do filtro'),'avisa a venda marcada que ficou fora do filtro');
+ await p.$eval('#pend-card table tr:first-child input',e=>{e.checked=true;e.dispatchEvent(new Event('change'))});
+ ok((await g('[...selPend].sort().join()'))==='pb,pz','marcar todas com filtro: só as que aparecem (e mantém as já marcadas)');
+ await g(`regConsulta.pendentes.filtros={caixa:{min:15,max:100}};render()`);
+ linhas=await p.$$eval('#pend-card table tr',x=>x.length-1);ok(linhas===2,'filtro de valor "para o caixa" ($15 a $100): '+linhas);
+ await g(`regConsulta.pendentes.filtros={situacao:['Cancelamento pedido']};render()`);
+ linhas=await p.$$eval('#pend-card table tr',x=>x.length-1);ok(linhas===1,'filtro de situação: '+linhas);
+ await g(`regConsulta.pendentes.filtros={};selPend.clear();render()`);
  ok((await p.$eval('#pend-card',e=>e.innerHTML)).includes('tag r" title="Registrada')||(await p.$eval('#pend-card',e=>e.innerText)).includes('há 1 d'),'pendente com mais de 24 h em destaque');
  await p.$eval('#pend-card table tr:first-child input',e=>{e.checked=true;e.dispatchEvent(new Event('change'))});
  ok((await g('[...selPend].sort().join()'))==='pb,pz','marcar todas ignora a venda com pedido');

@@ -60,6 +60,8 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - As 8 vendas de CBD anteriores ao custo (209 unidades) foram corrigidas na produção com o ok do dono (migração `20261003010000_corrige_repasse_cbd.sql`, com backup dos valores antigos no comentário): repasse − $75 por unidade, custo gravado, caixa e total sem mudança; lote 000136 recalculado.
 - **Pré-registro:** toda venda nova nasce `pendente` (trigger `trg_vendas_nova_pendente`) e não entra no caixa nem nos totais do Histórico.
   - No Caixa de Balcão, "Vendas a guardar no caixa" lista as pendentes: o vendedor vê só as dele; Gerente ou acima vê todas, com o resumo "dinheiro na mão" por vendedor. Pendente há 24 h ou mais fica em vermelho.
+  - Gerente ou acima: **clicar no cartão do vendedor** (no resumo "dinheiro na mão", inclusive o próprio) marca todas as vendas dele de uma vez; clicar de novo desmarca (`marcarVendedorPend`; venda com pedido de cancelamento fica de fora). O cartão fica verde quando todas estão marcadas (pedido do dono, v4.30.1).
+  - A tabela tem filtros (tipo `pendentes`): ID, Data/hora, Vendedor, Total, Repasse, Para o caixa (faixas de valor) e Situação. "Marcar todas" marca só as que aparecem no filtro; as já marcadas fora do filtro continuam marcadas, com o aviso "N venda(s) marcada(s) fora do filtro também vão ser guardadas".
   - O vendedor marca as vendas e clica em "Guardar no caixa". O resumo mostra total vendido, descontos, repasse por pessoa (e quem paga cada auxiliar) e, em destaque, o **valor para o caixa** (soma de `receita_loja`: o vendedor fica com o repasse e guarda só a parte da loja).
   - Confirmar chama `guardar_vendas(p_ids)`, uma rpc só: grava o lote em `depositos_caixa` (com `operacao_id`) e as vendas passam a `ativa`, com `guardada_em` e `deposito_id`. Vendedor guarda só as próprias; Gerente ou acima, as de todos.
   - No Histórico, a venda guardada aparece na data em que foi guardada (`guardada_em`; vendas antigas sem lote usam `data`), com o lote na descrição.
@@ -157,7 +159,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 ### Imagem de novo preço (Catálogo PDV)
 
-- Pedido do dono (v4.30): imagem "preço antigo → preço novo" para divulgar. Abre pelo 🏷️ de cada produto no Catálogo PDV e, ao salvar um produto com preço diferente, a janela "Preço alterado" oferece "🖼️ Gerar imagem" (`oferecerImagemPreco`, só produto ativo). "Produto editado" nas Últimas ações leva "(preço $X → $Y)".
+- Pedido do dono (v4.30): imagem "preço antigo → preço novo" para divulgar. Abre **só pelo 🏷️** de cada produto no Catálogo PDV: salvar um preço novo **não** oferece a imagem (pedido do dono, v4.30.1). "Produto editado" nas Últimas ações leva "(preço $X → $Y)".
 - **Preço antigo** (`precoAnteriorProduto`): 1º o histórico de preços do banco (`produtos_precos`, migração `20261004000000_historico_precos.sql`: a trigger `trg_produto_preco` grava uma linha a cada produto criado e a cada mudança de preço, com o preço anterior; só leitura para o site); 2º o último preço vendido diferente do atual (`venda_itens.preco_unit`); se não achar, o campo fica vazio e pede o valor. O campo é sempre editável e diz de onde veio.
 - Desenho (`desenharImagemPreco`): selo, mensagem, foto grande com brilho, nome, "DE $antigo" riscado → "POR $novo" na etiqueta da cor do produto e selo "-X%" quando baixou. Quando subiu: "ANTES/AGORA", sem %; padrões "NOVO PREÇO" e frases neutras (`FRASES_PRECO_NOVO`). Sem preço antigo: só "AGORA $novo". Arquivo `novo-preco-<produto>.png`.
 
