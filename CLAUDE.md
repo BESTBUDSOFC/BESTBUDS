@@ -135,17 +135,24 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Toda lista suspensa tem o mesmo campo de pesquisa. Campos de texto com lista (`data-combo`) aceitam valores fora da lista.
 - Celular: o teclado, ao abrir, dispara `resize`/`scroll`; as listas **não fecham** por isso, só se reposicionam (`popPosicionar`/`popReposicionar`, também com `visualViewport`). No celular (tela estreita e toque) a lista suspensa com busca abre como painel no alto da área visível (`.ssel-folha`), acima do teclado. A busca usa fonte de 16px para o iPhone não dar zoom. Fecha ao escolher, com Esc ou tocando fora.
 
-## Imagem da parceria (Descontos)
+## Imagens promocionais (Descontos e Catálogo PDV)
 
-- Em Configurações › Descontos, o 🖼️ de cada linha gera um card PNG 1080×1350 para divulgar (pedido do dono, v4.28): logo e nome da loja, "PARCERIA OFICIAL", nome do parceiro e o desconto (fixa: o % grande; escalonada: uma faixa por linha, "1 a 24 itens · 5% OFF", a última "50+ itens").
-- Feito no navegador (`desenharImagemDesconto`, canvas; o logo vem do Storage com `crossOrigin`, que libera CORS). A janela mostra a prévia, "⬇ Baixar PNG" (`parceria-<nome>.png`) e "📋 Copiar" quando o navegador permite. Gerar fica nas Últimas ações.
-- O nome perde o "(5,10,15)" do fim (`nomeParceiroLimpo`). Desconto sem nome de parceiro (ex.: "10%") sai como "OFERTA ESPECIAL", sem repetir o percentual.
+- Visual "neon de rua" escolhido pelo dono (v4.29.1) para as duas imagens (PNG 1080×1350): fundo escuro com brilho verde, nome da loja vazado e inclinado ao fundo (contorno branco a 7,5%: visível sem atrapalhar a frente), logo com brilho e faixa verde inclinada no rodapé.
+- Fontes próprias em `src/fonts/` (Anton e Montserrat, licença OFL), carregadas só ao gerar a imagem (`carregarFontesImagem`, nomes "BB Anton" e "BB Montserrat"). Auxiliares de desenho com prefixo `img` (`imgFundo`, `imgRodape`, `imgPilula`, `imgEtiqueta`, `imgFoto`, `imgCorFoto`).
+- As fotos dos produtos entram soltas (modo `lighten`: o fundo preto da foto some), com um brilho da cor da própria foto (`imgCorFoto`); a etiqueta de preço inclinada usa essa cor.
+- A janela é a mesma nas duas: prévia, "⬇ Baixar PNG", "📋 Copiar" quando o navegador permite (estado em `_imgDesconto`). Gerar fica nas Últimas ações.
 
-## Imagem do cardápio (Catálogo PDV)
+### Imagem da parceria (Descontos)
 
-- Em Configurações › Catálogo PDV, o botão "🖼️ Imagem do cardápio" gera um card PNG 1080×1350 promocional (pedido do dono, v4.29): logo e nome da loja, uma frase de efeito, "CARDÁPIO" e a grade com **todos os produtos ativos** (foto, nome e preço sem centavos, `precoCurto`), e no rodapé "Peça já no balcão da <loja>".
-- A frase é editável (até 70 caracteres; a imagem refaz sozinha) e o 🎲 sorteia outra de `FRASES_CARDAPIO`.
-- Mesmo desenho e mesma janela da imagem da parceria (`desenharImagemCardapio`, prévia, "⬇ Baixar PNG" = `cardapio-<loja>.png`, "📋 Copiar"; estado em `_imgDesconto`). Gerar fica nas Últimas ações. Sem produto ativo, o card sai com o aviso "Nenhum produto ativo no momento."
+- Em Configurações › Descontos, o 🖼️ de cada linha gera o card (pedido do dono, v4.28): pílula "PARCERIA OFICIAL" e o nome do parceiro; fixa: o % gigante em verde com a etiqueta "OFF" e "EM TODA A COMPRA"; escalonada: escada de barras ("QUANTO MAIS LEVA, MAIS ECONOMIZA"), uma por faixa, "1 a 24 itens", a última "50+ itens".
+- Rodapé: parceria com nome = **"ENTREGAS DE PACOTE SEM DESLOCAMENTO"** (benefício do parceiro, pedido do dono, v4.29.1); sem nome = "VÁLIDO NO BALCÃO DA <LOJA>". O Caixa não aplica o benefício sozinho: na venda ao parceiro, o vendedor deixa a taxa de deslocamento sem escolher.
+- O nome perde o "(5,10,15)" do fim (`nomeParceiroLimpo`). Desconto sem nome de parceiro (ex.: "10%") sai como "OFERTA ESPECIAL", sem repetir o percentual. Arquivo `parceria-<nome>.png`.
+
+### Imagem do cardápio (Catálogo PDV)
+
+- Em Configurações › Catálogo PDV, o botão "🖼️ Imagem do cardápio" gera o card com **todos os produtos ativos** (foto, nome e preço sem centavos, `precoCurto`), a frase de efeito (2 linhas, a última em verde), a pílula "CARDÁPIO" e o rodapé "PEÇA JÁ NO BALCÃO DA <LOJA>". Arquivo `cardapio-<loja>.png`.
+- **Destaque da casa** (pedido do dono, v4.29.1): o produto ativo de **maior preço** (empate: o primeiro na ordem do Catálogo; `destaqueCardapio`) sai grande, com "★ DESTAQUE DA CASA ★". Até 5 produtos: destaque à esquerda e os outros numa coluna à direita; 6 ou mais: mosaico (destaque em 2×2, os outros em 3 ou 4 colunas).
+- A frase é editável (até 70 caracteres; a imagem refaz sozinha) e o 🎲 sorteia outra de `FRASES_CARDAPIO`. Sem produto ativo, o card sai com o aviso "Nenhum produto ativo no momento."
 
 ## Avisos
 

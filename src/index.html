@@ -615,7 +615,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.29.0';
+const VERSAO='v4.29.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -3456,49 +3456,77 @@ function imagemDescontoTextos(p){
     :{nome,tipo:'escalonada',destaque:'',sub:'DESCONTO PROGRESSIVO',linhas:fx.map(f=>({faixa:faixa(f),pct:n(f.percentual_desconto)+'%'}))};
 }
 function carregarImagemCors(url){return new Promise(ok=>{if(!url)return ok(null);const i=new Image();i.crossOrigin='anonymous';i.onload=()=>ok(i);i.onerror=()=>ok(null);i.src=url})}
+/* Visual "neon de rua" (pedido do dono, v4.29): fundo escuro com brilho verde, "BEST BUDS" vazado ao fundo,
+   fotos soltas com brilho da cor de cada produto e faixa verde no rodapé. Fontes próprias em src/fonts (Anton e Montserrat, licença OFL). */
+let _fontesImg=null;
+function carregarFontesImagem(){
+  if(!_fontesImg)_fontesImg=Promise.all([['BB Anton','fonts/anton.woff2',{}],['BB Montserrat','fonts/montserrat.woff2',{weight:'100 900'}]].map(([n,u,o])=>{
+    try{return new FontFace(n,`url(${u})`,o).load().then(f=>document.fonts.add(f)).catch(()=>{})}catch(e){return null}}));
+  return _fontesImg;
+}
+const IMG_AN=px=>`${px}px "BB Anton", Impact, "Arial Narrow", sans-serif`,IMG_MO=(w,px)=>`${w} ${px}px "BB Montserrat", Arial, sans-serif`;
+function imgCtx(){const c=document.createElement('canvas');c.width=1080;c.height=1350;const g=c.getContext('2d');
+  const css=getComputedStyle(document.documentElement);return{c,g,W:1080,H:1350,verde:(css.getPropertyValue('--green')||'').trim()||'#00CC52',escuro:'#07070A'}}
+function imgRgba(c,a){if(c[0]==='#'){const n=parseInt(c.slice(1,7),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`}return c.replace('rgb(','rgba(').replace(')',`,${a})`)}
+function imgEspaco(g,v){if('letterSpacing' in g)g.letterSpacing=v+'px'}
+function imgRet(g,x,y,w,h,r){g.beginPath();if(g.roundRect)g.roundRect(x,y,w,h,r);else g.rect(x,y,w,h)}
+function imgBrilho(g,x,y,r,cor,a){const rg=g.createRadialGradient(x,y,0,x,y,r);rg.addColorStop(0,imgRgba(cor,a));rg.addColorStop(1,imgRgba(cor,0));g.fillStyle=rg;g.fillRect(x-r,y-r,2*r,2*r)}
+// cor mais marcante da foto (para o brilho e a etiqueta de preço); sem cor viva, usa o verde da loja
+function imgCorFoto(im,padrao){
+  try{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.drawImage(im,0,0,64,64);
+    const d=g.getImageData(0,0,64,64).data,bins=Array.from({length:24},()=>({w:0,r:0,g:0,b:0}));
+    for(let i=0;i<d.length;i+=4){const r=d[i]/255,gg=d[i+1]/255,b=d[i+2]/255,mx=Math.max(r,gg,b),mn=Math.min(r,gg,b),s=mx?(mx-mn)/mx:0;
+      if(s<.45||mx<.45)continue;let h=mx===r?((gg-b)/(mx-mn))%6:mx===gg?(b-r)/(mx-mn)+2:(r-gg)/(mx-mn)+4;h=(h*60+360)%360;
+      const k=Math.floor(h/15)%24,w=s*mx;bins[k].w+=w;bins[k].r+=d[i]*w;bins[k].g+=d[i+1]*w;bins[k].b+=d[i+2]*w}
+    const m=bins.reduce((a,b)=>b.w>a.w?b:a);return m.w?`rgb(${m.r/m.w|0},${m.g/m.w|0},${m.b/m.w|0})`:padrao}catch(e){return padrao}
+}
+function imgCaber(g,txt,fonte,max,linhasMax,px0,pxMin){
+  const q=t=>{const ps=t.split(' '),o=[];let l='';ps.forEach(w=>{const tl=l?l+' '+w:w;if(g.measureText(tl).width>max&&l){o.push(l);l=w}else l=tl});if(l)o.push(l);return o};
+  let px=px0,ln;do{g.font=fonte(px);ln=q(txt);px-=4}while((ln.length>linhasMax||ln.some(l=>g.measureText(l).width>max))&&px>pxMin);return{px:px+4,ln};
+}
+function imgEtiqueta(g,txt,cx,cy,px,bg,fg,rot){g.save();g.translate(cx,cy);g.rotate(rot);g.font=IMG_AN(px);const w=g.measureText(txt).width+px*.7,h=px*1.2;
+  g.shadowColor='rgba(0,0,0,.5)';g.shadowBlur=18;g.shadowOffsetY=6;g.fillStyle=bg;imgRet(g,-w/2,-h/2,w,h,h*.22);g.fill();g.shadowColor='transparent';
+  g.fillStyle=fg;g.textAlign='center';g.textBaseline='middle';g.fillText(txt,0,px*.04);g.restore()}
+// fundo, nome da loja vazado ao fundo e logo
+async function imgFundo(x,logo){
+  const{g,W,H,verde,escuro}=x;g.fillStyle=escuro;g.fillRect(0,0,W,H);imgBrilho(g,W/2,40,820,verde,.32);
+  const marca=(nomeLojaAtual()||'').toUpperCase().trim();
+  if(marca){g.save();g.translate(W/2,H/2);g.rotate(-.21);g.font=IMG_AN(190);g.strokeStyle='rgba(255,255,255,.075)';g.lineWidth=2.5;g.textAlign='center';
+    for(let i=-5;i<=5;i++)g.strokeText((marca+' · ').repeat(4),i%2?120:-60,i*200);g.restore()}
+  if(logo){const t=160,r=Math.min(t/logo.width,t/logo.height);g.save();g.shadowColor=verde;g.shadowBlur=50;g.drawImage(logo,W/2-logo.width*r/2,46,logo.width*r,logo.height*r);g.restore()}
+  else{g.font=IMG_AN(120);g.textAlign='center';g.fillStyle='#fff';g.fillText('🌿',W/2,180)}
+}
+function imgRodape(x,txt){const{g,W,H,verde,escuro}=x;g.fillStyle=verde;g.beginPath();g.moveTo(0,H-118);g.lineTo(W,H-150);g.lineTo(W,H);g.lineTo(0,H);g.fill();
+  g.save();g.translate(W/2,H-62);g.rotate(-.03);g.fillStyle=escuro;g.textAlign='center';imgEspaco(g,2);let px=50;g.font=IMG_AN(px);while(g.measureText(txt).width>W-90&&px>28){px-=2;g.font=IMG_AN(px)}g.fillText(txt,0,0);imgEspaco(g,0);g.restore()}
+function imgPilula(x,txt,y){const{g,W,verde,escuro}=x;g.font=IMG_MO(800,26);imgEspaco(g,7);const w=g.measureText(txt).width+56;g.fillStyle=verde;imgRet(g,W/2-w/2,y,w,50,25);g.fill();
+  g.fillStyle=escuro;g.textAlign='center';g.fillText(txt,W/2+3,y+35);imgEspaco(g,0)}
+function imgFoto(g,im,x,y,l){if(!im){g.font=IMG_AN(l*.4);g.textAlign='center';g.fillStyle='#fff';g.fillText('🌿',x+l/2,y+l*.65);return}
+  const r=Math.max(l/im.width,l/im.height),sw=l/r,sh=l/r;g.save();g.globalCompositeOperation='lighten';g.drawImage(im,(im.width-sw)/2,(im.height-sh)/2,sw,sh,x,y,l,l);g.restore()}
 async function desenharImagemDesconto(p){
-  const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
-  const css=getComputedStyle(document.documentElement),cor=(v,d)=>(css.getPropertyValue(v)||'').trim()||d;
-  const verde=cor('--green','#00CC52'),fundo=cor('--bg','#0D0D11'),texto='#F3F4F6',muted='#9CA3AF';
-  try{await Promise.all(['900 96px Inter','700 40px Inter','600 30px Inter'].map(f=>document.fonts.load(f)))}catch(e){}
-  const F=(peso,px)=>`${peso} ${px}px Inter, Arial, sans-serif`;
-  // fundo escuro com brilho verde no alto e moldura
-  g.fillStyle=fundo;g.fillRect(0,0,W,H);
-  const rg=g.createRadialGradient(W/2,120,40,W/2,120,900);rg.addColorStop(0,verde+'55');rg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=rg;g.fillRect(0,0,W,H);
-  g.strokeStyle=verde;g.lineWidth=6;g.strokeRect(36,36,W-72,H-72);
-  g.textAlign='center';g.textBaseline='alphabetic';
-  // logo e nome da loja
-  const logo=await carregarImagemCors(db.identidade_visual&&db.identidade_visual.logotipo);
-  let y=110;
-  if(logo){const t=220,r=Math.min(t/logo.width,t/logo.height);g.drawImage(logo,W/2-logo.width*r/2,y,logo.width*r,logo.height*r);y+=t+30}else{g.font=F(400,150);g.fillText('🌿',W/2,y+150);y+=200}
-  g.fillStyle=texto;g.font=F(900,56);g.fillText(nomeLojaAtual().toUpperCase(),W/2,y+40);y+=110;
-  const t=imagemDescontoTextos(p);
-  g.fillStyle=verde;g.font=F(700,30);if('letterSpacing' in g)g.letterSpacing='8px';g.fillText(t.nome?'PARCERIA OFICIAL':'OFERTA ESPECIAL',W/2,y);if('letterSpacing' in g)g.letterSpacing='0px';y+=30;
-  // nome do parceiro: diminui a fonte até caber (até 2 linhas)
-  let px=96,linhas;
-  const quebrar=(txt,max)=>{const ps=txt.split(' '),out=[];let l='';ps.forEach(w=>{const tl=l?l+' '+w:w;if(g.measureText(tl).width>max&&l){out.push(l);l=w}else l=tl});if(l)out.push(l);return out};
-  do{g.font=F(900,px);linhas=t.nome?quebrar(t.nome,W-200):[];px-=6}while((linhas.length>2||linhas.some(l=>g.measureText(l).width>W-200))&&px>40);
-  g.fillStyle=texto;linhas.forEach(l=>{y+=px+12;g.fillText(l,W/2,y)});y+=50;
-  g.fillStyle=verde;g.fillRect(W/2-60,y,120,6);y+=70;
-  const livre=(H-150)-y;   // centraliza o bloco do desconto no espaço que sobra até o rodapé
+  const x=imgCtx(),{c,g,W,H,verde,escuro}=x;await carregarFontesImagem();
+  await imgFundo(x,await carregarImagemCors(db.identidade_visual&&db.identidade_visual.logotipo));
+  const t=imagemDescontoTextos(p);g.textAlign='center';
+  imgPilula(x,t.nome?'PARCERIA OFICIAL':'OFERTA ESPECIAL',238);let y=300;
+  if(t.nome){const{px,ln}=imgCaber(g,t.nome.toUpperCase(),IMG_AN,W-160,2,130,60);g.fillStyle='#fff';ln.forEach(l=>{y+=px;g.font=IMG_AN(px);g.fillText(l,W/2,y)});y+=20}
   if(t.tipo==='fixa'){
-    y+=Math.max(0,(livre-340)/2);
-    g.fillStyle=verde;g.font=F(900,260);g.fillText(t.destaque,W/2,y+220);y+=280;
-    g.fillStyle=texto;g.font=F(700,40);g.fillText(t.sub,W/2,y+20);
+    y+=Math.max(0,(H-170-y-680)/2);
+    let px=460;g.font=IMG_AN(px);while(g.measureText(t.destaque).width>W-260&&px>200){px-=10;g.font=IMG_AN(px)}
+    const larg=g.measureText(t.destaque).width;
+    g.save();g.fillStyle=verde;g.shadowColor=verde;g.shadowBlur=70;g.fillText(t.destaque,W/2-40,y+560);g.restore();
+    imgEtiqueta(g,'OFF',Math.min(W-130,W/2-40+larg/2+20),y+190,110,'#fff',escuro,.12);
+    g.fillStyle='#fff';g.font=IMG_MO(800,40);imgEspaco(g,8);g.fillText('EM TODA A COMPRA',W/2,y+660);imgEspaco(g,0);
   }else{
-    const n=t.linhas.length||1,alt=Math.min(150,(livre-110)/n-20),x0=150,lw=W-300;
-    y+=Math.max(0,(livre-(60+n*(alt+20)))/2);
-    g.fillStyle=texto;g.font=F(700,40);g.fillText(t.sub,W/2,y+10);y+=50;
-    t.linhas.forEach((l,k)=>{
-      const yy=y+k*(alt+20);
-      g.fillStyle='rgba(255,255,255,.06)';g.strokeStyle=verde+'88';g.lineWidth=3;
-      if(g.roundRect){g.beginPath();g.roundRect(x0,yy,lw,alt,24);g.fill();g.stroke()}else{g.fillRect(x0,yy,lw,alt);g.strokeRect(x0,yy,lw,alt)}
-      g.textAlign='left';g.fillStyle=texto;g.font=F(700,Math.round(alt*.32));g.fillText(l.faixa,x0+44,yy+alt/2+alt*.11);
-      g.textAlign='right';g.fillStyle=verde;g.font=F(900,Math.round(alt*.5));g.fillText(l.pct+' OFF',x0+lw-44,yy+alt/2+alt*.17);
-      g.textAlign='center';
-    });
+    // escada: quanto maior a faixa, maior a barra
+    g.fillStyle=verde;g.font=IMG_MO(800,34);imgEspaco(g,5);g.fillText('QUANTO MAIS LEVA, MAIS ECONOMIZA',W/2,y+50);imgEspaco(g,0);
+    const n=Math.max(1,t.linhas.length),gap=n>4?20:40,bw=Math.min(230,(W-140-(n-1)*gap)/n),x0=W/2-(n*bw+(n-1)*gap)/2,chao=H-250,hmax=chao-(y+260);
+    const pf=Math.round(Math.min(120,bw*.5)),ff=Math.round(Math.min(28,bw*.13));
+    t.linhas.forEach((l,k)=>{const h=hmax*(0.45+0.55*k/(n-1||1)),bx=x0+k*(bw+gap),gr=g.createLinearGradient(0,chao-h,0,chao);
+      gr.addColorStop(0,imgRgba(verde,.95));gr.addColorStop(1,imgRgba(verde,.15));g.save();g.shadowColor=verde;g.shadowBlur=k===n-1?50:20;g.fillStyle=gr;imgRet(g,bx,chao-h,bw,h,[22,22,0,0]);g.fill();g.restore();
+      g.fillStyle='#fff';g.font=IMG_AN(pf);g.fillText(l.pct,bx+bw/2,chao-h-24);g.fillStyle=escuro;g.font=IMG_AN(Math.round(pf/3));g.fillText('OFF',bx+bw/2,chao-h+pf/2);
+      g.fillStyle='#fff';g.font=IMG_MO(700,ff);g.fillText(l.faixa,bx+bw/2,chao+42)});
+    if(!t.linhas.length){g.fillStyle='#9CA3AF';g.font=IMG_MO(600,32);g.fillText('Sem faixas cadastradas.',W/2,y+300)}
   }
-  g.fillStyle=muted;g.font=F(600,30);g.fillText('Válido no balcão da '+nomeLojaAtual()+(t.nome?' · apresente esta parceria':''),W/2,H-90);
+  imgRodape(x,t.nome?'ENTREGAS DE PACOTE SEM DESLOCAMENTO':'VÁLIDO NO BALCÃO DA '+(nomeLojaAtual()||'').toUpperCase());
   return c;
 }
 let _imgDesconto=null;   // última imagem gerada (parceria ou cardápio): Baixar e Copiar usam esta
@@ -3527,46 +3555,54 @@ async function copiarImagemDesconto(){
 /* ---- Imagem do cardápio (🖼️ em Configurações › Catálogo PDV): card 1080×1350 com os produtos ativos e o preço ---- */
 const FRASES_CARDAPIO=['O melhor da cidade está aqui.','Qualidade que você sente na primeira.','Seleção premium, preço justo.','Seu próximo favorito está aqui.','Chegou, escolheu, levou.'];
 const precoCurto=v=>'$'+Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2});
+// produto de maior preço = destaque da casa (empate: o primeiro na ordem do Catálogo)
+function destaqueCardapio(prods){return prods.reduce((a,p,i)=>Number(p.preco)>Number(prods[a].preco)?i:a,0)}
 async function desenharImagemCardapio(frase){
-  const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
-  const css=getComputedStyle(document.documentElement),cor=(v,d)=>(css.getPropertyValue(v)||'').trim()||d;
-  const verde=cor('--green','#00CC52'),fundo=cor('--bg','#0D0D11'),texto='#F3F4F6',muted='#9CA3AF';
-  try{await Promise.all(['900 64px Inter','700 30px Inter','600 28px Inter'].map(f=>document.fonts.load(f)))}catch(e){}
-  const F=(peso,px)=>`${peso} ${px}px Inter, Arial, sans-serif`;
-  g.fillStyle=fundo;g.fillRect(0,0,W,H);
-  const rg=g.createRadialGradient(W/2,90,40,W/2,90,900);rg.addColorStop(0,verde+'55');rg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=rg;g.fillRect(0,0,W,H);
-  g.strokeStyle=verde;g.lineWidth=6;g.strokeRect(36,36,W-72,H-72);
-  g.textAlign='center';
+  const x=imgCtx(),{c,g,W,H,verde,escuro}=x;await carregarFontesImagem();
   const prods=prodAtivos();
   const [logo,...fotos]=await Promise.all([carregarImagemCors(db.identidade_visual&&db.identidade_visual.logotipo),...prods.map(p=>carregarImagemCors(imgSrc(p.imagem)))]);
-  let y=76;
-  if(logo){const t=140,r=Math.min(t/logo.width,t/logo.height);g.drawImage(logo,W/2-logo.width*r/2,y,logo.width*r,logo.height*r);y+=t+14}else{g.font=F(400,110);g.fillText('🌿',W/2,y+110);y+=140}
-  g.fillStyle=texto;g.font=F(900,44);g.fillText(nomeLojaAtual().toUpperCase(),W/2,y+36);y+=66;
-  // frase de efeito: até 2 linhas, a fonte diminui até caber
-  const quebrar=(txt,max)=>{const ps=String(txt||'').split(' '),out=[];let l='';ps.forEach(w=>{const tl=l?l+' '+w:w;if(g.measureText(tl).width>max&&l){out.push(l);l=w}else l=tl});if(l)out.push(l);return out};
-  let px=66,linhas=[];
-  // prefere uma linha (até 48 px); se não couber, até 2 linhas
-  if(String(frase||'').trim())do{g.font=F(900,px);linhas=quebrar(frase.trim(),W-180);px-=4}while(((px>=48&&linhas.length>1)||linhas.length>2||linhas.some(l=>g.measureText(l).width>W-180))&&px>34);
-  g.fillStyle=verde;linhas.forEach(l=>{y+=px+10;g.fillText(l,W/2,y)});y+=linhas.length?44:10;
-  g.fillStyle=texto;g.font=F(700,26);if('letterSpacing' in g)g.letterSpacing='10px';g.fillText('CARDÁPIO',W/2,y);if('letterSpacing' in g)g.letterSpacing='0px';y+=34;
-  // grade dos produtos
-  const topo=y,base=H-140,n=prods.length,cols=n<=1?1:n<=4?2:3,lin=Math.max(1,Math.ceil(n/cols)),gap=28;
-  const cw=Math.min(380,(W-160-(cols-1)*gap)/cols),ch=Math.min(cw*1.32,(base-topo-(lin-1)*gap)/lin);
-  if(!n){g.fillStyle=muted;g.font=F(600,32);g.fillText('Nenhum produto ativo no momento.',W/2,topo+80)}
-  prods.forEach((p,k)=>{
-    const lr=Math.floor(k/cols),naLinha=lr===lin-1?n-lr*cols:cols;
-    const x=W/2-(naLinha*cw+(naLinha-1)*gap)/2+(k%cols)*(cw+gap),yy=topo+lr*(ch+gap);
-    g.fillStyle='rgba(255,255,255,.05)';g.strokeStyle=verde+'66';g.lineWidth=3;
-    if(g.roundRect){g.beginPath();g.roundRect(x,yy,cw,ch,24);g.fill();g.stroke()}else{g.fillRect(x,yy,cw,ch);g.strokeRect(x,yy,cw,ch)}
-    const pf=Math.round(Math.min(48,cw*.13)),nf0=Math.round(Math.min(34,cw*.09));
-    const lado=Math.min(cw-40,ch-(18+12+nf0+10+pf+20)),fx=x+(cw-lado)/2,fy=yy+18,foto=fotos[k];
-    if(foto){const r=Math.max(lado/foto.width,lado/foto.height),sw=lado/r,sh=lado/r;g.save();if(g.roundRect){g.beginPath();g.roundRect(fx,fy,lado,lado,16);g.clip()}g.drawImage(foto,(foto.width-sw)/2,(foto.height-sh)/2,sw,sh,fx,fy,lado,lado);g.restore()}
-    else{g.fillStyle='rgba(255,255,255,.06)';g.fillRect(fx,fy,lado,lado);g.font=F(400,lado*.4);g.fillStyle=texto;g.fillText('🌿',x+cw/2,fy+lado*.65)}
-    let fn=nf0;g.font=F(700,fn);while(g.measureText(p.nome).width>cw-30&&fn>16){fn-=2;g.font=F(700,fn)}
-    const yn=fy+lado+12+nf0;g.fillStyle=texto;g.fillText(p.nome,x+cw/2,yn);
-    g.fillStyle=verde;g.font=F(900,pf);g.fillText(precoCurto(p.preco),x+cw/2,yn+10+pf);
-  });
-  g.fillStyle=muted;g.font=F(600,30);g.fillText('Peça já no balcão da '+nomeLojaAtual(),W/2,H-90);
+  await imgFundo(x,logo);g.textAlign='center';
+  let y=222;const fr=String(frase||'').trim().toUpperCase();
+  if(fr){const{px,ln}=imgCaber(g,fr,IMG_AN,W-140,2,prods.length>5?92:110,56);
+    ln.forEach((l,i)=>{y+=px*.98;g.save();g.font=IMG_AN(px);if(i===ln.length-1){g.fillStyle=verde;g.shadowColor=verde;g.shadowBlur=30}else g.fillStyle='#fff';g.fillText(l,W/2,y);g.restore()})}
+  imgPilula(x,'CARDÁPIO',y+26);
+  const topo=y+110,base=H-170,n=prods.length,cores=fotos.map(f=>f?imgCorFoto(f,verde):verde);
+  const nomeCabe=(txt,px0,max)=>{let f=px0;g.font=IMG_AN(f);while(g.measureText(txt).width>max&&f>20){f-=2;g.font=IMG_AN(f)}return f};
+  const selo=(cx,yy)=>{g.fillStyle=verde;g.font=IMG_MO(800,22);imgEspaco(g,6);g.textAlign='center';g.fillText('★ DESTAQUE DA CASA ★',cx,yy);imgEspaco(g,0)};
+  if(!n){g.fillStyle='#9CA3AF';g.font=IMG_MO(600,32);g.fillText('Nenhum produto ativo no momento.',W/2,topo+120)}
+  else{
+    const hi=destaqueCardapio(prods),hp=prods[hi],hc=cores[hi],outros=prods.map((p,i)=>i).filter(i=>i!==hi),m=outros.length;
+    // cartão comum: foto com brilho, nome e etiqueta de preço
+    const comum=(i,cx,yy,l,nf,pf)=>{imgBrilho(g,cx,yy+l/2,l*.75,cores[i],.55);imgFoto(g,fotos[i],cx-l/2,yy,l);
+      const nm=prods[i].nome.toUpperCase();g.fillStyle='#fff';g.textAlign='center';g.font=IMG_AN(nomeCabe(nm,nf,l+60));g.fillText(nm,cx,yy+l+nf+8);
+      imgEtiqueta(g,precoCurto(prods[i].preco),cx,yy+l+nf+18+pf*.6,pf,cores[i],escuro,-.06)};
+    if(m===0){const l=Math.min(520,base-topo-170),cx=W/2;
+      imgBrilho(g,cx,topo+l/2,l*.75,hc,.6);imgFoto(g,fotos[hi],cx-l/2,topo,l);imgEtiqueta(g,precoCurto(hp.preco),cx+l/2-20,topo+40,80,hc,escuro,-.08);
+      const nm=hp.nome.toUpperCase();g.fillStyle='#fff';g.textAlign='center';g.font=IMG_AN(nomeCabe(nm,64,W-200));g.fillText(nm,cx,topo+l+66);selo(cx,topo+l+110)}
+    else if(m<=4){
+      // destaque grande à esquerda; os outros numa coluna à direita
+      const l=Math.min(470,base-topo-140),hx=40+(520-l)/2,hcx=300;
+      imgBrilho(g,hcx,topo+l/2,l*.75,hc,.6);imgFoto(g,fotos[hi],hx,topo,l);
+      imgEtiqueta(g,precoCurto(hp.preco),hx+l-70,topo+30,78,hc,escuro,-.08);
+      const nm=hp.nome.toUpperCase();g.fillStyle='#fff';g.textAlign='center';g.font=IMG_AN(nomeCabe(nm,60,500));g.fillText(nm,hcx,topo+l+62);selo(hcx,topo+l+104);
+      const x0=600,rh=Math.min(250,(base-topo)/m),t0=topo+((base-topo)-rh*m)/2;
+      outros.forEach((i,k)=>{const yy=t0+k*rh,d=Math.min(rh-30,190),cy=yy+rh/2,cor=cores[i];
+        imgBrilho(g,x0+d/2,cy,d*.75,cor,.5);imgFoto(g,fotos[i],x0,cy-d/2,d);
+        const nm=prods[i].nome.toUpperCase(),tx=x0+d+24,mx=W-50-tx;g.textAlign='left';g.fillStyle='#fff';g.font=IMG_AN(nomeCabe(nm,40,mx));g.fillText(nm,tx,cy-8);
+        g.font=IMG_AN(50);const pw=g.measureText(precoCurto(prods[i].preco)).width+35;imgEtiqueta(g,precoCurto(prods[i].preco),tx+pw/2+4,cy+42,50,cor,escuro,-.06)});
+    }else{
+      // muitos produtos: mosaico; o destaque ocupa 2×2 e os outros preenchem o resto, linha a linha
+      const cols=m<=5?3:4,lin=Math.ceil((4+m)/cols),cw=(W-100)/cols,ch=(base-topo)/lin,x0=50;
+      const L=Math.min(2*cw-40,2*ch-120),hcx=x0+cw;
+      imgBrilho(g,hcx,topo+L/2,L*.75,hc,.6);imgFoto(g,fotos[hi],hcx-L/2,topo,L);
+      imgEtiqueta(g,precoCurto(hp.preco),hcx+L/2-30,topo+36,Math.round(Math.min(78,L*.18)),hc,escuro,-.08);
+      const nm=hp.nome.toUpperCase();g.fillStyle='#fff';g.textAlign='center';g.font=IMG_AN(nomeCabe(nm,56,2*cw-30));g.fillText(nm,hcx,topo+L+56);selo(hcx,topo+L+94);
+      const livres=[];for(let r=0;r<lin;r++)for(let k=0;k<cols;k++)if(!(r<2&&k<2))livres.push([r,k]);
+      const nf=Math.round(Math.min(32,cw*.11)),pf=Math.round(Math.min(44,cw*.15)),l=Math.max(40,Math.min(cw-30,ch-nf-pf*1.2-34));
+      outros.forEach((i,n2)=>{const[r,k]=livres[n2];comum(i,x0+k*cw+cw/2,topo+r*ch+(ch-(l+nf+18+pf*1.2))/2,l,nf,pf)});
+    }
+  }
+  imgRodape(x,'PEÇA JÁ NO BALCÃO DA '+(nomeLojaAtual()||'').toUpperCase());
   return c;
 }
 let _cardFrase=FRASES_CARDAPIO[0],_cardTimer=null;
