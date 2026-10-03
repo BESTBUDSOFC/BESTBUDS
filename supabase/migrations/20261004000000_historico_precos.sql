@@ -2,7 +2,7 @@
 -- O banco grava uma linha a cada produto criado e a cada mudança de preço (trigger), com o preço anterior.
 -- A imagem "Novo preço" lê daqui o preço antigo. Ninguém escreve direto na tabela: só a trigger.
 -- Sem comando de remoção (a ferramenta do Supabase trava nele): a política só é criada se ainda não existe.
--- Aplicada no teste (btsnlkktyfnrtphgpjbe) em 2026-10-03; na produção só depois do "aprovado".
+-- Aplicada no teste (btsnlkktyfnrtphgpjbe) e, com o "aprovado" do dono, na produção (zwnawcnurwbowtdkholm) em 2026-10-03.
 
 create table if not exists public.produtos_precos (
   id uuid primary key default gen_random_uuid(),
