@@ -621,7 +621,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.30.2';
+const VERSAO='v4.30.3';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -3565,8 +3565,8 @@ async function desenharImagemDesconto(p,tx){
   imgRodape(x,imgTxt(v.rodape));
   return c;
 }
-/* ---- Janela das imagens (parceria, oferta, cardápio, novo preço): todos os textos editáveis, prévia e Baixar (JPG até 512 KB) ---- */
-let _imgDesconto=null;   // última imagem gerada: o Baixar usa esta
+/* ---- Janela das imagens (parceria, oferta, cardápio, novo preço): todos os textos editáveis, prévia, Baixar (JPG) e Copiar (PNG), até 512 KB ---- */
+let _imgDesconto=null;   // última imagem gerada: Baixar e Copiar usam esta
 let _imgM=null,_imgTimer=null;   // janela aberta: {tipo,titulo,campos,v,desenhar,arquivo,registro}
 // textos que a pessoa escreveu ficam lembrados neste aparelho, por tipo de imagem
 function imgTextosSalvos(tipo){try{return JSON.parse(localStorage.getItem('bb_img_'+tipo)||'{}')||{}}catch(e){return{}}}
@@ -3581,6 +3581,7 @@ function abrirModalImagem(m){
       ${c.frases?`<button class="btn btn-ghost btn-sm" title="Sortear outra frase" onclick="imgSortear('${c.id}')">🎲</button>`:''}</div>${c.dica!==undefined?`<div class="muted" style="font-size:12px;margin-top:4px" id="imgd-${c.id}">${c.dica}</div>`:''}</div>`).join('')}${m.extra||''}</div>
     <div id="img-desc-prev" class="muted" style="text-align:center;padding:30px">Gerando…</div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
+    <button class="btn btn-ghost" id="btn-copiar-img" onclick="copiarImagemDesconto()" style="display:none">📋 Copiar</button>
     <button class="btn btn-primary" id="btn-baixar-img" onclick="baixarImagemDesconto()" disabled>⬇ Baixar imagem</button></div>`);
   return imgGerar().then(()=>{if(_imgDesconto&&_imgM===m&&m.registro)reg(...m.registro(m.v))});
 }
@@ -3614,8 +3615,30 @@ async function imgGerar(){
   prev.innerHTML=`<img src="${url}" alt="${esc(m.titulo)}" style="width:100%;max-width:min(300px,42vh);border-radius:12px;border:1px solid var(--border)">
     <div class="muted" id="img-tam" style="font-size:12px;margin-top:6px">JPG · ${r.w}×${r.h} · ${Math.round(r.blob.size/1024)} KB (máx. 512 KB)</div>`;prev.style.padding='0';
   document.getElementById('btn-baixar-img').disabled=false;
+  if(navigator.clipboard&&window.ClipboardItem)document.getElementById('btn-copiar-img').style.display='';
 }
 function baixarImagemDesconto(){if(!_imgDesconto)return;const a=document.createElement('a');a.href=_imgDesconto.url;a.download=_imgDesconto.arquivo;document.body.appendChild(a);a.click();a.remove()}
+/* Copiar (pedido do dono, v4.30.3): a área de transferência só aceita PNG. Para respeitar os 512 KB, copia em tamanho
+   cheio se couber; senão reduz a imagem aos poucos até o PNG caber. */
+async function imgPngAteLimite(c){
+  const png=cv=>new Promise(r=>{try{cv.toBlob(b=>r(b),'image/png')}catch(e){r(null)}});
+  // o tamanho do PNG cai com a área: a próxima escala sai do tamanho que deu (com folga de 5%)
+  let escala=1;
+  for(let i=0;i<8&&escala>=.1;i++){
+    let cv=c;if(escala<1){cv=document.createElement('canvas');cv.width=Math.round(c.width*escala);cv.height=Math.round(c.height*escala);cv.getContext('2d').drawImage(c,0,0,cv.width,cv.height)}
+    const b=await png(cv);if(!b)return null;if(b.size<=IMG_LIMITE_BYTES)return{blob:b,w:cv.width,h:cv.height};
+    escala*=Math.min(.92,Math.sqrt(IMG_LIMITE_BYTES/b.size)*.95);
+  }
+  return null;
+}
+async function copiarImagemDesconto(){
+  if(!_imgDesconto)return;const c=_imgDesconto.canvas;let info=null;
+  // a promessa vai direto para o ClipboardItem: o Safari exige que a cópia comece no próprio toque
+  const prom=imgPngAteLimite(c).then(r=>{if(!r)throw new Error('sem png');info=r;return r.blob});
+  try{await navigator.clipboard.write([new ClipboardItem({'image/png':prom})]);
+    toast('✅ Imagem copiada ('+info.w+'×'+info.h+' · '+Math.round(info.blob.size/1024)+' KB). É só colar (Ctrl+V).')}
+  catch(e){toast('⚠️ Não deu para copiar neste navegador. Use ⬇ Baixar imagem.')}
+}
 function modalImagemDesconto(id){
   const p=db.parcerias.find(x=>x.id===id);if(!p)return;const t=imagemDescontoTextos(p),of=!t.nome,d=textosPadraoDesconto(p);
   return abrirModalImagem({tipo:(of?'oferta_':'parceria_')+t.tipo,titulo:of?'Imagem da oferta':'Imagem da parceria',v:{},
