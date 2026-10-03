@@ -498,6 +498,14 @@ body.video-aberto .ajuda-txt{display:none!important}
 .pn-eixo{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
 .pn-tip{position:fixed;display:none;flex-direction:column;gap:2px;pointer-events:none;z-index:300;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;box-shadow:0 8px 24px rgba(0,0,0,.5);font-size:12px}
 .pn-tip b{font-size:15px}.pn-tip span{color:var(--muted)}
+.pn-tip .pn-tip-v{color:var(--text);display:flex;align-items:center;gap:6px}.pn-tip .pn-tip-v i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.pn-vsel{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-2px 0 10px}
+.pn-vsel button{font:inherit;font-size:12px;color:var(--text);background:var(--input-bg);border:1px solid var(--border);border-radius:999px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.pn-vsel button i{width:9px;height:9px;border-radius:50%;background:var(--muted);opacity:.35}
+.pn-vsel button.ativo{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}.pn-vsel button.ativo i{background:var(--c);opacity:1}
+.pn-linha{fill:none;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.pn-rank-tog{display:flex;gap:6px;margin:-2px 0 10px;flex-wrap:wrap;align-items:center}
+.pn-medalha{font-size:14px;margin-right:2px}
 .pn-tabela-det{margin-top:8px}.pn-tabela-det summary{cursor:pointer;color:var(--muted);font-size:12px}
 .pn-duas{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .pn-duas>.pn-card{min-width:0}
@@ -621,7 +629,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.30.3';
+const VERSAO='v4.31.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -1106,6 +1114,9 @@ function renderPDV(c){
    Período sempre em dias de Brasília. Vendas contam pela data da venda; o caixa, pela data em que o
    dinheiro entrou (venda guardada: guardada_em; compra: data_local; ajuste: data). */
 let painelPer={preset:'7d',de:'',ate:''};
+let painelVend=new Set(),painelRank='pont',_pnVendChaves=[];   // vendedores com linha no gráfico; ranking por pontuação ou receita
+// cores das linhas dos vendedores (as barras são verdes): distintas entre si e legíveis no fundo escuro
+const PN_CORES=['#F5A524','#4EA8FF','#FF6B9A','#B48CFF','#3DD9C1','#FF8A4C','#E8E8E8','#C7E05A'];
 let _pnReg={em:0,linhas:[],erro:null,carregando:false,page:1,size:10,total:0};
 const PN_PRESETS=[['hoje','Hoje'],['7d','7 dias'],['30d','30 dias'],['mes','Este mês'],['tudo','Tudo'],['pers','Personalizado']];
 /* Aritmética de calendário em 'AAAA-MM-DD' (meio-dia UTC, sem instante real: não sofre com fuso) */
@@ -1153,11 +1164,19 @@ function pnDesenharColunas(){
     s+=`<rect class="pn-hit" x="${pl+slot*i}" y="${pt}" width="${slot}" height="${ih}" fill="transparent" tabindex="0" data-i="${i}" aria-label="${esc(b.rot)}: ${esc(fmt(b.valor))}"/>`;
     if(i%passo===0)s+=`<text x="${cx}" y="${H-8}" text-anchor="middle" class="pn-eixo">${esc(b.rot)}</text>`;
   });
+  // linha de cada vendedor escolhido: quanto ele trouxe de receita da loja em cada dia (mesma escala das barras)
+  (box._dados.series||[]).forEach(se=>{
+    const pts=baldes.map((b,i)=>[pl+slot*i+slot/2,y(se.vals[i]||0)]);
+    s+=`<path class="pn-linha" stroke="${se.cor}" d="${pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join('')}"/>`;
+    pts.forEach((p,i)=>{if(se.vals[i])s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="${se.cor}" stroke="var(--surface)" stroke-width="1.5"/>`});
+  });
   s+=`<line x1="${pl}" x2="${W-pr}" y1="${pt+ih+.5}" y2="${pt+ih+.5}" stroke="var(--muted)" stroke-width="1" opacity=".5"/></svg>`;
   box.innerHTML=s;
   const tip=document.getElementById('pn-tip');
   const mostra=(el,ev)=>{const b=baldes[+el.dataset.i];if(!b||!tip)return;
     tip.replaceChildren();const v=document.createElement('b');v.textContent=fmt(b.valor);const l=document.createElement('span');l.textContent=(b.de===b.ate?dataBRdia(b.de):dataBRdia(b.de)+' a '+dataBRdia(b.ate))+' · '+b.n+' venda(s)';tip.append(v,l);
+    (box._dados.series||[]).forEach(se=>{const x=se.vals[+el.dataset.i]||0,li=document.createElement('span'),bo=document.createElement('i');li.className='pn-tip-v';bo.style.background=se.cor;
+      li.append(bo,document.createTextNode(se.nome+': '+fmt(x)+' · '+(b.valor>0?Math.round(x/b.valor*1000)/10:0)+'% do '+box._dados.tipo));tip.append(li)});
     const r=el.getBoundingClientRect();tip.style.display='flex';tip.style.left=Math.min(window.innerWidth-tip.offsetWidth-8,Math.max(8,r.left+r.width/2-tip.offsetWidth/2))+'px';tip.style.top=Math.max(8,r.top+(y(b.valor)-pt)-tip.offsetHeight-8)+'px';
     box.querySelectorAll('.pn-hit').forEach(h=>h.classList.toggle('ativo',h===el))};
   box.querySelectorAll('.pn-hit').forEach(h=>{h.addEventListener('pointerenter',e=>mostra(h,e));h.addEventListener('focus',e=>mostra(h,e))});
@@ -1171,15 +1190,26 @@ function pnBarras(linhas,valorFmt){
 }
 function pnVendedores(per){
   const m={};
-  const pessoa=(id,nome)=>{const k=id||nome||'—';return m[k]=m[k]||{nome:nome||'—',n:0,total:0,loja:0,pendente:0,repasse:0,desconto:0,subtotal:0,aux:0}};
+  const pessoa=(id,nome)=>{const k=id||nome||'—';return m[k]=m[k]||{k,nome:nome||'—',n:0,total:0,loja:0,pendente:0,repasse:0,desconto:0,subtotal:0,aux:0}};
   pnVendasPer(per).forEach(v=>{
     const p=pessoa(v.usuario_id,v.usuario_nome),rp=repasseDaVenda(v);
     p.n++;p.total+=v.total||0;p.subtotal+=v.subtotal||0;p.desconto+=v.desconto||0;p.repasse+=rp.principal;
     if(v.status==='ativa')p.loja+=v.receita_loja||0;else p.pendente+=v.receita_loja||0;
     rp.aux.forEach(a=>{const q=pessoa(a.usuario_id,a.nome);q.repasse+=a.valor;q.aux++});
   });
-  return Object.values(m).sort((a,b)=>b.loja-a.loja||b.total-a.total);
+  // pontuação (pedido do dono, v4.31): nº de vendas × total vendido, para quem vende sempre não perder para uma venda grande de sorte.
+  // Mostrada de 0 a 100 em relação ao primeiro (a ordem é a mesma do produto).
+  const lista=Object.values(m);lista.forEach(p=>p.pont=p.n*p.total);
+  const top=Math.max(0,...lista.map(p=>p.pont));lista.forEach(p=>p.indice=top>0?Math.round(p.pont/top*1000)/10:0);
+  return lista.sort((a,b)=>b.loja-a.loja||b.total-a.total);
 }
+const pnChaveVenda=v=>v.usuario_id||v.usuario_nome||'—';
+function pnSelVend(i){const k=_pnVendChaves[i];if(k===undefined)return;painelVend.has(k)?painelVend.delete(k):painelVend.add(k);render()}
+function pnRanking(modo){painelRank=modo;render()}
+/* Datas do Personalizado: aplicar a cada dígito redesenhava a tela e tirava o foco do campo (só entrava 1 dígito).
+   Agora aplica ao sair dos campos ou com Enter; no celular (seletor nativo) aplica ao escolher. */
+function pnDatasSair(e){const g=document.getElementById('pn-datas');if(g&&e&&e.relatedTarget&&g.contains(e.relatedTarget))return;pnDatas()}
+function pnDatasMudou(){if(matchMedia('(pointer:coarse)').matches)pnDatas()}
 function pnProdutos(per){
   const m={};
   pnVendasPer(per).forEach(v=>(v.itens||[]).forEach(i=>{const k=i.produto_id||i.nome;const p=m[k]=m[k]||{nome:i.nome||'?',qtd:0,valor:0};p.qtd+=Number(i.qtd)||0;p.valor+=(Number(i.qtd)||0)*(Number(i.preco_unit)||0)}));
@@ -1209,7 +1239,8 @@ function pnHtmlAtividade(){
   return lista+`<div class="pn-pag"><span>${_pnReg.total?`${ini+1}–${Math.min(_pnReg.total,ini+_pnReg.linhas.length)} de ${_pnReg.total}`:'0 registros'}</span><select style="width:auto;padding:5px" onchange="pnRegPagina(0,+this.value)">${[10,20,50,100].map(n=>`<option ${_pnReg.size===n?'selected':''}>${n}</option>`).join('')}</select><button class="btn btn-ghost btn-sm" ${_pnReg.page<=1?'disabled':''} onclick="pnRegPagina(-1)">Anterior</button><span>p. ${_pnReg.page}/${pags}</span><button class="btn btn-ghost btn-sm" ${_pnReg.page>=pags?'disabled':''} onclick="pnRegPagina(1)">Próxima</button></div>`;
 }
 function pnAlternar(preset){painelPer.preset=preset;if(preset==='pers'&&!painelPer.de){const p=pnPeriodo();painelPer.de=p.de;painelPer.ate=p.ate}render()}
-function pnDatas(){painelPer.de=document.getElementById('pn-de').value;painelPer.ate=document.getElementById('pn-ate').value;render()}
+function pnDatas(){const de=document.getElementById('pn-de'),ate=document.getElementById('pn-ate');if(!de||!ate)return;
+  if(de.value===painelPer.de&&ate.value===painelPer.ate)return;painelPer.de=de.value;painelPer.ate=ate.value;render()}
 function renderPainel(c){
   if(!isGerente()){moduloAtual='pdv';return renderPDV(c)}
   const per=pnPeriodo();
@@ -1228,7 +1259,14 @@ function renderPainel(c){
   const txtPer=per.de===per.ate?dataBRdia(per.de):dataBRdia(per.de)+' a '+dataBRdia(per.ate);
   const baldes=pnBaldes(per);
   const vendasPer=pnVendasPer(per);
-  baldes.b.forEach(b=>{const vv=vendasPer.filter(v=>{const d=diaBR(v.data);return d>=b.de&&d<=b.ate});b.valor=vv.reduce((s,v)=>s+(v.receita_loja||0),0);b.n=vv.length});
+  baldes.b.forEach(b=>{const vv=vendasPer.filter(v=>{const d=diaBR(v.data);return d>=b.de&&d<=b.ate});b.valor=vv.reduce((s,v)=>s+(v.receita_loja||0),0);b.n=vv.length;b.vendas=vv});
+  // vendedores para comparar no gráfico (quem vendeu no período); a cor fica presa à posição na lista
+  const vendComVenda=vendedores.filter(p=>p.n).sort((a,b)=>b.loja-a.loja||a.nome.localeCompare(b.nome));
+  _pnVendChaves=vendComVenda.map(p=>p.k);
+  const series=vendComVenda.map((p,i)=>({p,cor:PN_CORES[i%PN_CORES.length]})).filter(x=>painelVend.has(x.p.k))
+    .map(({p,cor})=>({nome:p.nome,cor,vals:baldes.b.map(b=>b.vendas.filter(v=>pnChaveVenda(v)===p.k).reduce((s,v)=>s+(v.receita_loja||0),0))}));
+  const rankLista=painelRank==='pont'?vendedores.filter(p=>p.n).slice().sort((a,b)=>b.pont-a.pont||b.loja-a.loja):vendedores.filter(p=>p.n);
+  const medalha=i=>['🥇','🥈','🥉'][i]?`<span class="pn-medalha">${['🥇','🥈','🥉'][i]}</span>`:'';
   // alertas: pedidos de cancelamento, pedidos de senha, dinheiro na mão dos vendedores e estoque mínimo
   const alertas=[];
   if(pedidosCanc.length)alertas.push(`<button class="pn-alerta r" onclick="go('pdv')"><b>${pedidosCanc.length}</b> pedido(s) de cancelamento esperando resposta</button>`);
@@ -1242,21 +1280,26 @@ function renderPainel(c){
 
   <div class="pn-filtros">
     ${PN_PRESETS.map(([k,r])=>`<button class="btn btn-sm ${painelPer.preset===k?'btn-primary':'btn-ghost'}" onclick="pnAlternar('${k}')">${r}</button>`).join('')}
-    ${painelPer.preset==='pers'?`<input type="date" id="pn-de" value="${per.de}" onchange="pnDatas()"><span class="muted">até</span><input type="date" id="pn-ate" value="${per.ate}" onchange="pnDatas()">`:''}
+    ${painelPer.preset==='pers'?`<span id="pn-datas" style="display:contents" onfocusout="pnDatasSair(event)" onkeydown="if(event.key==='Enter')pnDatas()"><input type="date" id="pn-de" value="${per.de}" onchange="pnDatasMudou()"><span class="muted">até</span><input type="date" id="pn-ate" value="${per.ate}" onchange="pnDatasMudou()"></span>`:''}
     <span class="pn-per">${txtPer}</span>
   </div>
   <div class="card pn-card">
     <div class="pn-card-tit">📈 Receita da loja por ${baldes.tipo}</div>
-    ${vendasPer.length?`<div id="pn-colunas" class="pn-colunas"></div>
-    <details class="pn-tabela-det"><summary>Ver em tabela</summary><div class="table-wrap"><table><tr><th>${baldes.tipo==='dia'?'Dia':'Início'}</th><th>Vendas</th><th>Receita da loja</th></tr>${baldes.b.filter(b=>b.n).map(b=>`<tr><td>${dataBRdia(b.de)}</td><td>${b.n}</td><td class="money">${fmt(b.valor)}</td></tr>`).join('')}</table></div></details>`:`<div class="empty">Nenhuma venda no período.</div>`}
+    ${vendasPer.length?`<div class="pn-vsel"><span class="muted" style="font-size:12px">Comparar vendedor:</span>${vendComVenda.map((p,i)=>`<button type="button" class="${painelVend.has(p.k)?'ativo':''}" style="--c:${PN_CORES[i%PN_CORES.length]}" title="${painelVend.has(p.k)?'Tirar':'Mostrar'} a linha de ${esc(p.nome)}" onclick="pnSelVend(${i})"><i></i>${esc(p.nome)}</button>`).join('')}</div>
+    <div id="pn-colunas" class="pn-colunas"></div>
+    <details class="pn-tabela-det"><summary>Ver em tabela</summary><div class="table-wrap"><table><tr><th>${baldes.tipo==='dia'?'Dia':'Início'}</th><th>Vendas</th><th>Receita da loja</th>${series.map(se=>`<th style="color:${se.cor}">${esc(se.nome)}</th>`).join('')}</tr>${baldes.b.map((b,i)=>b.n?`<tr><td>${dataBRdia(b.de)}</td><td>${b.n}</td><td class="money">${fmt(b.valor)}</td>${series.map(se=>`<td>${fmt(se.vals[i])} <span class="muted">(${b.valor>0?Math.round(se.vals[i]/b.valor*1000)/10:0}%)</span></td>`).join('')}</tr>`:'').join('')}</table></div></details>`:`<div class="empty">Nenhuma venda no período.</div>`}
   </div>
 
   <div class="card pn-card">
       <div class="pn-card-tit">🏆 Vendedores</div>
-      ${vendedores.length?pnBarras(vendedores.filter(p=>p.n).map(p=>({nome:p.nome,valor:p.loja})),fmt)+`
+      ${vendedores.length?`<div class="pn-rank-tog"><span class="muted" style="font-size:12px">Ranking por:</span>
+        <button class="btn btn-sm ${painelRank==='pont'?'btn-primary':'btn-ghost'}" onclick="pnRanking('pont')" title="Nº de vendas × total vendido: quem vende sempre não perde para uma venda grande de sorte">🏆 Pontuação</button>
+        <button class="btn btn-sm ${painelRank==='loja'?'btn-primary':'btn-ghost'}" onclick="pnRanking('loja')">Receita da loja</button></div>
+      ${painelRank==='pont'?`<p class="muted" style="font-size:12px;margin:-4px 0 10px">Pontuação = nº de vendas × total vendido, de 0 a 100 (100 = o primeiro). Vale mais vender sempre do que uma venda grande de sorte.</p>`:''}`
+      +pnBarras(rankLista.map(p=>({nome:p.nome,valor:painelRank==='pont'?p.indice:p.loja})),painelRank==='pont'?(n=>n.toLocaleString('pt-BR',{maximumFractionDigits:1})+' pts'):fmt)+`
       <div class="table-wrap pn-tab"><table>
-        <tr><th>Vendedor</th><th>Vendas</th><th>Total vendido</th><th>Receita loja</th><th>Não guardado</th><th>Repasse recebido</th><th>Desconto médio</th></tr>
-        ${vendedores.map(p=>`<tr><td>${esc(p.nome)}${p.aux?` <span class="muted" style="font-size:11px">· ${p.aux} auxílio(s)</span>`:''}</td><td>${p.n}</td><td class="money money-total">${fmt(p.total)}</td><td class="money">${fmt(p.loja)}</td><td>${p.pendente?`<span style="color:var(--warning-light)">${fmt(p.pendente)}</span>`:'—'}</td><td style="color:var(--purple-light)">${fmt(p.repasse)}</td><td>${p.subtotal?Math.round(p.desconto/p.subtotal*1000)/10+'%':'—'}</td></tr>`).join('')}
+        <tr><th>Vendedor</th><th title="Nº de vendas × total vendido (0 a 100)">Pontuação</th><th>Vendas</th><th>Total vendido</th><th>Ticket médio</th><th>Receita loja</th><th>Não guardado</th><th>Repasse recebido</th><th>Desconto médio</th></tr>
+        ${[...rankLista,...vendedores.filter(p=>!p.n)].map((p,i)=>`<tr><td>${p.n&&painelRank==='pont'?medalha(i):''}${esc(p.nome)}${p.aux?` <span class="muted" style="font-size:11px">· ${p.aux} auxílio(s)</span>`:''}</td><td>${p.n?`<b>${p.indice.toLocaleString('pt-BR',{maximumFractionDigits:1})}</b>`:'—'}</td><td>${p.n}</td><td class="money money-total">${fmt(p.total)}</td><td>${p.n?fmt(p.total/p.n):'—'}</td><td class="money">${fmt(p.loja)}</td><td>${p.pendente?`<span style="color:var(--warning-light)">${fmt(p.pendente)}</span>`:'—'}</td><td style="color:var(--purple-light)">${fmt(p.repasse)}</td><td>${p.subtotal?Math.round(p.desconto/p.subtotal*1000)/10+'%':'—'}</td></tr>`).join('')}
       </table></div>`:`<div class="empty">Nenhuma venda no período.</div>`}
   </div>
   <div class="pn-duas">
@@ -1282,7 +1325,7 @@ function renderPainel(c){
     <div id="pn-atividade">${pnHtmlAtividade()}</div>
   </div>
   <div id="pn-tip" class="pn-tip" role="tooltip"></div>`;
-  const box=document.getElementById('pn-colunas');if(box){box._dados={baldes:baldes.b,tipo:baldes.tipo};pnDesenharColunas()}
+  const box=document.getElementById('pn-colunas');if(box){box._dados={baldes:baldes.b,tipo:baldes.tipo,series};pnDesenharColunas()}
   pnCarregarRegistros(false);
 }
 let _pnResize=null;

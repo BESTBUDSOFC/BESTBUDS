@@ -49,7 +49,42 @@ const U=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
  ok(txt.includes('Receita da loja por')&&!!(await p.$('#pn-colunas svg')),'mantém o gráfico de receita da loja');
  ok(txt.includes('Vendedores')&&txt.includes('Produtos')&&txt.includes('Avisos')&&txt.includes('Últimas ações'),'mantém vendedores, produtos, avisos e últimas ações');
  const vend=await p.$$eval('.pn-tab table',t=>[...t[0].querySelectorAll('tr')].slice(1).map(r=>[...r.cells].map(c=>c.innerText.trim())));
- ok(vend[0][0].startsWith('Zeca')&&vend[0][3]==='$40,00'&&vend[0][4]==='$20,00','ranking de vendedores: '+vend[0].join(' / '));
+ ok(vend[0][0].includes('Zeca')&&vend[0][5]==='$40,00'&&vend[0][6]==='$20,00','ranking de vendedores: '+vend[0].join(' / '));
+ // v4.31: comparar vendedor no gráfico (linha por cima das barras)
+ ok((await p.$$('.pn-vsel button')).length>=1&&!(await p.$('#pn-colunas .pn-linha')),'botões dos vendedores, sem linha até escolher');
+ await p.click('.pn-vsel button:has-text("Zeca")');await p.waitForTimeout(200);
+ ok((await p.$$('#pn-colunas .pn-linha')).length===1&&(await p.$eval('.pn-vsel button:has-text("Zeca")',e=>e.classList.contains('ativo'))),'clicar no Zeca desenha a linha dele');
+ await p.hover('#pn-colunas .pn-hit >> nth=-1');await p.waitForTimeout(150);
+ const tipV=await p.$eval('#pn-tip',e=>e.innerText.replace(/\s+/g,' '));
+ ok(tipV.includes('Zeca: $60,00')&&tipV.includes('100% do dia'),'dica mostra quanto o Zeca trouxe e o % do dia: '+tipV);
+ ok((await p.$eval('.pn-tabela-det table',e=>e.textContent)).includes('Zeca'),'tabela do gráfico ganha a coluna do vendedor');
+ await p.click('.pn-vsel button:has-text("Zeca")');await p.waitForTimeout(200);
+ ok(!(await p.$('#pn-colunas .pn-linha')),'clicar de novo tira a linha');
+ // v4.31: pontuação = nº de vendas × total vendido (quem vende sempre ganha de uma venda grande de sorte)
+ const rk=await t(`(()=>{const bk=db.vendas;const D=instanteBR(todayISO(),'10:00').toISOString();
+  db.vendas=[...Array.from({length:10},(_,i)=>({id:'r'+i,data:D,status:'ativa',usuario_id:'${U(1)}',usuario_nome:'Zeca',total:100,subtotal:100,desconto:0,cota_funcionario:50,receita_loja:50,itens:[],auxiliares:[]})),
+   {id:'rb',data:D,status:'ativa',usuario_id:'${U(4)}',usuario_nome:'Bruno',total:5000,subtotal:5000,desconto:0,cota_funcionario:2000,receita_loja:3000,itens:[],auxiliares:[]}];
+  const l=pnVendedores(pnPeriodo());db.vendas=bk;return l.map(x=>({n:x.nome,pont:x.pont,ind:x.indice,loja:x.loja}))})()`);
+ const z=rk.find(x=>x.n==='Zeca'),bu=rk.find(x=>x.n==='Bruno');
+ ok(z.pont===10000&&bu.pont===5000&&z.ind===100&&bu.ind===50,'pontuação: 10 vendas de $100 (10.000 → 100) vence 1 venda de $5.000 (5.000 → 50)');
+ await t(`window.__bk=db.vendas;db.vendas=[...Array.from({length:10},(_,i)=>({id:'r'+i,data:instanteBR(todayISO(),'10:00').toISOString(),status:'ativa',usuario_id:'${U(1)}',usuario_nome:'Zeca',total:100,subtotal:100,desconto:0,cota_funcionario:50,receita_loja:50,itens:[],auxiliares:[]})),{id:'rb',data:instanteBR(todayISO(),'10:00').toISOString(),status:'ativa',usuario_id:'${U(4)}',usuario_nome:'Bruno',total:5000,subtotal:5000,desconto:0,cota_funcionario:2000,receita_loja:3000,itens:[],auxiliares:[]}];painelRank='pont';render()`);
+ const ordemP=await p.$$eval('.pn-tab table',t=>[...t[0].querySelectorAll('tr')].slice(1).map(r=>r.cells[0].innerText.trim()));
+ ok(ordemP[0].includes('🥇')&&ordemP[0].includes('Zeca')&&ordemP[1].includes('Bruno'),'ranking por pontuação: Zeca 🥇, Bruno 🥈: '+ordemP.join(' / '));
+ await p.click('.pn-rank-tog button:has-text("Receita da loja")');await p.waitForTimeout(150);
+ const ordemL=await p.$$eval('.pn-tab table',t=>[...t[0].querySelectorAll('tr')].slice(1).map(r=>r.cells[0].innerText.trim()));
+ ok(ordemL[0].includes('Bruno')&&!ordemL[0].includes('🥇'),'ranking por receita da loja: Bruno primeiro: '+ordemL.join(' / '));
+ await t(`db.vendas=window.__bk;painelRank='pont';render()`);
+ // v4.31: datas do Personalizado aceitam a data inteira (antes redesenhava a cada dígito e saía do campo)
+ await p.click('.pn-filtros button:has-text("Personalizado")');await p.waitForTimeout(150);
+ await p.click('#pn-de',{position:{x:12,y:12}});await p.keyboard.type('01');await p.waitForTimeout(150);
+ ok(await t(`document.activeElement&&document.activeElement.id==='pn-de'`),'digitar na data não tira o foco do campo');
+ await p.keyboard.type('152026');   // navegador de teste em inglês: mês/dia/anoawait p.waitForTimeout(150);
+ const vDe=await t(`document.getElementById('pn-de').value`);
+ ok(await t(`document.activeElement&&document.activeElement.id==='pn-de'`)&&vDe==='2026-01-15','data inteira digitada: '+vDe);
+ await p.keyboard.press('Enter');await p.waitForTimeout(200);
+ ok((await t(`painelPer.de`))==='2026-01-15'&&(await p.$eval('.pn-per',e=>e.textContent)).startsWith('15/01/2026'),'Enter aplica o período');
+ await p.click('#pn-ate');await p.keyboard.press('Tab');await p.waitForTimeout(100);
+ ok(await t(`!!document.getElementById('pn-ate')`),'andar entre os campos de data não redesenha à toa');
  ok((await p.$$eval('.pn-aviso',x=>x.map(e=>e.innerText.replace(/\s+/g,' ')))).some(a=>a.includes('2 de 6 viram')&&a.includes('faltam')),'avisos: quem viu e quem falta');
  // últimas ações paginadas
  await p.waitForTimeout(200);
