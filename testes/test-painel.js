@@ -49,7 +49,7 @@ const U=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
  ok(txt.includes('Receita da loja por')&&!!(await p.$('#pn-colunas svg')),'mantém o gráfico de receita da loja');
  ok(txt.includes('Vendedores')&&txt.includes('Produtos')&&txt.includes('Avisos')&&txt.includes('Últimas ações'),'mantém vendedores, produtos, avisos e últimas ações');
  const vend=await p.$$eval('.pn-tab table',t=>[...t[0].querySelectorAll('tr')].slice(1).map(r=>[...r.cells].map(c=>c.innerText.trim())));
- ok(vend[0][0].includes('Zeca')&&vend[0][5]==='$40,00'&&vend[0][6]==='$20,00','ranking de vendedores: '+vend[0].join(' / '));
+ const zr=vend.find(r=>r[0].includes('Zeca'));ok(zr&&zr[9]==='$40,00'&&zr[10].startsWith('$2'),'vendedores da semana: Zeca com a receita guardada e o não guardado: '+(zr||[]).join(' / '));
  // v4.31: comparar vendedor no gráfico (linha por cima das barras)
  ok((await p.$$('.pn-vsel button')).length>=1&&!(await p.$('#pn-colunas .pn-linha')),'botões dos vendedores, sem linha até escolher');
  await p.click('.pn-vsel button:has-text("Zeca")');await p.waitForTimeout(200);
@@ -60,20 +60,30 @@ const U=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
  ok((await p.$eval('.pn-tabela-det table',e=>e.textContent)).includes('Zeca'),'tabela do gráfico ganha a coluna do vendedor');
  await p.click('.pn-vsel button:has-text("Zeca")');await p.waitForTimeout(200);
  ok(!(await p.$('#pn-colunas .pn-linha')),'clicar de novo tira a linha');
- // v4.31: pontuação = nº de vendas × total vendido (quem vende sempre ganha de uma venda grande de sorte)
- const rk=await t(`(()=>{const bk=db.vendas;const D=instanteBR(todayISO(),'10:00').toISOString();
-  db.vendas=[...Array.from({length:10},(_,i)=>({id:'r'+i,data:D,status:'ativa',usuario_id:'${U(1)}',usuario_nome:'Zeca',total:100,subtotal:100,desconto:0,cota_funcionario:50,receita_loja:50,itens:[],auxiliares:[]})),
-   {id:'rb',data:D,status:'ativa',usuario_id:'${U(4)}',usuario_nome:'Bruno',total:5000,subtotal:5000,desconto:0,cota_funcionario:2000,receita_loja:3000,itens:[],auxiliares:[]}];
-  const l=pnVendedores(pnPeriodo());db.vendas=bk;return l.map(x=>({n:x.nome,pont:x.pont,ind:x.indice,loja:x.loja}))})()`);
- const z=rk.find(x=>x.n==='Zeca'),bu=rk.find(x=>x.n==='Bruno');
- ok(z.pont===10000&&bu.pont===5000&&z.ind===100&&bu.ind===50,'pontuação: 10 vendas de $100 (10.000 → 100) vence 1 venda de $5.000 (5.000 → 50)');
- await t(`window.__bk=db.vendas;db.vendas=[...Array.from({length:10},(_,i)=>({id:'r'+i,data:instanteBR(todayISO(),'10:00').toISOString(),status:'ativa',usuario_id:'${U(1)}',usuario_nome:'Zeca',total:100,subtotal:100,desconto:0,cota_funcionario:50,receita_loja:50,itens:[],auxiliares:[]})),{id:'rb',data:instanteBR(todayISO(),'10:00').toISOString(),status:'ativa',usuario_id:'${U(4)}',usuario_nome:'Bruno',total:5000,subtotal:5000,desconto:0,cota_funcionario:2000,receita_loja:3000,itens:[],auxiliares:[]}];painelRank='pont';render()`);
- const ordemP=await p.$$eval('.pn-tab table',t=>[...t[0].querySelectorAll('tr')].slice(1).map(r=>r.cells[0].innerText.trim()));
- ok(ordemP[0].includes('🥇')&&ordemP[0].includes('Zeca')&&ordemP[1].includes('Bruno'),'ranking por pontuação: Zeca 🥇, Bruno 🥈: '+ordemP.join(' / '));
+ // v4.31: ranking semanal (seg 06:00 a seg 05:59) com pontuação 50% resultado (teto por venda) + 25% volume + 25% constância; medalha com 5+ vendas
+ await t(`window.__bk=db.vendas;(()=>{const I=pnSemanaTrabalho(0).ini.getTime(),H=h=>new Date(I+h*36e5).toISOString();let n=0;
+  const V=(nome,uid,h,loja,total)=>({id:'w'+(n++),data:H(h),status:'ativa',usuario_id:uid,usuario_nome:nome,total,subtotal:total,desconto:0,cota_funcionario:total-loja,receita_loja:loja,itens:[],auxiliares:[]});
+  db.vendas=[...[1,23.5,25,49,50,73,74,75].map(h=>V('Persistente','p1',h,100,200)),...[2,3,26,27,28].map(h=>V('Regular','r1',h,300,600)),V('Sortudo','s1',4,3000,5000),
+   V('Antes','a1',-1/60,999,999)]})();painelRank='pont';painelSemana=0;render()`);
+ const rs=await t(`(()=>{const r=pnRankingSemana(0);return{teto:r.teto,l:r.lista.map(p=>({n:p.nome,pont:p.pont,dias:p.dias,el:p.elegivel,res:Math.round(p.pRes*10)/10}))}})()`);
+ const P=rs.l.find(x=>x.n==='Persistente'),R=rs.l.find(x=>x.n==='Regular'),S=rs.l.find(x=>x.n==='Sortudo');
+ ok(rs.teto===300&&S.res===20,'teto por venda = 10% maiores da semana ($300): a venda de $3.000 do Sortudo conta como $300');
+ ok(P.dias===4,'dia de trabalho vira às 06:00: venda de terça 05:30 conta na segunda (Persistente: 4 dias)');
+ ok(R.pont===78.1&&P.pont===76.7&&S.pont===19.4,'pontuação 50/25/25: Regular 78,1 · Persistente 76,7 · Sortudo 19,4: '+JSON.stringify(rs.l));
+ ok(!rs.l.some(x=>x.n==='Antes'),'segunda 05:59 fica na semana anterior');
+ ok(await t(`pnRankingSemana(-1).lista.some(p=>p.nome==='Antes')`),'… e aparece na semana anterior');
+ ok(!S.el&&P.el&&R.el,'menos de 5 vendas: sem medalha (Sortudo)');
+ const linhas=await p.$$eval('.pn-tab table',t=>[...t[0].querySelectorAll('tr')].slice(1).map(r=>r.cells[0].innerText.trim()));
+ ok(linhas[0].includes('🥇')&&linhas[0].includes('Regular')&&linhas[1].includes('🥈')&&linhas[1].includes('Persistente')&&linhas[2].includes('Sortudo')&&!linhas[2].includes('🥉')&&linhas[2].includes('poucas vendas'),'tabela: 🥇 Regular, 🥈 Persistente, Sortudo sem medalha e com "poucas vendas": '+linhas.join(' / '));
+ const tit=await p.$eval('.pn-rank-tog',e=>e.innerText.replace(/\s+/g,' '));
+ ok(/Semana \d\d\/\d\d a \d\d\/\d\d/.test(tit)&&tit.includes('segunda 06:00 até segunda 05:59')&&(await p.$eval('.pn-rank-tog button[title="Próxima semana"]',e=>e.disabled)),'cabeçalho da semana; "próxima" travada na semana atual: '+tit);
+ await p.click('.pn-rank-tog button[title="Semana anterior"]');await p.waitForTimeout(150);
+ ok((await t('painelSemana'))===-1&&(await p.$eval('.pn-tab table',e=>e.innerText)).includes('Antes'),'‹ volta uma semana');
  await p.click('.pn-rank-tog button:has-text("Receita da loja")');await p.waitForTimeout(150);
+ await t(`painelSemana=0;render()`);
  const ordemL=await p.$$eval('.pn-tab table',t=>[...t[0].querySelectorAll('tr')].slice(1).map(r=>r.cells[0].innerText.trim()));
- ok(ordemL[0].includes('Bruno')&&!ordemL[0].includes('🥇'),'ranking por receita da loja: Bruno primeiro: '+ordemL.join(' / '));
- await t(`db.vendas=window.__bk;painelRank='pont';render()`);
+ ok(ordemL[0].includes('Sortudo')&&!ordemL[0].includes('🥇'),'ranking por receita da loja: Sortudo primeiro, sem medalha: '+ordemL.join(' / '));
+ await t(`db.vendas=window.__bk;painelRank='pont';painelSemana=0;render()`);
  // v4.31: datas do Personalizado aceitam a data inteira (antes redesenhava a cada dígito e saía do campo)
  await p.click('.pn-filtros button:has-text("Personalizado")');await p.waitForTimeout(150);
  await p.click('#pn-de',{position:{x:12,y:12}});await p.keyboard.type('01');await p.waitForTimeout(150);
