@@ -615,7 +615,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.27.4';
+const VERSAO='v4.28.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -654,7 +654,7 @@ const VIDEOS={
   cfg_itens:{arq:'cfg-itens.mp4',titulo:'Cadastro Central de Itens',dur:'0:55',ger:true},
   cfg_receitas:{arq:'cfg-receitas.mp4',titulo:'Receitas',dur:'0:44',ger:true},
   cfg_fornecedores:{arq:'cfg-fornecedores.mp4',titulo:'Fornecedores',dur:'0:32',ger:true},
-  cfg_descontos:{arq:'cfg-descontos.mp4',titulo:'Descontos',dur:'0:35',ger:true},
+  cfg_descontos:{arq:'cfg-descontos.mp4',titulo:'Descontos',dur:'0:45',ger:true},
   cfg_deslocamento:{arq:'cfg-deslocamento.mp4',titulo:'Deslocamento',dur:'0:33',ger:true},
   cfg_identidade:{arq:'cfg-identidade.mp4',titulo:'Identidade Visual',dur:'0:25',ger:true}
 };
@@ -3441,11 +3441,93 @@ async function toggleFornecedor(id){
   f.status=novo;render();
 }
 /* ---- Descontos ---- */
+/* ---- Imagem da parceria (🖼️ em Configurações › Descontos): card 1080×1350 para divulgar o desconto ---- */
+// nome sem o "(5,10,15)" que às vezes vai no cadastro para diferenciar
+function nomeParceiroLimpo(nome){return String(nome||'').replace(/\s*\(\s*[\d.,%\s]+\)\s*$/,'').trim()||String(nome||'')}
+function imagemDescontoTextos(p){
+  const fx=[...(p.faixas||[])].sort((a,b)=>a.quantidade_min-b.quantidade_min);
+  const n=v=>Number(v).toLocaleString('pt-BR',{maximumFractionDigits:2});
+  const faixa=f=>f.quantidade_max===null||f.quantidade_max===undefined?`${n(f.quantidade_min)}+ itens`:`${n(f.quantidade_min)} a ${n(f.quantidade_max)} itens`;
+  // desconto sem nome de parceiro (ex.: "10%"): o card não repete o percentual como nome
+  const nome=/^[\d.,\s]+%?$/.test(nomeParceiroLimpo(p.nome))?'':nomeParceiroLimpo(p.nome);
+  return p.tipo==='fixa'
+    ?{nome,tipo:'fixa',destaque:n(p.desconto_fixo)+'%',sub:'DE DESCONTO EM TODA A COMPRA',linhas:[]}
+    :{nome,tipo:'escalonada',destaque:'',sub:'DESCONTO PROGRESSIVO',linhas:fx.map(f=>({faixa:faixa(f),pct:n(f.percentual_desconto)+'%'}))};
+}
+function carregarImagemCors(url){return new Promise(ok=>{if(!url)return ok(null);const i=new Image();i.crossOrigin='anonymous';i.onload=()=>ok(i);i.onerror=()=>ok(null);i.src=url})}
+async function desenharImagemDesconto(p){
+  const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  const css=getComputedStyle(document.documentElement),cor=(v,d)=>(css.getPropertyValue(v)||'').trim()||d;
+  const verde=cor('--green','#00CC52'),fundo=cor('--bg','#0D0D11'),texto='#F3F4F6',muted='#9CA3AF';
+  try{await Promise.all(['900 96px Inter','700 40px Inter','600 30px Inter'].map(f=>document.fonts.load(f)))}catch(e){}
+  const F=(peso,px)=>`${peso} ${px}px Inter, Arial, sans-serif`;
+  // fundo escuro com brilho verde no alto e moldura
+  g.fillStyle=fundo;g.fillRect(0,0,W,H);
+  const rg=g.createRadialGradient(W/2,120,40,W/2,120,900);rg.addColorStop(0,verde+'55');rg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=rg;g.fillRect(0,0,W,H);
+  g.strokeStyle=verde;g.lineWidth=6;g.strokeRect(36,36,W-72,H-72);
+  g.textAlign='center';g.textBaseline='alphabetic';
+  // logo e nome da loja
+  const logo=await carregarImagemCors(db.identidade_visual&&db.identidade_visual.logotipo);
+  let y=110;
+  if(logo){const t=220,r=Math.min(t/logo.width,t/logo.height);g.drawImage(logo,W/2-logo.width*r/2,y,logo.width*r,logo.height*r);y+=t+30}else{g.font=F(400,150);g.fillText('🌿',W/2,y+150);y+=200}
+  g.fillStyle=texto;g.font=F(900,56);g.fillText(nomeLojaAtual().toUpperCase(),W/2,y+40);y+=110;
+  const t=imagemDescontoTextos(p);
+  g.fillStyle=verde;g.font=F(700,30);if('letterSpacing' in g)g.letterSpacing='8px';g.fillText(t.nome?'PARCERIA OFICIAL':'OFERTA ESPECIAL',W/2,y);if('letterSpacing' in g)g.letterSpacing='0px';y+=30;
+  // nome do parceiro: diminui a fonte até caber (até 2 linhas)
+  let px=96,linhas;
+  const quebrar=(txt,max)=>{const ps=txt.split(' '),out=[];let l='';ps.forEach(w=>{const tl=l?l+' '+w:w;if(g.measureText(tl).width>max&&l){out.push(l);l=w}else l=tl});if(l)out.push(l);return out};
+  do{g.font=F(900,px);linhas=t.nome?quebrar(t.nome,W-200):[];px-=6}while((linhas.length>2||linhas.some(l=>g.measureText(l).width>W-200))&&px>40);
+  g.fillStyle=texto;linhas.forEach(l=>{y+=px+12;g.fillText(l,W/2,y)});y+=50;
+  g.fillStyle=verde;g.fillRect(W/2-60,y,120,6);y+=70;
+  const livre=(H-150)-y;   // centraliza o bloco do desconto no espaço que sobra até o rodapé
+  if(t.tipo==='fixa'){
+    y+=Math.max(0,(livre-340)/2);
+    g.fillStyle=verde;g.font=F(900,260);g.fillText(t.destaque,W/2,y+220);y+=280;
+    g.fillStyle=texto;g.font=F(700,40);g.fillText(t.sub,W/2,y+20);
+  }else{
+    const n=t.linhas.length||1,alt=Math.min(150,(livre-110)/n-20),x0=150,lw=W-300;
+    y+=Math.max(0,(livre-(60+n*(alt+20)))/2);
+    g.fillStyle=texto;g.font=F(700,40);g.fillText(t.sub,W/2,y+10);y+=50;
+    t.linhas.forEach((l,k)=>{
+      const yy=y+k*(alt+20);
+      g.fillStyle='rgba(255,255,255,.06)';g.strokeStyle=verde+'88';g.lineWidth=3;
+      if(g.roundRect){g.beginPath();g.roundRect(x0,yy,lw,alt,24);g.fill();g.stroke()}else{g.fillRect(x0,yy,lw,alt);g.strokeRect(x0,yy,lw,alt)}
+      g.textAlign='left';g.fillStyle=texto;g.font=F(700,Math.round(alt*.32));g.fillText(l.faixa,x0+44,yy+alt/2+alt*.11);
+      g.textAlign='right';g.fillStyle=verde;g.font=F(900,Math.round(alt*.5));g.fillText(l.pct+' OFF',x0+lw-44,yy+alt/2+alt*.17);
+      g.textAlign='center';
+    });
+  }
+  g.fillStyle=muted;g.font=F(600,30);g.fillText('Válido no balcão da '+nomeLojaAtual()+(t.nome?' · apresente esta parceria':''),W/2,H-90);
+  return c;
+}
+let _imgDesconto=null;
+async function modalImagemDesconto(id){
+  const p=db.parcerias.find(x=>x.id===id);if(!p)return;
+  openModal(`<h3>🖼️ Imagem da parceria</h3><div id="img-desc-prev" class="muted" style="text-align:center;padding:30px">Gerando…</div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
+    <button class="btn btn-ghost" id="btn-copiar-img" onclick="copiarImagemDesconto()" style="display:none">📋 Copiar</button>
+    <button class="btn btn-primary" id="btn-baixar-img" onclick="baixarImagemDesconto()" disabled>⬇ Baixar PNG</button></div>`);
+  const c=await desenharImagemDesconto(p);
+  let url;try{url=c.toDataURL('image/png')}catch(e){url=null}
+  if(!url){document.getElementById('img-desc-prev').textContent='Não foi possível gerar a imagem.';return}
+  _imgDesconto={canvas:c,url,arquivo:'parceria-'+nomeParceiroLimpo(p.nome).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+'.png'};
+  const prev=document.getElementById('img-desc-prev');if(!prev)return;
+  prev.innerHTML=`<img src="${url}" alt="Imagem da parceria ${esc(p.nome)}" style="width:100%;max-width:360px;border-radius:12px;border:1px solid var(--border)">`;prev.style.padding='0';
+  document.getElementById('btn-baixar-img').disabled=false;
+  if(navigator.clipboard&&window.ClipboardItem)document.getElementById('btn-copiar-img').style.display='';
+  reg('Imagem de parceria gerada',p.nome);
+}
+function baixarImagemDesconto(){if(!_imgDesconto)return;const a=document.createElement('a');a.href=_imgDesconto.url;a.download=_imgDesconto.arquivo;document.body.appendChild(a);a.click();a.remove()}
+async function copiarImagemDesconto(){
+  if(!_imgDesconto)return;
+  try{const blob=await new Promise(r=>_imgDesconto.canvas.toBlob(r,'image/png'));await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('✅ Imagem copiada. É só colar (Ctrl+V).')}
+  catch(e){toast('⚠️ Não deu para copiar neste navegador. Use ⬇ Baixar PNG.')}
+}
 function descontoResumo(p){return p.tipo==='fixa'?p.desconto_fixo+'%':(p.faixas||[]).map(fx=>`${fx.quantidade_min}–${fx.quantidade_max===null?'∞':fx.quantidade_max}: ${fx.percentual_desconto}%`).join(' · ')||'—'}
 function cfgDescontos(b){
   const T='cfg_descontos',F=tabelaFiltravel(T,()=>ordenarPorOrdem([...db.parcerias]),{nome:p=>p.nome,tipo:p=>p.tipo==='fixa'?'Fixa':'Escalonada',desconto:p=>descontoResumo(p),status:p=>p.status});
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">🤝 Descontos Comerciais${ajuda('Descontos de parceria usados no Caixa de Balcão: percentual fixo ou escalonado por quantidade de itens. No Caixa o desconto é arredondado para o inteiro e reduz também o repasse.',['cfg_descontos'])}</div>
+    <div class="section-title" style="margin:0">🤝 Descontos Comerciais${ajuda('Descontos de parceria usados no Caixa de Balcão: percentual fixo ou escalonado por quantidade de itens. No Caixa o desconto é arredondado para o inteiro e reduz também o repasse. 🖼️ gera uma imagem da parceria para divulgar.',['cfg_descontos'])}</div>
     <button class="btn btn-purple btn-sm" onclick="modalDescontos()">+ Novo desconto</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr><th>Ordem</th>${thCol(T,'nome','Nome')}${thCol(T,'tipo','Tipo')}${thCol(T,'desconto','Desconto')}${thCol(T,'status','Status')}<th>Ações</th></tr>
@@ -3454,7 +3536,8 @@ function cfgDescontos(b){
     <td><span class="tag">${p.tipo==='fixa'?'Fixa':'Escalonada'}</span></td>
     <td style="font-size:12px">${esc(descontoResumo(p))}</td>
     <td><span class="badge ${p.status==='ativo'?'ativo':'inativo'}">${p.status}</span></td>
-    <td><button class="iconbtn" onclick="modalDescontos('${p.id}')">✏️</button>
+    <td><button class="iconbtn" title="Gerar imagem da parceria" onclick="modalImagemDesconto('${p.id}')">🖼️</button>
+      <button class="iconbtn" onclick="modalDescontos('${p.id}')">✏️</button>
       <button class="iconbtn" onclick="toggleDescontos('${p.id}')">${p.status==='ativo'?'⏸️':'▶️'}</button>${isSocioOuDiretor()&&p.status!=='ativo'?`<button class="iconbtn" title="Excluir linha" onclick="excluirDesconto('${p.id}')">🗑️</button>`:''}</td>
   </tr>`).join('')||linhaSemResultado(6,T)}</table></div>`;
 }

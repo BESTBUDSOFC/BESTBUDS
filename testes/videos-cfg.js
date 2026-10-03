@@ -72,7 +72,7 @@ async fornecedores(p){const T=6;
   await passo(p,salvar,6,T,'Toque em <b>Salvar</b>.',null,{clicar:true});
   await fim(p,'Os valores novos já valem na próxima compra.');
 },
-async descontos(p){const T=6;
+async descontos(p){const T=8;
   await capa(p,'Descontos','Configurações · '+T+' passos',2000);
   await passo(p,aba('Descontos'),1,T,'Abra a aba <b>Descontos</b>.',null,{clicar:true});
   await passo(p,'#cfg-body .table-wrap',2,T,'Os <b>descontos de parceria</b> que aparecem no Caixa de Balcão.','↑↓ mudam a ordem na lista do Caixa.');
@@ -80,6 +80,10 @@ async descontos(p){const T=6;
   await passo(p,'#pc-tipo + .ssel-btn',4,T,'<b>Tipo</b>: <b>Fixa</b> (sempre o mesmo %) ou <b>Escalonada</b> (o % muda com a quantidade de itens).');
   await passo(p,'#pc-faixas-box',5,T,'<b>Faixas</b>: de quantos a quantos itens, e o % de cada faixa.','Máximo vazio = sem limite. No Caixa o desconto é arredondado e reduz também o repasse.');
   await passo(p,salvar,6,T,'Toque em <b>Salvar</b>.',null,{clicar:true});
+  await passo(p,'#cfg-body tr:has-text("Escalonada") button[onclick^="modalImagemDesconto"]',7,T,'<b>🖼️</b> gera uma <b>imagem da parceria</b> para divulgar.',null,{clicar:true});
+  await p.waitForFunction(()=>document.querySelector('#img-desc-prev img'),null,{timeout:10000});await p.waitForTimeout(300);
+  await passo(p,'#btn-baixar-img',8,T,'Confira e toque em <b>Baixar PNG</b> para mandar ao parceiro.','O card usa o logo da loja, o nome do parceiro e o desconto de cada faixa.');
+  await limpar(p);await tocar(p,'#modal-box button:has-text("Fechar")');
   await fim(p,'O Caixa já usa o desconto novo.');
 },
 async deslocamento(p){const T=6;

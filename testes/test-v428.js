@@ -1,0 +1,43 @@
+// v4.28: imagem da parceria (🖼️ em Configurações › Descontos)
+const {chromium}=require('playwright');const fs=require('fs');const path=require('path');const SP=__dirname;const SRC=path.join(__dirname,'..','src');
+const SNAP=fs.readFileSync(SP+'/dados-producao.json','utf8');
+let falhas=0;const ok=(c,m)=>{console.log((c?'✅ ':'❌ ')+m);if(!c)falhas++};
+async function abrir(b,uid,vp){
+  const p=await b.newPage({viewport:vp||{width:1280,height:800},acceptDownloads:true,...(vp&&vp.width<500?{hasTouch:true,isMobile:true}:{})});
+  await p.addInitScript(u=>{window.__uid=u},uid);const errs=[];p.on('pageerror',e=>errs.push(e.message));p._errs=errs;
+  await p.route('**/*',r=>{const u=r.request().url();
+    if(u.includes('supabase-js'))return r.fulfill({body:`window.__SNAP=${SNAP};`+fs.readFileSync(SP+'/fake-supabase.js','utf8')+fs.readFileSync(SP+'/semente-real.js','utf8'),contentType:'application/javascript'});
+    if(u==='http://app/env.js')return r.fulfill({body:"window.BB_ENV='teste';",contentType:'application/javascript'});
+    if(u.startsWith('http://app/'))return r.fulfill({body:fs.readFileSync(SRC+'/index.html','utf8'),contentType:'text/html'});
+    return r.abort()});
+  await p.goto('http://app/');await p.waitForFunction(()=>typeof db!=='undefined'&&db&&db.usuarios);await p.waitForTimeout(400);return p;
+}
+const t=(p,js)=>p.evaluate(js);
+(async()=>{
+  const b=await chromium.launch();
+  const p=await abrir(b,'3b3f9ab4-50af-4cc5-a264-0b3702759b7c');
+  ok(await t(p,`nomeParceiroLimpo('Park Jung (5,10,15)')==='Park Jung'&&nomeParceiroLimpo("Benyy's (5,10,15)")==="Benyy's"&&nomeParceiroLimpo('Loja (Centro)')==='Loja (Centro)'`),'nome do parceiro sem o "(5,10,15)" do cadastro (outros parênteses ficam)');
+  const tx=await t(p,`(()=>{const e=imagemDescontoTextos({nome:'Park Jung (5,10,15)',tipo:'escalonada',faixas:[{quantidade_min:50,quantidade_max:null,percentual_desconto:15},{quantidade_min:1,quantidade_max:24,percentual_desconto:5},{quantidade_min:25,quantidade_max:49,percentual_desconto:10}]}),f=imagemDescontoTextos({nome:'10%',tipo:'fixa',desconto_fixo:10}),g=imagemDescontoTextos({nome:'Bar do Zé',tipo:'fixa',desconto_fixo:7.5});return {e,f,g}})()`);
+  ok(tx.e.nome==='Park Jung'&&JSON.stringify(tx.e.linhas)===JSON.stringify([{faixa:'1 a 24 itens',pct:'5%'},{faixa:'25 a 49 itens',pct:'10%'},{faixa:'50+ itens',pct:'15%'}]),'escalonada: faixas em ordem, "50+ itens" na última: '+JSON.stringify(tx.e.linhas));
+  ok(tx.f.nome===''&&tx.f.destaque==='10%','desconto sem nome de parceiro ("10%"): não repete o percentual como nome');
+  ok(tx.g.nome==='Bar do Zé'&&tx.g.destaque==='7,5%','fixa com parceiro: nome e "7,5%"');
+  await t(p,`cfgTabAtual='descontos';go('config')`);
+  ok((await p.$$('#cfg-body button[onclick^="modalImagemDesconto"]')).length===await t(p,`db.parcerias.length`),'um botão 🖼️ por desconto');
+  await p.click('#cfg-body tr:has-text("Escalonada") button[onclick^="modalImagemDesconto"]');
+  await p.waitForFunction(()=>document.querySelector('#img-desc-prev img'),null,{timeout:10000});
+  const img=await t(p,`(()=>{const i=document.querySelector('#img-desc-prev img');return {w:i.naturalWidth,h:i.naturalHeight,png:i.src.startsWith('data:image/png'),tam:i.src.length,btn:!document.getElementById('btn-baixar-img').disabled}})()`);
+  ok(img.w===1080&&img.h===1350&&img.png&&img.tam>50000&&img.btn,'gera PNG 1080×1350 e libera o Baixar: '+JSON.stringify(img));
+  const [dl]=await Promise.all([p.waitForEvent('download'),p.click('#btn-baixar-img')]);
+  ok(dl.suggestedFilename()==='parceria-escalonada.png','baixa o arquivo "'+dl.suggestedFilename()+'"');
+  const salvo=path.join(SP,'saida','parceria-teste.png');await dl.saveAs(salvo);
+  const head=fs.readFileSync(salvo).subarray(0,8).toString('hex');ok(head==='89504e470d0a1a0a','o arquivo baixado é um PNG de verdade');
+  ok(await t(p,`window.__DB.registros.some(r=>r.acao==='Imagem de parceria gerada')`),'fica nas Últimas ações');
+  ok(p._errs.length===0,'sem erros no console: '+p._errs.join(' | '));
+  // celular: a prévia cabe na tela
+  const m=await abrir(b,'3b3f9ab4-50af-4cc5-a264-0b3702759b7c',{width:390,height:844});
+  await t(m,`cfgTabAtual='descontos';go('config');modalImagemDesconto(db.parcerias[0].id)`);
+  await m.waitForFunction(()=>document.querySelector('#img-desc-prev img'),null,{timeout:10000});
+  const w=await t(m,`(()=>{const r=document.querySelector('#img-desc-prev img').getBoundingClientRect();return [r.left,r.right,innerWidth,document.documentElement.scrollWidth]})()`);
+  ok(w[0]>=0&&w[1]<=w[2]&&w[3]<=w[2],'celular: a prévia cabe na tela: '+w.map(Math.round));
+  await b.close();console.log(falhas?falhas+' FALHA(S)':'TUDO OK');process.exit(falhas?1:0);
+})();
