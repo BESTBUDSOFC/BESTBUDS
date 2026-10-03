@@ -68,7 +68,11 @@ const prevPronta=p=>p.waitForFunction(()=>document.querySelector('#img-desc-prev
   ok((await t(p,`document.getElementById('imgc-antigo').value`))==='180'&&(await t(p,`document.getElementById('imgc-selo').value`))==='BAIXOU O PREÇO'&&(await t(p,`document.getElementById('imgd-antigo').textContent`)).startsWith('Do histórico de preços'),'🏷️ depois de mudar: $180 do histórico e "Baixou o preço"');
   const tp=await textos(p,`desenharImagemPreco(_imgM.v)`);
   ok(tp.includes('$180')&&tp.includes('$150')&&tp.includes('-17%')&&tp.includes('DE')&&tp.includes('POR')&&tp.includes('PURPLE HAZE'),'imagem: de $180 por $150, -17%: '+tp.filter(x=>/\$|%|DE|POR/.test(x)).join(' '));
-  ok((await t(p,`_imgDesconto.arquivo`))==='novo-preco-purple-haze.png','arquivo "novo-preco-purple-haze.png"');
+  ok((await t(p,`_imgDesconto.arquivo`))==='novo-preco-purple-haze.jpg','arquivo "novo-preco-purple-haze.jpg"');
+  ok(await t(p,`_imgDesconto.bytes<=512000&&document.getElementById('img-tam').textContent.includes('KB')`),'novo preço: até 512 KB e mostra o tamanho ('+(await t(p,`document.getElementById('img-tam').textContent`))+')');
+  // limite garantido mesmo numa arte pesada: ruído em tela cheia força a descer a qualidade/tamanho
+  const pesada=await t(p,`(async()=>{const c=document.createElement('canvas');c.width=1080;c.height=1350;const g=c.getContext('2d'),d=g.createImageData(1080,1350);for(let i=0;i<d.data.length;i++)d.data[i]=Math.random()*255;g.putImageData(d,0,0);const r=await imgComprimir(c);return r&&{b:r.blob.size,w:r.w,t:r.blob.type}})()`);
+  ok(pesada&&pesada.b<=512000&&pesada.t==='image/jpeg','arte pesada também fica com até 512 KB: '+JSON.stringify(pesada));
   ok(await t(p,`window.__DB.registros.some(r=>r.acao==='Imagem de novo preço gerada'&&r.detalhe==='Purple Haze: $180 → $150')`),'fica nas Últimas ações');
   // ---- 🏷️ depois: lê o histórico ----
   await t(p,`closeModal();cfgTabAtual='produtos';go('config')`);

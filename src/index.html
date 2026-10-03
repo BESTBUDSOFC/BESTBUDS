@@ -621,7 +621,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.30.1';
+const VERSAO='v4.30.2';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -3565,8 +3565,8 @@ async function desenharImagemDesconto(p,tx){
   imgRodape(x,imgTxt(v.rodape));
   return c;
 }
-/* ---- Janela das imagens (parceria, oferta, cardápio, novo preço): todos os textos editáveis, prévia, Baixar e Copiar ---- */
-let _imgDesconto=null;   // última imagem gerada: Baixar e Copiar usam esta
+/* ---- Janela das imagens (parceria, oferta, cardápio, novo preço): todos os textos editáveis, prévia e Baixar (JPG até 512 KB) ---- */
+let _imgDesconto=null;   // última imagem gerada: o Baixar usa esta
 let _imgM=null,_imgTimer=null;   // janela aberta: {tipo,titulo,campos,v,desenhar,arquivo,registro}
 // textos que a pessoa escreveu ficam lembrados neste aparelho, por tipo de imagem
 function imgTextosSalvos(tipo){try{return JSON.parse(localStorage.getItem('bb_img_'+tipo)||'{}')||{}}catch(e){return{}}}
@@ -3581,8 +3581,7 @@ function abrirModalImagem(m){
       ${c.frases?`<button class="btn btn-ghost btn-sm" title="Sortear outra frase" onclick="imgSortear('${c.id}')">🎲</button>`:''}</div>${c.dica!==undefined?`<div class="muted" style="font-size:12px;margin-top:4px" id="imgd-${c.id}">${c.dica}</div>`:''}</div>`).join('')}${m.extra||''}</div>
     <div id="img-desc-prev" class="muted" style="text-align:center;padding:30px">Gerando…</div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
-    <button class="btn btn-ghost" id="btn-copiar-img" onclick="copiarImagemDesconto()" style="display:none">📋 Copiar</button>
-    <button class="btn btn-primary" id="btn-baixar-img" onclick="baixarImagemDesconto()" disabled>⬇ Baixar PNG</button></div>`);
+    <button class="btn btn-primary" id="btn-baixar-img" onclick="baixarImagemDesconto()" disabled>⬇ Baixar imagem</button></div>`);
   return imgGerar().then(()=>{if(_imgDesconto&&_imgM===m&&m.registro)reg(...m.registro(m.v))});
 }
 function imgCampo(id,valor){
@@ -3594,22 +3593,29 @@ function imgSortear(id){
   const i=fr.findIndex(f=>imgTxt(f)===imgTxt(m.v[id])),v=fr[(i+1)%fr.length];const inp=document.getElementById('imgc-'+id);if(inp)inp.value=v;
   imgCampo(id,v);clearTimeout(_imgTimer);imgGerar();
 }
+/* Tamanho máximo do arquivo: 512 KB (pedido do dono, v4.30.2). Sai em JPG: tenta a melhor qualidade e desce até caber;
+   se nem assim couber, reduz a imagem aos poucos. PNG dessas artes passa de 1 MB, por isso não é usado. */
+const IMG_LIMITE_BYTES=512000;
+async function imgComprimir(c){
+  const blobDe=(cv,q)=>new Promise(r=>{try{cv.toBlob(b=>r(b),'image/jpeg',q)}catch(e){r(null)}});
+  for(const escala of [1,.85,.7,.55]){
+    let cv=c;if(escala<1){cv=document.createElement('canvas');cv.width=Math.round(c.width*escala);cv.height=Math.round(c.height*escala);cv.getContext('2d').drawImage(c,0,0,cv.width,cv.height)}
+    for(const q of [.92,.88,.84,.8,.75,.7,.62]){const b=await blobDe(cv,q);if(!b)return null;if(b.size<=IMG_LIMITE_BYTES)return{blob:b,w:cv.width,h:cv.height,q}}
+  }
+  return null;
+}
+const blobParaDataURL=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.onerror=()=>r(null);f.readAsDataURL(b)});
 async function imgGerar(){
   const m=_imgM;if(!m)return;const c=await m.desenhar(m.v);if(_imgM!==m)return;
-  let url;try{url=c.toDataURL('image/png')}catch(e){url=null}
+  const r=await imgComprimir(c),url=r&&await blobParaDataURL(r.blob);if(_imgM!==m)return;
   const prev=document.getElementById('img-desc-prev');if(!prev)return;
   if(!url){prev.textContent='Não foi possível gerar a imagem.';return}
-  _imgDesconto={canvas:c,url,arquivo:m.arquivo(m.v)};
-  prev.innerHTML=`<img src="${url}" alt="${esc(m.titulo)}" style="width:100%;max-width:min(300px,42vh);border-radius:12px;border:1px solid var(--border)">`;prev.style.padding='0';
+  _imgDesconto={canvas:c,url,bytes:r.blob.size,arquivo:m.arquivo(m.v)};
+  prev.innerHTML=`<img src="${url}" alt="${esc(m.titulo)}" style="width:100%;max-width:min(300px,42vh);border-radius:12px;border:1px solid var(--border)">
+    <div class="muted" id="img-tam" style="font-size:12px;margin-top:6px">JPG · ${r.w}×${r.h} · ${Math.round(r.blob.size/1024)} KB (máx. 512 KB)</div>`;prev.style.padding='0';
   document.getElementById('btn-baixar-img').disabled=false;
-  if(navigator.clipboard&&window.ClipboardItem)document.getElementById('btn-copiar-img').style.display='';
 }
 function baixarImagemDesconto(){if(!_imgDesconto)return;const a=document.createElement('a');a.href=_imgDesconto.url;a.download=_imgDesconto.arquivo;document.body.appendChild(a);a.click();a.remove()}
-async function copiarImagemDesconto(){
-  if(!_imgDesconto)return;
-  try{const blob=await new Promise(r=>_imgDesconto.canvas.toBlob(r,'image/png'));await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('✅ Imagem copiada. É só colar (Ctrl+V).')}
-  catch(e){toast('⚠️ Não deu para copiar neste navegador. Use ⬇ Baixar PNG.')}
-}
 function modalImagemDesconto(id){
   const p=db.parcerias.find(x=>x.id===id);if(!p)return;const t=imagemDescontoTextos(p),of=!t.nome,d=textosPadraoDesconto(p);
   return abrirModalImagem({tipo:(of?'oferta_':'parceria_')+t.tipo,titulo:of?'Imagem da oferta':'Imagem da parceria',v:{},
@@ -3619,7 +3625,7 @@ function modalImagemDesconto(id){
       {id:'selo',label:'Selo',padrao:d.selo,max:30,lembrar:true},
       {id:'sub',label:t.tipo==='fixa'?'Texto abaixo do desconto':'Texto acima das faixas',padrao:d.sub,max:45,lembrar:true},
       {id:'rodape',label:'Rodapé',padrao:d.rodape,max:50,frases:FRASES_RODAPE,lembrar:true,largo:true}],
-    desenhar:v=>desenharImagemDesconto(p,v),arquivo:()=>'parceria-'+imgSlug(nomeParceiroLimpo(p.nome))+'.png',registro:()=>['Imagem de parceria gerada',p.nome]});
+    desenhar:v=>desenharImagemDesconto(p,v),arquivo:()=>'parceria-'+imgSlug(nomeParceiroLimpo(p.nome))+'.jpg',registro:()=>['Imagem de parceria gerada',p.nome]});
 }
 /* ---- Imagem do cardápio (🖼️ em Configurações › Catálogo PDV): produtos escolhidos (padrão: todos os ativos) e o preço ---- */
 const FRASES_CARDAPIO=['O melhor da cidade está aqui.','Qualidade que você sente na primeira.','Seleção premium, preço justo.','Seu próximo favorito está aqui.','Chegou, escolheu, levou.'];
@@ -3693,7 +3699,7 @@ function modalImagemCardapio(){
       {id:'rodape',label:'Rodapé',padrao:'PEÇA JÁ NO BALCÃO DA '+imgLoja(),max:50,frases:FRASES_RODAPE,lembrar:true,largo:true}],
     extra:`<div class="field img-largo"><label>Produtos na imagem</label><div class="img-prods">${ativos.map(p=>`<label class="img-chk"><input type="checkbox" checked value="${p.id}" onchange="imgProdutos()"> ${esc(p.nome)} <span class="muted">${precoCurto(p.preco)}</span></label>`).join('')||'<span class="muted">Nenhum produto ativo.</span>'}</div></div>
       <div class="field img-largo"><label>Destaque da casa</label><select id="imgc-destaque" onchange="imgCampo('destaque',this.value)"><option value="auto">Automático: o mais caro</option>${ativos.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('')}<option value="nenhum">Sem destaque (todos iguais)</option></select></div>`,
-    desenhar:v=>desenharImagemCardapio(v),arquivo:()=>'cardapio-'+imgSlug(nomeLojaAtual())+'.png',registro:v=>['Imagem do cardápio gerada',v.prods.length+' produto(s)']});
+    desenhar:v=>desenharImagemCardapio(v),arquivo:()=>'cardapio-'+imgSlug(nomeLojaAtual())+'.jpg',registro:v=>['Imagem do cardápio gerada',v.prods.length+' produto(s)']});
 }
 function imgProdutos(){const ids=[...document.querySelectorAll('.img-prods input:checked')].map(i=>i.value);imgCampo('prods',ids)}
 /* ---- Imagem de novo preço (🏷️ em Catálogo PDV e ao salvar um preço novo): preço antigo → preço novo ---- */
@@ -3750,7 +3756,7 @@ async function modalImagemPreco(pid,antigoConhecido){
       {id:'antigo',label:'Preço antigo ($)',padrao:antigo,num:true,dica:imgPrecoDica(r)},
       {id:'selo',label:'Selo',padrao:baixou?'BAIXOU O PREÇO':'NOVO PREÇO',max:30},
       {id:'rodape',label:'Rodapé',padrao:'PEÇA JÁ NO BALCÃO DA '+imgLoja(),max:50,frases:FRASES_RODAPE,lembrar:true,largo:true}],
-    desenhar:v=>desenharImagemPreco(v),arquivo:()=>'novo-preco-'+imgSlug(p.nome)+'.png',
+    desenhar:v=>desenharImagemPreco(v),arquivo:()=>'novo-preco-'+imgSlug(p.nome)+'.jpg',
     registro:v=>['Imagem de novo preço gerada',p.nome+': '+(v.antigo!==''?precoCurto(v.antigo)+' → ':'')+precoCurto(p.preco)]});
 }
 function descontoResumo(p){return p.tipo==='fixa'?p.desconto_fixo+'%':(p.faixas||[]).map(fx=>`${fx.quantidade_min}–${fx.quantidade_max===null?'∞':fx.quantidade_max}: ${fx.percentual_desconto}%`).join(' · ')||'—'}
