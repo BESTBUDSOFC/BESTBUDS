@@ -85,7 +85,8 @@
       }else if(st.op==='insert'){
         const arr=(Array.isArray(st.payload)?st.payload:[st.payload]).map(r=>table==='categorias_itens'?{...r}:({id:'gen-'+(seq++),status:['ajustes_caixa','vendas','compras','estoque_bau'].includes(table)?'ativa':'ativo',...r}));
         if(table==='fornecedor_itens'){for(const r of arr){const it=DB.itens.find(i=>i.id===r.item_id);const c=it&&DB.categorias_itens.find(c=>c.codigo===it.categoria);if(!c||!c.compravel)return{data:null,error:{message:'categoria invalida'}}}}
-        if(table==='avisos')arr.forEach(r=>{delete r.status;r.criado_em=new Date().toISOString();r.expira_em=new Date(Date.now()+864e5).toISOString()});
+        if(table==='avisos')arr.forEach(r=>{delete r.status;r.criado_em=new Date().toISOString();r.tipo='manual';r.referencia=null;   // trigger avisos_definir_autor
+          const h=('duracao_horas' in r)?r.duracao_horas:(r.duracao_horas=24);r.expira_em=h===null?'infinity':new Date(Date.now()+h*36e5).toISOString()});
         if(table==='avisos_vistos')arr.forEach(r=>{delete r.status;delete r.id});
         if(table==='vendas')arr.forEach(r=>{r.data=r.data||new Date().toISOString();r.status='pendente';r.guardada_em=null;r.deposito_id=null;r.cancelamento_status=null});
         if(table==='estoque_bau')arr.forEach(r=>{r.data=r.data||new Date().toISOString();r.status=r.status||'ativa'});

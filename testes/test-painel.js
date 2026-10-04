@@ -33,7 +33,7 @@ const U=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
   __DB.avisos_vistos=[{aviso_id:'av1',usuario_id:'${U(2)}'},{aviso_id:'av1',usuario_id:'${U(3)}'}];
   __DB.registros=Array.from({length:23},(_, i)=>({data:new Date(Date.now()-i*6e4).toISOString(),usuario_nome:'Zeca',acao:'Ação '+(i+1),detalhe:'d'}));`);
  await t('carregarTudo()');
- await t(SEED+`;painelPer.preset='hoje';_pnReg.em=0;go('painel')`);await p.waitForTimeout(400);
+ await t(SEED+`;painelFiltro={receita:{p:'hoje',s:0},vendedores:{p:'hoje',s:0},produtos:{p:'hoje',s:0}};_pnReg.em=0;go('painel')`);await p.waitForTimeout(400);
  const txt=await p.$eval('#main-content',e=>e.innerText);
  for(const sai of ['Saúde do caixa','Caixa atual','Entradas no período','Ticket médio','Descontos concedidos','Repasse da equipe','On-line agora','on-line agora','Avisos e equipe'])ok(!txt.includes(sai),'removido: '+sai);
  ok(!(await p.$('.pn-tile')),'sem cards de números na parte de vendas');
@@ -64,7 +64,7 @@ const U=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
  await t(`window.__bk=db.vendas;(()=>{const I=pnSemanaTrabalho(0).ini.getTime(),H=h=>new Date(I+h*36e5).toISOString();let n=0;
   const V=(nome,uid,h,loja,total)=>({id:'w'+(n++),data:H(h),status:'ativa',usuario_id:uid,usuario_nome:nome,total,subtotal:total,desconto:0,cota_funcionario:total-loja,receita_loja:loja,itens:[],auxiliares:[]});
   db.vendas=[...[1,23.5,25,49,50,73,74,75].map(h=>V('Persistente','p1',h,100,200)),...[2,3,26,27,28].map(h=>V('Regular','r1',h,300,600)),V('Sortudo','s1',4,3000,5000),
-   V('Antes','a1',-1/60,999,999)]})();painelRank='pont';painelSemana=0;render()`);
+   V('Antes','a1',-1/60,999,999)]})();painelRank='pont';painelFiltro.vendedores={p:'semana',s:0};render()`);
  const rs=await t(`(()=>{const r=pnRankingSemana(0);return{teto:r.teto,l:r.lista.map(p=>({n:p.nome,pont:p.pont,dias:p.dias,el:p.elegivel,res:Math.round(p.pRes*10)/10}))}})()`);
  const P=rs.l.find(x=>x.n==='Persistente'),R=rs.l.find(x=>x.n==='Regular'),S=rs.l.find(x=>x.n==='Sortudo');
  ok(rs.teto===300&&S.res===20,'teto por venda = 10% maiores da semana ($300): a venda de $3.000 do Sortudo conta como $300');
@@ -75,26 +75,34 @@ const U=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
  ok(!S.el&&P.el&&R.el,'menos de 5 vendas: sem medalha (Sortudo)');
  const linhas=await p.$$eval('.pn-tab table',t=>[...t[0].querySelectorAll('tr')].slice(1).map(r=>r.cells[0].innerText.trim()));
  ok(linhas[0].includes('🥇')&&linhas[0].includes('Regular')&&linhas[1].includes('🥈')&&linhas[1].includes('Persistente')&&linhas[2].includes('Sortudo')&&!linhas[2].includes('🥉')&&linhas[2].includes('poucas vendas'),'tabela: 🥇 Regular, 🥈 Persistente, Sortudo sem medalha e com "poucas vendas": '+linhas.join(' / '));
- const tit=await p.$eval('.pn-rank-tog',e=>e.innerText.replace(/\s+/g,' '));
- ok(/Semana \d\d\/\d\d a \d\d\/\d\d/.test(tit)&&tit.includes('segunda 06:00 até segunda 05:59')&&(await p.$eval('.pn-rank-tog button[title="Próxima semana"]',e=>e.disabled)),'cabeçalho da semana; "próxima" travada na semana atual: '+tit);
- await p.click('.pn-rank-tog button[title="Semana anterior"]');await p.waitForTimeout(150);
- ok((await t('painelSemana'))===-1&&(await p.$eval('.pn-tab table',e=>e.innerText)).includes('Antes'),'‹ volta uma semana');
+ const tit=await p.$eval('.pn-filtro[data-bloco="vendedores"]',e=>e.innerText.replace(/\s+/g,' '));
+ ok(/\d\d\/\d\d a \d\d\/\d\d/.test(tit)&&tit.includes('segunda 06:00 até segunda 05:59')&&(await p.$eval('.pn-filtro[data-bloco="vendedores"] button[title="Próxima semana"]',e=>e.disabled)),'cabeçalho da semana; "próxima" travada na semana atual: '+tit);
+ await p.click('.pn-filtro[data-bloco="vendedores"] button[title="Semana anterior"]');await p.waitForTimeout(150);
+ ok((await t('painelFiltro.vendedores.s'))===-1&&(await t('painelFiltro.receita.p'))==='hoje'&&(await p.$eval('.pn-tab table',e=>e.innerText)).includes('Antes'),'‹ volta uma semana');
  await p.click('.pn-rank-tog button:has-text("Receita da loja")');await p.waitForTimeout(150);
- await t(`painelSemana=0;render()`);
+ await t(`painelFiltro.vendedores.s=0;render()`);
  const ordemL=await p.$$eval('.pn-tab table',t=>[...t[0].querySelectorAll('tr')].slice(1).map(r=>r.cells[0].innerText.trim()));
  ok(ordemL[0].includes('Sortudo')&&!ordemL[0].includes('🥇'),'ranking por receita da loja: Sortudo primeiro, sem medalha: '+ordemL.join(' / '));
- await t(`db.vendas=window.__bk;painelRank='pont';painelSemana=0;render()`);
- // v4.31: datas do Personalizado aceitam a data inteira (antes redesenhava a cada dígito e saía do campo)
- await p.click('.pn-filtros button:has-text("Personalizado")');await p.waitForTimeout(150);
- await p.click('#pn-de',{position:{x:12,y:12}});await p.keyboard.type('01');await p.waitForTimeout(150);
- ok(await t(`document.activeElement&&document.activeElement.id==='pn-de'`),'digitar na data não tira o foco do campo');
- await p.keyboard.type('152026');   // navegador de teste em inglês: mês/dia/anoawait p.waitForTimeout(150);
- const vDe=await t(`document.getElementById('pn-de').value`);
- ok(await t(`document.activeElement&&document.activeElement.id==='pn-de'`)&&vDe==='2026-01-15','data inteira digitada: '+vDe);
- await p.keyboard.press('Enter');await p.waitForTimeout(200);
- ok((await t(`painelPer.de`))==='2026-01-15'&&(await p.$eval('.pn-per',e=>e.textContent)).startsWith('15/01/2026'),'Enter aplica o período');
- await p.click('#pn-ate');await p.keyboard.press('Tab');await p.waitForTimeout(100);
- ok(await t(`!!document.getElementById('pn-ate')`),'andar entre os campos de data não redesenha à toa');
+ await t(`db.vendas=window.__bk;painelRank='pont';painelFiltro={receita:{p:'hoje',s:0},vendedores:{p:'hoje',s:0},produtos:{p:'hoje',s:0}};render()`);
+ // v4.32: um filtro em cada bloco (Hoje, 7 dias, 30 dias, Esta semana); sem o filtro geral
+ ok(!(await p.$('.pn-filtros'))&&!(await p.$('#pn-de'))&&(await p.$$('.pn-filtro')).length===3,'sem filtro geral nem Personalizado; um filtro por bloco (receita, vendedores, produtos)');
+ ok(JSON.stringify(await p.$$eval('.pn-filtro[data-bloco="produtos"] > .btn',x=>x.map(e=>e.textContent.trim())))==='["Hoje","7 dias","30 dias","Esta semana"]','opções: Hoje, 7 dias, 30 dias, Esta semana');
+ await p.click('.pn-filtro[data-bloco="receita"] > .btn:has-text("7 dias")');await p.waitForTimeout(200);
+ ok((await p.$$eval('#pn-colunas .pn-hit',x=>x.length))===7&&(await t('painelFiltro.vendedores.p'))==='hoje'&&(await t('painelFiltro.produtos.p'))==='hoje','mudar o filtro da receita não mexe nos outros blocos');
+ await p.click('.pn-filtro[data-bloco="receita"] > .btn:has-text("30 dias")');await p.waitForTimeout(200);
+ ok((await p.$$eval('#pn-colunas .pn-hit',x=>x.length))===30,'30 dias = 30 colunas');
+ // semana na receita: 7 colunas por dia de trabalho (venda de terça 05:30 cai na segunda)
+ await t(`window.__bk2=db.vendas;(()=>{const I=pnSemanaTrabalho(0).ini.getTime(),H=h=>new Date(I+h*36e5).toISOString();
+  db.vendas=[{id:'q1',data:H(23.5),status:'ativa',usuario_id:'${U(1)}',usuario_nome:'Zeca',total:10,subtotal:10,desconto:0,cota_funcionario:5,receita_loja:5,itens:[{produto_id:'pr1',nome:'Produto 1',qtd:3,preco_unit:10}],auxiliares:[]},
+   {id:'q2',data:H(-0.5),status:'ativa',usuario_id:'${U(1)}',usuario_nome:'Zeca',total:10,subtotal:10,desconto:0,cota_funcionario:5,receita_loja:7,itens:[{produto_id:'pr2',nome:'Produto 2',qtd:9,preco_unit:10}],auxiliares:[]}]})();
+  painelFiltro.receita={p:'semana',s:0};painelFiltro.produtos={p:'semana',s:0};render()`);await p.waitForTimeout(200);
+ const sem=await t(`document.getElementById('pn-colunas')._dados.baldes.map(b=>b.valor)`);
+ ok(sem.length===7&&sem[0]===5&&sem.slice(1).every(v=>v===0),'semana: 7 colunas, venda de terça 05:30 conta na segunda e a de segunda 05:30 fica na semana anterior: '+sem.join(','));
+ const prodTxt=await p.$eval('.pn-duas .pn-card',e=>e.innerText);
+ ok(prodTxt.includes('Produto 1')&&!prodTxt.includes('Produto 2\n'),'produtos na semana: só o que foi vendido de segunda 06:00 em diante');
+ await p.click('.pn-filtro[data-bloco="produtos"] button[title="Semana anterior"]');await p.waitForTimeout(150);
+ ok((await p.$$eval('.pn-duas .pn-card .pn-tab td',x=>x.map(e=>e.textContent))).includes('Produto 2')&&(await t('painelFiltro.receita.s'))===0,'‹ nos produtos volta a semana só dos produtos');
+ await t(`db.vendas=window.__bk2;painelFiltro={receita:{p:'hoje',s:0},vendedores:{p:'hoje',s:0},produtos:{p:'hoje',s:0}};render()`);
  ok((await p.$$eval('.pn-aviso',x=>x.map(e=>e.innerText.replace(/\s+/g,' ')))).some(a=>a.includes('2 de 6 viram')&&a.includes('faltam')),'avisos: quem viu e quem falta');
  // últimas ações paginadas
  await p.waitForTimeout(200);
@@ -109,9 +117,9 @@ const U=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
  pag=await p.$eval('.pn-pag',e=>e.innerText.replace(/\s+/g,' '));ok(pag.includes('1–20 de 23')&&pag.includes('p. 1/2'),'trocar para 20 volta à página 1: '+pag);
  const rpc=await t(`__LOG.filter(x=>x.table==='registros'&&x.op==='select').length`);ok(rpc>=3,'cada página busca no banco (leitura): '+rpc);
  // período e gráfico
- await t(`pnAlternar('7d')`);await p.waitForTimeout(300);
+ await t(`pnFiltrar('receita','7d')`);await p.waitForTimeout(300);
  ok((await p.$$eval('#pn-colunas .pn-hit',x=>x.length))===7,'7 dias = 7 colunas');
- ok(!(await p.$eval('.pn-per',e=>e.innerText)).includes('comparado'),'sem comparação com período anterior');
+ ok(!(await p.$eval('.pn-filtro[data-bloco="receita"]',e=>e.innerText)).includes('comparado'),'sem comparação com período anterior');
  // Baú: sem a faixa, com a borda vermelha
  await t(`go('bau')`);await p.waitForTimeout(200);
  ok(!(await p.$eval('#main-content',e=>e.innerText)).includes('Itens no limite mínimo'),'Baú: faixa "Itens no limite mínimo" removida');
@@ -140,7 +148,7 @@ const U=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
  await p.close();
  // ---- celular
  p=await abre(U(3),{width:390,height:900});
- await p.evaluate(SEED+`;painelPer.preset='7d';go('painel')`);await p.waitForTimeout(300);
+ await p.evaluate(SEED+`;painelFiltro.receita={p:'7d',s:0};go('painel')`);await p.waitForTimeout(300);
  ok((await p.evaluate('document.documentElement.scrollWidth'))<=390,'celular: sem rolagem lateral');
  await p.screenshot({path:SP+'/saida/painel-mob.png',fullPage:true});ok(!p.errs.length,'celular sem erros JS');await p.close();
  // ---- vendedor
