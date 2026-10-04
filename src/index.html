@@ -336,6 +336,16 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .aviso-img-prev .iconbtn{position:absolute;top:6px;right:6px;background:var(--surface)}
 .aviso-lista{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto}
 .aviso-item{border:1px solid var(--border);border-radius:10px;padding:12px}
+.rk-grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.rk-bloco h4{margin:0 0 10px;font-size:14px}.rk-bloco h4 .muted{font-weight:500;font-size:12px}
+.rk-linha{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.rk-linha label{font-size:13px;color:var(--text);text-transform:none;letter-spacing:0;margin:0}
+.rk-linha label small{display:block;color:var(--muted);font-size:11px}.rk-linha select{width:auto;max-width:170px}
+.rk-num{display:flex;align-items:center;gap:6px}.rk-num input{width:72px}.rk-num span{font-size:12px;color:var(--muted)}
+.rk-prev-l{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)}.rk-prev-l:last-of-type{border-bottom:0}
+.aviso-dur{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}.aviso-dur input[type=number]{width:90px}
+/* aviso automático do vendedor ouro da semana */
+.aviso-ouro{border-color:#E8B53A!important;box-shadow:0 0 0 1px rgba(232,181,58,.35),0 10px 40px rgba(232,181,58,.12);background:linear-gradient(180deg,rgba(232,181,58,.10),transparent 60%),var(--surface)}
+.aviso-ouro .aviso-topo{color:#E8B53A}.aviso-ouro .aviso-titulo{font-size:22px}
 .aviso-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
 .aviso-form textarea{width:100%;resize:vertical;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font:inherit}
 #btn-avisos,#btn-tutorial{position:relative;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:15px;line-height:1;cursor:pointer}
@@ -454,8 +464,9 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .msel-opt .tag{margin-left:auto}
 .msel-vazio{padding:10px;color:var(--muted);font-size:12px}
 .pend-card{margin-top:18px}
-.pn-filtros{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:22px}
-.pn-filtros input[type=date]{width:auto;padding:6px 8px}
+.pn-card-cab{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 14px;margin-bottom:12px}.pn-card-cab .pn-card-tit{margin:0}
+.pn-filtro{display:flex;flex-wrap:wrap;gap:4px;align-items:center}.pn-filtro .btn-sm{padding:4px 9px;font-size:12px}
+.pn-filtro-per{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-size:12px;margin-left:4px}.pn-filtro-per b{font-size:13px}
 .pn-per{color:var(--muted);font-size:12px;margin-left:6px}
 .pn-tile .pn-sub{color:var(--muted);font-size:12px;margin-top:6px}
 .pn-sub .tag{white-space:nowrap}
@@ -629,7 +640,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.31.1';
+const VERSAO='v4.32.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -816,6 +827,7 @@ async function carregarTudo(){
     ajustes_caixa:(ajustesCaixa.data||[]).map(a=>({...a,valor:Number(a.valor)})),
     depositos:depositosR.error?[]:(depositosR.data||[]).map(d=>({...d,total_vendas:Number(d.total_vendas),repasse:Number(d.repasse),valor_caixa:Number(d.valor_caixa)})),
     aliquota_global:Number(cfg.aliquota_global||50),
+    ranking:{...RANKING_PADRAO,...(cfg.ranking||{})},
     aliquota_taxa_deslocamento:Number(cfg.aliquota_taxa_deslocamento||100),
     identidade_visual:{logotipo:cfg.logotipo_url||null,nome_loja:cfg.nome_loja||'BEST BUDS',cores:cfg.cores||{},...fundoLoginDeCfg(cfg)}
   };
@@ -1113,40 +1125,37 @@ function renderPDV(c){
    Tudo sai dos dados já carregados (db), menos as últimas ações da auditoria (registros), lidas ao abrir.
    Período sempre em dias de Brasília. Vendas contam pela data da venda; o caixa, pela data em que o
    dinheiro entrou (venda guardada: guardada_em; compra: data_local; ajuste: data). */
-let painelPer={preset:'7d',de:'',ate:''};
-let painelVend=new Set(),painelRank='pont',painelSemana=0,_pnVendChaves=[];   // vendedores com linha no gráfico; ranking por pontuação ou receita; semana do ranking (0 = atual, -1 = anterior…)
+let painelVend=new Set(),painelRank='pont',_pnVendChaves=[];   // vendedores com linha no gráfico; ranking por pontuação ou receita
+/* Filtro de cada bloco (pedido do dono, v4.32): Hoje, 7 dias, 30 dias ou Esta semana. A semana é a de trabalho
+   (segunda 06:00 até a segunda seguinte 05:59, Brasília; ‹ › volta semanas: s = 0 atual, -1 anterior…).
+   Hoje / 7 dias / 30 dias são dias de calendário de Brasília (até hoje). */
+let painelFiltro={receita:{p:'semana',s:0},vendedores:{p:'semana',s:0},produtos:{p:'semana',s:0}};
+const PN_FILTROS=[['hoje','Hoje'],['7d','7 dias'],['30d','30 dias'],['semana','Esta semana']];
 // cores das linhas dos vendedores (as barras são verdes): distintas entre si e legíveis no fundo escuro
 const PN_CORES=['#F5A524','#4EA8FF','#FF6B9A','#B48CFF','#3DD9C1','#FF8A4C','#E8E8E8','#C7E05A'];
 let _pnReg={em:0,linhas:[],erro:null,carregando:false,page:1,size:10,total:0};
-const PN_PRESETS=[['hoje','Hoje'],['7d','7 dias'],['30d','30 dias'],['mes','Este mês'],['tudo','Tudo'],['pers','Personalizado']];
 /* Aritmética de calendário em 'AAAA-MM-DD' (meio-dia UTC, sem instante real: não sofre com fuso) */
 function pnSomaDias(dia,n){const[a,m,d]=dia.split('-').map(Number);const t=new Date(Date.UTC(a,m-1,d,12)+n*864e5);return t.getUTCFullYear()+'-'+String(t.getUTCMonth()+1).padStart(2,'0')+'-'+String(t.getUTCDate()).padStart(2,'0')}
 function pnDifDias(a,b){const p=s=>{const[x,y,z]=s.split('-').map(Number);return Date.UTC(x,y-1,z)};return Math.round((p(b)-p(a))/864e5)}
 function pnDiaFmt(dia){const[a,m,d]=dia.split('-');return d+'/'+m}
-function pnPrimeiroDia(){const ds=[...db.vendas.map(v=>diaBR(v.data)),...db.compras.map(k=>k.data_local||diaBR(k.data)),...(db.ajustes_caixa||[]).map(a=>diaBR(a.data))].filter(Boolean).sort();return ds[0]||todayISO()}
-function pnPeriodo(){
-  const hoje=todayISO(),p=painelPer.preset;
-  let de=hoje,ate=hoje;
-  if(p==='7d')de=pnSomaDias(hoje,-6);
-  else if(p==='30d')de=pnSomaDias(hoje,-29);
-  else if(p==='mes')de=hoje.slice(0,8)+'01';
-  else if(p==='tudo')de=pnPrimeiroDia();
-  else if(p==='pers'){de=painelPer.de||pnSomaDias(hoje,-6);ate=painelPer.ate||hoje;if(de>ate)[de,ate]=[ate,de]}
-  const n=pnDifDias(de,ate)+1;
-  return{de,ate,n};
+function pnFaixa(bloco){
+  const f=painelFiltro[bloco];
+  const r=regrasRanking(),h=r.virada_hora;
+  if(f.p==='semana'){const w=pnSemanaTrabalho(f.s),dn=DIAS_SEMANA[r.semana_inicio];
+    return{bloco,p:'semana',s:f.s,de:w.seg,ate:w.ultimoDia,n:7,ini:w.ini,fim:w.fim,dia:pnDiaTrabalho,txt:`${pnDiaFmt(w.seg)} a ${pnDiaFmt(pnSomaDias(w.seg,7))}`,sub:`${dn} ${pnHora(h)} até ${dn} ${pnHoraFim(h)}`+(f.s===0?' · em andamento':'')}}
+  // Hoje / 7 / 30 dias: também em dias de trabalho (pedido do dono, v4.32: "Hoje" das 06:00 às 05:59 do dia seguinte)
+  const hoje=pnDiaTrabalho(new Date()),de=f.p==='7d'?pnSomaDias(hoje,-6):f.p==='30d'?pnSomaDias(hoje,-29):hoje;
+  return{bloco,p:f.p,s:0,de,ate:hoje,n:pnDifDias(de,hoje)+1,ini:instanteBR(de,pnHora(h)),fim:instanteBR(pnSomaDias(hoje,1),pnHora(h)),dia:pnDiaTrabalho,
+    txt:de===hoje?dataBRdia(hoje):dataBRdia(de)+' a '+dataBRdia(hoje),sub:h?`dias das ${pnHora(h)} às ${pnHoraFim(h)}`:''};
 }
-const pnNoPer=(dia,per)=>!!dia&&dia>=per.de&&dia<=per.ate;
 const pnVendida=v=>v.status==='ativa'||v.status==='pendente';
-function pnVendasPer(per){return db.vendas.filter(v=>pnVendida(v)&&pnNoPer(diaBR(v.data),per))}
-/* Agrupa o período em dias (até 62), semanas (até ~1 ano) ou meses */
-function pnBaldes(per){
-  const b=[];
-  if(per.n<=62){for(let i=0;i<per.n;i++){const d=pnSomaDias(per.de,i);b.push({de:d,ate:d,rot:pnDiaFmt(d)})}return{tipo:'dia',b}}
-  if(per.n<=380){for(let d=per.de;d<=per.ate;d=pnSomaDias(d,7)){const a=pnSomaDias(d,6)<per.ate?pnSomaDias(d,6):per.ate;b.push({de:d,ate:a,rot:pnDiaFmt(d)})}return{tipo:'semana',b}}
-  let m=per.de.slice(0,7);
-  while(m<=per.ate.slice(0,7)){const[a,mm]=m.split('-').map(Number);const prox=mm===12?(a+1)+'-01':a+'-'+String(mm+1).padStart(2,'0');b.push({de:m+'-01',ate:pnSomaDias(prox+'-01',-1),rot:String(mm).padStart(2,'0')+'/'+String(a).slice(2)});m=prox}
-  return{tipo:'mês',b};
+function pnVendasFaixa(f){const t0=f.ini.getTime(),t1=f.fim.getTime();return db.vendas.filter(v=>{if(!pnVendida(v))return false;const t=new Date(v.data).getTime();return t>=t0&&t<t1})}
+function pnFiltroHTML(f){
+  return `<div class="pn-filtro" data-bloco="${f.bloco}">${PN_FILTROS.map(([k,r])=>`<button class="btn btn-sm ${f.p===k?'btn-primary':'btn-ghost'}" onclick="pnFiltrar('${f.bloco}','${k}')">${r}</button>`).join('')}
+    <span class="pn-filtro-per">${f.p==='semana'?`<button class="btn btn-ghost btn-sm" title="Semana anterior" onclick="pnFiltroSemana('${f.bloco}',-1)">‹</button><b>${f.txt}</b><button class="btn btn-ghost btn-sm" title="Próxima semana" ${f.s>=0?'disabled':''} onclick="pnFiltroSemana('${f.bloco}',1)">›</button><span class="muted">${f.sub}</span>`:`<span class="muted">${f.txt}${f.sub?' · '+f.sub:''}</span>`}</span></div>`;
 }
+function pnFiltrar(bloco,p){painelFiltro[bloco]={p,s:0};render()}
+function pnFiltroSemana(bloco,d){const f=painelFiltro[bloco];f.s=Math.min(0,f.s+d);render()}
 function pnEscalaMax(v){if(v<=0)return 1;const e=Math.pow(10,Math.floor(Math.log10(v))),f=v/e;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e}
 function pnCompacto(n){n=Number(n)||0;const a=Math.abs(n);return a>=1e6?'$'+(n/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mi':a>=1e4?'$'+(n/1e3).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mil':'$'+n.toLocaleString('pt-BR',{maximumFractionDigits:0})}
 /* Colunas: receita da loja das vendas feitas em cada dia/semana/mês (desenhado depois de montar a tela, na largura real) */
@@ -1188,7 +1197,6 @@ function pnBarras(linhas,valorFmt){
   const max=Math.max(0,...linhas.map(l=>l.valor));
   return `<div class="pn-barras">${linhas.map(l=>`<div class="pn-barra-linha" title="${esc(l.nome)}: ${esc(valorFmt(l.valor))}"><span class="pn-barra-nome">${esc(l.nome)}</span><span class="pn-barra-trilho"><span class="pn-barra" style="width:${max>0?Math.max(l.valor>0?1.5:0,l.valor/max*100):0}%"></span></span><span class="pn-barra-valor">${esc(valorFmt(l.valor))}</span></div>`).join('')}</div>`;
 }
-function pnVendedores(per){return pnVendedoresDe(pnVendasPer(per))}
 function pnVendedoresDe(vendas){
   const m={};
   const pessoa=(id,nome)=>{const k=id||nome||'—';return m[k]=m[k]||{k,nome:nome||'—',n:0,total:0,loja:0,pendente:0,repasse:0,desconto:0,subtotal:0,aux:0,vendas:[]}};
@@ -1200,42 +1208,43 @@ function pnVendedoresDe(vendas){
   });
   return Object.values(m).sort((a,b)=>b.loja-a.loja||b.total-a.total);
 }
-/* ---- Ranking semanal de vendedores (pedido do dono, v4.31) ----
-   Semana de trabalho: segunda 06:00 até a segunda seguinte 05:59 (Brasília). O "dia de trabalho" também vira às 06:00.
-   Pontuação 0–100 = 50% resultado + 25% volume + 25% constância, cada parte comparada com o melhor da semana (= 100):
-   - resultado: receita da loja das vendas, cada venda limitada a um teto (as 10% maiores vendas da semana): uma venda
-     grande de sorte não vale a semana inteira;
-   - volume: nº de vendas; constância: dias de trabalho com venda.
-   Medalha só com 5 vendas ou mais na semana (com menos, não dá para separar talento de sorte). */
-const PN_PESOS={resultado:.5,volume:.25,constancia:.25},PN_MIN_VENDAS=5,PN_VIRADA_H=6;
-const pnDiaTrabalho=inst=>diaBR(new Date(new Date(inst).getTime()-PN_VIRADA_H*36e5));
+/* ---- Ranking de vendedores (pedido do dono, v4.31; regras editáveis desde a v4.32) ----
+   As regras ficam no banco (configuracoes.ranking) e são editadas em Configurações › Ranking. O site (aqui) e a função
+   do banco que publica o aviso automático do vendedor ouro (gerar_aviso_vendedor_semana) leem os MESMOS valores, então
+   mudar uma regra muda os dois. O que fica em dois lugares é só a fórmula (o jeito de fazer a conta): mudou a fórmula
+   aqui, mude também na função do banco (migração 20261005000000).
+   Pontuação 0–100 = peso × resultado + peso × volume + peso × constância, cada parte comparada com o melhor do período:
+   - resultado: receita da loja, cada venda limitada a um teto (o valor das X% maiores vendas do período);
+   - volume: nº de vendas; constância: dias de trabalho com venda (o dia vira na hora da virada).
+   Medalha só com o mínimo de vendas. Semana de trabalho: do dia de início, na hora da virada, até o mesmo horário 7 dias depois. */
+const RANKING_PADRAO={peso_resultado:50,peso_volume:25,peso_constancia:25,min_vendas:5,teto_percentil:90,virada_hora:6,semana_inicio:1,contar_pendentes:true,aviso_ativo:true,aviso_titulo:'Vendedor ouro da semana',aviso_podio:true};
+const DIAS_SEMANA=['','segunda','terça','quarta','quinta','sexta','sábado','domingo'];   // 1 = segunda … 7 = domingo (como no banco)
+function regrasRanking(){return{...RANKING_PADRAO,...((db&&db.ranking)||{})}}
+const pnHora=h=>String(h).padStart(2,'0')+':00',pnHoraFim=h=>String((h+23)%24).padStart(2,'0')+':59';
+const pnDiaTrabalho=inst=>diaBR(new Date(new Date(inst).getTime()-regrasRanking().virada_hora*36e5));
 function pnSemanaTrabalho(desloc){
-  const hoje=pnDiaTrabalho(new Date()),[a,m,d]=hoje.split('-').map(Number),dow=new Date(Date.UTC(a,m-1,d,12)).getUTCDay();   // 0 = domingo
-  const seg=pnSomaDias(hoje,-((dow+6)%7)+7*(desloc||0)),ini=instanteBR(seg,'06:00'),fim=instanteBR(pnSomaDias(seg,7),'06:00');
+  const r=regrasRanking(),hoje=pnDiaTrabalho(new Date()),[a,m,d]=hoje.split('-').map(Number),dow=new Date(Date.UTC(a,m-1,d,12)).getUTCDay()||7;   // 1 = segunda … 7 = domingo
+  const seg=pnSomaDias(hoje,-((dow-r.semana_inicio+7)%7)+7*(desloc||0)),ini=instanteBR(seg,pnHora(r.virada_hora)),fim=instanteBR(pnSomaDias(seg,7),pnHora(r.virada_hora));
   return{seg,ini,fim,ultimoDia:pnSomaDias(seg,6)};
 }
-function pnRankingSemana(desloc){
-  const sem=pnSemanaTrabalho(desloc),t0=sem.ini.getTime(),t1=sem.fim.getTime();
-  const vendas=db.vendas.filter(v=>{if(!pnVendida(v))return false;const t=new Date(v.data).getTime();return t>=t0&&t<t1});
+// a fórmula também está no banco (gerar_aviso_vendedor_semana); as regras (pesos, mínimo, teto…) vêm do mesmo lugar
+function pnRankingFaixa(f){
+  const r=regrasRanking(),vendas=pnVendasFaixa(f).filter(v=>r.contar_pendentes||v.status==='ativa');
   const lista=pnVendedoresDe(vendas).filter(p=>p.n);
-  const vals=vendas.map(v=>v.receita_loja||0).sort((x,y)=>x-y),teto=vals.length?vals[Math.floor((vals.length-1)*.9)]:0;
-  lista.forEach(p=>{p.ajust=p.vendas.reduce((s,v)=>s+Math.min(v.receita_loja||0,teto),0);p.dias=new Set(p.vendas.map(v=>pnDiaTrabalho(v.data))).size;p.elegivel=p.n>=PN_MIN_VENDAS});
+  const vals=vendas.map(v=>v.receita_loja||0).sort((x,y)=>x-y),teto=vals.length?vals[Math.floor((vals.length-1)*r.teto_percentil/100)]:0;
+  lista.forEach(p=>{p.ajust=p.vendas.reduce((s,v)=>s+Math.min(v.receita_loja||0,teto),0);p.dias=new Set(p.vendas.map(v=>f.dia(v.data))).size;p.elegivel=p.n>=r.min_vendas});
   const mx=k=>Math.max(0,...lista.map(p=>p[k])),pct=(v,k)=>mx(k)>0?v/mx(k)*100:0;
   lista.forEach(p=>{p.pRes=pct(p.ajust,'ajust');p.pVol=pct(p.n,'n');p.pCon=pct(p.dias,'dias');
-    p.pont=Math.round((PN_PESOS.resultado*p.pRes+PN_PESOS.volume*p.pVol+PN_PESOS.constancia*p.pCon)*10)/10});
-  return{...sem,vendas,lista,teto};
+    p.pont=Math.round((r.peso_resultado*p.pRes+r.peso_volume*p.pVol+r.peso_constancia*p.pCon)/100*10)/10});
+  return{...f,vendas,lista,teto,regras:r};
 }
+function pnRankingSemana(desloc){const w=pnSemanaTrabalho(desloc);return{...pnRankingFaixa({p:'semana',ini:w.ini,fim:w.fim,dia:pnDiaTrabalho}),...w}}
 const pnChaveVenda=v=>v.usuario_id||v.usuario_nome||'—';
 function pnSelVend(i){const k=_pnVendChaves[i];if(k===undefined)return;painelVend.has(k)?painelVend.delete(k):painelVend.add(k);render()}
 function pnRanking(modo){painelRank=modo;render()}
-function pnSemana(d){painelSemana=Math.min(0,painelSemana+d);render()}
-/* Datas do Personalizado: aplicar a cada dígito redesenhava a tela e tirava o foco do campo (só entrava 1 dígito).
-   Agora aplica ao sair dos campos ou com Enter; no celular (seletor nativo) aplica ao escolher. */
-function pnDatasSair(e){const g=document.getElementById('pn-datas');if(g&&e&&e.relatedTarget&&g.contains(e.relatedTarget))return;pnDatas()}
-function pnDatasMudou(){if(matchMedia('(pointer:coarse)').matches)pnDatas()}
-function pnProdutos(per){
+function pnProdutos(vendas){
   const m={};
-  pnVendasPer(per).forEach(v=>(v.itens||[]).forEach(i=>{const k=i.produto_id||i.nome;const p=m[k]=m[k]||{nome:i.nome||'?',qtd:0,valor:0};p.qtd+=Number(i.qtd)||0;p.valor+=(Number(i.qtd)||0)*(Number(i.preco_unit)||0)}));
+  vendas.forEach(v=>(v.itens||[]).forEach(i=>{const k=i.produto_id||i.nome;const p=m[k]=m[k]||{nome:i.nome||'?',qtd:0,valor:0};p.qtd+=Number(i.qtd)||0;p.valor+=(Number(i.qtd)||0)*(Number(i.preco_unit)||0)}));
   const lista=Object.values(m).sort((a,b)=>b.qtd-a.qtd||b.valor-a.valor);
   const vendidos=new Set(Object.keys(m));
   const parados=db.produtos.filter(p=>p.status==='ativo'&&!vendidos.has(p.id)&&!vendidos.has(p.nome)).map(p=>p.nome);
@@ -1261,12 +1270,9 @@ function pnHtmlAtividade(){
   const lista=_pnReg.linhas.length?`<div class="pn-lista">${_pnReg.linhas.map(r=>`<div class="pn-ativ"><span class="pn-ativ-q">${esc(dataHoraBR(r.data))} · ${esc(r.usuario_nome||'—')}</span><span><b>${esc(r.acao)}</b>${r.detalhe?' — '+esc(r.detalhe):''}</span></div>`).join('')}</div>`:`<div class="empty">Nenhuma ação registrada.</div>`;
   return lista+`<div class="pn-pag"><span>${_pnReg.total?`${ini+1}–${Math.min(_pnReg.total,ini+_pnReg.linhas.length)} de ${_pnReg.total}`:'0 registros'}</span><select style="width:auto;padding:5px" onchange="pnRegPagina(0,+this.value)">${[10,20,50,100].map(n=>`<option ${_pnReg.size===n?'selected':''}>${n}</option>`).join('')}</select><button class="btn btn-ghost btn-sm" ${_pnReg.page<=1?'disabled':''} onclick="pnRegPagina(-1)">Anterior</button><span>p. ${_pnReg.page}/${pags}</span><button class="btn btn-ghost btn-sm" ${_pnReg.page>=pags?'disabled':''} onclick="pnRegPagina(1)">Próxima</button></div>`;
 }
-function pnAlternar(preset){painelPer.preset=preset;if(preset==='pers'&&!painelPer.de){const p=pnPeriodo();painelPer.de=p.de;painelPer.ate=p.ate}render()}
-function pnDatas(){const de=document.getElementById('pn-de'),ate=document.getElementById('pn-ate');if(!de||!ate)return;
-  if(de.value===painelPer.de&&ate.value===painelPer.ate)return;painelPer.de=de.value;painelPer.ate=ate.value;render()}
 function renderPainel(c){
   if(!isGerente()){moduloAtual='pdv';return renderPDV(c)}
-  const per=pnPeriodo();
+  const fR=pnFaixa('receita'),fV=pnFaixa('vendedores'),fP=pnFaixa('produtos');
   const pend=db.vendas.filter(v=>v.status==='pendente');
   const pendAbertas=pend.filter(v=>v.cancelamento_status!=='pedido');
   const pendValor=pendAbertas.reduce((s,v)=>s+(v.receita_loja||0),0);
@@ -1275,20 +1281,20 @@ function renderPainel(c){
   const pedidosCanc=pend.filter(v=>v.cancelamento_status==='pedido');
   const pedidosSenha=(db.pedidos_senha||[]).length;
   const estoqueMin=itensComAlerta();
-  const vendedores=pnVendedores(per),prods=pnProdutos(per);
+  const prods=pnProdutos(pnVendasFaixa(fP));
   const eqs=membrosEquipe();
   const avisos=avisosAtivos().sort((a,b)=>new Date(b.criado_em)-new Date(a.criado_em));
   const vistosPor=id=>new Set((db.avisos_vistos_todos||[]).filter(x=>x.aviso_id===id).map(x=>x.usuario_id));
-  const txtPer=per.de===per.ate?dataBRdia(per.de):dataBRdia(per.de)+' a '+dataBRdia(per.ate);
-  const baldes=pnBaldes(per);
-  const vendasPer=pnVendasPer(per);
-  baldes.b.forEach(b=>{const vv=vendasPer.filter(v=>{const d=diaBR(v.data);return d>=b.de&&d<=b.ate});b.valor=vv.reduce((s,v)=>s+(v.receita_loja||0),0);b.n=vv.length;b.vendas=vv});
-  // vendedores para comparar no gráfico (quem vendeu no período); a cor fica presa à posição na lista
-  const vendComVenda=vendedores.filter(p=>p.n).sort((a,b)=>b.loja-a.loja||a.nome.localeCompare(b.nome));
+  // gráfico: uma barra por dia (na semana, dia de trabalho: vira às 06:00)
+  const vendasPer=pnVendasFaixa(fR);
+  const baldes={tipo:'dia',b:Array.from({length:fR.n},(_,i)=>{const d=pnSomaDias(fR.de,i);return{de:d,ate:d,rot:pnDiaFmt(d)}})};
+  baldes.b.forEach(b=>{const vv=vendasPer.filter(v=>fR.dia(v.data)===b.de);b.valor=vv.reduce((s,v)=>s+(v.receita_loja||0),0);b.n=vv.length;b.vendas=vv});
+  // vendedores para comparar no gráfico (quem vendeu no período do gráfico); a cor fica presa à posição na lista
+  const vendComVenda=pnVendedoresDe(vendasPer).filter(p=>p.n).sort((a,b)=>b.loja-a.loja||a.nome.localeCompare(b.nome));
   _pnVendChaves=vendComVenda.map(p=>p.k);
   const series=vendComVenda.map((p,i)=>({p,cor:PN_CORES[i%PN_CORES.length]})).filter(x=>painelVend.has(x.p.k))
     .map(({p,cor})=>({nome:p.nome,cor,vals:baldes.b.map(b=>b.vendas.filter(v=>pnChaveVenda(v)===p.k).reduce((s,v)=>s+(v.receita_loja||0),0))}));
-  const rk=pnRankingSemana(painelSemana);
+  const rk=pnRankingFaixa(fV);
   // pontuação: quem tem 5+ vendas primeiro (e só eles levam medalha); receita: só pela receita da loja
   const rankLista=painelRank==='pont'?[...rk.lista.filter(p=>p.elegivel).sort((a,b)=>b.pont-a.pont||b.loja-a.loja),...rk.lista.filter(p=>!p.elegivel).sort((a,b)=>b.pont-a.pont)]
     :rk.lista.slice().sort((a,b)=>b.loja-a.loja||b.total-a.total);
@@ -1305,36 +1311,28 @@ function renderPainel(c){
   <div class="section-title">🚨 Alertas</div>
   <div class="pn-alertas">${alertas.join('')||`<div class="pn-ok">✅ Nada pendente agora.</div>`}</div>
 
-  <div class="pn-filtros">
-    ${PN_PRESETS.map(([k,r])=>`<button class="btn btn-sm ${painelPer.preset===k?'btn-primary':'btn-ghost'}" onclick="pnAlternar('${k}')">${r}</button>`).join('')}
-    ${painelPer.preset==='pers'?`<span id="pn-datas" style="display:contents" onfocusout="pnDatasSair(event)" onkeydown="if(event.key==='Enter')pnDatas()"><input type="date" id="pn-de" value="${per.de}" onchange="pnDatasMudou()"><span class="muted">até</span><input type="date" id="pn-ate" value="${per.ate}" onchange="pnDatasMudou()"></span>`:''}
-    <span class="pn-per">${txtPer}</span>
-  </div>
   <div class="card pn-card">
-    <div class="pn-card-tit">📈 Receita da loja por ${baldes.tipo}</div>
+    <div class="pn-card-cab"><div class="pn-card-tit">📈 Receita da loja por dia</div>${pnFiltroHTML(fR)}</div>
     ${vendasPer.length?`<div class="pn-vsel"><span class="muted" style="font-size:12px">Comparar vendedor:</span>${vendComVenda.map((p,i)=>`<button type="button" class="${painelVend.has(p.k)?'ativo':''}" style="--c:${PN_CORES[i%PN_CORES.length]}" title="${painelVend.has(p.k)?'Tirar':'Mostrar'} a linha de ${esc(p.nome)}" onclick="pnSelVend(${i})"><i></i>${esc(p.nome)}</button>`).join('')}</div>
     <div id="pn-colunas" class="pn-colunas"></div>
     <details class="pn-tabela-det"><summary>Ver em tabela</summary><div class="table-wrap"><table><tr><th>${baldes.tipo==='dia'?'Dia':'Início'}</th><th>Vendas</th><th>Receita da loja</th>${series.map(se=>`<th style="color:${se.cor}">${esc(se.nome)}</th>`).join('')}</tr>${baldes.b.map((b,i)=>b.n?`<tr><td>${dataBRdia(b.de)}</td><td>${b.n}</td><td class="money">${fmt(b.valor)}</td>${series.map(se=>`<td>${fmt(se.vals[i])} <span class="muted">(${b.valor>0?Math.round(se.vals[i]/b.valor*1000)/10:0}%)</span></td>`).join('')}</tr>`:'').join('')}</table></div></details>`:`<div class="empty">Nenhuma venda no período.</div>`}
   </div>
 
   <div class="card pn-card">
-      <div class="pn-card-tit">🏆 Vendedores da semana</div>
-      <div class="pn-rank-tog"><button class="btn btn-ghost btn-sm" title="Semana anterior" onclick="pnSemana(-1)">‹</button>
-        <b style="font-size:13px">Semana ${pnDiaFmt(rk.seg)} a ${pnDiaFmt(pnSomaDias(rk.seg,7))}</b><span class="muted" style="font-size:12px">segunda 06:00 até segunda 05:59${painelSemana===0?' · em andamento':''}</span>
-        <button class="btn btn-ghost btn-sm" title="Próxima semana" ${painelSemana>=0?'disabled':''} onclick="pnSemana(1)">›</button>
-        <span style="flex:1"></span><span class="muted" style="font-size:12px">Ranking por:</span>
+      <div class="pn-card-cab"><div class="pn-card-tit">🏆 Vendedores</div>${pnFiltroHTML(fV)}</div>
+      <div class="pn-rank-tog"><span class="muted" style="font-size:12px">Ranking por:</span>
         <button class="btn btn-sm ${painelRank==='pont'?'btn-primary':'btn-ghost'}" onclick="pnRanking('pont')">🏆 Pontuação</button>
         <button class="btn btn-sm ${painelRank==='loja'?'btn-primary':'btn-ghost'}" onclick="pnRanking('loja')">Receita da loja</button></div>
-      ${rk.lista.length?`${painelRank==='pont'?`<p class="muted" style="font-size:12px;margin:-4px 0 10px">Pontuação de 0 a 100: <b>50% resultado</b> (receita da loja, cada venda limitada a ${fmt(rk.teto)}, o valor das 10% maiores da semana) + <b>25% volume</b> (nº de vendas) + <b>25% constância</b> (dias com venda). Cada parte é comparada com o melhor da semana. Medalha só com ${PN_MIN_VENDAS}+ vendas.</p>`:''}`
+      ${rk.lista.length?`${painelRank==='pont'?`<p class="muted" style="font-size:12px;margin:-4px 0 10px">Pontuação de 0 a 100: <b>${rk.regras.peso_resultado}% resultado</b> (receita da loja${rk.regras.teto_percentil<100?`, cada venda limitada a ${fmt(rk.teto)}, o valor das ${100-rk.regras.teto_percentil}% maiores do período`:''}) + <b>${rk.regras.peso_volume}% volume</b> (nº de vendas) + <b>${rk.regras.peso_constancia}% constância</b> (dias com venda; o dia vira às ${pnHora(rk.regras.virada_hora)}). Cada parte é comparada com o melhor do período. Medalha só com ${rk.regras.min_vendas}+ vendas${rk.regras.contar_pendentes?'':'; vendas ainda não guardadas não contam'}.${isSocioOuDiretor()||isGerente()?` <a href="#" style="color:var(--green)" onclick="cfgTabAtual='ranking';go('config');return false">Mudar as regras</a>`:''}</p>`:''}`
       +pnBarras(rankLista.map(p=>({nome:p.nome,valor:painelRank==='pont'?p.pont:p.loja})),painelRank==='pont'?(n=>pts(n)+' pts'):fmt)+`
       <div class="table-wrap pn-tab"><table>
         <tr><th>Vendedor</th><th>Pontuação</th><th title="50%: receita da loja com teto por venda">Resultado</th><th title="25%: nº de vendas">Volume</th><th title="25%: dias de trabalho com venda">Constância</th><th>Vendas</th><th>Dias</th><th>Total vendido</th><th>Ticket médio</th><th>Receita loja</th><th>Não guardado</th><th>Repasse recebido</th><th>Desconto médio</th></tr>
-        ${rankLista.map((p,i)=>`<tr><td>${medalha(p,i)}${esc(p.nome)}${p.elegivel?'':` <span class="tag y" style="white-space:nowrap" title="Menos de ${PN_MIN_VENDAS} vendas na semana: sem medalha">poucas vendas</span>`}${p.aux?` <span class="muted" style="font-size:11px">· ${p.aux} auxílio(s)</span>`:''}</td><td><b>${pts(p.pont)}</b></td><td>${pts(p.pRes)}</td><td>${pts(p.pVol)}</td><td>${pts(p.pCon)}</td><td>${p.n}</td><td>${p.dias}</td><td class="money money-total">${fmt(p.total)}</td><td>${fmt(p.total/p.n)}</td><td class="money">${fmt(p.loja)}</td><td>${p.pendente?`<span style="color:var(--warning-light)">${fmt(p.pendente)}</span>`:'—'}</td><td style="color:var(--purple-light)">${fmt(p.repasse)}</td><td>${p.subtotal?Math.round(p.desconto/p.subtotal*1000)/10+'%':'—'}</td></tr>`).join('')}
-      </table></div>`:`<div class="empty">Nenhuma venda nesta semana.</div>`}
+        ${rankLista.map((p,i)=>`<tr><td>${medalha(p,i)}${esc(p.nome)}${p.elegivel?'':` <span class="tag y" style="white-space:nowrap" title="Menos de ${rk.regras.min_vendas} vendas no período: sem medalha">poucas vendas</span>`}${p.aux?` <span class="muted" style="font-size:11px">· ${p.aux} auxílio(s)</span>`:''}</td><td><b>${pts(p.pont)}</b></td><td>${pts(p.pRes)}</td><td>${pts(p.pVol)}</td><td>${pts(p.pCon)}</td><td>${p.n}</td><td>${p.dias}</td><td class="money money-total">${fmt(p.total)}</td><td>${fmt(p.total/p.n)}</td><td class="money">${fmt(p.loja)}</td><td>${p.pendente?`<span style="color:var(--warning-light)">${fmt(p.pendente)}</span>`:'—'}</td><td style="color:var(--purple-light)">${fmt(p.repasse)}</td><td>${p.subtotal?Math.round(p.desconto/p.subtotal*1000)/10+'%':'—'}</td></tr>`).join('')}
+      </table></div>`:`<div class="empty">Nenhuma venda no período.</div>`}
   </div>
   <div class="pn-duas">
     <div class="card pn-card">
-      <div class="pn-card-tit">🌿 Produtos</div>
+      <div class="pn-card-cab"><div class="pn-card-tit">🌿 Produtos</div>${pnFiltroHTML(fP)}</div>
       ${prods.lista.length?pnBarras(prods.lista.map(p=>({nome:p.nome,valor:p.qtd})),n=>n.toLocaleString('pt-BR')+' un')+`
       <div class="table-wrap pn-tab"><table>
         <tr><th>Produto</th><th>Qtd</th><th>Vendido</th><th>% do vendido</th></tr>
@@ -1345,7 +1343,7 @@ function renderPainel(c){
     <div class="card pn-card">
       <div class="pn-card-tit">📢 Avisos</div>
       ${avisos.length?avisos.map(a=>{const vistos=vistosPor(a.id),falta=eqs.filter(u=>!vistos.has(u.id));const pct=eqs.length?Math.round((eqs.length-falta.length)/eqs.length*100):0;
-        return `<div class="pn-aviso"><div class="pn-aviso-t"><b>${esc(a.titulo)}</b><span class="muted">por ${esc(a.criado_por_nome||'—')} · some ${esc(dataHoraBR(a.expira_em))}</span></div>
+        return `<div class="pn-aviso"><div class="pn-aviso-t"><b>${esc(a.titulo)}</b><span class="muted">por ${esc(a.criado_por_nome||'—')} · ${avisoPermanente(a)?'permanente':'some '+esc(dataHoraBR(a.expira_em))}</span></div>
         <div class="pn-meter" role="img" aria-label="${eqs.length-falta.length} de ${eqs.length} viram"><span style="width:${pct}%"></span></div>
         <div class="pn-sub">${eqs.length-falta.length} de ${eqs.length} viram${falta.length?` · <span style="color:var(--warning-light)">faltam: ${falta.map(u=>esc(u.nome)).join(', ')}</span>`:' · todos viram'}</div></div>`}).join(''):`<div class="empty" style="padding:12px">Nenhum aviso ativo.</div>`}
     </div>
@@ -2829,7 +2827,7 @@ async function salvarEdicaoCompraFin(id){
 
 /* ================= CONFIGURAÇÕES ================= */
 function renderConfig(c){
-  const tabs=[['usuarios','Usuários'],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['logo','Identidade Visual']];
+  const tabs=[['usuarios','Usuários'],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['ranking','Ranking'],['logo','Identidade Visual']];
   c.innerHTML=`<h2 class="page-title">Configurações</h2>
   <div class="cfg-tabs">${tabs.map(t=>`<button class="cfg-tab ${cfgTabAtual===t[0]?'active':''}" onclick="cfgTabAtual='${t[0]}';render()">${t[1]}</button>`).join('')}</div>
   <div id="cfg-body"></div>`;
@@ -2841,7 +2839,95 @@ function renderConfig(c){
   else if(cfgTabAtual==='fornecedores')cfgFornecedores(b);
   else if(cfgTabAtual==='descontos')cfgDescontos(b);
   else if(cfgTabAtual==='deslocamento')cfgDeslocamento(b);
+  else if(cfgTabAtual==='ranking')cfgRanking(b);
   else if(cfgTabAtual==='logo')cfgLogo(b);
+}
+/* ---- Ranking (pedido do dono, v4.32): regras do ranking de vendedores e do aviso automático do vendedor ouro ----
+   Ficam em configuracoes.ranking. O Painel e a função do banco que publica o aviso leem daqui: mudou aqui, muda em tudo.
+   O banco também confere as regras (ranking_regras_validas): soma dos pesos 100, faixas de cada campo. */
+function cfgRanking(b){
+  const r=regrasRanking(),num=(id,v,min,max,suf)=>`<span class="rk-num"><input id="${id}" type="number" min="${min}" max="${max}" step="1" value="${v}" inputmode="numeric" oninput="cfgRankingPrevia()">${suf?`<span>${suf}</span>`:''}</span>`;
+  const sel=(id,ops,v)=>`<select id="${id}" onchange="cfgRankingPrevia()">${ops.map(([k,t])=>`<option value="${k}" ${String(k)===String(v)?'selected':''}>${t}</option>`).join('')}</select>`;
+  const chk=(id,v,t)=>`<label class="img-chk"><input type="checkbox" id="${id}" ${v?'checked':''} onchange="cfgRankingPrevia()"> ${t}</label>`;
+  b.innerHTML=`<div class="section-title" style="margin:0 0 4px">🏆 Ranking de vendedores e aviso do vendedor ouro</div>
+  <p class="muted" style="font-size:13px;margin:0 0 14px">Estas regras valem para o Painel (bloco Vendedores e os filtros Hoje, 7 dias, 30 dias e Esta semana) e para o aviso automático do vendedor ouro, que o próprio banco publica. Mudou aqui, muda em tudo.</p>
+  <div class="rk-grade">
+    <div class="card rk-bloco"><h4>Pontuação <span class="muted" id="rk-soma"></span></h4>
+      <div class="rk-linha"><label>Resultado <small>receita da loja</small></label>${num('rk-res',r.peso_resultado,0,100,'%')}</div>
+      <div class="rk-linha"><label>Volume <small>nº de vendas</small></label>${num('rk-vol',r.peso_volume,0,100,'%')}</div>
+      <div class="rk-linha"><label>Constância <small>dias com venda</small></label>${num('rk-con',r.peso_constancia,0,100,'%')}</div>
+    </div>
+    <div class="card rk-bloco"><h4>Medalha e sorte</h4>
+      <div class="rk-linha"><label>Mínimo de vendas para medalha</label>${num('rk-min',r.min_vendas,1,100,'vendas')}</div>
+      <div class="rk-linha"><label>Limite por venda <small>no resultado, cada venda vale no máximo…</small></label>${sel('rk-teto',[[100,'sem limite'],[95,'as 5% maiores'],[90,'as 10% maiores'],[85,'as 15% maiores'],[80,'as 20% maiores'],[75,'as 25% maiores'],[70,'as 30% maiores'],[60,'as 40% maiores'],[50,'a venda do meio (metade)']],r.teto_percentil)}</div>
+      ${chk('rk-pend',r.contar_pendentes,'Contar vendas ainda não guardadas no caixa')}
+    </div>
+    <div class="card rk-bloco"><h4>Dia e semana de trabalho</h4>
+      <div class="rk-linha"><label>O dia vira às</label>${sel('rk-vira',Array.from({length:24},(_,h)=>[h,pnHora(h)]),r.virada_hora)}</div>
+      <div class="rk-linha"><label>A semana começa na</label>${sel('rk-sem',DIAS_SEMANA.slice(1).map((d,i)=>[i+1,d]),r.semana_inicio)}</div>
+      <p class="muted" style="font-size:12px;margin:6px 0 0" id="rk-dia-txt"></p>
+    </div>
+    <div class="card rk-bloco"><h4>Aviso automático</h4>
+      ${chk('rk-av',r.aviso_ativo,'Publicar o vendedor ouro no começo de cada semana')}
+      <div class="field" style="margin:8px 0 6px"><label>Título</label><input id="rk-tit" maxlength="50" value="${esc(r.aviso_titulo)}" oninput="cfgRankingPrevia()"></div>
+      ${chk('rk-pod',r.aviso_podio,'Mostrar 2º e 3º lugares na mensagem')}
+      <p class="muted" style="font-size:12px;margin:6px 0 0">Fica no ar a semana inteira. Sem ninguém com o mínimo de vendas, não sai aviso.</p>
+    </div>
+  </div>
+  <div class="card rk-bloco" id="rk-previa" style="margin-top:12px"></div>
+  <p id="rk-err" style="color:var(--danger);font-size:13px;display:none;margin:10px 0 0"></p>
+  <div class="modal-actions" style="justify-content:flex-start"><button class="btn btn-ghost" onclick="cfgRankingPadrao()">Restaurar padrão</button>
+    <button class="btn btn-primary" id="rk-salvar" onclick="salvarRegrasRanking()">Salvar regras</button></div>`;
+  cfgRankingPrevia();
+}
+function cfgRankingForm(){
+  const v=id=>(document.getElementById(id)||{}).value,c=id=>!!(document.getElementById(id)||{}).checked,n=id=>Number(v(id));
+  return{peso_resultado:n('rk-res'),peso_volume:n('rk-vol'),peso_constancia:n('rk-con'),min_vendas:n('rk-min'),teto_percentil:n('rk-teto'),virada_hora:n('rk-vira'),semana_inicio:n('rk-sem'),
+    contar_pendentes:c('rk-pend'),aviso_ativo:c('rk-av'),aviso_titulo:String(v('rk-tit')||'').trim(),aviso_podio:c('rk-pod')};
+}
+// as mesmas conferências do banco (ranking_regras_validas)
+function errosRegrasRanking(r){
+  const e=[],int=(x,a,b)=>Number.isInteger(x)&&x>=a&&x<=b;
+  if(![r.peso_resultado,r.peso_volume,r.peso_constancia].every(x=>int(x,0,100)))e.push('Cada peso vai de 0 a 100.');
+  else if(r.peso_resultado+r.peso_volume+r.peso_constancia!==100)e.push('Os três pesos precisam somar 100% (agora: '+(r.peso_resultado+r.peso_volume+r.peso_constancia)+'%).');
+  if(!int(r.min_vendas,1,100))e.push('Mínimo de vendas: de 1 a 100.');
+  if(!int(r.teto_percentil,50,100))e.push('Limite por venda inválido.');
+  if(!int(r.virada_hora,0,23)||!int(r.semana_inicio,1,7))e.push('Dia ou semana de trabalho inválido.');
+  if(!r.aviso_titulo||r.aviso_titulo.length>50)e.push('Título do aviso: de 1 a 50 letras.');
+  return e;
+}
+function cfgRankingPrevia(){
+  const r=cfgRankingForm(),err=errosRegrasRanking(r),soma=r.peso_resultado+r.peso_volume+r.peso_constancia;
+  const sm=document.getElementById('rk-soma');if(sm){sm.textContent='· soma '+soma+'%';sm.style.color=soma===100?'var(--green)':'var(--danger)'}
+  const dn=DIAS_SEMANA[r.semana_inicio]||'?',h=r.virada_hora;
+  const dt=document.getElementById('rk-dia-txt');if(dt)dt.innerHTML=`"Hoje" vai das ${pnHora(h)} às ${pnHoraFim(h)} do dia seguinte. "Esta semana" vai de ${dn} ${pnHora(h)} até ${dn} ${pnHoraFim(h)} da semana seguinte.`;
+  const e=document.getElementById('rk-err');if(e){e.textContent=err.join(' ');e.style.display=err.length?'':'none'}
+  const bt=document.getElementById('rk-salvar');if(bt)bt.disabled=!!err.length;
+  const pv=document.getElementById('rk-previa');if(!pv)return;
+  if(err.length){pv.innerHTML='<span class="muted">Corrija as regras para ver a prévia.</span>';return}
+  // prévia: a semana passada calculada com as regras da tela (sem salvar)
+  const antes=db.ranking;let rk;
+  try{db.ranking=r;rk=pnRankingSemana(-1)}finally{db.ranking=antes}
+  const top=rk.lista.filter(p=>p.elegivel).sort((a,b)=>b.pont-a.pont||b.loja-a.loja).slice(0,3);
+  pv.innerHTML=`<h4 style="margin:0 0 6px">Prévia com estas regras <span class="muted">· semana de ${pnDiaFmt(rk.seg)} a ${pnDiaFmt(pnSomaDias(rk.seg,7))}</span></h4>
+    ${top.length?top.map((p,i)=>`<div class="rk-prev-l"><span>${['🥇','🥈','🥉'][i]} <b>${esc(p.nome)}</b></span><span>${p.pont.toLocaleString('pt-BR',{maximumFractionDigits:1})} pts · ${p.n} vendas · ${p.dias} dia(s)</span></div>`).join('')
+      +(r.aviso_ativo?`<p class="muted" style="font-size:12px;margin:8px 0 0">O aviso sairia como: <b>🥇 ${esc(r.aviso_titulo)}: ${esc(top[0].nome)}</b></p>`:`<p class="muted" style="font-size:12px;margin:8px 0 0">Aviso automático desligado.</p>`)
+      :`<span class="muted">Ninguém com ${r.min_vendas}+ vendas nessa semana: sem medalha e sem aviso.</span>`}`;
+}
+function cfgRankingPadrao(){
+  const r=RANKING_PADRAO,set=(id,v)=>{const el=document.getElementById(id);if(!el)return;if(el.type==='checkbox')el.checked=v;else el.value=v;el.dispatchEvent(new Event('change',{bubbles:true}))};
+  set('rk-res',r.peso_resultado);set('rk-vol',r.peso_volume);set('rk-con',r.peso_constancia);set('rk-min',r.min_vendas);set('rk-teto',r.teto_percentil);
+  set('rk-vira',r.virada_hora);set('rk-sem',r.semana_inicio);set('rk-pend',r.contar_pendentes);set('rk-av',r.aviso_ativo);set('rk-tit',r.aviso_titulo);set('rk-pod',r.aviso_podio);
+  cfgRankingPrevia();toast('Padrão de volta na tela. Clique em "Salvar regras" para valer.');
+}
+async function salvarRegrasRanking(){
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio mudam as regras.');
+  const r=cfgRankingForm(),err=errosRegrasRanking(r);if(err.length)return cfgRankingPrevia();
+  const{error}=await sb.from('configuracoes').update({ranking:r}).eq('id',1);
+  if(error)return toast('⚠️ Não foi possível salvar: '+error.message);
+  db.ranking=r;
+  reg('Regras do ranking alteradas',`${r.peso_resultado}/${r.peso_volume}/${r.peso_constancia} · mín. ${r.min_vendas} vendas · limite ${r.teto_percentil<100?(100-r.teto_percentil)+'% maiores':'nenhum'} · dia vira ${pnHora(r.virada_hora)} · semana na ${DIAS_SEMANA[r.semana_inicio]} · pendentes ${r.contar_pendentes?'contam':'não contam'} · aviso ${r.aviso_ativo?'ligado':'desligado'}`);
+  toast('✅ Regras salvas. Painel e aviso automático já usam as novas regras.');render();
 }
 /* ---- Usuários ---- */
 /* Perfil com mais acesso primeiro (Sócio > Diretor > Gerente > Vendedor), depois nome A→Z */
@@ -4809,9 +4895,11 @@ function renderPerfilRodape(){
 /* ================= AVISOS PARA TODOS =================
    Gerente, Diretor ou Sócio publica um aviso (título + mensagem). Ele aparece como pop-up na tela de
    todo mundo que está logado (tempo real) ou assim que a pessoa entrar. Cada pessoa vê o pop-up uma vez
-   (fica registrado em avisos_vistos). Depois de 24 horas o aviso some da tela e o banco o apaga de vez.
+   (fica registrado em avisos_vistos). Quem publica escolhe em quantas horas ele some (o banco apaga de vez depois)
+   ou deixa permanente (expira_em = 'infinity'). Toda segunda às 06:00 o banco publica sozinho o "Vendedor ouro da
+   semana" (tipo 'vendedor_semana'), que fica a semana inteira.
    O aviso pode levar uma imagem (Storage "midia/avisos/"); com imagem, a mensagem é opcional. */
-const AVISO_TITULO_MAX=80,AVISO_MSG_MAX=1000,AVISO_IMG_LADO=1600;
+const AVISO_TITULO_MAX=80,AVISO_MSG_MAX=1000,AVISO_IMG_LADO=1600,AVISO_HORAS_MAX=8760;
 function avisoImgHTML(a){return a.imagem_url?`<a class="aviso-img" href="${esc(a.imagem_url)}" target="_blank" rel="noopener" title="Abrir a imagem em tamanho real"><img src="${esc(a.imagem_url)}" alt="Imagem do aviso" loading="lazy"></a>`:''}
 /* Reduz a foto (celular costuma passar de 5 MB, o limite do Storage) para no máximo 1600 px no lado maior */
 async function reduzirImagem(file,lado){
@@ -4846,9 +4934,13 @@ async function limparImagensAvisos(){
     if(velhos.length)await sb.storage.from('midia').remove(velhos);
   }catch(e){console.warn('[Best Buds] limpeza de imagens de avisos',e)}
 }
-function avisosAtivos(){const agora=Date.now();return (db.avisos||[]).filter(a=>new Date(a.expira_em).getTime()>agora)}
+// permanente: o banco grava expira_em = 'infinity' (e devolve o texto "infinity")
+const avisoPermanente=a=>!a.expira_em||/infinity/i.test(String(a.expira_em));
+const avisoExpiraMs=a=>avisoPermanente(a)?Infinity:new Date(a.expira_em).getTime();
+function avisosAtivos(){const agora=Date.now();return (db.avisos||[]).filter(a=>avisoExpiraMs(a)>agora)}
 function avisosNaoVistos(){return avisosAtivos().filter(a=>!db.avisos_vistos.has(a.id)).sort((a,b)=>new Date(a.criado_em)-new Date(b.criado_em))}
-function tempoRestante(a){const ms=new Date(a.expira_em).getTime()-Date.now();if(ms<=0)return 'expirado';const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);return h?`some em ${h}h${m?String(m).padStart(2,'0'):''}`:`some em ${m} min`}
+function tempoRestante(a){if(avisoPermanente(a))return 'permanente';const ms=avisoExpiraMs(a)-Date.now();if(ms<=0)return 'expirado';const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);
+  return h>=48?`some em ${Math.floor(h/24)} dias (${dataHoraBR(a.expira_em)})`:h?`some em ${h}h${m?String(m).padStart(2,'0'):''}`:`some em ${m} min`}
 function atualizarSeloAvisos(){
   const el=document.getElementById('avisos-selo');if(!el||!db)return;
   const n=avisosNaoVistos().length;el.textContent=n;el.style.display=n?'':'none';
@@ -4956,7 +5048,8 @@ function mostrarAvisosPendentes(){
   if(bg.classList.contains('open'))return;
   const a=avisosNaoVistos()[0];if(!a)return;
   _avisoAtual=a.id;
-  document.getElementById('aviso-box').innerHTML=`<div class="aviso-topo">📢 Aviso</div>
+  document.getElementById('aviso-box').classList.toggle('aviso-ouro',a.tipo==='vendedor_semana');
+  document.getElementById('aviso-box').innerHTML=`<div class="aviso-topo">${a.tipo==='vendedor_semana'?'🏆 Vendedor da semana':'📢 Aviso'}</div>
     <h3 class="aviso-titulo">${esc(a.titulo)}</h3>
     ${avisoImgHTML(a)}
     ${a.mensagem?`<div class="aviso-msg">${esc(a.mensagem)}</div>`:''}
@@ -4982,16 +5075,20 @@ function modalAvisos(){
     <div class="field"><label>Imagem (opcional)</label>
       <label class="btn btn-ghost btn-sm aviso-img-btn">🖼️ Escolher imagem<input type="file" id="av-img" accept="image/png,image/jpeg,image/webp" hidden onchange="escolherImagemAviso(this)"></label>
       <div class="aviso-img-prev" id="av-img-prev" style="display:none"></div></div>
-    <p class="muted" style="font-size:12px;margin:-4px 0 10px">Aparece como pop-up na tela de todos e é apagado automaticamente depois de 24 horas.</p>
+    <div class="field"><label>Some depois de</label><div class="aviso-dur">
+      <input id="av-horas" type="number" min="1" max="${AVISO_HORAS_MAX}" step="1" value="24" inputmode="numeric"><span>horas</span>
+      ${[[24,'24 h'],[72,'3 dias'],[168,'1 semana']].map(([h,r])=>`<button type="button" class="btn btn-ghost btn-sm" onclick="avisoHoras(${h})">${r}</button>`).join('')}
+      <label class="img-chk"><input type="checkbox" id="av-perm" onchange="avisoPermChk(this.checked)"> Permanente (não some)</label></div></div>
+    <p class="muted" style="font-size:12px;margin:-4px 0 10px">Aparece como pop-up na tela de todos. Some sozinho depois das horas escolhidas; o permanente fica até alguém apagar (🗑️).</p>
     <button class="btn btn-primary" id="btn-publicar-aviso" onclick="publicarAviso()">Publicar para todos</button>
   </div>`:''}
-  <div class="section-title" style="margin-top:${ger?'18px':'4px'}">Avisos das últimas 24 horas</div>
-  <div class="aviso-lista">${lista.length?lista.map(a=>`<div class="aviso-item">
+  <div class="section-title" style="margin-top:${ger?'18px':'4px'}">Avisos no ar</div>
+  <div class="aviso-lista">${lista.length?lista.map(a=>`<div class="aviso-item${a.tipo==='vendedor_semana'?' aviso-ouro':''}">
       <div class="aviso-item-top"><b>${esc(a.titulo)}</b>${ger?`<button class="iconbtn" title="Apagar agora" onclick="apagarAviso('${a.id}')">🗑️</button>`:''}</div>
       ${avisoImgHTML(a)}
       ${a.mensagem?`<div class="aviso-msg">${esc(a.mensagem)}</div>`:''}
       <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
-    </div>`).join(''):'<p class="muted" style="font-size:13px">Nenhum aviso nas últimas 24 horas.</p>'}</div>
+    </div>`).join(''):'<p class="muted" style="font-size:13px">Nenhum aviso no ar.</p>'}</div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button></div>`);
   _avisoImg=null;
   // quem abre a lista já viu todos os avisos ativos
@@ -4999,11 +5096,15 @@ function modalAvisos(){
   if(novos.length){novos.forEach(a=>db.avisos_vistos.add(a.id));atualizarSeloAvisos();
     sb.from('avisos_vistos').upsert(novos.map(a=>({aviso_id:a.id,usuario_id:session.usuario_id})),{onConflict:'aviso_id,usuario_id',ignoreDuplicates:true}).then(({error})=>{if(error)console.warn('[Best Buds] falha ao marcar avisos',error)})}
 }
+function avisoHoras(h){const i=document.getElementById('av-horas'),c=document.getElementById('av-perm');if(c){c.checked=false}if(i){i.disabled=false;i.value=h}}
+function avisoPermChk(on){const i=document.getElementById('av-horas');if(i)i.disabled=on}
 async function publicarAviso(){
   if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem publicar avisos.');
   const titulo=document.getElementById('av-titulo').value.trim(),mensagem=document.getElementById('av-msg').value.trim();
   if(!titulo)return toast('⚠️ Informe o título do aviso.');
   if(!mensagem&&!_avisoImg)return toast('⚠️ Escreva a mensagem ou coloque uma imagem no aviso.');
+  const perm=!!(document.getElementById('av-perm')||{}).checked,horas=Math.round(Number((document.getElementById('av-horas')||{}).value));
+  if(!perm&&!(horas>=1&&horas<=AVISO_HORAS_MAX))return toast('⚠️ Informe em quantas horas o aviso some (1 a '+AVISO_HORAS_MAX.toLocaleString('pt-BR')+') ou marque "Permanente".');
   const btn=document.getElementById('btn-publicar-aviso');btn.disabled=true;
   let imagem_url=null;
   if(_avisoImg){
@@ -5011,7 +5112,7 @@ async function publicarAviso(){
     try{imagem_url=await uploadImagem(await reduzirImagem(_avisoImg,AVISO_IMG_LADO),'avisos')}
     catch(err){btn.disabled=false;btn.textContent='Publicar para todos';return toast('⚠️ Erro ao enviar a imagem: '+(err.message||err))}
   }
-  const{data,error}=await sb.from('avisos').insert({titulo:titulo.slice(0,AVISO_TITULO_MAX),mensagem:mensagem.slice(0,AVISO_MSG_MAX),...(imagem_url?{imagem_url}:{}),criado_por:session.usuario_id,criado_por_nome:sessionUser().nome}).select().single();
+  const{data,error}=await sb.from('avisos').insert({titulo:titulo.slice(0,AVISO_TITULO_MAX),mensagem:mensagem.slice(0,AVISO_MSG_MAX),...(imagem_url?{imagem_url}:{}),duracao_horas:perm?null:horas,criado_por:session.usuario_id,criado_por_nome:sessionUser().nome}).select().single();
   btn.disabled=false;btn.textContent='Publicar para todos';
   if(error){
     if(imagem_url)sb.storage.from('midia').remove(['avisos/'+imagem_url.split('/').pop()]).then(()=>{});
@@ -5020,7 +5121,7 @@ async function publicarAviso(){
   _avisoImg=null;limparImagensAvisos();
   db.avisos.unshift(data);db.avisos_vistos.add(data.id);
   sb.from('avisos_vistos').insert({aviso_id:data.id,usuario_id:session.usuario_id}).then(()=>{});
-  reg('Aviso publicado',titulo);toast('✅ Aviso publicado para todos.');modalAvisos();
+  reg('Aviso publicado',titulo+(perm?' (permanente)':' ('+horas+' h)'));toast('✅ Aviso publicado para todos.');modalAvisos();
 }
 function apagarAviso(id){
   if(!isGerente())return;
