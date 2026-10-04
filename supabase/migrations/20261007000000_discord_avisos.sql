@@ -9,7 +9,7 @@
 -- O endereço da função fica em discord_interno ('funcao_url') e é gravado à parte em cada banco (teste e produção).
 -- Depois da migração, em cada banco: publicar a função discord-avisos (verify_jwt desligado) e gravar
 --   insert into public.discord_interno (chave, valor) values ('funcao_url', 'https://<projeto>.supabase.co/functions/v1/discord-avisos');
--- Aplicada no teste (btsnlkktyfnrtphgpjbe) em 2026-10-04, com a função e o funcao_url; produção só depois do "aprovado".
+-- Aplicada no teste (btsnlkktyfnrtphgpjbe) e, com o "aprovado" do dono, na produção em 2026-10-04 (com a função e o funcao_url; canais desligados até o dono configurar).
 -- Sem a palavra de remoção no texto (a ferramenta do Supabase trava nela).
 
 create extension if not exists pg_net;
