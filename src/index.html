@@ -364,6 +364,15 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .aviso-dur{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}.aviso-dur input[type=number]{width:90px}
 /* aviso automático do vendedor ouro da semana */
 .aviso-ouro{border-color:#E8B53A!important;box-shadow:0 0 0 1px rgba(232,181,58,.35),0 10px 40px rgba(232,181,58,.12);background:linear-gradient(180deg,rgba(232,181,58,.10),transparent 60%),var(--surface)}
+.foto-u{border-radius:50%;object-fit:cover;flex:none;display:inline-flex;align-items:center;justify-content:center;background:var(--input-bg);border:2px solid var(--border);vertical-align:middle}
+.foto-ini{font-family:var(--font-display,inherit);font-weight:800;color:var(--muted);letter-spacing:.5px}
+.u-nome-foto{display:inline-flex;align-items:center;gap:10px}
+.u-foto-campo{display:flex;align-items:center;gap:14px}.u-foto-bts{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.aviso-podio{display:grid;grid-template-columns:1fr 1.25fr 1fr;align-items:end;gap:8px;margin:4px 0 12px;text-align:center}
+.ap-lugar{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.ap-ouro .foto-u{border:3px solid #E8B53A;box-shadow:0 0 18px rgba(232,181,58,.55)}.ap-prata .foto-u{border:3px solid #C9D1D9}.ap-bronze .foto-u{border:3px solid #CD7F32}
+.ap-ouro .foto-ini{color:#E8B53A}.ap-nome{font-weight:800;font-size:13px;line-height:1.2;overflow-wrap:anywhere}.ap-ouro .ap-nome{font-size:15px;color:#E8B53A}
+.ap-pts{font-size:11px;color:var(--muted)}
 .aviso-ouro .aviso-topo{color:#E8B53A}.aviso-ouro .aviso-titulo{font-size:22px}
 .aviso-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
 .aviso-form textarea{width:100%;resize:vertical;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font:inherit}
@@ -683,7 +692,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.34.0';
+const VERSAO='v4.35.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -778,6 +787,22 @@ async function uploadImagem(file,pasta){
   if(error)throw error;
   const{data}=sb.storage.from('midia').getPublicUrl(caminho);
   return data.publicUrl;
+}
+/* Foto do personagem no perfil (pedido do dono, v4.35): só aparece em Configurações › Usuários e no vendedor ouro.
+   Sem foto, as iniciais do nome (1ª letra do primeiro e do último nome). */
+const iniciais=n=>{const p=String(n||'').trim().split(/\s+/).map(w=>w.replace(/[^\p{L}\p{N}]/gu,'')).filter(Boolean);return ((p[0]||'?')[0]+(p.length>1?p[p.length-1][0]:'')).toUpperCase()};
+function fotoUsuarioHTML(u,px,cls){const f=u&&u.foto_url;
+  return f?`<img class="foto-u ${cls||''}" src="${esc(f)}" alt="Foto de ${esc(u.nome||'')}" loading="lazy" style="width:${px}px;height:${px}px">`
+    :`<span class="foto-u foto-ini ${cls||''}" style="width:${px}px;height:${px}px;font-size:${Math.round(px*.4)}px" aria-hidden="true">${esc(iniciais(u&&u.nome))}</span>`}
+// recorte quadrado do centro, 400×400 em JPG (foto leve e sempre redonda certinha)
+const FOTO_LADO=400;
+async function fotoQuadrada(file){
+  const url=URL.createObjectURL(file);
+  try{const im=await new Promise((ok,er)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=er;i.src=url});
+    const l=Math.min(im.width,im.height),c=document.createElement('canvas');c.width=c.height=Math.min(FOTO_LADO,l);
+    c.getContext('2d').drawImage(im,(im.width-l)/2,(im.height-l)/2,l,l,0,0,c.width,c.height);
+    const b=await new Promise(ok=>c.toBlob(ok,'image/jpeg',.88));return new File([b],'foto.jpg',{type:'image/jpeg'})}
+  finally{URL.revokeObjectURL(url)}
 }
 /* Registro de auditoria: grava direto no Supabase (immutable, não pode ser editado nem apagado pela UI) */
 function reg(acao,detalhe){
@@ -3123,7 +3148,7 @@ function cfgUsuarios(b){
     const ehUltimoSocio=u.perfil==='socio'&&u.status==='ativo'&&sociosAtivos<=1;
     const ped=pedidoSenhaDe(u.id),podeU=podeGerenciarUsuario(u)&&u.id!==session.usuario_id;
     return`<tr class="${ped?'linha-pedido-senha':''}${u.status!=='ativo'?' linha-inativa':''}">
-    <td><b>${esc(u.nome)}</b>${u.id===session.usuario_id?' <span class="tag">você</span>':''}${ped?`<br><span class="tag y" title="Pedido feito na tela de login">🔑 pediu nova senha · ${dataHoraBR(ped.criado_em)}</span>`:''}</td>
+    <td><span class="u-nome-foto">${fotoUsuarioHTML(u,32)}<span><b>${esc(u.nome)}</b>${u.id===session.usuario_id?' <span class="tag">você</span>':''}</span></span>${ped?`<br><span class="tag y" title="Pedido feito na tela de login">🔑 pediu nova senha · ${dataHoraBR(ped.criado_em)}</span>`:''}</td>
     <td style="color:var(--muted)">${esc(u.usuario||'—')}</td>
     <td><span class="badge ${u.perfil}">${PERFIL_LABEL[u.perfil]||u.perfil}</span></td>
     <td><span class="badge ${u.status==='ativo'?'ativo':'inativo'}">${u.status}</span></td>
@@ -3175,9 +3200,15 @@ function modalUsuario(id){
   // ninguém altera o próprio perfil; só o Sócio mexe no perfil de um Sócio ou promove alguém a Sócio; Diretor altera o resto
   const podePerfil=u&&u.id!==session.usuario_id&&!ehUltimoSocio&&(isSocio()||(isDiretor()&&!alvoEhSocio));
   const ped=u?pedidoSenhaDe(u.id):null;
+  _fotoU={file:null,tirar:false};
   openModal(`<h3>${u?'Editar usuário':'Novo usuário'}</h3>
   ${ped?`<div class="alert-banner aviso-pedido-senha" style="margin-bottom:14px">🔑 <b>${esc(u.nome)}</b> pediu nova senha em ${dataHoraBR(ped.criado_em)}. Digite uma senha nova abaixo, salve e passe para a pessoa. No primeiro acesso ela cria a própria senha.</div>`:''}
   <div class="field"><label>Nome</label><input id="u-nome" value="${u?esc(u.nome):''}"></div>
+  ${isGerente()?`<div class="field"><label>Foto do personagem <small style="text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)">(aparece no vendedor ouro; sem foto, vão as iniciais)</small></label>
+    <div class="u-foto-campo"><span id="u-foto-prev">${fotoUsuarioHTML(u||{nome:''},88)}</span>
+      <div class="u-foto-bts"><label class="btn btn-ghost btn-sm aviso-img-btn">🖼️ Escolher foto<input type="file" id="u-foto" accept="image/png,image/jpeg,image/webp" hidden onchange="escolherFotoUsuario(this)"></label>
+      <button type="button" class="btn btn-ghost btn-sm" id="u-foto-tirar" onclick="tirarFotoUsuario()" style="${u&&u.foto_url?'':'display:none'}">Tirar foto</button>
+      <small style="color:var(--muted);font-size:11px">PNG, JPG ou WebP. O centro da imagem vira um quadrado.</small></div></div></div>`:''}
   <div class="row2">
     <div class="field"><label>Nome de usuário (login)</label><input id="u-usuario" value="${u?esc(u.usuario||''):''}" placeholder="ex.: joao.silva"></div>
     <div class="field"><label>Perfil</label><select id="u-perfil" ${podePerfil?'':'disabled'}>
@@ -3191,6 +3222,25 @@ function modalUsuario(id){
   <p id="u-err" style="color:var(--danger);font-size:13px;display:none"></p>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarUsuario('${id||''}')">Salvar</button></div>`);
+}
+let _fotoU={file:null,tirar:false};
+function escolherFotoUsuario(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
+  if(!['image/png','image/jpeg','image/webp'].includes(f.type))return toast('⚠️ Formato inválido. Use PNG, JPG ou WebP.');
+  _fotoU={file:f,tirar:false};
+  document.getElementById('u-foto-prev').innerHTML=`<img class="foto-u" src="${URL.createObjectURL(f)}" alt="Prévia da foto" style="width:88px;height:88px">`;
+  document.getElementById('u-foto-tirar').style.display=''}
+function tirarFotoUsuario(){_fotoU={file:null,tirar:true};
+  document.getElementById('u-foto-prev').innerHTML=fotoUsuarioHTML({nome:document.getElementById('u-nome').value},88);
+  document.getElementById('u-foto-tirar').style.display='none'}
+// grava a foto escolhida (ou tira) depois que o usuário foi salvo; o arquivo antigo sai do Storage
+async function salvarFotoUsuario(u){
+  if(!_fotoU.file&&!_fotoU.tirar)return true;
+  const velha=u.foto_url;let nova=null;
+  try{if(_fotoU.file)nova=await uploadImagem(await fotoQuadrada(_fotoU.file),'perfis')}catch(err){toast('⚠️ Usuário salvo, mas a foto não foi enviada: '+(err.message||err));return false}
+  const{error}=await sb.from('profiles').update({foto_url:nova}).eq('id',u.id);
+  if(error){if(nova)sb.storage.from('midia').remove(['perfis/'+nova.split('/').pop()]).then(()=>{});toast('⚠️ Usuário salvo, mas a foto não: '+error.message);return false}
+  if(velha)sb.storage.from('midia').remove(['perfis/'+velha.split('/').pop()]).then(()=>{});
+  u.foto_url=nova;reg(nova?'Foto do usuário trocada':'Foto do usuário tirada',u.nome);return true;
 }
 const ADMIN_USERS_URL=SUPABASE_URL+'/functions/v1/admin-users';
 async function chamarAdminUsers(payload){
@@ -3240,13 +3290,16 @@ async function salvarUsuario(id){
     }
     u.nome=nome;u.usuario=usuario;u.perfil=perfil;
     reg('Usuário editado',nome+' ('+(PERFIL_LABEL[perfil]||perfil)+')');
+    await salvarFotoUsuario(u);
   }else{
     if(!isSocioOuDiretor()&&perfil!=='vendedor')return fail('Apenas Sócio ou Diretor podem criar gerentes.');
     if(perfil==='socio'&&!isSocio())return fail('Apenas o Sócio pode criar outro Sócio.');
     let resp;
     try{resp=await chamarAdminUsers({action:'create',nome,usuario,perfil,senha})}catch(err){return fail(err.message)}
-    db.usuarios.push({id:resp.id,nome,usuario,perfil,status:'ativo',troca_senha_obrigatoria:true,criado_em:nowISO(),ultimo_login:null});
+    const novo={id:resp.id,nome,usuario,perfil,status:'ativo',troca_senha_obrigatoria:true,criado_em:nowISO(),ultimo_login:null,foto_url:null};
+    db.usuarios.push(novo);
     reg('Usuário criado',`${nome} (${PERFIL_LABEL[perfil]||perfil})`);
+    await salvarFotoUsuario(novo);
   }
   closeModal();render();
 }
@@ -5079,6 +5132,15 @@ function renderPerfilRodape(){
    semana" (tipo 'vendedor_semana'), que fica a semana inteira.
    O aviso pode levar uma imagem (Storage "midia/avisos/"); com imagem, a mensagem é opcional. */
 const AVISO_TITULO_MAX=80,AVISO_MSG_MAX=1000,AVISO_IMG_LADO=1600,AVISO_HORAS_MAX=8760;
+// vendedor ouro: pódio com a foto (ou as iniciais) de quem está no 1º, 2º e 3º lugar (v4.35)
+function avisoPodioHTML(a){
+  if(a.tipo!=='vendedor_semana'||!Array.isArray(a.podio)||!a.podio.length)return '';
+  const pos=[[1,'🥈','prata'],[0,'🥇','ouro'],[2,'🥉','bronze']].filter(([i])=>a.podio[i]);
+  return `<div class="aviso-podio">${pos.map(([i,m,c])=>{const p=a.podio[i],u=(db.usuarios||[]).find(x=>x.id===p.id)||{nome:p.nome};
+    return `<div class="ap-lugar ap-${c}">${fotoUsuarioHTML({...u,nome:p.nome},i?60:92)}<div class="ap-nome">${m} ${esc(p.nome)}</div><div class="ap-pts">${String(p.pont).replace('.',',')} pts · ${p.n} vendas</div></div>`}).join('')}</div>`;
+}
+// mensagem na tela: com o pódio desenhado, as linhas 🥈/🥉 da mensagem repetiriam os nomes (o Discord continua com elas)
+const avisoMsg=a=>avisoPodioHTML(a)?String(a.mensagem||'').split('\n').filter(l=>!/^(🥈|🥉)/.test(l.trim())).join('\n'):(a.mensagem||'');
 // até 2 imagens (pedido do dono, v4.34): com duas, sempre lado a lado (também no celular), nunca uma embaixo da outra
 const avisoImagens=a=>[a.imagem_url,a.imagem2_url].filter(Boolean);
 function avisoImgHTML(a){const im=avisoImagens(a);if(!im.length)return '';
@@ -5251,8 +5313,8 @@ function mostrarAvisosPendentes(){
   document.getElementById('aviso-box').classList.toggle('aviso-ouro',a.tipo==='vendedor_semana');
   document.getElementById('aviso-box').innerHTML=`<div class="aviso-topo">${a.tipo==='vendedor_semana'?'🏆 Vendedor da semana':'📢 Aviso'}</div>
     <h3 class="aviso-titulo">${esc(a.titulo)}</h3>
-    ${avisoImgHTML(a)}
-    ${a.mensagem?`<div class="aviso-msg">${esc(a.mensagem)}</div>`:''}
+    ${avisoPodioHTML(a)}${avisoImgHTML(a)}
+    ${avisoMsg(a)?`<div class="aviso-msg">${esc(avisoMsg(a))}</div>`:''}
     <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
     <div class="modal-actions"><button class="btn btn-primary" id="btn-aviso-ok" onclick="marcarAvisoVisto()">Entendi</button></div>`;
   bg.classList.add('open');
@@ -5286,8 +5348,8 @@ function modalAvisos(){
   <div class="section-title" style="margin-top:${ger?'18px':'4px'}">Avisos no ar</div>
   <div class="aviso-lista">${lista.length?lista.map(a=>`<div class="aviso-item${a.tipo==='vendedor_semana'?' aviso-ouro':''}">
       <div class="aviso-item-top"><b>${esc(a.titulo)}</b>${ger?`<button class="iconbtn" title="Apagar agora" onclick="apagarAviso('${a.id}')">🗑️</button>`:''}</div>
-      ${avisoImgHTML(a)}
-      ${a.mensagem?`<div class="aviso-msg">${esc(a.mensagem)}</div>`:''}
+      ${avisoPodioHTML(a)}${avisoImgHTML(a)}
+      ${avisoMsg(a)?`<div class="aviso-msg">${esc(avisoMsg(a))}</div>`:''}
       <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
     </div>`).join(''):'<p class="muted" style="font-size:13px">Nenhum aviso no ar.</p>'}</div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button></div>`);

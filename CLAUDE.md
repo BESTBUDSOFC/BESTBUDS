@@ -38,6 +38,13 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Configurações › Usuários: só usuário inativo, por Sócio ou Diretor (função `admin-users`, `delete_auth_user`). O histórico fica: vendas, compras, Baú, ajustes, registros, produtos, receitas e senhas atendidas perdem só o vínculo (`on delete set null`, migração `20261006000000_excluir_usuario_preserva_historico.sql`); o nome continua em `usuario_nome`. Até a v4.32.2 qualquer linha de histórico travava a exclusão ("Database error deleting user").
 - Tabela nova que aponte para `profiles`: use `on delete set null` (histórico) ou `on delete cascade` (dado só da pessoa), nunca sem regra.
 
+## Foto do personagem (v4.35)
+
+- Pedido do dono: cada usuário pode ter a foto do personagem do jogo (`profiles.foto_url`, migração `20261009000000_foto_perfil_podio.sql`; arquivo em `midia/perfis/`, o banco só aceita esse caminho). Sem foto, aparecem as **iniciais** (`iniciais()`: 1ª letra do primeiro e do último nome, sem parênteses; `fotoUsuarioHTML`).
+- Quem coloca: quem gerencia o usuário em Configurações › Usuários (✏️, campo "Foto do personagem"; Gerente ou acima, porque o Storage só aceita envio deles). O vendedor não muda a própria foto (trigger `trg_profiles_foto_quem`). O site recorta o centro em quadrado de até 400 px, JPG (`fotoQuadrada`); trocar ou tirar apaga o arquivo antigo; fica nas Últimas ações.
+- Onde aparece: tabela de Usuários e **pódio do vendedor ouro**. A função `gerar_aviso_vendedor_semana` grava `avisos.podio` (1º a 3º com `id`, nome, vendas, dias, pontos; só o 1º se o pódio estiver desligado). O pop-up e a lista mostram 🥈 · 🥇 · 🥉 lado a lado com foto ou iniciais (`avisoPodioHTML`; com pódio, a mensagem na tela esconde as linhas 🥈/🥉, que continuam no Discord). No Discord, a foto do 1º vai como miniatura do cartão.
+- A imagem do pódio (artes A/B/C mostradas ao dono) ficou para depois; quando vier, use estas fotos e as iniciais.
+
 ## Limite de requisições
 
 - `public.checar_limite_requisicoes()` roda antes de cada requisição da API de dados (`pgrst.db_pre_request`).
@@ -235,4 +242,4 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Menu lateral: módulos de operação no alto; "Configurações" fica separada, logo acima do rodapé com o usuário.
 - Menu lateral, abaixo dos módulos: "On-line" e "Off-line" com a contagem, recolhidos por padrão; clicar abre ou fecha a lista. Cada pessoa aparece com o nome e, na frente, o selo do perfil em tamanho menor (mesmo desenho da aba Usuários). Presença pelo Supabase Realtime (canal `presenca`, chave = id do usuário), sem gravar no banco.
 - Rodapé do menu: nome, selo do perfil e o botão "Sair".
-- Não há avatares (removidos na v4.17.3).
+- Não há avatares no menu nem na lista de on-line (removidos na v4.17.3). A **foto do personagem** (v4.35) aparece só em Configurações › Usuários e no vendedor ouro.

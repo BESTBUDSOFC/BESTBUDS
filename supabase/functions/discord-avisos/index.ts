@@ -1,4 +1,4 @@
-// Avisos do site no Discord (v4.33.0; 2 imagens na v4.34.0). Ver supabase/migrations/20261007000000_discord_avisos.sql.
+// Avisos do site no Discord (v4.33.0; 2 imagens na v4.34.0; foto do vendedor ouro na v4.35.0). Ver supabase/migrations/20261007000000_discord_avisos.sql.
 // acao "sincronizar" (chamada pelo banco, sem login): envia o que está pendente e apaga o que saiu do site.
 //   Não recebe dados de fora: só faz o que já está anotado em discord_mensagens, então chamar à toa não faz mal.
 // acao "teste" (chamada pelo site, Sócio ou Diretor): manda uma mensagem de teste para o canal escolhido.
@@ -36,6 +36,8 @@ function montar(canal: string, aviso: any, cargos: string[]) {
     footer: { text: `${canal === 'ouro' ? '🏆 Ranking da semana' : '📢 Aviso'} · ${aviso.criado_por_nome || 'Sistema'}`.slice(0, 2000) },
     timestamp: aviso.criado_em || agora(),
   };
+  // vendedor ouro: foto do 1º lugar no canto do cartão (sem foto, o cartão sai sem miniatura)
+  if (aviso._foto) embed.thumbnail = { url: aviso._foto };
   const embeds = [embed];
   if (aviso.imagem_url) embed.image = { url: aviso.imagem_url };
   // 2 imagens: cartões com o mesmo "url" viram uma galeria no Discord, com as imagens lado a lado
@@ -69,6 +71,11 @@ async function enviar(linha: any): Promise<{ ok: boolean; erro?: string }> {
       return { ok: true };
     }
     aviso = data;
+  }
+  const id1 = Array.isArray(aviso.podio) && aviso.podio[0] && aviso.podio[0].id;
+  if (linha.canal === 'ouro' && id1 && !aviso._foto) {
+    const { data: pf } = await db.from('profiles').select('foto_url').eq('id', id1).maybeSingle();
+    if (pf?.foto_url) aviso = { ...aviso, _foto: pf.foto_url };
   }
   let r: Response;
   try {
