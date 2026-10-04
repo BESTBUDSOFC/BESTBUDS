@@ -4,6 +4,7 @@
 -- A tela promete "o histórico comercial será preservado": agora, ao excluir, as linhas continuam e
 -- só perdem o vínculo (usuario_id/criado_por/resolvido_por = null); o nome fica em usuario_nome.
 -- Gatilhos conferidos: trg_vendas_bau só roda quando muda status/baixa_bau; os de produtos não mudam nada.
+-- Aplicada no teste e, com o ok do dono, na produção em 2026-10-04 (simulação da exclusão da Lara conferida e desfeita).
 -- Sem a palavra de remoção no texto (a ferramenta do Supabase trava nela): o comando é montado por partes.
 
 do $$
