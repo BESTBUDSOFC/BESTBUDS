@@ -5,7 +5,7 @@
 -- avisos.podio ganha a receita da loja de cada um ('receita'). avisos.imagem_tentativas limita as tentativas (3);
 -- sem imagem, o aviso sai como antes (texto).
 -- discord_interno 'fontes_url' (gravado à parte em cada banco): onde a função busca as fontes .ttf do site.
--- Aplicada no teste (btsnlkktyfnrtphgpjbe) em 2026-10-04; produção só depois do "aprovado".
+-- Aplicada no teste (btsnlkktyfnrtphgpjbe) em 2026-10-04; na produção em 2026-10-04, com o "aprovado".
 -- Sem a palavra de remoção no texto (a ferramenta do Supabase trava nela).
 
 alter table public.avisos add column if not exists imagem_tentativas integer not null default 0;

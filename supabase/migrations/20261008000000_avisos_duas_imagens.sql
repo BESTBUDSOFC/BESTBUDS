@@ -1,6 +1,6 @@
 -- v4.34.0: aviso com até duas imagens, sempre lado a lado (pedido do dono).
 -- imagem2_url segue a mesma regra da imagem_url (só arquivos do Storage em midia/avisos/) e só existe junto com a primeira.
--- Aplicada no teste (btsnlkktyfnrtphgpjbe) em 2026-10-04; produção só depois do "aprovado".
+-- Aplicada no teste (btsnlkktyfnrtphgpjbe) em 2026-10-04; na produção em 2026-10-04, com o "aprovado".
 
 alter table public.avisos add column if not exists imagem2_url text;
 do $$ begin

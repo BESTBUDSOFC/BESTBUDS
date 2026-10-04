@@ -4,7 +4,7 @@
 --   não muda a própria foto (trigger). Sem foto, o site mostra as iniciais do nome.
 -- avisos.podio: no aviso automático do vendedor ouro, o 1º, 2º e 3º lugares com o id de cada um (para achar a foto).
 --   gerar_aviso_vendedor_semana passa a gravar o pódio; a conta do ranking não muda.
--- Aplicada no teste (btsnlkktyfnrtphgpjbe) em 2026-10-04; produção só depois do "aprovado".
+-- Aplicada no teste (btsnlkktyfnrtphgpjbe) em 2026-10-04; na produção em 2026-10-04, com o "aprovado" (a gerar_aviso_vendedor_semana daqui foi substituída pela da 20261010000000).
 -- Sem a palavra de remoção no texto (a ferramenta do Supabase trava nela).
 
 alter table public.profiles add column if not exists foto_url text;
