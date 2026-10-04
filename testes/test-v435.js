@@ -77,6 +77,22 @@ fs.mkdirSync(SP+'/saida',{recursive:true});
   const msgTela=await t(s,`document.querySelector('#aviso-box .aviso-msg').innerText`);
   ok(msgTela.includes('Parabéns')&&!msgTela.includes('🥈')&&!msgTela.includes('🥉'),'com o pódio, a mensagem não repete 2º e 3º');
   await s.screenshot({path:SP+'/saida/ouro-podio.png'});
+  // v4.36: com a imagem do servidor, o aviso do vendedor ouro é só a imagem (sem título, pódio nem texto)
+  await t(s,`marcarAvisoVisto()`);await s.waitForTimeout(300);
+  await t(s,`closeModal();document.getElementById('aviso-bg').classList.remove('open');window.__DB.avisos.push({id:'ouro3',titulo:'🥇 Vendedor ouro da semana: Bento Klen',mensagem:'Semana de 28/09 a 05/10: texto\\n🥈 Luna Clark',tipo:'vendedor_semana',criado_por_nome:'Sistema',criado_em:new Date(Date.now()+5000).toISOString(),expira_em:new Date(Date.now()+864e5).toISOString(),imagem_url:'https://zwnawcnurwbowtdkholm.supabase.co/storage/v1/object/public/midia/avisos/ouro-2026-09-28-1.png',podio:[{id:'${BENTO}',nome:'Bento Klen',n:30,dias:3,pont:93.8,receita:17872}]});window.__rt._h.filter(h=>h.f.table==='avisos').forEach(h=>h.cb({eventType:'INSERT'}))`);
+  await s.waitForFunction(()=>document.getElementById('aviso-bg').classList.contains('open')&&!!document.querySelector('#aviso-box .aviso-img'),null,{timeout:5000});
+  const so=await t(s,`(()=>{const b=document.getElementById('aviso-box');return{img:!!b.querySelector('.aviso-img img'),tit:!!b.querySelector('.aviso-titulo'),pod:!!b.querySelector('.aviso-podio'),msg:!!b.querySelector('.aviso-msg'),ouro:b.classList.contains('aviso-ouro')}})()`);
+  ok(so.img&&!so.tit&&!so.pod&&!so.msg&&so.ouro,'com imagem: pop-up do vendedor ouro mostra só a imagem '+JSON.stringify(so));
+  await t(s,`marcarAvisoVisto();modalAvisos()`);
+  const li=await t(s,`(()=>{const it=[...document.querySelectorAll('.aviso-lista .aviso-item')].find(e=>e.querySelector('img[src*="ouro-2026"]'));return it?{top:it.querySelector('.aviso-item-top b').innerText,pod:!!it.querySelector('.aviso-podio'),msg:!!it.querySelector('.aviso-msg')}:null})()`);
+  ok(li&&li.top.includes('Vendedor da semana')&&!li.pod&&!li.msg,'lista: só a imagem, com "🏆 Vendedor da semana" no topo');
+  await t(s,`closeModal()`);
+  // desenho do servidor (supabase/functions/discord-avisos/podio.ts): nomes, receita e estrelas desenhadas (a fonte não tem ★)
+  const svgOut=require('child_process').execSync(`node --experimental-strip-types --input-type=module -e "import {svgPodio} from '${path.join(__dirname,'..','supabase/functions/discord-avisos/podio.ts')}';const m=(t,f,px,e=0)=>[...t].length*px*(f==='anton'?.45:.68)+e*Math.max(0,[...t].length-1);const p=[{nome:'Bento Klen',pont:93.8,n:30,dias:3,receita:17872},{nome:'Luna Clark',pont:64.7,n:16,dias:3},{nome:'Walter Monteiro',pont:62.4,n:19,dias:4}];process.stdout.write(svgPodio({semana:'28/09 a 05/10',podio:p,loja:'BEST BUDS'},m)+'\\n@@\\n'+svgPodio({semana:'28/09 a 05/10',podio:[p[0]],loja:'BEST BUDS'},m))"`,{encoding:'utf8',stdio:['ignore','pipe','ignore']});
+  const [sv3,sv1]=svgOut.split('\n@@\n');
+  ok(sv3.includes('BENTO KLEN')&&sv3.includes('LUNA CLARK')&&sv3.includes('WALTER MONTEIRO')&&sv3.includes('$17.872')&&sv3.includes('RECEITA')&&sv3.includes('2º LUGAR')&&sv3.includes('3º LUGAR'),'imagem: campeão, receita da loja, 2º e 3º lugares');
+  ok(!sv3.includes('★')&&(sv3.match(/<polygon fill=/g)||[]).length===2&&sv3.includes('SEMANA 28/09 A 05/10')&&sv3.includes('QUEM SERÁ O PRÓXIMO?'),'imagem: estrelas desenhadas, semana e rodapé');
+  ok(!sv1.includes('2º LUGAR')&&!sv1.includes('3º LUGAR')&&sv1.includes('BK'),'imagem com só o campeão: sem cartões de 2º e 3º, iniciais no lugar da foto');
   // aviso sem pódio (antigo) continua igual
   ok(await t(s,`avisoPodioHTML({tipo:'vendedor_semana',titulo:'x'})===''&&avisoPodioHTML({tipo:'manual',podio:[{nome:'a'}]})===''`),'aviso antigo ou manual: sem pódio');
   ok(s._errs.length===0,'sem erros JS '+s._errs.join(' | '));

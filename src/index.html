@@ -692,7 +692,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.35.0';
+const VERSAO='v4.36.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -5132,8 +5132,11 @@ function renderPerfilRodape(){
    semana" (tipo 'vendedor_semana'), que fica a semana inteira.
    O aviso pode levar uma imagem (Storage "midia/avisos/"); com imagem, a mensagem é opcional. */
 const AVISO_TITULO_MAX=80,AVISO_MSG_MAX=1000,AVISO_IMG_LADO=1600,AVISO_HORAS_MAX=8760;
-// vendedor ouro: pódio com a foto (ou as iniciais) de quem está no 1º, 2º e 3º lugar (v4.35)
+// vendedor ouro com a imagem do servidor (v4.36, pedido do dono): o aviso é só a imagem
+const avisoSoImagem=a=>a.tipo==='vendedor_semana'&&!!a.imagem_url;
+// vendedor ouro sem imagem (a imagem falhou ou aviso antigo): pódio com a foto (ou as iniciais) do 1º, 2º e 3º (v4.35)
 function avisoPodioHTML(a){
+  if(avisoSoImagem(a))return '';
   if(a.tipo!=='vendedor_semana'||!Array.isArray(a.podio)||!a.podio.length)return '';
   const pos=[[1,'🥈','prata'],[0,'🥇','ouro'],[2,'🥉','bronze']].filter(([i])=>a.podio[i]);
   return `<div class="aviso-podio">${pos.map(([i,m,c])=>{const p=a.podio[i],u=(db.usuarios||[]).find(x=>x.id===p.id)||{nome:p.nome};
@@ -5312,9 +5315,9 @@ function mostrarAvisosPendentes(){
   _avisoAtual=a.id;
   document.getElementById('aviso-box').classList.toggle('aviso-ouro',a.tipo==='vendedor_semana');
   document.getElementById('aviso-box').innerHTML=`<div class="aviso-topo">${a.tipo==='vendedor_semana'?'🏆 Vendedor da semana':'📢 Aviso'}</div>
-    <h3 class="aviso-titulo">${esc(a.titulo)}</h3>
+    ${avisoSoImagem(a)?avisoImgHTML(a):`<h3 class="aviso-titulo">${esc(a.titulo)}</h3>
     ${avisoPodioHTML(a)}${avisoImgHTML(a)}
-    ${avisoMsg(a)?`<div class="aviso-msg">${esc(avisoMsg(a))}</div>`:''}
+    ${avisoMsg(a)?`<div class="aviso-msg">${esc(avisoMsg(a))}</div>`:''}`}
     <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
     <div class="modal-actions"><button class="btn btn-primary" id="btn-aviso-ok" onclick="marcarAvisoVisto()">Entendi</button></div>`;
   bg.classList.add('open');
@@ -5347,9 +5350,9 @@ function modalAvisos(){
   </div>`:''}
   <div class="section-title" style="margin-top:${ger?'18px':'4px'}">Avisos no ar</div>
   <div class="aviso-lista">${lista.length?lista.map(a=>`<div class="aviso-item${a.tipo==='vendedor_semana'?' aviso-ouro':''}">
-      <div class="aviso-item-top"><b>${esc(a.titulo)}</b>${ger?`<button class="iconbtn" title="Apagar agora" onclick="apagarAviso('${a.id}')">🗑️</button>`:''}</div>
+      <div class="aviso-item-top"><b>${avisoSoImagem(a)?'🏆 Vendedor da semana':esc(a.titulo)}</b>${ger?`<button class="iconbtn" title="Apagar agora" onclick="apagarAviso('${a.id}')">🗑️</button>`:''}</div>
       ${avisoPodioHTML(a)}${avisoImgHTML(a)}
-      ${avisoMsg(a)?`<div class="aviso-msg">${esc(avisoMsg(a))}</div>`:''}
+      ${!avisoSoImagem(a)&&avisoMsg(a)?`<div class="aviso-msg">${esc(avisoMsg(a))}</div>`:''}
       <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
     </div>`).join(''):'<p class="muted" style="font-size:13px">Nenhum aviso no ar.</p>'}</div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button></div>`);
