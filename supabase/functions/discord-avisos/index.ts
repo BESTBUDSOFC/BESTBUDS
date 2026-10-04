@@ -1,4 +1,4 @@
-// Avisos do site no Discord (v4.33.0; 2 imagens na v4.34.0; foto do vendedor ouro na v4.35.0; imagem do vendedor ouro na v4.36.0). Ver supabase/migrations/20261007000000_discord_avisos.sql.
+// Avisos do site no Discord (v4.33.0; 2 imagens na v4.34.0; foto do vendedor ouro na v4.35.0; imagem do vendedor ouro na v4.36.0; imagens anexadas na v4.37.1). Ver supabase/migrations/20261007000000_discord_avisos.sql.
 // acao "sincronizar" (chamada pelo banco, sem login): envia o que está pendente e apaga o que saiu do site.
 //   Não recebe dados de fora: só faz o que já está anotado em discord_mensagens, então chamar à toa não faz mal.
 // acao "teste" (chamada pelo site, Sócio ou Diretor): manda uma mensagem de teste para o canal escolhido.
@@ -27,7 +27,8 @@ async function webhookDo(canal: string): Promise<string | null> {
 }
 
 // mensagem do Discord: cargos marcados no texto, aviso num cartão (embed)
-function montar(canal: string, aviso: any, cargos: string[]) {
+// imgs: endereços das imagens no cartão (attachment://… quando vão anexadas; sem imgs, os links do site)
+function montar(canal: string, aviso: any, cargos: string[], imgs?: string[]) {
   const linhas: string[] = [];
   if (aviso.mensagem) linhas.push(aviso.mensagem);
   if (canal === 'avisos' && !aviso._teste) {
@@ -44,11 +45,12 @@ function montar(canal: string, aviso: any, cargos: string[]) {
   // vendedor ouro: foto do 1º lugar no canto do cartão (sem foto, o cartão sai sem miniatura)
   if (aviso._foto) embed.thumbnail = { url: aviso._foto };
   const embeds = [embed];
-  if (aviso.imagem_url) embed.image = { url: aviso.imagem_url };
+  const i1 = imgs?.[0] ?? aviso.imagem_url, i2 = imgs?.[1] ?? aviso.imagem2_url;
+  if (i1) embed.image = { url: i1 };
   // 2 imagens: cartões com o mesmo "url" viram uma galeria no Discord, com as imagens lado a lado
-  if (aviso.imagem_url && aviso.imagem2_url) {
+  if (i1 && i2) {
     embed.url = aviso.imagem_url;
-    embeds.push({ url: aviso.imagem_url, image: { url: aviso.imagem2_url } });
+    embeds.push({ url: aviso.imagem_url, image: { url: i2 } });
   }
   return {
     content: cargos.length ? cargos.map((id) => `<@&${id}>`).join(' ') : undefined,
@@ -153,6 +155,23 @@ async function imagemOuro(aviso: any): Promise<Uint8Array | null> {
   }
 }
 
+// v4.37.1: as imagens do aviso vão ANEXADAS (o Discord não precisa buscar o link do site, que podia não aparecer)
+async function anexosDoAviso(aviso: any): Promise<{ nome: string; tipo: string; bytes: Uint8Array }[] | null> {
+  const urls = [aviso.imagem_url, aviso.imagem2_url].filter(Boolean) as string[];
+  if (!urls.length) return null;
+  const arqs: { nome: string; tipo: string; bytes: Uint8Array }[] = [];
+  for (const [i, u] of urls.entries()) {
+    try {
+      const r = await fetch(u);
+      if (!r.ok) return null;
+      const tipo = (r.headers.get('content-type') || 'image/png').split(';')[0];
+      const ext = ({ 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' } as Record<string, string>)[tipo] || 'png';
+      arqs.push({ nome: `aviso-${i + 1}.${ext}`, tipo, bytes: new Uint8Array(await r.arrayBuffer()) });
+    } catch { return null; }
+  }
+  return arqs;
+}
+
 async function erroDiscord(r: Response) {
   const t = await r.text().catch(() => '');
   let m = t;
@@ -191,6 +210,17 @@ async function enviar(linha: any): Promise<{ ok: boolean; erro?: string }> {
         attachments: [{ id: 0, filename: 'vendedor-ouro.png' }],
       }));
       fd.append('files[0]', new Blob([png], { type: 'image/png' }), 'vendedor-ouro.png');
+      init = { method: 'POST', body: fd };
+    }
+  } else if (aviso.imagem_url && !aviso._teste) {
+    // sem conseguir baixar a imagem, vai como antes (link da imagem no cartão)
+    const arqs = await anexosDoAviso(aviso);
+    if (arqs) {
+      const corpo: any = montar(linha.canal, aviso, cargos, arqs.map((a) => 'attachment://' + a.nome));
+      corpo.attachments = arqs.map((a, i) => ({ id: i, filename: a.nome }));
+      const fd = new FormData();
+      fd.append('payload_json', JSON.stringify(corpo));
+      arqs.forEach((a, i) => fd.append(`files[${i}]`, new Blob([a.bytes], { type: a.tipo }), a.nome));
       init = { method: 'POST', body: fd };
     }
   }
