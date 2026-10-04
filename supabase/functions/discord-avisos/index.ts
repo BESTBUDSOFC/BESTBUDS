@@ -1,4 +1,4 @@
-// Avisos do site no Discord (v4.33.0; 2 imagens na v4.34.0; foto do vendedor ouro na v4.35.0; imagem do vendedor ouro na v4.36.0; imagens anexadas na v4.37.1). Ver supabase/migrations/20261007000000_discord_avisos.sql.
+// Avisos do site no Discord (v4.33.0; 2 imagens na v4.34.0; foto do vendedor ouro na v4.35.0; imagem do vendedor ouro na v4.36.0; imagens anexadas na v4.37.1; @everyone na v4.37.2). Ver supabase/migrations/20261007000000_discord_avisos.sql.
 // acao "sincronizar" (chamada pelo banco, sem login): envia o que está pendente e apaga o que saiu do site.
 //   Não recebe dados de fora: só faz o que já está anotado em discord_mensagens, então chamar à toa não faz mal.
 // acao "teste" (chamada pelo site, Sócio ou Diretor): manda uma mensagem de teste para o canal escolhido.
@@ -26,9 +26,29 @@ async function webhookDo(canal: string): Promise<string | null> {
   return data?.webhook || null;
 }
 
+// menções: cargos cadastrados no canal. O cargo @everyone tem o MESMO id do servidor e só toca escrito "@everyone"
+// (como <@&id> aparece como texto e não avisa ninguém). @everyone só sai quando o dono cadastrou esse cargo (v4.37.2).
+type Mencoes = { content?: string; allowed_mentions: { parse: string[]; roles: string[] } };
+const _servidor: Record<string, string> = {};
+async function servidorDo(hook: string): Promise<string | null> {
+  if (_servidor[hook]) return _servidor[hook];
+  try {
+    const r = await fetch(hook);
+    const g = r.ok ? (await r.json())?.guild_id : null;
+    if (g) _servidor[hook] = String(g);
+    return g ? String(g) : null;
+  } catch { return null; }
+}
+function mencoes(cargos: string[], servidor: string | null): Mencoes {
+  const todos = !!servidor && cargos.includes(servidor);
+  const roles = cargos.filter((c) => c !== servidor);
+  const partes = [...(todos ? ['@everyone'] : []), ...roles.map((id) => `<@&${id}>`)];
+  return { content: partes.length ? partes.join(' ') : undefined, allowed_mentions: { parse: todos ? ['everyone'] : [], roles } };
+}
+
 // mensagem do Discord: cargos marcados no texto, aviso num cartão (embed)
 // imgs: endereços das imagens no cartão (attachment://… quando vão anexadas; sem imgs, os links do site)
-function montar(canal: string, aviso: any, cargos: string[], imgs?: string[]) {
+function montar(canal: string, aviso: any, m: Mencoes, imgs?: string[]) {
   const linhas: string[] = [];
   if (aviso.mensagem) linhas.push(aviso.mensagem);
   if (canal === 'avisos' && !aviso._teste) {
@@ -53,8 +73,7 @@ function montar(canal: string, aviso: any, cargos: string[], imgs?: string[]) {
     embeds.push({ url: aviso.imagem_url, image: { url: i2 } });
   }
   return {
-    content: cargos.length ? cargos.map((id) => `<@&${id}>`).join(' ') : undefined,
-    allowed_mentions: { parse: [], roles: cargos },   // só os cargos escolhidos tocam; nunca @everyone
+    ...m,   // só os cargos escolhidos tocam (@everyone só se ele foi cadastrado)
     embeds,
   };
 }
@@ -198,15 +217,15 @@ async function enviar(linha: any): Promise<{ ok: boolean; erro?: string }> {
     if (pf?.foto_url) aviso = { ...aviso, _foto: pf.foto_url };
   }
   // vendedor ouro: só a imagem, anexada (fica no canal mesmo que o arquivo do site seja limpo); sem imagem, o texto de antes
-  const cargos: string[] = linha.cargos || [];
-  let init: RequestInit = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(montar(linha.canal, aviso, cargos)) };
+  const cargos: string[] = (linha.cargos || []).map(String);
+  const m = mencoes(cargos, cargos.length ? await servidorDo(hook) : null);
+  let init: RequestInit = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(montar(linha.canal, aviso, m)) };
   if (linha.canal === 'ouro' && aviso.tipo === 'vendedor_semana') {
     const png = await imagemOuro(aviso);
     if (png) {
       const fd = new FormData();
       fd.append('payload_json', JSON.stringify({
-        content: cargos.length ? cargos.map((id) => `<@&${id}>`).join(' ') : undefined,
-        allowed_mentions: { parse: [], roles: cargos },
+        ...m,
         attachments: [{ id: 0, filename: 'vendedor-ouro.png' }],
       }));
       fd.append('files[0]', new Blob([png], { type: 'image/png' }), 'vendedor-ouro.png');
@@ -216,7 +235,7 @@ async function enviar(linha: any): Promise<{ ok: boolean; erro?: string }> {
     // sem conseguir baixar a imagem, vai como antes (link da imagem no cartão)
     const arqs = await anexosDoAviso(aviso);
     if (arqs) {
-      const corpo: any = montar(linha.canal, aviso, cargos, arqs.map((a) => 'attachment://' + a.nome));
+      const corpo: any = montar(linha.canal, aviso, m, arqs.map((a) => 'attachment://' + a.nome));
       corpo.attachments = arqs.map((a, i) => ({ id: i, filename: a.nome }));
       const fd = new FormData();
       fd.append('payload_json', JSON.stringify(corpo));

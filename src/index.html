@@ -693,7 +693,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.37.1';
+const VERSAO='v4.37.2';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -2946,6 +2946,7 @@ function cfgDiscord(b){
   <details class="card dc-ajuda"><summary>Como pegar o webhook e o ID dos cargos</summary><ol>
     <li><b>Webhook:</b> no Discord, ⚙️ do canal › <b>Integrações</b> › <b>Webhooks</b> › <b>Novo webhook</b>. Dê nome e foto (ex.: o logo da loja) e clique em <b>Copiar URL do webhook</b>. Cole aqui. O endereço é uma senha: não mande em conversa.</li>
     <li><b>ID do cargo:</b> ligue o <b>Modo desenvolvedor</b> (Configurações de usuário › Avançado). Depois, Configurações do servidor › <b>Cargos</b> › botão direito no cargo › <b>Copiar ID do cargo</b>.</li>
+    <li><b>Marcar todo mundo (@everyone):</b> cadastre o cargo <b>@everyone</b>. O ID dele é o mesmo do servidor (botão direito no ícone do servidor › <b>Copiar ID do servidor</b>). O site manda "@everyone" de verdade, e todos são avisados.</li>
     <li>Se a marcação não fizer o celular tocar, ative no cargo <b>"Permitir que qualquer pessoa @mencione este cargo"</b>.</li></ol></details>
   <div class="rk-grade dc-grade">${DISCORD_CANAIS.map(([c,t,txt])=>{const d=db.discord[c];return`<div class="card rk-bloco dc-canal" id="dc-${c}">
     <h4>${t} ${!d.webhook_definido?`<span class="tag y">sem webhook</span>`:d.ativo?`<span class="tag g">🟢 ligado</span>`:`<span class="tag r">⚪ desligado</span>`}</h4>
