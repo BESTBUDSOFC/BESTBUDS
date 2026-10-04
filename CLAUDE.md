@@ -84,6 +84,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - **Medalha 🥇🥈🥉 só com o mínimo de vendas no período** (regra `min_vendas`, padrão 5); quem tem menos aparece depois, com a etiqueta "poucas vendas". Botão "Receita da loja" ordena só pela receita, sem medalhas. A tabela mostra as três partes, vendas, dias, total, ticket médio, receita, não guardado, repasse e desconto médio.
 - Últimas ações: paginação no banco (`registros` com `range` e `count`), sem filtro, 10/20/50/100 por página.
 - Gerente ou acima lê `avisos_vistos` de todos (migração `20261001010000_painel_avisos_vistos.sql`). O pop-up de aviso filtra pelo próprio usuário (`db.avisos_vistos`); `db.avisos_vistos_todos` é só para o Painel.
+- **Celular** (até 767px, pedido do dono, v4.32.2): cada bloco começa recolhido, com o resumo de uma linha no título (receita do período, 1º do ranking, produto mais vendido, avisos no ar); tocar abre e fecha (`pnBloco`, `pnDobrar`, estado `painelAbertos`). Alertas ficam sempre abertos. Vendedores e Produtos viram **cartões** (`.pn-cartoes`: pontuação grande e as três partes em barrinhas; produto com barra, valor e %); tabelas e barras ficam só no computador (`.pn-so-desk`). No computador nada muda.
 - Gráficos em SVG/HTML próprios, sem biblioteca; cor das barras `#00A843` (um passo abaixo do verde da loja, validado no fundo escuro).
 
 ## Livro do Baú
@@ -212,7 +213,8 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 ## Menu lateral e topo
 
-- Topo: logo, nome da loja com a tipografia da tela de login (1ª parte cheia, última palavra vazada) e a versão ao lado; à direita, 🎓 (rever o tutorial) e 📢 (avisos). Não há "Sair" no topo no computador; no celular (sem menu lateral) o "Sair" e o selo do perfil continuam no topo.
+- Topo: logo, nome da loja com a tipografia da tela de login (1ª parte cheia, última palavra vazada) e a versão ao lado; à direita, 🎓 (rever o tutorial) e 📢 (avisos). Não há "Sair" no topo no computador.
+- Celular (até 767px, pedido do dono, v4.32.2): o topo não mostra "Sair" nem a versão (cortavam a tela). Tocar no selo do perfil abre a conta (`abrirConta`): nome, selo, versão e o botão "Sair".
 - Menu lateral: módulos de operação no alto; "Configurações" fica separada, logo acima do rodapé com o usuário.
 - Menu lateral, abaixo dos módulos: "On-line" e "Off-line" com a contagem, recolhidos por padrão; clicar abre ou fecha a lista. Cada pessoa aparece com o nome e, na frente, o selo do perfil em tamanho menor (mesmo desenho da aba Usuários). Presença pelo Supabase Realtime (canal `presenca`, chave = id do usuário), sem gravar no banco.
 - Rodapé do menu: nome, selo do perfil e o botão "Sair".

@@ -852,7 +852,7 @@ let fails=0;const ok=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m);if(!c)fails++};
   await p.click('#eq-sec .eq-grp.on');
   await p.screenshot({path:SP+'/saida/menu-equipe.png'});
   await p.setViewportSize({width:390,height:800});await p.waitForTimeout(150);
-  ok(await p.isVisible('#btn-sair')&&await p.isVisible('#h-versao'),'no celular o Sair continua no topo (o menu lateral não aparece)');
+  ok(!(await p.isVisible('#btn-sair'))&&!(await p.isVisible('#h-versao'))&&await p.isVisible('#app-header .who'),'no celular o topo esconde Sair e versão; o selo do perfil abre a conta (v4.32.2)');
   await p.screenshot({path:SP+'/saida/topo-celular.png',clip:{x:0,y:0,width:390,height:70}});
   await p.setViewportSize({width:1400,height:1000});
   // 19. datas e horas: tudo em horário de Brasília, seja qual for o fuso do aparelho
