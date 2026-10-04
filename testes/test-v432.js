@@ -54,6 +54,46 @@ const t=(p,js)=>p.evaluate(js);
   await p.click('#btn-aviso-ok');
   await t(p,`modalAvisos()`);
   ok(await t(p,`!!document.querySelector('.aviso-lista .aviso-item.aviso-ouro')`),'na lista, o vendedor ouro também fica dourado');
+  // ---- Configurações › Ranking: regras num lugar só (site e banco leem configuracoes.ranking) ----
+  await t(p,`closeModal();document.getElementById('aviso-bg').classList.remove('open');cfgTabAtual='ranking';go('config')`);await p.waitForTimeout(200);
+  ok(JSON.stringify(await t(p,`cfgRankingForm()`))===JSON.stringify(await t(p,`RANKING_PADRAO`)),'aba Ranking abre com as regras atuais (padrão 50/25/25, mínimo 5, 10% maiores, 06:00, segunda)');
+  ok(!(await p.$('#cfg-body .ajuda')),'aba sem "?" (não tem vídeo)');
+  await p.fill('#rk-res','60');await p.waitForTimeout(100);
+  ok((await t(p,`document.getElementById('rk-salvar').disabled`))&&(await p.$eval('#rk-err',e=>e.textContent)).includes('somar 100'),'pesos somando 110: avisa e trava o Salvar');
+  await p.fill('#rk-res','100');await p.fill('#rk-vol','0');await p.fill('#rk-con','0');await p.fill('#rk-min','3');await p.fill('#rk-tit','Craque da semana');
+  await t(p,`(()=>{const s=document.getElementById('rk-vira');s.value='5';s.dispatchEvent(new Event('change'));const d=document.getElementById('rk-sem');d.value='7';d.dispatchEvent(new Event('change'))})()`);
+  ok((await p.$eval('#rk-dia-txt',e=>e.textContent)).includes('domingo 05:00 até domingo 04:59'),'texto explica o dia e a semana escolhidos');
+  ok((await p.$eval('#rk-previa',e=>e.textContent)).includes('Prévia com estas regras'),'prévia da semana passada com as regras da tela');
+  ok(await t(p,`JSON.stringify(db.ranking)===JSON.stringify({...RANKING_PADRAO,...(window.__DB.configuracoes[0].ranking||{})})`),'antes de salvar, nada muda');
+  await p.click('#rk-salvar');await p.waitForTimeout(300);
+  const salvo=await t(p,`window.__DB.configuracoes[0].ranking`);
+  ok(salvo&&salvo.peso_resultado===100&&salvo.peso_volume===0&&salvo.min_vendas===3&&salvo.virada_hora===5&&salvo.semana_inicio===7&&salvo.aviso_titulo==='Craque da semana','Salvar grava no banco (configuracoes.ranking), de onde o aviso automático lê');
+  ok(await t(p,`window.__DB.registros.some(r=>r.acao==='Regras do ranking alteradas'&&r.detalhe.startsWith('100/0/0 · mín. 3 vendas'))`),'fica nas Últimas ações');
+  // as regras mudam o Painel na hora
+  ok(await t(p,`(()=>{const w=pnSemanaTrabalho(0),[a,m,d]=w.seg.split('-').map(Number);return new Date(Date.UTC(a,m-1,d,12)).getUTCDay()===0&&w.ini.toISOString()===instanteBR(w.seg,'05:00').toISOString()})()`),'semana começa no domingo às 05:00');
+  ok(await t(p,`pnDiaTrabalho(instanteBR('2026-10-06','04:59'))==='2026-10-05'&&pnDiaTrabalho(instanteBR('2026-10-06','05:00'))==='2026-10-06'`),'dia de trabalho vira às 05:00');
+  await t(p,`go('painel')`);await p.waitForTimeout(200);
+  const exp=await p.$eval('#main-content',e=>e.innerText);
+  ok(/100% resultado/.test(exp)&&/0% volume/.test(exp)&&exp.includes('Medalha só com 3+ vendas'),'explicação do Painel usa as regras salvas');
+  ok((await p.$eval('.pn-filtro[data-bloco="vendedores"]',e=>e.innerText)).includes('domingo 05:00 até domingo 04:59'),'filtro "Esta semana" usa o novo corte');
+  // mínimo, teto, pendentes e pesos na conta
+  const conta=await t(p,`(()=>{const bk=db.vendas,bkr=db.ranking;const w=pnSemanaTrabalho(0),I=w.ini.getTime(),H=h=>new Date(I+h*36e5).toISOString();let n=0;
+    const V=(nome,h,loja,st)=>({id:'c'+(n++),data:H(h),status:st||'ativa',usuario_id:nome,usuario_nome:nome,total:loja,subtotal:loja,desconto:0,cota_funcionario:0,receita_loja:loja,itens:[],auxiliares:[]});
+    db.vendas=[V('A',1,100),V('A',2,100),V('A',3,100),V('B',1,500,'pendente'),V('B',2,500,'pendente'),V('B',3,500,'pendente')];
+    const f={p:'semana',ini:w.ini,fim:w.fim,dia:pnDiaTrabalho};
+    try{db.ranking={...RANKING_PADRAO,min_vendas:3,peso_resultado:100,peso_volume:0,peso_constancia:0,teto_percentil:100};const r1=pnRankingFaixa(f).lista.map(p=>p.nome+':'+p.pont+':'+p.elegivel);
+      db.ranking={...db.ranking,contar_pendentes:false};const r2=pnRankingFaixa(f).lista.map(p=>p.nome+':'+p.pont);
+      db.ranking={...db.ranking,contar_pendentes:true,min_vendas:4};const r3=pnRankingFaixa(f).lista.map(p=>p.elegivel);
+      return{r1,r2,r3}}finally{db.vendas=bk;db.ranking=bkr}})()`);
+  ok(conta.r1.includes('B:100:true')&&conta.r1.includes('A:20:true'),'100% resultado e sem limite: B (1.500) 100, A (300) 20: '+conta.r1);
+  ok(conta.r2.length===1&&conta.r2[0]==='A:100','pendentes fora: só A conta: '+conta.r2);
+  ok(conta.r3.every(x=>x===false),'mínimo 4: ninguém com 3 vendas leva medalha');
+  // "Hoje" das 06:00 às 05:59 do dia seguinte
+  await t(p,`db.ranking={...RANKING_PADRAO}`);
+  const hoje=await t(p,`(()=>{const D=pnDiaTrabalho(new Date()),f=(painelFiltro.receita={p:'hoje',s:0},pnFaixa('receita'));painelFiltro.receita={p:'semana',s:0};
+    const dentro=x=>{const tt=x.getTime();return tt>=f.ini.getTime()&&tt<f.fim.getTime()};
+    return{a:dentro(instanteBR(D,'06:00')),b:dentro(instanteBR(pnSomaDias(D,1),'05:59')),c:dentro(instanteBR(D,'05:59')),d:dentro(instanteBR(pnSomaDias(D,1),'06:00')),sub:f.sub}})()`);
+  ok(hoje.a&&hoje.b&&!hoje.c&&!hoje.d&&hoje.sub.includes('06:00 às 05:59'),'"Hoje" vai das 06:00 às 05:59 do dia seguinte: '+JSON.stringify(hoje));
   ok(p._errs.length===0,'sem erros no console: '+p._errs.join(' | '));
   await b.close();console.log(falhas?falhas+' FALHA(S)':'TUDO OK');process.exit(falhas?1:0);
 })();
