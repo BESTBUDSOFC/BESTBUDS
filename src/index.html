@@ -693,7 +693,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.37.2';
+const VERSAO='v4.38.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -779,11 +779,11 @@ function toast(msg){
 }
 /* ================= IMAGENS (SUPABASE STORAGE) ================= */
 function imgSrc(url){return url||null}
-async function uploadImagem(file,pasta){
+async function uploadImagem(file,pasta,prefixo){
   if(!file)return null;
   if(!['image/png','image/jpeg','image/webp'].includes(file.type))throw new Error('Formato inválido. Use PNG, JPG ou WebP.');
   const ext={'image/png':'png','image/jpeg':'jpg','image/webp':'webp'}[file.type];
-  const caminho=pasta+'/'+uid()+'.'+ext;
+  const caminho=pasta+'/'+(prefixo?prefixo+'-':'')+uid()+'.'+ext;   // fotos de perfil: perfis/<id da pessoa>-…
   const{error}=await sb.storage.from('midia').upload(caminho,file,{cacheControl:'3600',upsert:false});
   if(error)throw error;
   const{data}=sb.storage.from('midia').getPublicUrl(caminho);
@@ -999,7 +999,7 @@ const MODULOS=[
   {id:'bau',nome:'Baú',ic:'📦',perfis:['socio','diretor','gerente','vendedor']},
   {id:'financeiro',nome:'Histórico Financeiro',ic:'📊',perfis:['socio','diretor','gerente','vendedor']},
   {id:'painel',nome:'Painel',ic:'📈',perfis:['socio','diretor','gerente']},
-  {id:'config',nome:'Configurações',ic:'⚙️',perfis:['socio','diretor','gerente']}
+  {id:'config',nome:'Configurações',ic:'⚙️',perfis:['socio','diretor','gerente','vendedor']}
 ];
 let moduloAtual='pdv';
 let pdvState={cupom:[],parceriaId:null,taxaId:null,auxiliares:[]};
@@ -2905,6 +2905,8 @@ async function salvarEdicaoCompraFin(id){
 
 /* ================= CONFIGURAÇÕES ================= */
 function renderConfig(c){
+  // vendedor (v4.38): só a aba Usuários, para mudar o próprio nome e a foto
+  if(!isGerente()){cfgTabAtual='usuarios';c.innerHTML=`<h2 class="page-title">Configurações</h2><div class="cfg-tabs"><button class="cfg-tab active">Usuários</button></div><div id="cfg-body"></div>`;return cfgUsuarios(document.getElementById('cfg-body'))}
   const tabs=[['usuarios','Usuários'],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['ranking','Ranking'],...(isSocioOuDiretor()?[['discord','Discord']]:[]),['logo','Identidade Visual']];
   if(cfgTabAtual==='discord'&&!isSocioOuDiretor())cfgTabAtual='usuarios';
   c.innerHTML=`<h2 class="page-title">Configurações</h2>
@@ -3199,6 +3201,7 @@ async function salvarRegrasRanking(){
 /* Perfil com mais acesso primeiro (Sócio > Diretor > Gerente > Vendedor), depois nome A→Z */
 function usuariosOrdenados(){return [...db.usuarios].sort((a,b)=>(PERFIL_NIVEL[b.perfil]||0)-(PERFIL_NIVEL[a.perfil]||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}))}
 function cfgUsuarios(b){
+  if(!isGerente())return cfgMeuPerfil(b);
   const T='cfg_usuarios',F=tabelaFiltravel(T,usuariosOrdenados,{nome:u=>u.nome,usuario:u=>u.usuario||'—',perfil:u=>PERFIL_LABEL[u.perfil]||u.perfil,status:u=>u.status,primeiro_acesso:u=>primeiroAcessoFeito(u)?'Feito':'Pendente',data:u=>u.criado_em});
   b.innerHTML=`${avisoPedidosSenha()}<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div class="section-title" style="margin:0">👥 Usuários${ajuda('Quem acessa o sistema e com qual perfil. Sócio gerencia todos os perfis; Diretor, todos menos Sócio; Gerente cadastra vendedores. Ninguém altera o próprio perfil e sempre existe ao menos um Sócio ativo. Pedido de nova senha aparece destacado aqui.',['cfg_usuarios'])}</div>
@@ -3255,6 +3258,7 @@ function podeGerenciarUsuario(alvo){
 }
 function modalUsuario(id){
   const u=id?db.usuarios.find(x=>x.id===id):null;
+  if(u&&u.id===session.usuario_id&&!podeGerenciarUsuario(u))return modalMeuPerfil();
   if(u&&!podeGerenciarUsuario(u))return toast('⚠️ Você não tem permissão para editar '+PERFIL_LABEL[u.perfil]+'.');
   const sociosAtivos=db.usuarios.filter(x=>x.perfil==='socio'&&x.status==='ativo').length;
   const ehUltimoSocio=u&&u.perfil==='socio'&&u.status==='ativo'&&sociosAtivos<=1;
@@ -3285,6 +3289,48 @@ function modalUsuario(id){
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
   <button class="btn btn-purple" onclick="salvarUsuario('${id||''}')">Salvar</button></div>`);
 }
+/* ---- Meu perfil (pedido do dono, v4.38): cada pessoa muda o próprio nome e a foto do personagem ----
+   O vendedor vê em Configurações só a aba Usuários, com a própria linha (não vê o login dos outros).
+   O banco garante: na própria linha, quem não é Gerente ou acima não muda login, perfil nem status;
+   a foto só pode ser arquivo dela (midia/perfis/<id>-*), migração 20261011000000. */
+function cfgMeuPerfil(b){
+  const u=sessionUser();if(!u){b.innerHTML='';return}
+  b.innerHTML=`<div class="section-title" style="margin:0 0 6px">👤 Meu perfil</div>
+  <p class="muted" style="font-size:13px;margin:0 0 12px">Toque em ✏️ para trocar o seu nome e a foto do seu personagem (ela aparece no vendedor ouro).</p>
+  <div class="table-wrap"><table><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Ações</th></tr>
+  <tr><td><span class="u-nome-foto">${fotoUsuarioHTML(u,32)}<span><b>${esc(u.nome)}</b> <span class="tag">você</span></span></span></td>
+    <td style="color:var(--muted)">${esc(u.usuario||'—')}</td><td><span class="badge ${u.perfil}">${PERFIL_LABEL[u.perfil]||u.perfil}</span></td>
+    <td><button class="iconbtn" title="Editar meu nome e foto" onclick="modalMeuPerfil()">✏️</button></td></tr></table></div>`;
+}
+function modalMeuPerfil(){
+  const u=sessionUser();if(!u)return;
+  _fotoU={file:null,tirar:false};
+  openModal(`<h3>Meu perfil</h3>
+  <div class="field"><label>Nome</label><input id="u-nome" maxlength="60" value="${esc(u.nome||'')}"></div>
+  <div class="field"><label>Foto do personagem <small style="text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)">(aparece no vendedor ouro; sem foto, vão as iniciais)</small></label>
+    <div class="u-foto-campo"><span id="u-foto-prev">${fotoUsuarioHTML(u,88)}</span>
+      <div class="u-foto-bts"><label class="btn btn-ghost btn-sm aviso-img-btn">🖼️ Escolher foto<input type="file" id="u-foto" accept="image/png,image/jpeg,image/webp" hidden onchange="escolherFotoUsuario(this)"></label>
+      <button type="button" class="btn btn-ghost btn-sm" id="u-foto-tirar" onclick="tirarFotoUsuario()" style="${u.foto_url?'':'display:none'}">Tirar foto</button>
+      <small style="color:var(--muted);font-size:11px">PNG, JPG ou WebP. O centro da imagem vira um quadrado.</small></div></div></div>
+  <p class="muted" style="font-size:12px;margin:0">Login, perfil e senha só um Gerente ou acima muda.</p>
+  <p id="u-err" style="color:var(--danger);font-size:13px;display:none"></p>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+  <button class="btn btn-purple" id="btn-meu-perfil" onclick="salvarMeuPerfil()">Salvar</button></div>`);
+}
+async function salvarMeuPerfil(){
+  const u=sessionUser();if(!u)return;
+  const nome=document.getElementById('u-nome').value.trim(),e=document.getElementById('u-err');
+  const fail=m=>{e.textContent=m;e.style.display='block'};
+  if(!nome||nome.length>60)return fail('O nome precisa ter de 1 a 60 letras.');
+  const bt=document.getElementById('btn-meu-perfil');if(bt)bt.disabled=true;
+  if(nome!==u.nome){
+    const{error}=await sb.from('profiles').update({nome}).eq('id',u.id);
+    if(error){if(bt)bt.disabled=false;return fail('Erro ao salvar: '+error.message)}
+    reg('Perfil editado','nome: '+u.nome+' → '+nome);u.nome=nome;
+  }
+  await salvarFotoUsuario(u);
+  closeModal();buildNav();render();toast('✅ Perfil salvo.');
+}
 let _fotoU={file:null,tirar:false};
 function escolherFotoUsuario(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
   if(!['image/png','image/jpeg','image/webp'].includes(f.type))return toast('⚠️ Formato inválido. Use PNG, JPG ou WebP.');
@@ -3298,7 +3344,7 @@ function tirarFotoUsuario(){_fotoU={file:null,tirar:true};
 async function salvarFotoUsuario(u){
   if(!_fotoU.file&&!_fotoU.tirar)return true;
   const velha=u.foto_url;let nova=null;
-  try{if(_fotoU.file)nova=await uploadImagem(await fotoQuadrada(_fotoU.file),'perfis')}catch(err){toast('⚠️ Usuário salvo, mas a foto não foi enviada: '+(err.message||err));return false}
+  try{if(_fotoU.file)nova=await uploadImagem(await fotoQuadrada(_fotoU.file),'perfis',u.id)}catch(err){toast('⚠️ Usuário salvo, mas a foto não foi enviada: '+(err.message||err));return false}
   const{error}=await sb.from('profiles').update({foto_url:nova}).eq('id',u.id);
   if(error){if(nova)sb.storage.from('midia').remove(['perfis/'+nova.split('/').pop()]).then(()=>{});toast('⚠️ Usuário salvo, mas a foto não: '+error.message);return false}
   if(velha)sb.storage.from('midia').remove(['perfis/'+velha.split('/').pop()]).then(()=>{});
@@ -5296,7 +5342,7 @@ function tutPassos(){
   const u=sessionUser(),mods=MODULOS.filter(m=>m.perfis.includes(u.perfil));
   const P=[{titulo:`Olá, ${esc(String(u.nome||'').split(' ')[0])}! 👋`,texto:'Um tour rápido pelo sistema.'},
     {alvo:()=>tutVisivel('#sidebar-nav')||tutVisivel('#bottom-nav'),titulo:'O menu',texto:'Aqui ficam as abas do sistema.'}];
-  mods.forEach(m=>P.push({antes:()=>go(m.id),alvo:()=>tutVisivel(`.nav-item[onclick="go('${m.id}')"]`),titulo:`${m.ic} ${m.nome}`,texto:TUT_MOD[m.id]||''}));
+  mods.forEach(m=>P.push({antes:()=>go(m.id),alvo:()=>tutVisivel(`.nav-item[onclick="go('${m.id}')"]`),titulo:`${m.ic} ${m.nome}`,texto:m.id==='config'&&!isGerente()?'Seu perfil: troque o seu nome e a foto do seu personagem.':TUT_MOD[m.id]||''}));
   P.push({antes:()=>go('pdv'),alvo:()=>tutVisivel('#main-content .page-title .ajuda'),titulo:'O ponto de interrogação',
     texto:'Onde tem <b>?</b>, tem um vídeo de como fazer. <b>Toque no ?</b>',espera:'ajuda'});
   P.push({alvo:()=>tutVisivel('#main-content .page-title .ajuda.aberta .ajuda-txt'),titulo:'Vídeo "Como fazer"',
