@@ -12,7 +12,8 @@
 -- 3) Regras do ranking num lugar só (configuracoes.ranking, editadas em Configurações › Ranking): o site e esta função
 --    leem os mesmos valores. Pesos, mínimo de vendas, teto por venda, hora da virada do dia, dia de início da semana,
 --    se vendas pendentes contam e o aviso automático (ligado, título, pódio).
--- 4) A primeira semana (28/09 a 05/10) não é anunciada (pedido do dono).
+-- 4) A primeira semana (28/09 a 05/10) não é anunciada (pedido do dono), nem a de 21/09.
+-- Aplicada no teste e, com o "aprovado" do dono, na produção em 2026-10-04 (03:55 UTC, antes da primeira rodada do pg_cron).
 -- Sem comando de remoção (a ferramenta do Supabase trava nele).
 
 alter table public.avisos add column if not exists duracao_horas integer default 24;
@@ -134,6 +135,8 @@ revoke execute on function public.gerar_aviso_vendedor_semana() from public, ano
 
 -- a primeira semana (28/09 a 05/10) não é anunciada (pedido do dono)
 insert into public.avisos_semana_gerados (referencia, resultado) values ('2026-09-28', 'pulada a pedido do dono') on conflict do nothing;
+-- a semana anterior (21/09) também: aplicada num domingo, a primeira rodada anunciaria a semana de 21/09
+insert into public.avisos_semana_gerados (referencia, resultado) values ('2026-09-21', 'anterior ao aviso automático') on conflict do nothing;
 
 -- roda de hora em hora (minuto 3): na primeira rodada depois de segunda 06:00 cria o aviso; nas outras não faz nada
 select cron.schedule('aviso-vendedor-semana', '3 * * * *', $$select public.gerar_aviso_vendedor_semana()$$);
