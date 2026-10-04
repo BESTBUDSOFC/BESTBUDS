@@ -55,12 +55,12 @@ const VEND='6cba3b7c-7316-44b0-a9e0-9ef6fcc235e0',GERENTE='6a313a44-df23-484e-b9
   // tutorial do vendedor fala do perfil
   ok(await t(p,`tutPassos().some(x=>/Seu perfil/.test(x.texto||''))`),'tutorial: parada de Configurações fala do perfil');
   ok(p._errs.length===0,'sem erros JS (vendedor) '+p._errs.join(' | '));
-  // gerente: todas as abas; a própria linha abre "Meu perfil"
+  // gerente: todas as abas; v4.39: gerencia o próprio perfil (permissões iguais), então a própria linha abre a edição com o perfil travado
   const g=await abrir(b,GERENTE);
   await t(g,`cfgTabAtual='usuarios';go('config')`);await g.waitForTimeout(200);
   ok((await t(g,`document.querySelectorAll('.cfg-tab').length`))>5,'gerente continua vendo todas as abas');
   await t(g,`modalUsuario(session.usuario_id)`);await g.waitForTimeout(100);
-  ok(await g.isVisible('#btn-meu-perfil'),'gerente, na própria linha: abre "Meu perfil" (antes dava "sem permissão")');
+  ok(await t(g,`!!document.getElementById('u-perfil')&&document.getElementById('u-perfil').disabled`),'gerente, na própria linha: edição com o perfil travado (v4.39)');
   await t(g,`closeModal()`);
   ok(g._errs.length===0,'sem erros JS (gerente) '+g._errs.join(' | '));
   await b.close();

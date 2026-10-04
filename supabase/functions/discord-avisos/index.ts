@@ -1,8 +1,8 @@
 // Avisos do site no Discord (v4.33.0; 2 imagens na v4.34.0; foto do vendedor ouro na v4.35.0; imagem do vendedor ouro na v4.36.0; imagens anexadas na v4.37.1; @everyone na v4.37.2). Ver supabase/migrations/20261007000000_discord_avisos.sql.
 // acao "sincronizar" (chamada pelo banco, sem login): envia o que está pendente e apaga o que saiu do site.
 //   Não recebe dados de fora: só faz o que já está anotado em discord_mensagens, então chamar à toa não faz mal.
-// acao "teste" (chamada pelo site, Sócio ou Diretor): manda uma mensagem de teste para o canal escolhido.
-// acao "previa" (Configurações › Ranking, Gerente ou acima): desenha a imagem do vendedor ouro com o pódio mandado e devolve o PNG (não grava nada).
+// acao "teste" (chamada pelo site, quem tem a permissão "discord"): manda uma mensagem de teste para o canal escolhido.
+// acao "previa" (Configurações › Ranking, quem tem a permissão "ranking"): desenha a imagem do vendedor ouro com o pódio mandado e devolve o PNG (não grava nada).
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { encodeBase64 } from 'jsr:@std/encoding@1/base64';
 import { initWasm, Resvg } from 'npm:@resvg/resvg-wasm@2.6.2';
@@ -328,8 +328,8 @@ Deno.serve(async (req) => {
     const jwt = (req.headers.get('Authorization') || '').replace('Bearer ', '');
     const { data: u } = jwt ? await db.auth.getUser(jwt) : { data: null };
     if (!u?.user) return json({ error: 'Faça login de novo.' }, 401);
-    const { data: prof } = await db.from('profiles').select('perfil').eq('id', u.user.id).single();
-    if (!prof || !['gerente', 'socio', 'diretor'].includes(prof.perfil)) return json({ error: 'Apenas Gerente, Diretor ou Sócio.' }, 403);
+    const { data: pode } = await db.rpc('tem_permissao_de', { p_ator: u.user.id, p: 'ranking' });   // v4.39: permissão "ranking"
+    if (pode !== true) return json({ error: 'Sem permissão para gerar a imagem do ranking.' }, 403);
     const d = podioDaPrevia(body);
     if (!d) return json({ error: 'Dados do ranking inválidos.' }, 400);
     try {
@@ -345,8 +345,9 @@ Deno.serve(async (req) => {
     const jwt = (req.headers.get('Authorization') || '').replace('Bearer ', '');
     const { data: u } = jwt ? await db.auth.getUser(jwt) : { data: null };
     if (!u?.user) return json({ error: 'Faça login de novo.' }, 401);
-    const { data: prof } = await db.from('profiles').select('perfil,nome').eq('id', u.user.id).single();
-    if (!prof || !['socio', 'diretor'].includes(prof.perfil)) return json({ error: 'Apenas Sócio ou Diretor.' }, 403);
+    const { data: prof } = await db.from('profiles').select('nome').eq('id', u.user.id).single();
+    const { data: pode } = await db.rpc('tem_permissao_de', { p_ator: u.user.id, p: 'discord' });   // v4.39: permissão "discord"
+    if (!prof || pode !== true) return json({ error: 'Sem permissão para configurar o Discord.' }, 403);
     const canal = body.canal === 'ouro' ? 'ouro' : 'avisos';
     const { data: cfg } = await db.from('discord_canais').select('*').eq('canal', canal).single();
     if (!cfg?.webhook_definido) return json({ error: 'Salve o endereço do webhook antes de testar.' }, 400);

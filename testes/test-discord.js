@@ -23,7 +23,7 @@ fs.mkdirSync(SP+'/saida',{recursive:true});
   // ---- quem vê a aba ----
   for(const [uid,nome,ve] of [[GERENTE,'Gerente',false],[VEND,'Vendedor',false],[DIRETOR,'Diretor',true]]){
     const q=await abrir(b,uid);await limpa(q);
-    if(nome==='Vendedor'){ok(!(await t(q,`typeof cfgDiscord==='function'&&isSocioOuDiretor()`)),'vendedor não configura o Discord');await q.close();continue}
+    if(nome==='Vendedor'){ok(!(await t(q,`typeof cfgDiscord==='function'&&pode('discord')`)),'vendedor não configura o Discord');await q.close();continue}
     await t(q,`go('config')`);await q.waitForTimeout(200);
     const tem=await t(q,`[...document.querySelectorAll('.cfg-tab')].some(x=>x.textContent==='Discord')`);
     ok(tem===ve,`${nome} ${ve?'vê':'não vê'} a aba Discord`);

@@ -845,7 +845,7 @@ let fails=0;const ok=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m);if(!c)fails++};
   ok((await p.$$eval('#eq-sec .eq-item.off .nm',x=>x.map(e=>e.textContent))).includes('Ana'),'quem sai vai para Off-line em tempo real (lista continua aberta)');
   await p.click('#eq-sec .eq-grp.on');ok((await p.$$eval('#eq-sec .eq-item:not(.off)',x=>x.length))===0,'clicar de novo recolhe');
   const rod=await p.$eval('#eq-perfil',e=>({nm:e.querySelector('.nm').textContent,b:e.querySelector('.badge').className,sair:!!e.querySelector('#eq-sair'),foto:!!e.querySelector('.eq-foto .foto-u')}));
-  ok(rod.nm==='walter'&&rod.b==='badge socio'&&rod.sair&&rod.foto,'rodapé: foto (v4.38.2), nome, selo do perfil e Sair: '+JSON.stringify(rod));
+  ok(rod.nm==='walter'&&rod.b==='badge pc pc-ouro'&&rod.sair&&rod.foto,'rodapé: foto (v4.38.2), nome, selo do perfil e Sair: '+JSON.stringify(rod));
   await p.click('#eq-perfil .eq-foto');ok(await p.isVisible('#btn-meu-perfil'),'tocar na foto do rodapé abre "Meu perfil"');await t(`closeModal()`);
   ok(!(await p.isVisible('#btn-sair')),'Sair do topo não aparece no computador');
   const topo=await p.$eval('#app-header',e=>({marca:e.querySelector('#h-nome-loja').innerHTML,ordem:[...e.children].filter(c=>getComputedStyle(c).display!=='none').map(c=>c.id||c.className)}));
