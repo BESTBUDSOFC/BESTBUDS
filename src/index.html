@@ -222,6 +222,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .eq-perfil{flex:none;display:flex;align-items:center;gap:10px;margin:8px -10px -12px;padding:12px 12px 12px 18px;border-top:1px solid var(--border);background:rgba(0,0,0,.18)}
 .eq-perfil .info{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
 .eq-perfil .nm{font-weight:700}
+.eq-foto{flex:none;padding:0;background:none;border:0;border-radius:50%;cursor:pointer;line-height:0}.eq-foto:hover .foto-u{box-shadow:0 0 0 2px var(--green)}
 .eq-sair{flex:none;background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 10px;border-radius:8px;font-weight:600;font-size:12px}
 .eq-sair:hover{color:var(--danger);border-color:var(--danger)}
 /* Topo: nome da loja com a tipografia da tela de login (sem logo) + versão ao lado */
@@ -697,7 +698,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.38.1';
+const VERSAO='v4.38.2';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -5236,7 +5237,8 @@ function renderEquipe(){
 }
 function renderPerfilRodape(){
   const el=document.getElementById('eq-perfil'),u=db&&sessionUser();if(!el||!u)return;
-  el.innerHTML=`<div class="info"><span class="nm" title="${esc(u.nome)}">${esc(u.nome)}</span>${seloPerfil(u)}</div>
+  // v4.38.2 (pedido do dono): foto do personagem (ou iniciais) antes do nome; tocar nela abre "Meu perfil"
+  el.innerHTML=`<button type="button" class="eq-foto" title="Meu perfil: nome e foto" onclick="modalMeuPerfil()">${fotoUsuarioHTML(u,38)}</button><div class="info"><span class="nm" title="${esc(u.nome)}">${esc(u.nome)}</span>${seloPerfil(u)}</div>
     <button class="eq-sair" id="eq-sair" onclick="logout()">Sair</button>`;
 }
 

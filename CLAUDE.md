@@ -247,5 +247,5 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Celular (até 767px, pedido do dono, v4.32.2): o topo não mostra "Sair" nem a versão (cortavam a tela). Tocar no selo do perfil abre a conta (`abrirConta`): nome, selo, versão e o botão "Sair".
 - Menu lateral: módulos de operação no alto; "Configurações" fica separada, logo acima do rodapé com o usuário.
 - Menu lateral, abaixo dos módulos: "On-line" e "Off-line" com a contagem, recolhidos por padrão; clicar abre ou fecha a lista. **Dentro de cada um, a lista é dividida por perfil** (Sócios, Diretores, Gerentes, Vendedores, com a contagem e a cor do perfil; grupo vazio não aparece) e cada pessoa aparece com a **foto do personagem** (ou as iniciais) e o nome, sem o selo (pedido do dono, v4.38.1; `renderEquipe`, `EQ_PERFIL_PLURAL`, `.eq-sub`). Presença pelo Supabase Realtime (canal `presenca`, chave = id do usuário), sem gravar no banco.
-- Rodapé do menu: nome, selo do perfil e o botão "Sair".
-- A **foto do personagem** (v4.35) aparece em Configurações › Usuários, no vendedor ouro e, desde a v4.38.1, na lista On-line/Off-line do menu. O rodapé do menu continua com nome e selo.
+- Rodapé do menu: **foto do personagem** (ou iniciais; tocar abre "Meu perfil", v4.38.2), nome, selo do perfil e o botão "Sair".
+- A **foto do personagem** (v4.35) aparece em Configurações › Usuários, no vendedor ouro e, desde a v4.38.1, na lista On-line/Off-line do menu. No rodapé do menu, desde a v4.38.2.
