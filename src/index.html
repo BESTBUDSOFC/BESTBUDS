@@ -360,6 +360,7 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .rk-linha{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.rk-linha label{font-size:13px;color:var(--text);text-transform:none;letter-spacing:0;margin:0}
 .rk-linha label small{display:block;color:var(--muted);font-size:11px}.rk-linha select{width:auto;max-width:170px}
 .rk-num{display:flex;align-items:center;gap:6px}.rk-num input{width:72px}.rk-num span{font-size:12px;color:var(--muted)}
+.rk-img-linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.rk-img-linha select{flex:1;min-width:220px;width:auto}
 .rk-prev-l{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)}.rk-prev-l:last-of-type{border-bottom:0}
 .aviso-dur{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}.aviso-dur input[type=number]{width:90px}
 /* aviso automático do vendedor ouro da semana */
@@ -692,7 +693,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.36.0';
+const VERSAO='v4.37.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -3079,6 +3080,11 @@ function cfgRanking(b){
     </div>
   </div>
   <div class="card rk-bloco" id="rk-previa" style="margin-top:12px"></div>
+  <div class="card rk-bloco rk-img" style="margin-top:12px"><h4>🖼️ Imagem do vendedor ouro</h4>
+    <p class="muted" style="font-size:12px;margin:0 0 10px">Gera agora a mesma imagem do aviso automático, com o ranking da semana escolhida e as regras desta tela (mesmo sem salvar). Na semana atual, a imagem sai marcada como <b>parcial</b>. Dá para baixar, copiar ou publicar como aviso.</p>
+    <div class="rk-img-linha"><select id="rk-img-sem">${[0,-1,-2,-3].map(d=>{const w=pnSemanaTrabalho(d);return`<option value="${d}">${d===0?'Esta semana (até agora)':d===-1?'Semana passada':'Semana'} · ${pnDiaFmt(w.seg)} a ${pnDiaFmt(pnSomaDias(w.seg,7))}</option>`}).join('')}</select>
+      <button class="btn btn-primary" id="rk-img-btn" onclick="rkImagemOuro()">🖼️ Gerar imagem</button></div>
+  </div>
   <p id="rk-err" style="color:var(--danger);font-size:13px;display:none;margin:10px 0 0"></p>
   <div class="modal-actions" style="justify-content:flex-start"><button class="btn btn-ghost" onclick="cfgRankingPadrao()">Restaurar padrão</button>
     <button class="btn btn-primary" id="rk-salvar" onclick="salvarRegrasRanking()">Salvar regras</button></div>`;
@@ -3117,6 +3123,61 @@ function cfgRankingPrevia(){
     ${top.length?top.map((p,i)=>`<div class="rk-prev-l"><span>${['🥇','🥈','🥉'][i]} <b>${esc(p.nome)}</b></span><span>${p.pont.toLocaleString('pt-BR',{maximumFractionDigits:1})} pts · ${p.n} vendas · ${p.dias} dia(s)</span></div>`).join('')
       +(r.aviso_ativo?`<p class="muted" style="font-size:12px;margin:8px 0 0">O aviso sairia como: <b>🥇 ${esc(r.aviso_titulo)}: ${esc(top[0].nome)}</b></p>`:`<p class="muted" style="font-size:12px;margin:8px 0 0">Aviso automático desligado.</p>`)
       :`<span class="muted">Ninguém com ${r.min_vendas}+ vendas nessa semana: sem medalha e sem aviso.</span>`}`;
+}
+/* Imagem do vendedor ouro sob demanda (pedido do dono, v4.37): o pódio é calculado aqui com as regras da tela e a função
+   discord-avisos desenha com o MESMO código do aviso automático (podio.ts) e devolve o PNG. Nada é gravado nem enviado ao Discord. */
+const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+let _rkImg=null;   // {parcial,titulo,nome,semana,blob}
+function rkPodioSemana(r,desloc){
+  const antes=db.ranking;let rk;
+  try{db.ranking=r;rk=pnRankingSemana(desloc)}finally{db.ranking=antes}
+  // mesma ordem do banco: pontuação e, no empate, a receita da loja (guardada + pendente)
+  const top=rk.lista.filter(p=>p.elegivel).sort((a,b)=>b.pont-a.pont||(b.loja+b.pendente)-(a.loja+a.pendente)).slice(0,r.aviso_podio?3:1);
+  return{rk,podio:top.map(p=>({id:UUID_RE.test(p.k)?p.k:null,nome:p.nome,pont:p.pont,n:p.n,dias:p.dias,receita:Math.round(p.loja+p.pendente)}))};
+}
+async function rkImagemOuro(){
+  if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio.');
+  const r=cfgRankingForm(),err=errosRegrasRanking(r);if(err.length)return toast('⚠️ Corrija as regras antes: '+err[0]);
+  const desloc=Number((document.getElementById('rk-img-sem')||{}).value)||0,parcial=desloc===0;
+  const{rk,podio}=rkPodioSemana(r,desloc);
+  const semana=`${pnDiaFmt(rk.seg)} a ${pnDiaFmt(pnSomaDias(rk.seg,7))}`;
+  if(!podio.length)return toast(`Ninguém com ${r.min_vendas}+ vendas na semana de ${semana}: não haveria aviso.`);
+  _imgDesconto=null;_rkImg=null;
+  openModal(`<h3>🖼️ Vendedor ouro · ${esc(semana)}${parcial?' <span class="tag">parcial</span>':''}</h3>
+    <p class="muted" style="font-size:12px;margin:-4px 0 10px">${parcial?`Ranking até agora (${dataHoraBR(new Date())}). A semana ainda não acabou: o resultado pode mudar até ${DIAS_SEMANA[r.semana_inicio]} ${pnHora(r.virada_hora)}.`:'Semana fechada, com as regras da tela.'}</p>
+    <div id="img-desc-prev" class="muted" style="text-align:center;padding:30px">Desenhando a imagem…</div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
+    <button class="btn btn-ghost" id="btn-copiar-img" onclick="copiarImagemDesconto()" style="display:none">📋 Copiar</button>
+    <button class="btn btn-ghost" id="btn-baixar-img" onclick="baixarImagemDesconto()" disabled>⬇ Baixar imagem</button>
+    <button class="btn btn-primary" id="rk-img-pub" onclick="rkPublicarImagem()" disabled>📢 Publicar como aviso</button></div>`);
+  const btn=document.getElementById('rk-img-btn');if(btn)btn.disabled=true;
+  try{
+    const{data:{session:sa}}=await sb.auth.getSession();
+    const resp=await fetch(DISCORD_URL,{method:'POST',headers:{'Content-Type':'application/json',...(sa?.access_token?{Authorization:'Bearer '+sa.access_token}:{})},
+      body:JSON.stringify({acao:'previa',podio,semana:semana+(parcial?' · parcial':''),titulo:r.aviso_titulo})});
+    if(!resp.ok){const j=await resp.json().catch(()=>({}));throw new Error(j.error||'HTTP '+resp.status)}
+    const png=await resp.blob(),im=new Image(),src=URL.createObjectURL(png);
+    await new Promise((ok,ko)=>{im.onload=ok;im.onerror=()=>ko(new Error('imagem inválida'));im.src=src});
+    const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;c.getContext('2d').drawImage(im,0,0);URL.revokeObjectURL(src);
+    const j=await imgComprimir(c),url=j&&await blobParaDataURL(j.blob);if(!url)throw new Error('não deu para gerar o JPG');
+    const prev=document.getElementById('img-desc-prev');if(!prev)return;
+    _imgDesconto={canvas:c,url,bytes:j.blob.size,arquivo:`vendedor-ouro-${rk.seg}${parcial?'-parcial':''}.jpg`};
+    _rkImg={parcial,titulo:r.aviso_titulo,nome:podio[0].nome,semana,blob:j.blob};
+    prev.innerHTML=`<img src="${url}" alt="Imagem do vendedor ouro" style="width:100%;max-width:min(300px,42vh);border-radius:12px;border:1px solid var(--border)">
+      <div class="muted" style="font-size:12px;margin-top:6px">JPG · ${j.w}×${j.h} · ${Math.round(j.blob.size/1024)} KB (máx. 512 KB)</div>`;prev.style.padding='0';
+    document.getElementById('btn-baixar-img').disabled=false;document.getElementById('rk-img-pub').disabled=false;
+    if(navigator.clipboard&&window.ClipboardItem)document.getElementById('btn-copiar-img').style.display='';
+    reg('Imagem do vendedor ouro gerada',`semana ${semana}${parcial?' (parcial)':''} · 1º ${podio[0].nome}`);
+  }catch(e){
+    const prev=document.getElementById('img-desc-prev');if(prev)prev.textContent='⚠️ Não foi possível gerar a imagem: '+(e.message||e);
+  }finally{const b=document.getElementById('rk-img-btn');if(b)b.disabled=false}
+}
+// abre o 📢 com a imagem já colocada e um título sugerido (vai para o canal de avisos do Discord, não para o canal ouro)
+function rkPublicarImagem(){
+  const x=_rkImg;if(!x)return;
+  modalAvisos();
+  _avisoImgs=[new File([x.blob],'vendedor-ouro.jpg',{type:'image/jpeg'})];desenharPreviaImagensAviso();
+  const t=document.getElementById('av-titulo');if(t)t.value=(x.parcial?`📊 Parcial do ranking (${x.semana})`:`🥇 ${x.titulo}: ${x.nome}`).slice(0,AVISO_TITULO_MAX);
 }
 function cfgRankingPadrao(){
   const r=RANKING_PADRAO,set=(id,v)=>{const el=document.getElementById(id);if(!el)return;if(el.type==='checkbox')el.checked=v;else el.value=v;el.dispatchEvent(new Event('change',{bubbles:true}))};
