@@ -53,6 +53,8 @@
     solicitacoes_senha:[{id:'ped-1',usuario_id:U(4),usuario:'bruno',status:'pendente',criado_em:'2026-09-25T10:00:00Z'},{id:'ped-2',usuario_id:U(6),usuario:'abel',status:'pendente',criado_em:'2026-09-25T11:00:00Z'}],
     config_privada:[{id:1,senha_padrao_reset:null}],
     configuracoes:[{id:1,nome_loja:'BEST BUDS',cores:{},aliquota_global:50}],
+    discord_canais:[{canal:'avisos',ativo:false,webhook_definido:false,cargos:[]},{canal:'ouro',ativo:false,webhook_definido:false,cargos:[]}],
+    discord_mensagens:[],discord_segredos:[],
   };
   let seq=1000;
   window.__LOG=[];
@@ -87,6 +89,10 @@
         if(table==='fornecedor_itens'){for(const r of arr){const it=DB.itens.find(i=>i.id===r.item_id);const c=it&&DB.categorias_itens.find(c=>c.codigo===it.categoria);if(!c||!c.compravel)return{data:null,error:{message:'categoria invalida'}}}}
         if(table==='avisos')arr.forEach(r=>{delete r.status;r.criado_em=new Date().toISOString();r.tipo='manual';r.referencia=null;   // trigger avisos_definir_autor
           const h=('duracao_horas' in r)?r.duracao_horas:(r.duracao_horas=24);r.expira_em=h===null?'infinity':new Date(Date.now()+h*36e5).toISOString()});
+        if(table==='avisos')arr.forEach(r=>{const c=r.tipo==='vendedor_semana'?'ouro':'avisos',cfg=DB.discord_canais.find(x=>x.canal===c);   // trigger discord_aviso_novo
+          if(!cfg||!cfg.ativo||!cfg.webhook_definido)return;
+          const ids=cfg.cargos.filter(x=>r.discord_cargos==null?x.padrao:r.discord_cargos.includes(x.id)).map(x=>x.id);
+          DB.discord_mensagens.push({id:'gen-'+(seq++),aviso_id:r.id,canal:c,titulo:r.titulo,cargos:ids,status:'pendente',tentativas:0,teste:false,criado_em:new Date().toISOString()})});
         if(table==='avisos_vistos')arr.forEach(r=>{delete r.status;delete r.id});
         if(table==='vendas')arr.forEach(r=>{r.data=r.data||new Date().toISOString();r.status='pendente';r.guardada_em=null;r.deposito_id=null;r.cancelamento_status=null});
         if(table==='estoque_bau')arr.forEach(r=>{r.data=r.data||new Date().toISOString();r.status=r.status||'ativa'});
@@ -101,10 +107,14 @@
         data=T.filter(match);
         // trigger trg_produto_preco: cada mudança de preço vira uma linha em produtos_precos, com o preço anterior
         if(table==='produtos'&&st.payload&&'preco' in st.payload)data.forEach(r=>{if(Number(r.preco)!==Number(st.payload.preco))(DB.produtos_precos=DB.produtos_precos||[]).push({id:'gen-'+(seq++),produto_id:r.id,preco:Number(st.payload.preco),preco_anterior:Number(r.preco),alterado_em:new Date().toISOString()})});
+        if(table==='discord_canais'){const eu=DB.profiles.find(p=>p.id===(window.__uid||U(2)))||{};if(!['socio','diretor'].includes(eu.perfil))data=[];
+          data.forEach(r=>{Object.assign(r,st.payload,{webhook_definido:r.webhook_definido,atualizado_em:new Date().toISOString(),atualizado_por_nome:eu.nome})});
+          if(st.single||st.maybe)return{data:data[0]||null,error:data[0]?null:{message:'sem permissão'}};return{data,error:null}}
         data.forEach(r=>Object.assign(r,st.payload));
       }else if(st.op==='delete'){
         data=T.filter(match);
         if(table==='itens'){const ids=data.map(r=>r.id);if(DB.receita_insumos.some(r=>ids.includes(r.item_id)))return{data:null,error:{message:'violates foreign key constraint'}}}
+        if(table==='avisos'){const ids=data.map(r=>r.id);DB.discord_mensagens.forEach(m=>{if(m.canal==='avisos'&&ids.includes(m.aviso_id)&&['enviado','pendente','erro'].includes(m.status))m.status=m.status==='enviado'?'apagar':'cancelado'})}   // trigger discord_avisos_sairam
         DB[table]=T.filter(r=>!match(r));
       }
       if(st.single||st.maybe)return{data:data[0]||null,error:null};
@@ -118,6 +128,14 @@
     rpc:async(nome,args)=>{window.__LOG.push({rpc:nome,args});
       const uid=window.__uid||U(2),eu=DB.profiles.find(p=>p.id===uid)||{},nivel={vendedor:1,gerente:2,diretor:3,socio:4}[eu.perfil]||0;
       const erro=m=>({data:null,error:{message:m}});
+      if(nome==='discord_salvar_webhook'){
+        if(nivel<3)return erro('Apenas Sócio ou Diretor configuram o Discord.');
+        const u=String(args.p_url||'').trim();
+        if(u&&!/^https:\/\/(ptb\.|canary\.)?(discord|discordapp)\.com\/api(\/v[0-9]+)?\/webhooks\/[0-9]+\/[A-Za-z0-9_-]+$/.test(u))return erro('Endereço de webhook inválido.');
+        const c=DB.discord_canais.find(x=>x.canal===args.p_canal);if(!c)return erro('Canal inválido.');
+        DB.discord_segredos=DB.discord_segredos.filter(x=>x.canal!==args.p_canal);if(u)DB.discord_segredos.push({canal:args.p_canal,webhook:u});
+        c.webhook_definido=!!u;return{data:null,error:null};
+      }
       if(nome==='guardar_vendas'){
         const vs=DB.vendas.filter(v=>args.p_ids.includes(v.id));
         if(!vs.length||vs.length!==new Set(args.p_ids).size)return erro('Venda não encontrada.');

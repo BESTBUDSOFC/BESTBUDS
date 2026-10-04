@@ -1,0 +1,169 @@
+// Avisos do site no Discord (v4.33.0). Ver supabase/migrations/20261007000000_discord_avisos.sql.
+// acao "sincronizar" (chamada pelo banco, sem login): envia o que está pendente e apaga o que saiu do site.
+//   Não recebe dados de fora: só faz o que já está anotado em discord_mensagens, então chamar à toa não faz mal.
+// acao "teste" (chamada pelo site, Sócio ou Diretor): manda uma mensagem de teste para o canal escolhido.
+import { createClient } from 'jsr:@supabase/supabase-js@2';
+
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', ...CORS } });
+
+const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+const COR = { avisos: 0x00c853, ouro: 0xf5a524 } as Record<string, number>;
+const agora = () => new Date().toISOString();
+
+async function webhookDo(canal: string): Promise<string | null> {
+  const { data } = await db.from('discord_segredos').select('webhook').eq('canal', canal).maybeSingle();
+  return data?.webhook || null;
+}
+
+// mensagem do Discord: cargos marcados no texto, aviso num cartão (embed)
+function montar(canal: string, aviso: any, cargos: string[]) {
+  const linhas: string[] = [];
+  if (aviso.mensagem) linhas.push(aviso.mensagem);
+  if (canal === 'avisos' && !aviso._teste) {
+    const fim = aviso.expira_em && aviso.expira_em !== 'infinity' ? Date.parse(aviso.expira_em) : NaN;
+    linhas.push(Number.isFinite(fim) ? `⏳ Some <t:${Math.floor(fim / 1000)}:R>` : '📌 Aviso permanente');
+  }
+  const embed: any = {
+    title: String(aviso.titulo || 'Aviso').slice(0, 256),
+    description: linhas.join('\n\n').slice(0, 4000),
+    color: COR[canal] ?? COR.avisos,
+    footer: { text: `${canal === 'ouro' ? '🏆 Ranking da semana' : '📢 Aviso'} · ${aviso.criado_por_nome || 'Sistema'}`.slice(0, 2000) },
+    timestamp: aviso.criado_em || agora(),
+  };
+  if (aviso.imagem_url) embed.image = { url: aviso.imagem_url };
+  return {
+    content: cargos.length ? cargos.map((id) => `<@&${id}>`).join(' ') : undefined,
+    allowed_mentions: { parse: [], roles: cargos },   // só os cargos escolhidos tocam; nunca @everyone
+    embeds: [embed],
+  };
+}
+
+async function erroDiscord(r: Response) {
+  const t = await r.text().catch(() => '');
+  let m = t;
+  try { m = JSON.parse(t).message || t; } catch { /* texto puro */ }
+  if (r.status === 401 || r.status === 404) return `Webhook não existe mais (HTTP ${r.status}). Cole o endereço novo em Configurações › Discord.`;
+  return `Discord respondeu HTTP ${r.status}: ${String(m).slice(0, 200)}`;
+}
+
+async function enviar(linha: any): Promise<{ ok: boolean; erro?: string }> {
+  const hook = await webhookDo(linha.canal);
+  if (!hook) return { ok: false, erro: 'Canal sem webhook.' };
+  let aviso = linha._aviso;
+  if (!aviso) {
+    const { data } = await db.from('avisos').select('*').eq('id', linha.aviso_id).maybeSingle();
+    if (!data) {   // o aviso saiu do site antes de ir para o Discord: não envia
+      await db.from('discord_mensagens').update({ status: 'cancelado', atualizado_em: agora() }).eq('id', linha.id);
+      return { ok: true };
+    }
+    aviso = data;
+  }
+  let r: Response;
+  try {
+    r = await fetch(hook + '?wait=true', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(montar(linha.canal, aviso, linha.cargos || [])),
+    });
+  } catch (e) {
+    const erro = 'Sem resposta do Discord: ' + String((e as Error).message || e).slice(0, 150);
+    await db.from('discord_mensagens').update({ status: 'erro', erro, atualizado_em: agora() }).eq('id', linha.id);
+    return { ok: false, erro };
+  }
+  if (!r.ok) {
+    const erro = await erroDiscord(r);
+    // 429 (muitas mensagens) volta para a fila; o resto vira erro (o pg_cron tenta de novo até 5 vezes)
+    await db.from('discord_mensagens').update({ status: r.status === 429 ? 'pendente' : 'erro', erro, atualizado_em: agora() }).eq('id', linha.id);
+    return { ok: false, erro };
+  }
+  const msg = await r.json();
+  await db.from('discord_mensagens').update({ status: 'enviado', msg_id: String(msg.id), erro: null, enviado_em: agora(), atualizado_em: agora() }).eq('id', linha.id);
+  // apagado no site enquanto ia para o Discord: apaga lá também
+  if (linha.canal === 'avisos' && linha.aviso_id) {
+    const { data } = await db.from('avisos').select('id').eq('id', linha.aviso_id).maybeSingle();
+    if (!data) await db.from('discord_mensagens').update({ status: 'apagar', atualizado_em: agora() }).eq('id', linha.id);
+  }
+  return { ok: true };
+}
+
+async function apagar(linha: any) {
+  const hook = await webhookDo(linha.canal);
+  if (!hook || !linha.msg_id) {
+    await db.from('discord_mensagens').update({ status: 'apagado', erro: 'Sem webhook ou sem número da mensagem.', apagado_em: agora(), atualizado_em: agora() }).eq('id', linha.id);
+    return;
+  }
+  let r: Response | null = null;
+  try { r = await fetch(`${hook}/messages/${linha.msg_id}`, { method: 'DELETE' }); } catch { r = null; }
+  if (r && (r.ok || r.status === 404)) {   // 404: alguém já apagou no Discord (ou o webhook mudou)
+    await db.from('discord_mensagens').update({ status: 'apagado', erro: r.status === 404 ? 'A mensagem já não estava no Discord.' : null, apagado_em: agora(), atualizado_em: agora() }).eq('id', linha.id);
+  } else {
+    const erro = r ? await erroDiscord(r) : 'Sem resposta do Discord.';
+    await db.from('discord_mensagens').update({ status: 'apagar', erro, atualizado_em: agora() }).eq('id', linha.id);
+  }
+}
+
+// pega a linha só se ninguém pegou antes (duas chamadas ao mesmo tempo não mandam em dobro)
+async function pegar(id: string, de: string[], para: string, tentativas: number) {
+  const { data } = await db.from('discord_mensagens')
+    .update({ status: para, tentativas: tentativas + 1, atualizado_em: agora() })
+    .eq('id', id).in('status', de).select().maybeSingle();
+  return data;
+}
+
+async function sincronizar() {
+  const velho = new Date(Date.now() - 5 * 60000).toISOString();
+  // função que caiu no meio: devolve para a fila
+  await db.from('discord_mensagens').update({ status: 'pendente' }).eq('status', 'enviando').lt('atualizado_em', velho);
+  await db.from('discord_mensagens').update({ status: 'apagar' }).eq('status', 'apagando').lt('atualizado_em', velho);
+  let enviados = 0, apagados = 0;
+  const { data: envios } = await db.from('discord_mensagens').select('*')
+    .or('and(status.eq.pendente,tentativas.lt.10),and(status.eq.erro,tentativas.lt.5)')
+    .order('criado_em').limit(20);
+  for (const l of envios || []) {
+    const minha = await pegar(l.id, ['pendente', 'erro'], 'enviando', l.tentativas);
+    if (minha && (await enviar(minha)).ok) enviados++;
+  }
+  const { data: saidas } = await db.from('discord_mensagens').select('*')
+    .eq('status', 'apagar').lt('tentativas', 10).order('criado_em').limit(20);
+  for (const l of saidas || []) {
+    const minha = await pegar(l.id, ['apagar'], 'apagando', l.tentativas);
+    if (minha) { await apagar(minha); apagados++; }
+  }
+  return { enviados, apagados };
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405);
+  let body: any = {};
+  try { body = await req.json(); } catch { /* corpo vazio = sincronizar */ }
+
+  if (body.acao === 'teste') {
+    const jwt = (req.headers.get('Authorization') || '').replace('Bearer ', '');
+    const { data: u } = jwt ? await db.auth.getUser(jwt) : { data: null };
+    if (!u?.user) return json({ error: 'Faça login de novo.' }, 401);
+    const { data: prof } = await db.from('profiles').select('perfil,nome').eq('id', u.user.id).single();
+    if (!prof || !['socio', 'diretor'].includes(prof.perfil)) return json({ error: 'Apenas Sócio ou Diretor.' }, 403);
+    const canal = body.canal === 'ouro' ? 'ouro' : 'avisos';
+    const { data: cfg } = await db.from('discord_canais').select('*').eq('canal', canal).single();
+    if (!cfg?.webhook_definido) return json({ error: 'Salve o endereço do webhook antes de testar.' }, 400);
+    const cargos = (cfg.cargos || []).filter((c: any) => c.padrao).map((c: any) => String(c.id));
+    const { data: linha } = await db.from('discord_mensagens')
+      .insert({ canal, titulo: 'Teste de conexão', cargos, teste: true, status: 'enviando', tentativas: 1 }).select().single();
+    const r = await enviar({
+      ...linha, _aviso: {
+        titulo: canal === 'ouro' ? '🏆 Teste: canal do vendedor ouro' : '🔔 Teste: canal de avisos',
+        mensagem: `Se você está vendo esta mensagem, o site está ligado a este canal.\nCargos marcados por padrão: ${cargos.length ? cargos.length : 'nenhum'}.`,
+        criado_por_nome: prof.nome, criado_em: agora(), _teste: true,
+      },
+    });
+    return r.ok ? json({ ok: true }) : json({ error: r.erro }, 502);
+  }
+
+  return json(await sincronizar());
+});

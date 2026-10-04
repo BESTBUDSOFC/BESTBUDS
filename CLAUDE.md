@@ -33,6 +33,11 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Quem esqueceu a senha pede em "Redefinir senha" na tela de login. O pedido destaca a linha da pessoa em Configurações › Usuários.
 - Um Gerente ou acima edita o usuário (✏️) e define uma senha nova. Ao salvar, o pedido é marcado como atendido. A pessoa troca a senha no primeiro acesso.
 
+## Excluir usuário
+
+- Configurações › Usuários: só usuário inativo, por Sócio ou Diretor (função `admin-users`, `delete_auth_user`). O histórico fica: vendas, compras, Baú, ajustes, registros, produtos, receitas e senhas atendidas perdem só o vínculo (`on delete set null`, migração `20261006000000_excluir_usuario_preserva_historico.sql`); o nome continua em `usuario_nome`. Até a v4.32.2 qualquer linha de histórico travava a exclusão ("Database error deleting user").
+- Tabela nova que aponte para `profiles`: use `on delete set null` (histórico) ou `on delete cascade` (dado só da pessoa), nunca sem regra.
+
 ## Limite de requisições
 
 - `public.checar_limite_requisicoes()` roda antes de cada requisição da API de dados (`pgrst.db_pre_request`).
@@ -182,6 +187,17 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Imagens de avisos vencidos são apagadas pelo site (1 listagem + 1 remoção) quando alguém publica ou apaga um aviso.
 - O banco define o autor e a validade (trigger). Vencido, o aviso some da tela e o pg_cron o apaga de vez (a cada 10 minutos); o permanente nunca vence.
 - As janelas de cadastro usadas por atalho abrem na segunda camada (`modal2`), que é esvaziada ao fechar. As funções do cadastro de fornecedor procuram elementos só dentro da janela aberta.
+
+## Discord (avisos)
+
+- Pedido do dono (v4.33): os avisos do site vão para o Discord por **webhook** (sem bot). Migração `20261007000000_discord_avisos.sql`, função `supabase/functions/discord-avisos/` (publicada com `verify_jwt` desligado: a ação "sincronizar" não recebe dados, só faz o que está anotado no banco; "teste" exige login de Sócio ou Diretor).
+- Dois canais (`discord_canais`): **avisos** (todo aviso manual; quando some do site, apagado com 🗑️ ou vencido pelo pg_cron, a mensagem some do Discord) e **ouro** (o aviso automático do vendedor ouro; fica no Discord para sempre, como histórico; pedido do dono).
+- Fluxo: trigger `trg_discord_aviso_novo` anota em `discord_mensagens` e acorda a função pelo `pg_net` (`discord_acordar`); a função posta com `?wait=true`, guarda `msg_id` e, quando o aviso sai (`trg_discord_avisos_sairam`, por comando), apaga por `DELETE {webhook}/messages/{id}`. O pg_cron `discord-sincronizar` (5 min) acorda a função só se houver pendência (erro tenta até 5 vezes). A função "pega" cada linha com update condicional, então duas chamadas juntas não mandam em dobro.
+- Segredo: o endereço do webhook fica em `discord_segredos` (RLS sem política; o site grava por `discord_salvar_webhook` e nunca lê). `discord_canais.webhook_definido` só muda pela rpc (trigger). O endereço da função fica em `discord_interno` (`funcao_url`), gravado à parte em cada banco.
+- Cargos: em Configurações › **Discord** (só Sócio ou Diretor), nome + ID (15–22 dígitos) + "padrão". No 📢, caixas com os cargos (os padrão já marcados); o aviso grava `avisos.discord_cargos` (ids; vazio = não marca ninguém). O banco só marca cargos cadastrados no canal (`allowed_mentions` só com eles; nunca @everyone). O vendedor ouro marca todos os cargos do canal ouro.
+- Ligado/desligado sem engano (v4.33.1: o dono salvou o canal desligado sem perceber): a primeira configuração já vem com "Ligado" marcado; desligado aparece em vermelho no quadro, o salvar e o "Enviar teste" avisam que nada vai, e o 📢 diz que o aviso fica só no site.
+- A aba mostra "Últimos envios" (`discord_mensagens`, só Sócio ou Diretor leem) com a situação e o erro; "Enviar teste" chama a função com o login.
+- Na publicação em produção: aplicar a migração, publicar a função `discord-avisos` e gravar `funcao_url` (`https://zwnawcnurwbowtdkholm.supabase.co/functions/v1/discord-avisos`) em `discord_interno`. O dono cola os webhooks na aba (não por conversa).
 
 ## Explicações na tela
 
