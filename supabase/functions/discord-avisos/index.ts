@@ -1,8 +1,12 @@
-// Avisos do site no Discord (v4.33.0; 2 imagens na v4.34.0; foto do vendedor ouro na v4.35.0). Ver supabase/migrations/20261007000000_discord_avisos.sql.
+// Avisos do site no Discord (v4.33.0; 2 imagens na v4.34.0; foto do vendedor ouro na v4.35.0; imagem do vendedor ouro na v4.36.0). Ver supabase/migrations/20261007000000_discord_avisos.sql.
 // acao "sincronizar" (chamada pelo banco, sem login): envia o que está pendente e apaga o que saiu do site.
 //   Não recebe dados de fora: só faz o que já está anotado em discord_mensagens, então chamar à toa não faz mal.
 // acao "teste" (chamada pelo site, Sócio ou Diretor): manda uma mensagem de teste para o canal escolhido.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { encodeBase64 } from 'jsr:@std/encoding@1/base64';
+import { initWasm, Resvg } from 'npm:@resvg/resvg-wasm@2.6.2';
+import opentype from 'npm:opentype.js@1.3.4';
+import { svgPodio, type Medir } from './podio.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -52,6 +56,83 @@ function montar(canal: string, aviso: any, cargos: string[]) {
   };
 }
 
+// ---------- imagem do vendedor ouro (v4.36): desenhada aqui (SVG → PNG), guardada no Storage e anexada no Discord ----------
+let _wasm: Promise<void> | null = null;
+let _fontes: Promise<{ buf: Uint8Array[]; medir: Medir }> | null = null;
+function prepararDesenho() {
+  if (!_wasm) _wasm = initWasm(fetch('https://unpkg.com/@resvg/resvg-wasm@2.6.2/index_bg.wasm')).catch((e) => { _wasm = null; throw e; });
+  if (!_fontes) _fontes = (async () => {
+    const { data } = await db.from('discord_interno').select('valor').eq('chave', 'fontes_url').maybeSingle();
+    const base = String(data?.valor || '').replace(/\/?$/, '/');
+    if (base === '/') throw new Error('Endereço das fontes (fontes_url) não configurado.');
+    const buf = await Promise.all(['Anton-Regular.ttf', 'Montserrat-ExtraBold.ttf'].map(async (f) => {
+      const r = await fetch(base + f);
+      if (!r.ok) throw new Error(`Fonte ${f}: HTTP ${r.status}`);
+      return new Uint8Array(await r.arrayBuffer());
+    }));
+    const ab = (b: Uint8Array) => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
+    const F: Record<string, any> = { anton: opentype.parse(ab(buf[0])), mont: opentype.parse(ab(buf[1])) };
+    const medir: Medir = (t, f, px, esp = 0) => F[f].getAdvanceWidth(t, px) + esp * Math.max(0, [...t].length - 1);
+    return { buf, medir };
+  })().catch((e) => { _fontes = null; throw e; });
+  return Promise.all([_wasm, _fontes]).then(([, f]) => f);
+}
+async function dataUri(url: string | null | undefined) {
+  if (!url) return null;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    return `data:${r.headers.get('content-type') || 'image/png'};base64,${encodeBase64(new Uint8Array(await r.arrayBuffer()))}`;
+  } catch { return null; }
+}
+const ddmm = (d: Date) => `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+async function desenharOuro(aviso: any): Promise<Uint8Array> {
+  const { buf, medir } = await prepararDesenho();
+  const { data: cfg } = await db.from('configuracoes').select('nome_loja,logotipo_url,ranking').eq('id', 1).maybeSingle();
+  const ids = (aviso.podio || []).map((p: any) => p.id).filter(Boolean);
+  const { data: perfis } = ids.length ? await db.from('profiles').select('id,foto_url').in('id', ids) : { data: [] as any[] };
+  const fotos: Record<string, string | null> = {};
+  await Promise.all((perfis || []).filter((p: any) => p.foto_url).map(async (p: any) => { fotos[p.id] = await dataUri(p.foto_url); }));
+  // semana premiada: segunda (referencia) até a segunda seguinte
+  const ini = /^\d{4}-\d{2}-\d{2}$/.test(aviso.referencia || '') ? new Date(aviso.referencia + 'T12:00:00Z') : new Date(Date.parse(aviso.criado_em) - 7 * 864e5);
+  const semana = `${ddmm(ini)} a ${ddmm(new Date(ini.getTime() + 7 * 864e5))}`;
+  const svg = svgPodio({
+    semana, loja: cfg?.nome_loja || 'BEST BUDS', logo: await dataUri(cfg?.logotipo_url),
+    titulo: cfg?.ranking?.aviso_titulo || 'Vendedor ouro da semana',
+    podio: (aviso.podio || []).map((p: any) => ({ ...p, foto: (p.id && fotos[p.id]) || null })),
+  }, medir);
+  return new Resvg(svg, { font: { fontBuffers: buf, defaultFontFamily: 'Montserrat', loadSystemFonts: false } }).render().asPng();
+}
+// imagem do aviso: a que já existe ou uma nova (uma chamada por vez desenha; as outras esperam). Sem imagem: null
+async function imagemOuro(aviso: any): Promise<Uint8Array | null> {
+  const baixar = async (u: string) => { try { const r = await fetch(u); return r.ok ? new Uint8Array(await r.arrayBuffer()) : null; } catch { return null; } };
+  if (aviso.imagem_url) return await baixar(aviso.imagem_url);
+  if (!Array.isArray(aviso.podio) || !aviso.podio.length || (aviso.imagem_tentativas ?? 0) >= 3) return null;
+  const t0 = aviso.imagem_tentativas ?? 0;
+  const { data: vez } = await db.from('avisos').update({ imagem_tentativas: t0 + 1 })
+    .eq('id', aviso.id).eq('imagem_tentativas', t0).is('imagem_url', null).select('id').maybeSingle();
+  if (!vez) {   // outra chamada está desenhando: espera até 25 s
+    for (let i = 0; i < 10; i++) {
+      await new Promise((ok) => setTimeout(ok, 2500));
+      const { data } = await db.from('avisos').select('imagem_url').eq('id', aviso.id).maybeSingle();
+      if (data?.imagem_url) return await baixar(data.imagem_url);
+    }
+    return null;
+  }
+  try {
+    const png = await desenharOuro(aviso);
+    const caminho = `avisos/ouro-${String(aviso.referencia || 'semana').replace(/[^A-Za-z0-9-]/g, '')}-${Date.now()}.png`;
+    const { error } = await db.storage.from('midia').upload(caminho, png, { contentType: 'image/png', upsert: true });
+    if (error) throw error;
+    const url = db.storage.from('midia').getPublicUrl(caminho).data.publicUrl;
+    await db.from('avisos').update({ imagem_url: url }).eq('id', aviso.id);
+    return png;
+  } catch (e) {
+    console.error('imagem do vendedor ouro', e);
+    return null;
+  }
+}
+
 async function erroDiscord(r: Response) {
   const t = await r.text().catch(() => '');
   let m = t;
@@ -77,12 +158,25 @@ async function enviar(linha: any): Promise<{ ok: boolean; erro?: string }> {
     const { data: pf } = await db.from('profiles').select('foto_url').eq('id', id1).maybeSingle();
     if (pf?.foto_url) aviso = { ...aviso, _foto: pf.foto_url };
   }
+  // vendedor ouro: só a imagem, anexada (fica no canal mesmo que o arquivo do site seja limpo); sem imagem, o texto de antes
+  const cargos: string[] = linha.cargos || [];
+  let init: RequestInit = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(montar(linha.canal, aviso, cargos)) };
+  if (linha.canal === 'ouro' && aviso.tipo === 'vendedor_semana') {
+    const png = await imagemOuro(aviso);
+    if (png) {
+      const fd = new FormData();
+      fd.append('payload_json', JSON.stringify({
+        content: cargos.length ? cargos.map((id) => `<@&${id}>`).join(' ') : undefined,
+        allowed_mentions: { parse: [], roles: cargos },
+        attachments: [{ id: 0, filename: 'vendedor-ouro.png' }],
+      }));
+      fd.append('files[0]', new Blob([png], { type: 'image/png' }), 'vendedor-ouro.png');
+      init = { method: 'POST', body: fd };
+    }
+  }
   let r: Response;
   try {
-    r = await fetch(hook + '?wait=true', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(montar(linha.canal, aviso, linha.cargos || [])),
-    });
+    r = await fetch(hook + '?wait=true', init);
   } catch (e) {
     const erro = 'Sem resposta do Discord: ' + String((e as Error).message || e).slice(0, 150);
     await db.from('discord_mensagens').update({ status: 'erro', erro, atualizado_em: agora() }).eq('id', linha.id);
@@ -134,6 +228,11 @@ async function sincronizar() {
   await db.from('discord_mensagens').update({ status: 'pendente' }).eq('status', 'enviando').lt('atualizado_em', velho);
   await db.from('discord_mensagens').update({ status: 'apagar' }).eq('status', 'apagando').lt('atualizado_em', velho);
   let enviados = 0, apagados = 0;
+  // vendedor ouro recente sem imagem: desenha (mesmo com o Discord desligado, a imagem vai para o aviso do site)
+  const ontem = new Date(Date.now() - 864e5).toISOString();
+  const { data: semImg } = await db.from('avisos').select('*').eq('tipo', 'vendedor_semana').is('imagem_url', null)
+    .not('podio', 'is', null).lt('imagem_tentativas', 3).gt('criado_em', ontem).limit(3);
+  for (const a of semImg || []) await imagemOuro(a);
   const { data: envios } = await db.from('discord_mensagens').select('*')
     .or('and(status.eq.pendente,tentativas.lt.10),and(status.eq.erro,tentativas.lt.5)')
     .order('criado_em').limit(20);

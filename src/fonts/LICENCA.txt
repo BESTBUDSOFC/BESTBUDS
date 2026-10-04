@@ -1,4 +1,5 @@
-Fontes usadas só nas imagens promocionais (cardápio e parceria):
-- anton.woff2: Anton (Vernon Adams), SIL Open Font License 1.1
-- montserrat.woff2: Montserrat (Julieta Ulanovsky e colaboradores), SIL Open Font License 1.1
+Fontes usadas só nas imagens (cardápio, parceria, novo preço e vendedor ouro):
+- anton.woff2 e Anton-Regular.ttf: Anton (Vernon Adams), SIL Open Font License 1.1
+- montserrat.woff2 e Montserrat-ExtraBold.ttf: Montserrat (Julieta Ulanovsky e colaboradores), SIL Open Font License 1.1
+Os .ttf são lidos pela função discord-avisos (servidor) para desenhar a imagem do vendedor ouro.
 https://openfontlicense.org
