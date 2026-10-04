@@ -35,6 +35,21 @@ fs.mkdirSync(SP+'/saida',{recursive:true});
   await t(p,`cfgTabAtual='discord';go('config')`);await p.waitForTimeout(300);
   ok(await p.isVisible('#dc-avisos')&&await p.isVisible('#dc-ouro'),'aba mostra os dois canais (avisos e vendedor ouro)');
   ok((await p.$eval('#dc-log',e=>e.innerText)).includes('Nada enviado'),'registro vazio: "Nada enviado ainda"');
+  ok(await p.isChecked('#dc-ativo-avisos')&&await p.isChecked('#dc-ativo-ouro'),'primeira configuração: "Ligado" já vem marcado');
+  // salvar desligado deixa claro que nada vai (v4.33.1: o dono salvou desligado sem perceber)
+  await p.uncheck('#dc-ativo-avisos');await p.fill('#dc-hook-avisos',HOOK);await t(p,`salvarDiscord('avisos')`);await p.waitForTimeout(300);
+  ok((await p.$eval('#toast',e=>e.textContent)).includes('DESLIGADO'),'salvar desligado: aviso forte de que nada vai para o Discord');
+  ok(await p.isVisible('#dc-avisos .tag.r')&&(await p.$eval('#dc-avisos .dc-desligado',e=>e.innerText)).includes('nada vai para o Discord'),'quadro mostra "desligado" em vermelho');
+  ok(!(await p.isChecked('#dc-ativo-avisos')),'depois de salvo desligado, a caixa mostra o que está salvo');
+  await t(p,`modalAvisos()`);
+  ok((await p.$eval('.aviso-discord-off',e=>e.innerText)).includes('desligado'),'📢 avisa que o Discord está desligado');
+  await t(p,`closeModal()`);
+  await p.route('**/functions/v1/discord-avisos',r=>r.fulfill({status:200,contentType:'application/json',headers:{'Access-Control-Allow-Origin':'*'},body:'{"ok":true}'}));
+  await t(p,`testarDiscord('avisos')`);await p.waitForTimeout(300);
+  ok((await p.$eval('#toast',e=>e.textContent)).includes('canal está DESLIGADO'),'teste com o canal desligado avisa que os avisos não vão');
+  await p.unroute('**/functions/v1/discord-avisos');
+  // volta ao estado inicial do teste
+  await t(p,`window.__DB.discord_canais.find(c=>c.canal==='avisos').webhook_definido=false;db.discord.avisos.webhook_definido=false;render()`);await p.waitForTimeout(200);
   // ligar sem webhook
   await p.check('#dc-ativo-avisos');await t(p,`salvarDiscord('avisos')`);
   ok((await p.$eval('#toast',e=>e.textContent)).includes('cole o endereço do webhook'),'ligar sem webhook: pede o endereço');
@@ -62,7 +77,7 @@ fs.mkdirSync(SP+'/saida',{recursive:true});
   ok(await t(p,`window.__LOG.some(l=>l.rpc==='discord_salvar_webhook'&&l.args.p_url.endsWith('abcDEF_ghi-123'))`),'webhook vai pela função do banco (discord_salvar_webhook)');
   ok(await t(p,`!JSON.stringify(db.discord).includes('abcDEF')`),'o site não guarda o endereço do webhook');
   ok((await p.getAttribute('#dc-hook-avisos','placeholder')).includes('Salvo')&&(await p.inputValue('#dc-hook-avisos'))==='','depois de salvo, o campo fica vazio com "Salvo ✓"');
-  ok(await p.isVisible('#dc-avisos .tag.g'),'selo "webhook salvo"');
+  ok(await p.isVisible('#dc-avisos .tag.g')&&!(await p.$('#dc-avisos .dc-desligado')),'selo "ligado" em verde');
   ok(await t(p,`window.__DB.registros.some(r=>r.acao==='Discord configurado'&&r.detalhe.includes('Canal de avisos: ligado, 2 cargo(s), webhook novo'))`),'Últimas ações: "Discord configurado"');
   // ouro: sem caixa "padrão" (todos marcam)
   await p.click('#dc-ouro button:has-text("+ Adicionar cargo")');

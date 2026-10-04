@@ -339,6 +339,8 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .aviso-lista{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto}
 .aviso-item{border:1px solid var(--border);border-radius:10px;padding:12px}
 .dc-ajuda{padding:10px 14px;margin:0 0 12px;font-size:13px}.dc-ajuda summary{cursor:pointer;font-weight:600}.dc-ajuda ol{margin:8px 0 0;padding-left:20px;line-height:1.55}
+.dc-desligado{background:rgba(255,77,77,.08);border:1px solid rgba(255,77,77,.35);border-radius:8px;padding:8px 10px;font-size:12px;margin:0 0 10px}
+.dc-ligado small{font-weight:400}
 .dc-cargos-tit{font-weight:600;font-size:13px;margin:12px 0 6px}.dc-cargos-tit small{font-weight:500;color:var(--muted)}
 .dc-cargos{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
 .dc-cargo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto auto;gap:6px;align-items:center}.dc-cargo .img-chk{font-size:12px;white-space:nowrap}
@@ -675,7 +677,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.33.0';
+const VERSAO='v4.33.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -2914,9 +2916,10 @@ function cfgDiscord(b){
     <li><b>ID do cargo:</b> ligue o <b>Modo desenvolvedor</b> (Configurações de usuário › Avançado). Depois, Configurações do servidor › <b>Cargos</b> › botão direito no cargo › <b>Copiar ID do cargo</b>.</li>
     <li>Se a marcação não fizer o celular tocar, ative no cargo <b>"Permitir que qualquer pessoa @mencione este cargo"</b>.</li></ol></details>
   <div class="rk-grade dc-grade">${DISCORD_CANAIS.map(([c,t,txt])=>{const d=db.discord[c];return`<div class="card rk-bloco dc-canal" id="dc-${c}">
-    <h4>${t} ${d.webhook_definido?`<span class="tag g">webhook salvo</span>`:`<span class="tag y">sem webhook</span>`}</h4>
+    <h4>${t} ${!d.webhook_definido?`<span class="tag y">sem webhook</span>`:d.ativo?`<span class="tag g">🟢 ligado</span>`:`<span class="tag r">⚪ desligado</span>`}</h4>
+    ${d.webhook_definido&&!d.ativo?`<div class="dc-desligado">⚠️ Desligado: nada vai para o Discord. Marque <b>Ligado</b> e clique em <b>Salvar</b>.</div>`:''}
     <p class="muted" style="font-size:12px;margin:0 0 10px">${txt}</p>
-    <label class="img-chk"><input type="checkbox" id="dc-ativo-${c}" ${d.ativo?'checked':''}> Ligado</label>
+    <label class="img-chk dc-ligado"><input type="checkbox" id="dc-ativo-${c}" ${d.ativo||!d.webhook_definido?'checked':''}> <b>Ligado</b> <small class="muted">(desmarque só para pausar o envio)</small></label>
     <div class="field" style="margin:10px 0 6px"><label>Endereço do webhook</label>
       <input id="dc-hook-${c}" type="password" autocomplete="off" spellcheck="false" placeholder="${d.webhook_definido?'Salvo ✓ (cole outro só para trocar)':'https://discord.com/api/webhooks/…'}"></div>
     ${d.webhook_definido?`<button type="button" class="btn btn-ghost btn-sm" onclick="tirarWebhookDiscord('${c}')">Tirar webhook</button>`:''}
@@ -2967,7 +2970,7 @@ async function salvarDiscord(c){
     db.discord[c]=discordDeLinhas([data])[c];
   }catch(err){btn.disabled=false;btn.textContent='Salvar';return toast('⚠️ Não foi possível salvar: '+(err.message||err))}
   reg('Discord configurado',`${c==='ouro'?'Canal do vendedor ouro':'Canal de avisos'}: ${ativo?'ligado':'desligado'}, ${cargos.length} cargo(s)${hook?', webhook novo':''}`);
-  toast(ativo?'✅ Salvo. Use "Enviar teste" para conferir no Discord.':'✅ Salvo (desligado: nada vai para o Discord).');render();
+  toast(ativo?'✅ Salvo e ligado. Use "Enviar teste" para conferir no Discord.':'⚠️ Salvo, mas DESLIGADO: nada vai para o Discord. Marque "Ligado" e salve para enviar.');render();
 }
 function tirarWebhookDiscord(c){
   if(!isSocioOuDiretor())return;
@@ -2986,7 +2989,7 @@ async function testarDiscord(c){
     const r=await fetch(DISCORD_URL,{method:'POST',headers:{'Content-Type':'application/json',...(sa?.access_token?{Authorization:'Bearer '+sa.access_token}:{})},body:JSON.stringify({acao:'teste',canal:c})});
     const j=await r.json().catch(()=>({error:'Resposta inválida do servidor.'}));
     if(!r.ok)throw new Error(j.error||'Erro desconhecido.');
-    toast('✅ Teste enviado. Confira no Discord.');
+    toast(db.discord[c].ativo?'✅ Teste enviado. Confira no Discord.':'✅ O teste chegou, mas o canal está DESLIGADO: os avisos não vão até você marcar "Ligado" e salvar.');
   }catch(err){toast('⚠️ Teste não chegou: '+(err.message||err))}
   if(btn){btn.disabled=false;btn.textContent='Enviar teste'}
   carregarLogDiscord();
@@ -3007,6 +3010,8 @@ function dcLogHTML(){
 }
 // janela do 📢: cargos do canal de avisos (os padrão já vêm marcados)
 function avisoDiscordHTML(){
+  const d=db.discord&&db.discord.avisos;
+  if(d&&d.webhook_definido&&!d.ativo)return `<div class="field aviso-discord-off"><p class="muted" style="font-size:12px;margin:0">💬 O canal de avisos do Discord está <b>desligado</b>: este aviso fica só no site.${isSocioOuDiretor()?' Para ligar: Configurações › Discord.':''}</p></div>`;
   if(!discordLigado('avisos'))return '';
   const cs=db.discord.avisos.cargos;
   return `<div class="field aviso-discord"><label>💬 Discord</label>${cs.length?`<div class="aviso-discord-cargos">${cs.map(x=>`<label class="img-chk"><input type="checkbox" class="av-dc" value="${esc(x.id)}" ${x.padrao?'checked':''}> @${esc(x.nome)}</label>`).join('')}</div>
