@@ -95,11 +95,12 @@ export function svgPodio(d: DadosPodio, medir: Medir): string {
   out.push(`<rect x="${cx0}" y="${cy0}" width="${cw}" height="${chh}" rx="36" fill="none" stroke="${OURO}" stroke-width="14" stroke-opacity=".10"/>`);
   out.push(`<rect x="${cx0}" y="${cy0}" width="${cw}" height="${chh}" rx="36" fill="none" stroke="${OURO}" stroke-opacity=".8" stroke-width="3"/>`);
   // selo do título com uma estrela desenhada de cada lado (a fonte não tem ★)
-  const pxSelo = caber(medir, titulo, 'mont', cw - 140, 26, 16, 8);
-  const wSelo = medir(titulo, 'mont', pxSelo, 8);
-  out.push(`<text x="544" y="${cy0 + 66}" text-anchor="middle" ${MONT(800)} font-size="${pxSelo}" letter-spacing="8" fill="${OURO}">${esc(titulo)}</text>`);
+  // (v4.36: letra do título maior, pedido do dono)
+  const pxSelo = caber(medir, titulo, 'mont', cw - 150, 34, 18, 7);
+  const wSelo = medir(titulo, 'mont', pxSelo, 7);
+  out.push(`<text x="543" y="${cy0 + 70}" text-anchor="middle" ${MONT(800)} font-size="${pxSelo}" letter-spacing="7" fill="${OURO}">${esc(titulo)}</text>`);
   const estrela = (x: number, y: number, r: number) => `<polygon fill="${OURO}" points="${Array.from({ length: 10 }, (_, k) => { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * .45 : r; return `${(x + rr * Math.cos(a)).toFixed(1)},${(y + rr * Math.sin(a)).toFixed(1)}`; }).join(' ')}"/>`;
-  out.push(estrela(540 - wSelo / 2 - 30, cy0 + 57, 13) + estrela(540 + wSelo / 2 + 38, cy0 + 57, 13));
+  out.push(estrela(540 - wSelo / 2 - 32, cy0 + 58, 16) + estrela(540 + wSelo / 2 + 38, cy0 + 58, 16));
   if (c1) {
     const fy = cy0 + 232, r = 100;
     out.push(`<circle cx="540" cy="${fy}" r="${r + 80}" fill="url(#gFoto)"/>`);
