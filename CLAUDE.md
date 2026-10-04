@@ -184,6 +184,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - O pop-up e a lista mostram o vendedor ouro com destaque dourado (`.aviso-ouro`, topo "🏆 Vendedor da semana").
 - O aviso aparece como pop-up para todos, em tempo real ou ao entrar. Cada pessoa vê o pop-up uma vez (`avisos_vistos`).
 - O aviso pode levar uma imagem (PNG, JPG ou WebP), reduzida no navegador para até 1600 px e enviada ao Storage em `midia/avisos/`. Com imagem, a mensagem é opcional. O banco só aceita imagem desse caminho do Storage.
+- **Até duas imagens por aviso** (pedido do dono, v4.34; migração `20261008000000_avisos_duas_imagens.sql`: `avisos.imagem2_url`, mesma regra da `imagem_url` e só junto com ela). Com duas, ficam **sempre lado a lado**, nunca uma embaixo da outra, também no celular: prévia, lista, pop-up (`avisoImgHTML`, `.aviso-imgs-dupla`, grade de 2 colunas) e Discord (dois cartões com o mesmo `url` viram galeria lado a lado). Escolha com `multiple` (`_avisoImgs`, máx. `AVISO_IMGS_MAX` = 2); apagar o aviso tira as duas do Storage.
 - Imagens de avisos vencidos são apagadas pelo site (1 listagem + 1 remoção) quando alguém publica ou apaga um aviso.
 - O banco define o autor e a validade (trigger). Vencido, o aviso some da tela e o pg_cron o apaga de vez (a cada 10 minutos); o permanente nunca vence.
 - As janelas de cadastro usadas por atalho abrem na segunda camada (`modal2`), que é esvaziada ao fechar. As funções do cadastro de fornecedor procuram elementos só dentro da janela aberta.
