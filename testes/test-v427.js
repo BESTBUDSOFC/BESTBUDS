@@ -75,7 +75,7 @@ const t=(p,js)=>p.evaluate(js);
   p=await abrir(b,VEND,{semTutorial:true});await p.waitForTimeout(300);
   ok(await t(p,`!!_tut&&!!document.getElementById('tut-bal')`),'primeiro acesso (sem tutorial_visto_em): o tutorial abre sozinho');
   const nav=await t(p,`_tut.passos.map(x=>x.titulo).join(' | ')`);
-  ok(nav.includes('Caixa de Balcão')&&nav.includes('Baú')&&nav.includes('Histórico Financeiro')&&!nav.includes('Painel')&&!nav.includes('Configurações'),'vendedor: só as abas dele: '+nav);
+  ok(nav.includes('Caixa de Balcão')&&nav.includes('Baú')&&nav.includes('Histórico Financeiro')&&!nav.includes('Painel')&&nav.includes('Configurações'),'vendedor: só as abas dele (Configurações desde a v4.38, só para o perfil): '+nav);
   ok(await t(p,`!document.querySelector('.modal-bg.open')`),'avisos esperam o tutorial acabar');
   while(!(await t(p,`!!_tut.passos[_tut.i].espera`)))await p.click('#tut-prox');
   ok(await t(p,`document.getElementById('tut-prox').disabled&&moduloAtual==='pdv'`),'passo do "?": Próximo travado até tocar no "?"');

@@ -823,17 +823,18 @@ let fails=0;const ok=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m);if(!c)fails++};
   const c2=await lerCards();ok(num(c2['Saídas'])===num(c0['Saídas'])&&num(c2['Entradas'])-num(c0['Entradas'])===1000,'ajuste revertido sai da soma');
   await t(`db.ajustes_caixa.length=0;render()`);
 
-  // 18. menu lateral: on-line/off-line recolhidos, nome + selo do perfil; topo sem Sair, versão junto ao nome
+  // 18. menu lateral: on-line/off-line recolhidos, foto + nome, divididos por perfil (v4.38); topo sem Sair, versão junto ao nome
   await t(`go('pdv')`);await p.waitForTimeout(100);
   ok((await t(`window.__tracked&&window.__tracked.usuario_id`))===U(2),'ao entrar, o usuário se anuncia no canal de presença');
   await t(`window.__pres._sync(['${U(2)}','${U(3)}'])`);
   const g0=await p.$eval('#eq-sec',e=>({grp:[...e.querySelectorAll('.eq-grp')].map(x=>x.textContent.replace(/\s+/g,' ').trim()),itens:e.querySelectorAll('.eq-item').length,txt:e.textContent}));
   ok(g0.grp.length===2&&g0.grp[0].includes('On-line')&&g0.grp[0].endsWith('2')&&g0.grp[1].includes('Off-line')&&g0.itens===0&&!g0.txt.includes('Membros'),'recolhido por padrão: só On-line e Off-line com contagem: '+JSON.stringify(g0));
   await p.click('#eq-sec .eq-grp.on');
-  const on=await p.$$eval('#eq-sec .eq-item',x=>x.map(e=>({nm:e.querySelector('.nm').textContent,b:e.querySelector('.badge').className+'|'+e.querySelector('.badge').textContent})));
-  ok(on.length===2&&on[0].nm.startsWith('walter')&&on[0].b==='badge socio mini|Sócio'&&on[1].nm==='Ana'&&on[1].b==='badge gerente mini|Gerente','On-line abre: nome e selo do perfil (mesmo da aba Usuários): '+JSON.stringify(on));
-  ok(!(await p.$('#eq-sec .av, #eq-sec img')),'sem avatares');
-  ok(await p.$eval('#eq-sec .eq-item',e=>{const n=e.querySelector('.nm').getBoundingClientRect(),b=e.querySelector('.badge').getBoundingClientRect();return Math.abs((n.top+n.bottom)/2-(b.top+b.bottom)/2)<4&&b.left>n.right-1&&b.height<=18}),'selo pequeno na frente do nome, na mesma linha');
+  const on=await p.$$eval('#eq-sec .eq-item',x=>x.map(e=>({nm:e.querySelector('.nm').textContent,foto:!!e.querySelector('.foto-u'),selo:!!e.querySelector('.badge')})));
+  const eqSubs=await p.$$eval('#eq-sec .eq-sub',x=>x.map(e=>e.textContent.replace(/\s+/g,'')));
+  ok(on.length===2&&on[0].nm.startsWith('walter')&&on[1].nm==='Ana'&&on.every(x=>x.foto&&!x.selo),'On-line abre: foto (ou iniciais) e nome, sem o selo (v4.38): '+JSON.stringify(on));
+  ok(eqSubs.join()==='Sócios1,Gerentes1','dividido por perfil, com a contagem: '+eqSubs.join());
+  ok(await p.$eval('#eq-sec .eq-item',e=>{const n=e.querySelector('.nm').getBoundingClientRect(),f=e.querySelector('.foto-u').getBoundingClientRect();return Math.abs((n.top+n.bottom)/2-(f.top+f.bottom)/2)<4&&f.right<=n.left+1&&f.height<=28}),'foto pequena antes do nome, na mesma linha');
   const nav=await p.$eval('#sidebar-nav',e=>({mods:[...e.querySelectorAll('#nav-mods .nav-item')].map(x=>x.textContent.trim()),cfg:e.querySelector('#nav-cfg').textContent.trim(),ordem:[...e.children].map(c=>c.id)}));
   ok(!nav.mods.some(m=>m.includes('Configurações'))&&nav.cfg.includes('Configurações')&&nav.ordem.join()==='nav-mods,eq-sec,nav-cfg,eq-perfil','Configurações separada, logo acima do usuário: '+JSON.stringify(nav));
   const posCfg=await p.$eval('#nav-cfg',e=>e.getBoundingClientRect().bottom),posPerf=await p.$eval('#eq-perfil',e=>e.getBoundingClientRect().top);
