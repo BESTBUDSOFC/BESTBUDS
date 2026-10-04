@@ -5,7 +5,7 @@
 -- 2) Quem não é Gerente ou acima, na própria linha, não muda o login (usuario). Perfil e status já eram travados.
 --    Nome: de 1 a 60 letras, para todos.
 -- 3) Storage: a pessoa envia e apaga só arquivos dela em midia/perfis/<id dela>-*.
--- Aplicada no teste (btsnlkktyfnrtphgpjbe) em 2026-10-04; produção só depois do "aprovado".
+-- Aplicada no teste (btsnlkktyfnrtphgpjbe) e, com o "aprovado" do dono, na produção em 2026-10-04 (travas conferidas simulando um vendedor).
 -- Sem a palavra de remoção no texto (a ferramenta do Supabase trava nela).
 
 create or replace function public.profiles_foto_quem() returns trigger
