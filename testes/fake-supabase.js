@@ -161,7 +161,7 @@
         Object.assign(v,{status:args.p_aprovar?'revertida':'pendente',cancelamento_status:args.p_aprovar?'aprovado':'recusado',cancelamento_respondido_por_nome:eu.nome});return{data:null,error:null};
       }
       return{data:'OP-'+(seq++),error:null}},
-    auth:{getSession:async()=>({data:{session:window.__semSessao?null:{user:{id:window.__uid||U(2)}}}}),signOut:async()=>({}),signInWithPassword:async()=>({data:{user:{id:window.__uid||U(2)}},error:null})},
+    auth:{getSession:async()=>({data:{session:window.__semSessao?null:{access_token:'token-falso',user:{id:window.__uid||U(2)}}}}),signOut:async()=>({}),signInWithPassword:async()=>({data:{user:{id:window.__uid||U(2)}},error:null})},
     storage:{from(){const ST=window.__ST=window.__ST||{files:[],removidos:[]};return{
       upload:async(c,f)=>{ST.files.push({name:c,size:f.size,type:f.type,f,created_at:new Date().toISOString()});return{}},
       getPublicUrl:c=>({data:{publicUrl:'https://zwnawcnurwbowtdkholm.supabase.co/storage/v1/object/public/midia/'+c}}),

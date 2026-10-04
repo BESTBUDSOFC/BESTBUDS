@@ -2,6 +2,7 @@
 // acao "sincronizar" (chamada pelo banco, sem login): envia o que está pendente e apaga o que saiu do site.
 //   Não recebe dados de fora: só faz o que já está anotado em discord_mensagens, então chamar à toa não faz mal.
 // acao "teste" (chamada pelo site, Sócio ou Diretor): manda uma mensagem de teste para o canal escolhido.
+// acao "previa" (Configurações › Ranking, Gerente ou acima): desenha a imagem do vendedor ouro com o pódio mandado e devolve o PNG (não grava nada).
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { encodeBase64 } from 'jsr:@std/encoding@1/base64';
 import { initWasm, Resvg } from 'npm:@resvg/resvg-wasm@2.6.2';
@@ -86,22 +87,41 @@ async function dataUri(url: string | null | undefined) {
   } catch { return null; }
 }
 const ddmm = (d: Date) => `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
-async function desenharOuro(aviso: any): Promise<Uint8Array> {
+// desenha a imagem (PNG) de um pódio: 1º a 3º com id, nome, pontos, vendas, dias e receita; fotos lidas dos perfis
+async function desenharPodio(podio: any[], semana: string, titulo?: string): Promise<Uint8Array> {
   const { buf, medir } = await prepararDesenho();
   const { data: cfg } = await db.from('configuracoes').select('nome_loja,logotipo_url,ranking').eq('id', 1).maybeSingle();
-  const ids = (aviso.podio || []).map((p: any) => p.id).filter(Boolean);
+  const ids = podio.map((p: any) => p.id).filter(Boolean);
   const { data: perfis } = ids.length ? await db.from('profiles').select('id,foto_url').in('id', ids) : { data: [] as any[] };
   const fotos: Record<string, string | null> = {};
   await Promise.all((perfis || []).filter((p: any) => p.foto_url).map(async (p: any) => { fotos[p.id] = await dataUri(p.foto_url); }));
-  // semana premiada: segunda (referencia) até a segunda seguinte
-  const ini = /^\d{4}-\d{2}-\d{2}$/.test(aviso.referencia || '') ? new Date(aviso.referencia + 'T12:00:00Z') : new Date(Date.parse(aviso.criado_em) - 7 * 864e5);
-  const semana = `${ddmm(ini)} a ${ddmm(new Date(ini.getTime() + 7 * 864e5))}`;
   const svg = svgPodio({
     semana, loja: cfg?.nome_loja || 'BEST BUDS', logo: await dataUri(cfg?.logotipo_url),
-    titulo: cfg?.ranking?.aviso_titulo || 'Vendedor ouro da semana',
-    podio: (aviso.podio || []).map((p: any) => ({ ...p, foto: (p.id && fotos[p.id]) || null })),
+    titulo: titulo || cfg?.ranking?.aviso_titulo || 'Vendedor ouro da semana',
+    podio: podio.map((p: any) => ({ ...p, foto: (p.id && fotos[p.id]) || null })),
   }, medir);
   return new Resvg(svg, { font: { fontBuffers: buf, defaultFontFamily: 'Montserrat', loadSystemFonts: false } }).render().asPng();
+}
+async function desenharOuro(aviso: any): Promise<Uint8Array> {
+  // semana premiada: segunda (referencia) até a segunda seguinte
+  const ini = /^\d{4}-\d{2}-\d{2}$/.test(aviso.referencia || '') ? new Date(aviso.referencia + 'T12:00:00Z') : new Date(Date.parse(aviso.criado_em) - 7 * 864e5);
+  return await desenharPodio(aviso.podio || [], `${ddmm(ini)} a ${ddmm(new Date(ini.getTime() + 7 * 864e5))}`);
+}
+// prévia (Configurações › Ranking, v4.37): o site manda o pódio calculado com as regras da tela; só desenha e devolve
+function podioDaPrevia(body: any): { podio: any[]; semana: string; titulo?: string } | null {
+  const p = body?.podio, n = (v: any, max: number) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= max;
+  if (!Array.isArray(p) || !p.length || p.length > 3) return null;
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const podio: any[] = [];
+  for (const l of p) {
+    if (!l || typeof l.nome !== 'string' || !l.nome.trim() || l.nome.length > 60) return null;
+    if (l.id != null && !(typeof l.id === 'string' && uuid.test(l.id))) return null;
+    if (!n(l.pont, 100) || !n(l.n, 1e5) || !n(l.dias, 31) || (l.receita != null && !n(l.receita, 1e10))) return null;
+    podio.push({ id: l.id || null, nome: l.nome.trim(), pont: l.pont, n: Math.round(l.n), dias: Math.round(l.dias), ...(l.receita != null ? { receita: l.receita } : {}) });
+  }
+  if (typeof body.semana !== 'string' || !body.semana.trim() || body.semana.length > 40) return null;
+  if (body.titulo != null && (typeof body.titulo !== 'string' || body.titulo.length > 50)) return null;
+  return { podio, semana: body.semana.trim(), titulo: body.titulo?.trim() || undefined };
 }
 // imagem do aviso: a que já existe ou uma nova (uma chamada por vez desenha; as outras esperam). Sem imagem: null
 async function imagemOuro(aviso: any): Promise<Uint8Array | null> {
@@ -254,6 +274,23 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405);
   let body: any = {};
   try { body = await req.json(); } catch { /* corpo vazio = sincronizar */ }
+
+  if (body.acao === 'previa') {
+    const jwt = (req.headers.get('Authorization') || '').replace('Bearer ', '');
+    const { data: u } = jwt ? await db.auth.getUser(jwt) : { data: null };
+    if (!u?.user) return json({ error: 'Faça login de novo.' }, 401);
+    const { data: prof } = await db.from('profiles').select('perfil').eq('id', u.user.id).single();
+    if (!prof || !['gerente', 'socio', 'diretor'].includes(prof.perfil)) return json({ error: 'Apenas Gerente, Diretor ou Sócio.' }, 403);
+    const d = podioDaPrevia(body);
+    if (!d) return json({ error: 'Dados do ranking inválidos.' }, 400);
+    try {
+      const png = await desenharPodio(d.podio, d.semana, d.titulo);
+      return new Response(png, { headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-store', ...CORS } });
+    } catch (e) {
+      console.error('prévia do vendedor ouro', e);
+      return json({ error: 'Não foi possível desenhar a imagem agora. Tente de novo.' }, 500);
+    }
+  }
 
   if (body.acao === 'teste') {
     const jwt = (req.headers.get('Authorization') || '').replace('Bearer ', '');
