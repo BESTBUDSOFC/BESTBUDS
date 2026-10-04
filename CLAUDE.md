@@ -33,6 +33,11 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - Quem esqueceu a senha pede em "Redefinir senha" na tela de login. O pedido destaca a linha da pessoa em Configurações › Usuários.
 - Um Gerente ou acima edita o usuário (✏️) e define uma senha nova. Ao salvar, o pedido é marcado como atendido. A pessoa troca a senha no primeiro acesso.
 
+## Excluir usuário
+
+- Configurações › Usuários: só usuário inativo, por Sócio ou Diretor (função `admin-users`, `delete_auth_user`). O histórico fica: vendas, compras, Baú, ajustes, registros, produtos, receitas e senhas atendidas perdem só o vínculo (`on delete set null`, migração `20261006000000_excluir_usuario_preserva_historico.sql`); o nome continua em `usuario_nome`. Até a v4.32.2 qualquer linha de histórico travava a exclusão ("Database error deleting user").
+- Tabela nova que aponte para `profiles`: use `on delete set null` (histórico) ou `on delete cascade` (dado só da pessoa), nunca sem regra.
+
 ## Limite de requisições
 
 - `public.checar_limite_requisicoes()` roda antes de cada requisição da API de dados (`pgrst.db_pre_request`).
