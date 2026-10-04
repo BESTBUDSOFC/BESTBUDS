@@ -225,6 +225,8 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .h-marca span{display:block;color:transparent;-webkit-text-stroke:1px var(--text)}
 @media(min-width:768px){#app-header .who,#btn-sair{display:none}#btn-tutorial{margin-left:auto}}
 @media(max-width:420px){#app-header .who .nm{display:none}}
+/* celular (pedido do dono, v4.32.2): sem "Sair" e sem a versão no topo (não cabiam: o "Sair" era cortado); tocar no selo do perfil abre a conta, com o "Sair" */
+@media(max-width:767px){#btn-sair,#h-versao{display:none}#app-header .who{cursor:pointer;display:flex;align-items:center;gap:6px;padding:4px;border-radius:8px}#app-header .who:active{background:rgba(255,255,255,.06)}}
 .nav-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:var(--muted);font-weight:600;font-size:14px;background:transparent;width:100%;text-align:left}
 .nav-item:hover{color:var(--text);background:rgba(var(--purple-rgb),.08)}
 .nav-item.active{color:var(--green);background:rgba(var(--green-rgb),.08);border:1px solid rgba(var(--green-rgb),.25)}
@@ -465,6 +467,30 @@ tr.linha-pedido-senha td:first-child{box-shadow:inset 3px 0 0 var(--warning-bord
 .msel-vazio{padding:10px;color:var(--muted);font-size:12px}
 .pend-card{margin-top:18px}
 .pn-card-cab{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 14px;margin-bottom:12px}.pn-card-cab .pn-card-tit{margin:0}
+.pn-dobra{background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:700;font-size:14px;text-align:left;cursor:default;display:flex;align-items:center;gap:8px}
+.pn-resumo,.pn-seta{display:none}
+@media(max-width:767px){
+  .pn-so-desk{display:none}
+  .pn-card{padding:14px}
+  .pn-dobra{cursor:pointer;width:100%;min-width:0}
+  .pn-tit-txt{white-space:nowrap;flex:0 0 auto}
+  .pn-resumo{display:block;flex:1 1 auto;min-width:0;text-align:right;font-weight:600;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pn-seta{display:inline-block;transition:transform .15s;color:var(--muted)}
+  .pn-fechado .pn-card-cab{margin-bottom:0}.pn-fechado .pn-seta{transform:rotate(-90deg)}
+  .pn-card:not(.pn-fechado) .pn-resumo{display:none}
+}
+/* cartões no celular (no lugar das tabelas) */
+.pn-cartoes{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+@media(min-width:768px){.pn-cartoes{display:none}}
+.pn-vc{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:rgba(255,255,255,.02)}
+.pn-vc-top{display:flex;justify-content:space-between;align-items:center;gap:8px}.pn-vc-nome{font-weight:700;font-size:14px;min-width:0}
+.pn-vc-val{font-size:18px;color:var(--green);white-space:nowrap}.pn-vc-val small{font-size:11px;color:var(--muted);font-weight:600}
+.pn-vc-partes{display:grid;gap:4px;margin:8px 0 6px}.pn-vc-partes div{display:grid;grid-template-columns:78px 1fr 30px;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.pn-vc-partes i{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}.pn-vc-partes em{display:block;height:100%;background:#00A843;border-radius:3px}
+.pn-vc-partes b{text-align:right;color:var(--text);font-size:12px}
+.pn-vc-info{font-size:12px;color:var(--muted);line-height:1.5}
+.pn-pc{font-size:13px;padding:8px 2px;border-bottom:1px solid var(--border)}.pn-pc:last-child{border-bottom:0}.pn-pc>div{display:flex;justify-content:space-between;gap:10px}
+.pn-pc i{display:block;height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:6px 0 4px}.pn-pc em{display:block;height:100%;background:#00A843;border-radius:3px}.pn-pc span{font-size:12px;color:var(--muted)}
 .pn-filtro{display:flex;flex-wrap:wrap;gap:4px;align-items:center}.pn-filtro .btn-sm{padding:4px 9px;font-size:12px}
 .pn-filtro-per{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-size:12px;margin-left:4px}.pn-filtro-per b{font-size:13px}
 .pn-per{color:var(--muted);font-size:12px;margin-left:6px}
@@ -599,7 +625,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
   <span id="h-logo" class="emb">🌿</span>
   <span id="h-nome-loja" class="h-marca" title="BEST BUDS">BEST<span>BUDS</span></span>
   <span class="vselo" id="h-versao">v4.8.0</span>
-  <div class="who" style="margin-left:auto"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
+  <div class="who" style="margin-left:auto" role="button" tabindex="0" title="Sua conta" onclick="abrirConta()" onkeydown="if(event.key==='Enter')abrirConta()"><div class="nm" id="h-user"></div><span class="badge" id="h-perfil"></span></div>
   <button id="btn-tutorial" title="Rever o tutorial" aria-label="Rever o tutorial" onclick="iniciarTutorial()">🎓</button>
   <button id="btn-avisos" title="Avisos" onclick="modalAvisos()">📢<span id="avisos-selo" class="avisos-selo" style="display:none"></span></button>
   <button id="btn-sair" onclick="logout()">Sair</button>
@@ -640,7 +666,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.32.1';
+const VERSAO='v4.32.2';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -1125,10 +1151,21 @@ function renderPDV(c){
    Tudo sai dos dados já carregados (db), menos as últimas ações da auditoria (registros), lidas ao abrir.
    Período sempre em dias de Brasília. Vendas contam pela data da venda; o caixa, pela data em que o
    dinheiro entrou (venda guardada: guardada_em; compra: data_local; ajuste: data). */
-let painelVend=new Set(),painelRank='pont',_pnVendChaves=[];   // vendedores com linha no gráfico; ranking por pontuação ou receita
+let painelVend=new Set(),painelRank='pont',_pnVendChaves=[];
+// celular (pedido do dono, v4.32.2): cada bloco do Painel fica recolhido, com um resumo de uma linha; tocar abre. No computador, tudo aberto.
+let painelAbertos=new Set();
+const pnCelular=()=>matchMedia('(max-width:767px)').matches;
+function pnBloco(id,tit,filtro,resumo,corpo,extra){
+  const aberto=!pnCelular()||painelAbertos.has(id);
+  return `<div class="card pn-card ${aberto?'':'pn-fechado'}${extra?' '+extra:''}" data-bloco-id="${id}">
+    <div class="pn-card-cab"><button type="button" class="pn-card-tit pn-dobra" onclick="pnDobrar('${id}')" aria-expanded="${aberto}"><span class="pn-tit-txt">${tit}</span>${resumo?`<span class="pn-resumo">${resumo}</span>`:''}<span class="pn-seta" aria-hidden="true">▾</span></button>${aberto?filtro:''}</div>
+    ${aberto?`<div class="pn-corpo">${corpo}</div>`:''}</div>`;
+}
+function pnDobrar(id){if(!pnCelular())return;painelAbertos.has(id)?painelAbertos.delete(id):painelAbertos.add(id);render()}
+const pnRotulo=f=>(PN_FILTROS.find(x=>x[0]===f.p)||[,''])[1]+(f.p==='semana'&&f.s?` (${f.txt})`:'');   // vendedores com linha no gráfico; ranking por pontuação ou receita
 /* Filtro de cada bloco (pedido do dono, v4.32): Hoje, 7 dias, 30 dias ou Esta semana. A semana é a de trabalho
    (segunda 06:00 até a segunda seguinte 05:59, Brasília; ‹ › volta semanas: s = 0 atual, -1 anterior…).
-   Hoje / 7 dias / 30 dias são dias de calendário de Brasília (até hoje). */
+   Hoje / 7 dias / 30 dias também são dias de trabalho (viram na hora da virada, pnDiaTrabalho). */
 let painelFiltro={receita:{p:'semana',s:0},vendedores:{p:'semana',s:0},produtos:{p:'semana',s:0}};
 const PN_FILTROS=[['hoje','Hoje'],['7d','7 dias'],['30d','30 dias'],['semana','Esta semana']];
 // cores das linhas dos vendedores (as barras são verdes): distintas entre si e legíveis no fundo escuro
@@ -1311,53 +1348,48 @@ function renderPainel(c){
   <div class="section-title">🚨 Alertas</div>
   <div class="pn-alertas">${alertas.join('')||`<div class="pn-ok">✅ Nada pendente agora.</div>`}</div>
 
-  <div class="card pn-card">
-    <div class="pn-card-cab"><div class="pn-card-tit">📈 Receita da loja por dia</div>${pnFiltroHTML(fR)}</div>
+  ${pnBloco('receita','📈 Receita da loja por dia',pnFiltroHTML(fR),`${fmt(vendasPer.reduce((s,v)=>s+(v.receita_loja||0),0))} · ${pnRotulo(fR)}`,`
     ${vendasPer.length?`<div class="pn-vsel"><span class="muted" style="font-size:12px">Comparar vendedor:</span>${vendComVenda.map((p,i)=>`<button type="button" class="${painelVend.has(p.k)?'ativo':''}" style="--c:${PN_CORES[i%PN_CORES.length]}" title="${painelVend.has(p.k)?'Tirar':'Mostrar'} a linha de ${esc(p.nome)}" onclick="pnSelVend(${i})"><i></i>${esc(p.nome)}</button>`).join('')}</div>
     <div id="pn-colunas" class="pn-colunas"></div>
-    <details class="pn-tabela-det"><summary>Ver em tabela</summary><div class="table-wrap"><table><tr><th>${baldes.tipo==='dia'?'Dia':'Início'}</th><th>Vendas</th><th>Receita da loja</th>${series.map(se=>`<th style="color:${se.cor}">${esc(se.nome)}</th>`).join('')}</tr>${baldes.b.map((b,i)=>b.n?`<tr><td>${dataBRdia(b.de)}</td><td>${b.n}</td><td class="money">${fmt(b.valor)}</td>${series.map(se=>`<td>${fmt(se.vals[i])} <span class="muted">(${b.valor>0?Math.round(se.vals[i]/b.valor*1000)/10:0}%)</span></td>`).join('')}</tr>`:'').join('')}</table></div></details>`:`<div class="empty">Nenhuma venda no período.</div>`}
-  </div>
+    <details class="pn-tabela-det"><summary>Ver em tabela</summary><div class="table-wrap"><table><tr><th>${baldes.tipo==='dia'?'Dia':'Início'}</th><th>Vendas</th><th>Receita da loja</th>${series.map(se=>`<th style="color:${se.cor}">${esc(se.nome)}</th>`).join('')}</tr>${baldes.b.map((b,i)=>b.n?`<tr><td>${dataBRdia(b.de)}</td><td>${b.n}</td><td class="money">${fmt(b.valor)}</td>${series.map(se=>`<td>${fmt(se.vals[i])} <span class="muted">(${b.valor>0?Math.round(se.vals[i]/b.valor*1000)/10:0}%)</span></td>`).join('')}</tr>`:'').join('')}</table></div></details>`:`<div class="empty">Nenhuma venda no período.</div>`}`)}
 
-  <div class="card pn-card">
-      <div class="pn-card-cab"><div class="pn-card-tit">🏆 Vendedores</div>${pnFiltroHTML(fV)}</div>
+  ${pnBloco('vendedores','🏆 Vendedores',pnFiltroHTML(fV),rankLista.length?`${painelRank==='pont'&&rankLista[0].elegivel?'🥇 ':''}${esc(rankLista[0].nome)} · ${pnRotulo(fV)}`:pnRotulo(fV),`
       <div class="pn-rank-tog"><span class="muted" style="font-size:12px">Ranking por:</span>
         <button class="btn btn-sm ${painelRank==='pont'?'btn-primary':'btn-ghost'}" onclick="pnRanking('pont')">🏆 Pontuação</button>
         <button class="btn btn-sm ${painelRank==='loja'?'btn-primary':'btn-ghost'}" onclick="pnRanking('loja')">Receita da loja</button></div>
       ${rk.lista.length?`${painelRank==='pont'?`<p class="muted" style="font-size:12px;margin:-4px 0 10px">Pontuação de 0 a 100: <b>${rk.regras.peso_resultado}% resultado</b> (receita da loja${rk.regras.teto_percentil<100?`, cada venda limitada a ${fmt(rk.teto)}, o valor das ${100-rk.regras.teto_percentil}% maiores do período`:''}) + <b>${rk.regras.peso_volume}% volume</b> (nº de vendas) + <b>${rk.regras.peso_constancia}% constância</b> (dias com venda; o dia vira às ${pnHora(rk.regras.virada_hora)}). Cada parte é comparada com o melhor do período. Medalha só com ${rk.regras.min_vendas}+ vendas${rk.regras.contar_pendentes?'':'; vendas ainda não guardadas não contam'}.${isSocioOuDiretor()||isGerente()?` <a href="#" style="color:var(--green)" onclick="cfgTabAtual='ranking';go('config');return false">Mudar as regras</a>`:''}</p>`:''}`
-      +pnBarras(rankLista.map(p=>({nome:p.nome,valor:painelRank==='pont'?p.pont:p.loja})),painelRank==='pont'?(n=>pts(n)+' pts'):fmt)+`
-      <div class="table-wrap pn-tab"><table>
+      +`<div class="pn-so-desk">${pnBarras(rankLista.map(p=>({nome:p.nome,valor:painelRank==='pont'?p.pont:p.loja})),painelRank==='pont'?(n=>pts(n)+' pts'):fmt)}</div>
+      <div class="pn-cartoes">${rankLista.map((p,i)=>`<div class="pn-vc">
+        <div class="pn-vc-top"><span class="pn-vc-nome">${medalha(p,i)}${esc(p.nome)}${p.elegivel?'':` <span class="tag y" style="white-space:nowrap">poucas vendas</span>`}</span><b class="pn-vc-val">${painelRank==='pont'?`${pts(p.pont)} <small>pts</small>`:fmt(p.loja)}</b></div>
+        ${painelRank==='pont'?`<div class="pn-vc-partes">${[['Resultado',p.pRes],['Volume',p.pVol],['Constância',p.pCon]].map(([t,v])=>`<div><span>${t}</span><i><em style="width:${Math.max(0,Math.min(100,v))}%"></em></i><b>${pts(v)}</b></div>`).join('')}</div>`:''}
+        <div class="pn-vc-info">${p.n} venda(s) · ${p.dias} dia(s) · receita ${fmt(p.loja)} · ticket ${fmt(p.total/p.n)}${p.pendente?` · <span style="color:var(--warning-light)">não guardado ${fmt(p.pendente)}</span>`:''} · repasse ${fmt(p.repasse)}${p.aux?` · ${p.aux} auxílio(s)`:''}</div></div>`).join('')}</div>
+      <div class="table-wrap pn-tab pn-so-desk"><table>
         <tr><th>Vendedor</th><th>Pontuação</th><th title="50%: receita da loja com teto por venda">Resultado</th><th title="25%: nº de vendas">Volume</th><th title="25%: dias de trabalho com venda">Constância</th><th>Vendas</th><th>Dias</th><th>Total vendido</th><th>Ticket médio</th><th>Receita loja</th><th>Não guardado</th><th>Repasse recebido</th><th>Desconto médio</th></tr>
         ${rankLista.map((p,i)=>`<tr><td>${medalha(p,i)}${esc(p.nome)}${p.elegivel?'':` <span class="tag y" style="white-space:nowrap" title="Menos de ${rk.regras.min_vendas} vendas no período: sem medalha">poucas vendas</span>`}${p.aux?` <span class="muted" style="font-size:11px">· ${p.aux} auxílio(s)</span>`:''}</td><td><b>${pts(p.pont)}</b></td><td>${pts(p.pRes)}</td><td>${pts(p.pVol)}</td><td>${pts(p.pCon)}</td><td>${p.n}</td><td>${p.dias}</td><td class="money money-total">${fmt(p.total)}</td><td>${fmt(p.total/p.n)}</td><td class="money">${fmt(p.loja)}</td><td>${p.pendente?`<span style="color:var(--warning-light)">${fmt(p.pendente)}</span>`:'—'}</td><td style="color:var(--purple-light)">${fmt(p.repasse)}</td><td>${p.subtotal?Math.round(p.desconto/p.subtotal*1000)/10+'%':'—'}</td></tr>`).join('')}
-      </table></div>`:`<div class="empty">Nenhuma venda no período.</div>`}
-  </div>
+      </table></div>`:`<div class="empty">Nenhuma venda no período.</div>`}`)}
   <div class="pn-duas">
-    <div class="card pn-card">
-      <div class="pn-card-cab"><div class="pn-card-tit">🌿 Produtos</div>${pnFiltroHTML(fP)}</div>
-      ${prods.lista.length?pnBarras(prods.lista.map(p=>({nome:p.nome,valor:p.qtd})),n=>n.toLocaleString('pt-BR')+' un')+`
-      <div class="table-wrap pn-tab"><table>
+    ${pnBloco('produtos','🌿 Produtos',pnFiltroHTML(fP),prods.lista.length?`${esc(prods.lista[0].nome)} · ${prods.lista[0].qtd.toLocaleString('pt-BR')} un · ${pnRotulo(fP)}`:pnRotulo(fP),`
+      ${prods.lista.length?`<div class="pn-so-desk">${pnBarras(prods.lista.map(p=>({nome:p.nome,valor:p.qtd})),n=>n.toLocaleString('pt-BR')+' un')}</div>
+      <div class="pn-cartoes">${(()=>{const tot=prods.lista.reduce((s,p)=>s+p.valor,0),mx=Math.max(...prods.lista.map(p=>p.qtd),1);return prods.lista.map(p=>`<div class="pn-pc"><div><b>${esc(p.nome)}</b><b>${p.qtd.toLocaleString('pt-BR')} un</b></div><i><em style="width:${Math.round(p.qtd/mx*100)}%"></em></i><span>${fmt(p.valor)} · ${tot?Math.round(p.valor/tot*1000)/10:0}% do vendido</span></div>`).join('')})()}</div>
+      <div class="table-wrap pn-tab pn-so-desk"><table>
         <tr><th>Produto</th><th>Qtd</th><th>Vendido</th><th>% do vendido</th></tr>
         ${(()=>{const tot=prods.lista.reduce((s,p)=>s+p.valor,0);return prods.lista.map(p=>`<tr><td>${esc(p.nome)}</td><td>${p.qtd.toLocaleString('pt-BR')}</td><td class="money money-total">${fmt(p.valor)}</td><td>${tot?Math.round(p.valor/tot*1000)/10:0}%</td></tr>`).join('')})()}
       </table></div>`:`<div class="empty">Nenhum produto vendido no período.</div>`}
-      ${prods.parados.length?`<p class="pn-parados"><b>Sem venda no período:</b> ${prods.parados.map(esc).join(', ')}</p>`:''}
-    </div>
-    <div class="card pn-card">
-      <div class="pn-card-tit">📢 Avisos</div>
+      ${prods.parados.length?`<p class="pn-parados"><b>Sem venda no período:</b> ${prods.parados.map(esc).join(', ')}</p>`:''}`)}
+    ${pnBloco('avisos','📢 Avisos','',avisos.length?avisos.length+' no ar':'nenhum no ar',`
       ${avisos.length?avisos.map(a=>{const vistos=vistosPor(a.id),falta=eqs.filter(u=>!vistos.has(u.id));const pct=eqs.length?Math.round((eqs.length-falta.length)/eqs.length*100):0;
         return `<div class="pn-aviso"><div class="pn-aviso-t"><b>${esc(a.titulo)}</b><span class="muted">por ${esc(a.criado_por_nome||'—')} · ${avisoPermanente(a)?'permanente':'some '+esc(dataHoraBR(a.expira_em))}</span></div>
         <div class="pn-meter" role="img" aria-label="${eqs.length-falta.length} de ${eqs.length} viram"><span style="width:${pct}%"></span></div>
-        <div class="pn-sub">${eqs.length-falta.length} de ${eqs.length} viram${falta.length?` · <span style="color:var(--warning-light)">faltam: ${falta.map(u=>esc(u.nome)).join(', ')}</span>`:' · todos viram'}</div></div>`}).join(''):`<div class="empty" style="padding:12px">Nenhum aviso ativo.</div>`}
-    </div>
+        <div class="pn-sub">${eqs.length-falta.length} de ${eqs.length} viram${falta.length?` · <span style="color:var(--warning-light)">faltam: ${falta.map(u=>esc(u.nome)).join(', ')}</span>`:' · todos viram'}</div></div>`}).join(''):`<div class="empty" style="padding:12px">Nenhum aviso ativo.</div>`}`)}
   </div>
-  <div class="card pn-card">
-    <div class="pn-card-tit">🕘 Últimas ações</div>
-    <div id="pn-atividade">${pnHtmlAtividade()}</div>
-  </div>
+  ${pnBloco('atividade','🕘 Últimas ações','','',`<div id="pn-atividade">${pnHtmlAtividade()}</div>`)}
   <div id="pn-tip" class="pn-tip" role="tooltip"></div>`;
   const box=document.getElementById('pn-colunas');if(box){box._dados={baldes:baldes.b,tipo:baldes.tipo,series};pnDesenharColunas()}
   pnCarregarRegistros(false);
 }
 let _pnResize=null;
-window.addEventListener('resize',()=>{if(moduloAtual!=='painel')return;clearTimeout(_pnResize);_pnResize=setTimeout(pnDesenharColunas,150)});
+let _pnEraCelular=pnCelular();
+window.addEventListener('resize',()=>{if(moduloAtual!=='painel')return;clearTimeout(_pnResize);_pnResize=setTimeout(()=>{const c=pnCelular();if(c!==_pnEraCelular){_pnEraCelular=c;render()}else{_pnEraCelular=c;pnDesenharColunas()}},150)});
 
 /* ================= VENDAS A GUARDAR (pré-registro) =================
    A venda nasce pendente e só entra no caixa quando o dinheiro é guardado. O vendedor fica com o repasse
@@ -4947,6 +4979,13 @@ function atualizarSeloAvisos(){
   const b=document.getElementById('btn-avisos');if(b)b.title=n?n+' aviso(s) novo(s)':'Avisos';
 }
 let _avisoAtual=null;
+/* Conta (celular): nome, perfil, versão e o "Sair", que não cabe no topo */
+function abrirConta(){
+  const u=sessionUser();if(!u)return;
+  openModal(`<h3>👤 ${esc(u.nome||'')}</h3><p style="margin:6px 0 4px">${typeof seloPerfil==='function'?seloPerfil(u):esc(u.perfil)}</p>
+    <p class="muted" style="font-size:12px;margin:0 0 6px">Versão ${esc(VERSAO)}</p>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button><button class="btn btn-danger" id="btn-sair-conta" onclick="closeModal();logout()">Sair</button></div>`);
+}
 /* ================= TUTORIAL DE PRIMEIRO ACESSO =================
    Todo mundo passa uma vez, inclusive quem já usava o sistema (profiles.tutorial_visto_em vazio). Mostra só as abas do perfil
    e ensina o "?": tocar nele mostra a explicação e o vídeo "Como fazer". Rever: botão 🎓 no topo. */
