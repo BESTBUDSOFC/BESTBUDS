@@ -133,7 +133,8 @@ end; $function$;
 -- ninguém de fora chama: só o pg_cron (dono do banco)
 revoke execute on function public.gerar_aviso_vendedor_semana() from public, anon, authenticated;
 
--- a primeira semana (28/09 a 05/10) não é anunciada (pedido do dono)
+-- a primeira semana (28/09 a 05/10) não seria anunciada; em 04/10 o dono mudou de ideia e a marca foi tirada na produção
+--   (ela é anunciada na segunda 05/10). Num banco novo, não aplique a linha abaixo.
 insert into public.avisos_semana_gerados (referencia, resultado) values ('2026-09-28', 'pulada a pedido do dono') on conflict do nothing;
 -- a semana anterior (21/09) também: aplicada num domingo, a primeira rodada anunciaria a semana de 21/09
 insert into public.avisos_semana_gerados (referencia, resultado) values ('2026-09-21', 'anterior ao aviso automático') on conflict do nothing;
