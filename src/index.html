@@ -207,7 +207,11 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .eq-grp .n{margin-left:auto;font-size:11px;font-weight:800;padding:0 7px;border-radius:999px;background:var(--input-bg);border:1px solid var(--border)}
 .eq-grp .seta{font-size:10px;transition:transform .15s}
 .eq-grp.aberto .seta{transform:rotate(90deg)}
-.eq-lista{padding:2px 0 6px 23px}
+.eq-lista{padding:2px 0 6px 14px}
+.eq-sub{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:8px 8px 3px}
+.eq-sub span{font-size:10px;font-weight:700;opacity:.8}
+.eq-sub.socio{color:var(--warning)}.eq-sub.diretor{color:var(--info)}.eq-sub.gerente{color:var(--purple)}.eq-sub.vendedor{color:var(--green)}
+.eq-item .foto-u{flex:none}
 .eq-item{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:8px;min-width:0}
 .eq-item .nm{flex:0 1 auto;min-width:0}
 .badge.mini{flex:none;padding:1px 6px;font-size:9px;line-height:1.4}
@@ -693,7 +697,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.38.0';
+const VERSAO='v4.38.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -789,7 +793,7 @@ async function uploadImagem(file,pasta,prefixo){
   const{data}=sb.storage.from('midia').getPublicUrl(caminho);
   return data.publicUrl;
 }
-/* Foto do personagem no perfil (pedido do dono, v4.35): só aparece em Configurações › Usuários e no vendedor ouro.
+/* Foto do personagem no perfil (pedido do dono, v4.35): aparece em Configurações › Usuários, no vendedor ouro e (v4.38) na lista On-line/Off-line do menu.
    Sem foto, as iniciais do nome (1ª letra do primeiro e do último nome). */
 const iniciais=n=>{const p=String(n||'').trim().split(/\s+/).map(w=>w.replace(/[^\p{L}\p{N}]/gu,'')).filter(Boolean);return ((p[0]||'?')[0]+(p.length>1?p[p.length-1][0]:'')).toUpperCase()};
 function fotoUsuarioHTML(u,px,cls){const f=u&&u.foto_url;
@@ -5216,14 +5220,18 @@ function iniciarPresenca(){
 function seloPerfil(u,mini){return `<span class="badge ${esc(u.perfil)}${mini?' mini':''}">${esc(PERFIL_LABEL[u.perfil]||u.perfil)}</span>`}
 function membrosEquipe(){return (db.usuarios||[]).filter(u=>u.status==='ativo').sort((a,b)=>(PERFIL_NIVEL[b.perfil]||0)-(PERFIL_NIVEL[a.perfil]||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}))}
 function alternarEquipe(k){_eqAberto[k]=!_eqAberto[k];renderEquipe()}
+const EQ_PERFIL_PLURAL={socio:'Sócios',diretor:'Diretores',gerente:'Gerentes',vendedor:'Vendedores'};
 function renderEquipe(){
   const el=document.getElementById('eq-sec');if(!el||!db||!session)return;
   const eu=session.usuario_id,todos=membrosEquipe();
   const estaOn=u=>u.id===eu||_online.has(u.id);   // quem está vendo a tela está on-line
   const on=todos.filter(estaOn),off=todos.filter(u=>!estaOn(u));
-  const item=(u,ok)=>`<div class="eq-item ${ok?'':'off'}"><span class="nm" title="${esc(u.nome)}">${esc(u.nome)}${u.id===eu?' <span class="muted" style="font-size:11px;font-weight:400">(você)</span>':''}</span>${seloPerfil(u,true)}</div>`;
+  // v4.38 (pedido do dono): foto do personagem (ou iniciais) na frente do nome e a lista dividida por perfil, sem o selo
+  const item=(u,ok)=>`<div class="eq-item ${ok?'':'off'}">${fotoUsuarioHTML(u,26)}<span class="nm" title="${esc(u.nome)}">${esc(u.nome)}${u.id===eu?' <span class="muted" style="font-size:11px;font-weight:400">(você)</span>':''}</span></div>`;
+  const porPerfil=(lista,ok)=>['socio','diretor','gerente','vendedor'].map(pf=>{const l=lista.filter(u=>u.perfil===pf);
+    return l.length?`<div class="eq-sub ${pf}">${EQ_PERFIL_PLURAL[pf]}<span>${l.length}</span></div>${l.map(u=>item(u,ok)).join('')}`:''}).join('');
   const grupo=(k,tit,lista,ok,vazio)=>`<button class="eq-grp ${ok?'on':''} ${_eqAberto[k]?'aberto':''}" aria-expanded="${_eqAberto[k]}" onclick="alternarEquipe('${k}')"><span class="seta">▶</span><span class="dot"></span>${tit}<span class="n">${lista.length}</span></button>
-    ${_eqAberto[k]?`<div class="eq-lista">${lista.map(u=>item(u,ok)).join('')||`<div class="eq-vazio">${vazio}</div>`}</div>`:''}`;
+    ${_eqAberto[k]?`<div class="eq-lista">${porPerfil(lista,ok)||`<div class="eq-vazio">${vazio}</div>`}</div>`:''}`;
   el.innerHTML=grupo('on','On-line',on,true,'Ninguém on-line.')+grupo('off','Off-line',off,false,'Todos on-line.');
 }
 function renderPerfilRodape(){
