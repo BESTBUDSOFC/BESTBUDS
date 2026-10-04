@@ -333,12 +333,6 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .aviso-img img{display:block;width:100%;max-height:50vh;object-fit:contain}
 .aviso-lista .aviso-img img{max-height:220px}
 .aviso-img-btn{display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;letter-spacing:0}
-.aviso-imgs-dupla{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px;align-items:center}
-.aviso-imgs-dupla .aviso-img{margin:0}
-.aviso-imgs-dupla .aviso-img img{max-height:40vh}
-.aviso-lista .aviso-imgs-dupla .aviso-img img{max-height:180px}
-.aviso-img-prevs{display:grid;grid-template-columns:minmax(0,260px);gap:8px;margin-top:8px}.aviso-img-prevs.dupla{grid-template-columns:1fr 1fr;max-width:420px}
-.aviso-img-prevs .aviso-img-prev{margin-top:0;max-width:none}
 .aviso-img-prev{position:relative;margin-top:8px;max-width:260px;border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .aviso-img-prev img{display:block;width:100%;max-height:180px;object-fit:contain;background:var(--input-bg)}
 .aviso-img-prev .iconbtn{position:absolute;top:6px;right:6px;background:var(--surface)}
@@ -683,7 +677,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.34.0';
+const VERSAO='v4.33.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -5079,11 +5073,7 @@ function renderPerfilRodape(){
    semana" (tipo 'vendedor_semana'), que fica a semana inteira.
    O aviso pode levar uma imagem (Storage "midia/avisos/"); com imagem, a mensagem é opcional. */
 const AVISO_TITULO_MAX=80,AVISO_MSG_MAX=1000,AVISO_IMG_LADO=1600,AVISO_HORAS_MAX=8760;
-// até 2 imagens (pedido do dono, v4.34): com duas, sempre lado a lado (também no celular), nunca uma embaixo da outra
-const avisoImagens=a=>[a.imagem_url,a.imagem2_url].filter(Boolean);
-function avisoImgHTML(a){const im=avisoImagens(a);if(!im.length)return '';
-  const tag=(u,i)=>`<a class="aviso-img" href="${esc(u)}" target="_blank" rel="noopener" title="Abrir a imagem em tamanho real"><img src="${esc(u)}" alt="Imagem ${i+1} do aviso" loading="lazy"></a>`;
-  return im.length>1?`<div class="aviso-imgs-dupla">${im.map(tag).join('')}</div>`:tag(im[0],0)}
+function avisoImgHTML(a){return a.imagem_url?`<a class="aviso-img" href="${esc(a.imagem_url)}" target="_blank" rel="noopener" title="Abrir a imagem em tamanho real"><img src="${esc(a.imagem_url)}" alt="Imagem do aviso" loading="lazy"></a>`:''}
 /* Reduz a foto (celular costuma passar de 5 MB, o limite do Storage) para no máximo 1600 px no lado maior */
 async function reduzirImagem(file,lado){
   try{
@@ -5098,31 +5088,21 @@ async function reduzirImagem(file,lado){
     return new File([b],'aviso.'+(b.type==='image/webp'?'webp':'jpg'),{type:b.type});
   }catch(e){return file}
 }
-const AVISO_IMGS_MAX=2;
-let _avisoImgs=[];
+let _avisoImg=null;
 function escolherImagemAviso(inp){
-  const fs=[...(inp.files||[])];inp.value='';
-  if(!fs.length)return;
-  if(fs.some(f=>!['image/png','image/jpeg','image/webp'].includes(f.type)))return toast('⚠️ Formato inválido. Use PNG, JPG ou WebP.');
-  const cabe=AVISO_IMGS_MAX-_avisoImgs.length;
-  if(fs.length>cabe)toast(`⚠️ Até ${AVISO_IMGS_MAX} imagens por aviso.${cabe>0?` Entrou${cabe>1?'ram':''} só ${cabe===1?'a primeira':'as primeiras '+cabe}.`:''}`);
-  _avisoImgs.push(...fs.slice(0,Math.max(0,cabe)));
-  desenharPreviaImagensAviso();
+  const f=inp.files&&inp.files[0];inp.value='';
+  if(!f)return;
+  if(!['image/png','image/jpeg','image/webp'].includes(f.type))return toast('⚠️ Formato inválido. Use PNG, JPG ou WebP.');
+  _avisoImg=f;
+  const pv=document.getElementById('av-img-prev');
+  pv.innerHTML=`<img src="${URL.createObjectURL(f)}" alt="Prévia da imagem"><button type="button" class="iconbtn" title="Tirar a imagem" onclick="tirarImagemAviso()">✕</button>`;pv.style.display='';
 }
-function tirarImagemAviso(i){_avisoImgs.splice(i,1);desenharPreviaImagensAviso()}
-function desenharPreviaImagensAviso(){
-  const pv=document.getElementById('av-img-prev'),bt=document.getElementById('av-img-btn');
-  if(bt)bt.style.display=_avisoImgs.length>=AVISO_IMGS_MAX?'none':'';
-  if(bt)bt.querySelector('.av-img-txt').textContent=_avisoImgs.length?'🖼️ Mais uma imagem':'🖼️ Escolher imagens (até 2)';
-  if(!pv)return;
-  pv.innerHTML=_avisoImgs.map((f,i)=>`<div class="aviso-img-prev"><img src="${URL.createObjectURL(f)}" alt="Prévia da imagem ${i+1}"><button type="button" class="iconbtn" title="Tirar esta imagem" onclick="tirarImagemAviso(${i})">✕</button></div>`).join('');
-  pv.className='aviso-img-prevs'+(_avisoImgs.length>1?' dupla':'');pv.style.display=_avisoImgs.length?'':'none';
-}
+function tirarImagemAviso(){_avisoImg=null;const pv=document.getElementById('av-img-prev');if(pv){pv.innerHTML='';pv.style.display='none'}}
 /* Apaga do Storage as imagens de avisos que não estão mais no ar (1 listagem + 1 remoção, sem laço por arquivo) */
 async function limparImagensAvisos(){
   try{
     const{data,error}=await sb.storage.from('midia').list('avisos',{limit:1000});if(error||!data)return;
-    const emUso=new Set(avisosAtivos().flatMap(a=>avisoImagens(a).map(u=>u.split('/').pop())));
+    const emUso=new Set(avisosAtivos().map(a=>(a.imagem_url||'').split('/').pop()).filter(Boolean));
     const velhos=data.filter(o=>o.name&&!emUso.has(o.name)&&o.created_at&&Date.now()-new Date(o.created_at).getTime()>24*3600e3).map(o=>'avisos/'+o.name);
     if(velhos.length)await sb.storage.from('midia').remove(velhos);
   }catch(e){console.warn('[Best Buds] limpeza de imagens de avisos',e)}
@@ -5273,8 +5253,8 @@ function modalAvisos(){
     <div class="field"><label>Título</label><input id="av-titulo" maxlength="${AVISO_TITULO_MAX}" placeholder="Ex.: Reunião hoje às 20h"></div>
     <div class="field"><label>Mensagem</label><textarea id="av-msg" rows="4" maxlength="${AVISO_MSG_MAX}" placeholder="Escreva o aviso para toda a equipe"></textarea></div>
     <div class="field"><label>Imagem (opcional)</label>
-      <label class="btn btn-ghost btn-sm aviso-img-btn" id="av-img-btn"><span class="av-img-txt">🖼️ Escolher imagens (até 2)</span><input type="file" id="av-img" accept="image/png,image/jpeg,image/webp" multiple hidden onchange="escolherImagemAviso(this)"></label>
-      <div class="aviso-img-prevs" id="av-img-prev" style="display:none"></div></div>
+      <label class="btn btn-ghost btn-sm aviso-img-btn">🖼️ Escolher imagem<input type="file" id="av-img" accept="image/png,image/jpeg,image/webp" hidden onchange="escolherImagemAviso(this)"></label>
+      <div class="aviso-img-prev" id="av-img-prev" style="display:none"></div></div>
     <div class="field"><label>Some depois de</label><div class="aviso-dur">
       <input id="av-horas" type="number" min="1" max="${AVISO_HORAS_MAX}" step="1" value="24" inputmode="numeric"><span>horas</span>
       ${[[24,'24 h'],[72,'3 dias'],[168,'1 semana']].map(([h,r])=>`<button type="button" class="btn btn-ghost btn-sm" onclick="avisoHoras(${h})">${r}</button>`).join('')}
@@ -5291,7 +5271,7 @@ function modalAvisos(){
       <div class="aviso-meta">${esc(a.criado_por_nome||'—')} · ${dataHoraBR(a.criado_em)} · ${tempoRestante(a)}</div>
     </div>`).join(''):'<p class="muted" style="font-size:13px">Nenhum aviso no ar.</p>'}</div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button></div>`);
-  _avisoImgs=[];
+  _avisoImg=null;
   // quem abre a lista já viu todos os avisos ativos
   const novos=avisosNaoVistos();
   if(novos.length){novos.forEach(a=>db.avisos_vistos.add(a.id));atualizarSeloAvisos();
@@ -5303,26 +5283,25 @@ async function publicarAviso(){
   if(!isGerente())return toast('⚠️ Apenas Gerente, Diretor ou Sócio podem publicar avisos.');
   const titulo=document.getElementById('av-titulo').value.trim(),mensagem=document.getElementById('av-msg').value.trim();
   if(!titulo)return toast('⚠️ Informe o título do aviso.');
-  if(!mensagem&&!_avisoImgs.length)return toast('⚠️ Escreva a mensagem ou coloque uma imagem no aviso.');
+  if(!mensagem&&!_avisoImg)return toast('⚠️ Escreva a mensagem ou coloque uma imagem no aviso.');
   const perm=!!(document.getElementById('av-perm')||{}).checked,horas=Math.round(Number((document.getElementById('av-horas')||{}).value));
   if(!perm&&!(horas>=1&&horas<=AVISO_HORAS_MAX))return toast('⚠️ Informe em quantas horas o aviso some (1 a '+AVISO_HORAS_MAX.toLocaleString('pt-BR')+') ou marque "Permanente".');
   const btn=document.getElementById('btn-publicar-aviso');btn.disabled=true;
-  const urls=[],tirarEnviadas=()=>{if(urls.length)sb.storage.from('midia').remove(urls.map(u=>'avisos/'+u.split('/').pop())).then(()=>{})};
-  for(const [i,f] of _avisoImgs.entries()){
-    btn.textContent=_avisoImgs.length>1?`Enviando imagem ${i+1} de ${_avisoImgs.length}…`:'Enviando imagem…';
-    try{urls.push(await uploadImagem(await reduzirImagem(f,AVISO_IMG_LADO),'avisos'))}
-    catch(err){tirarEnviadas();btn.disabled=false;btn.textContent='Publicar para todos';return toast('⚠️ Erro ao enviar a imagem: '+(err.message||err))}
+  let imagem_url=null;
+  if(_avisoImg){
+    btn.textContent='Enviando imagem…';
+    try{imagem_url=await uploadImagem(await reduzirImagem(_avisoImg,AVISO_IMG_LADO),'avisos')}
+    catch(err){btn.disabled=false;btn.textContent='Publicar para todos';return toast('⚠️ Erro ao enviar a imagem: '+(err.message||err))}
   }
-  const[imagem_url,imagem2_url]=urls;
   // Discord: só manda a escolha quando o canal está ligado (sem escolha, o banco usa os cargos padrão)
   const dc=document.querySelector('.aviso-discord')?[...document.querySelectorAll('.av-dc:checked')].map(x=>x.value):null;
-  const{data,error}=await sb.from('avisos').insert({titulo:titulo.slice(0,AVISO_TITULO_MAX),mensagem:mensagem.slice(0,AVISO_MSG_MAX),...(imagem_url?{imagem_url}:{}),...(imagem2_url?{imagem2_url}:{}),...(dc?{discord_cargos:dc}:{}),duracao_horas:perm?null:horas,criado_por:session.usuario_id,criado_por_nome:sessionUser().nome}).select().single();
+  const{data,error}=await sb.from('avisos').insert({titulo:titulo.slice(0,AVISO_TITULO_MAX),mensagem:mensagem.slice(0,AVISO_MSG_MAX),...(imagem_url?{imagem_url}:{}),...(dc?{discord_cargos:dc}:{}),duracao_horas:perm?null:horas,criado_por:session.usuario_id,criado_por_nome:sessionUser().nome}).select().single();
   btn.disabled=false;btn.textContent='Publicar para todos';
   if(error){
-    tirarEnviadas();
+    if(imagem_url)sb.storage.from('midia').remove(['avisos/'+imagem_url.split('/').pop()]).then(()=>{});
     return toast('⚠️ Não foi possível publicar: '+error.message);
   }
-  _avisoImgs=[];limparImagensAvisos();
+  _avisoImg=null;limparImagensAvisos();
   db.avisos.unshift(data);db.avisos_vistos.add(data.id);
   sb.from('avisos_vistos').insert({aviso_id:data.id,usuario_id:session.usuario_id}).then(()=>{});
   reg('Aviso publicado',titulo+(perm?' (permanente)':' ('+horas+' h)')+(dc?' · Discord: '+(dc.length?dc.length+' cargo(s)':'sem cargos'):''));toast(dc?'✅ Aviso publicado para todos e enviado ao Discord.':'✅ Aviso publicado para todos.');modalAvisos();
@@ -5333,7 +5312,7 @@ function apagarAviso(id){
   confirmar('Apagar aviso','O aviso "'+a.titulo+'" sai da tela de todos agora. Confirmar?',async()=>{
     const{error}=await sb.from('avisos').delete().eq('id',id);
     if(error)return toast('⚠️ Erro ao apagar: '+error.message);
-    const im=avisoImagens(a);if(im.length)sb.storage.from('midia').remove(im.map(u=>'avisos/'+u.split('/').pop())).then(()=>{});
+    if(a.imagem_url)sb.storage.from('midia').remove(['avisos/'+a.imagem_url.split('/').pop()]).then(()=>{});
     db.avisos=db.avisos.filter(x=>x.id!==id);reg('Aviso apagado',a.titulo);atualizarSeloAvisos();modalAvisos();
   });
 }

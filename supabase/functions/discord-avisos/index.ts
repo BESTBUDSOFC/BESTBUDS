@@ -1,4 +1,4 @@
-// Avisos do site no Discord (v4.33.0; 2 imagens na v4.34.0). Ver supabase/migrations/20261007000000_discord_avisos.sql.
+// Avisos do site no Discord (v4.33.0). Ver supabase/migrations/20261007000000_discord_avisos.sql.
 // acao "sincronizar" (chamada pelo banco, sem login): envia o que está pendente e apaga o que saiu do site.
 //   Não recebe dados de fora: só faz o que já está anotado em discord_mensagens, então chamar à toa não faz mal.
 // acao "teste" (chamada pelo site, Sócio ou Diretor): manda uma mensagem de teste para o canal escolhido.
@@ -36,17 +36,11 @@ function montar(canal: string, aviso: any, cargos: string[]) {
     footer: { text: `${canal === 'ouro' ? '🏆 Ranking da semana' : '📢 Aviso'} · ${aviso.criado_por_nome || 'Sistema'}`.slice(0, 2000) },
     timestamp: aviso.criado_em || agora(),
   };
-  const embeds = [embed];
   if (aviso.imagem_url) embed.image = { url: aviso.imagem_url };
-  // 2 imagens: cartões com o mesmo "url" viram uma galeria no Discord, com as imagens lado a lado
-  if (aviso.imagem_url && aviso.imagem2_url) {
-    embed.url = aviso.imagem_url;
-    embeds.push({ url: aviso.imagem_url, image: { url: aviso.imagem2_url } });
-  }
   return {
     content: cargos.length ? cargos.map((id) => `<@&${id}>`).join(' ') : undefined,
     allowed_mentions: { parse: [], roles: cargos },   // só os cargos escolhidos tocam; nunca @everyone
-    embeds,
+    embeds: [embed],
   };
 }
 
