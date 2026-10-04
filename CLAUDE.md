@@ -188,6 +188,16 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - O banco define o autor e a validade (trigger). Vencido, o aviso some da tela e o pg_cron o apaga de vez (a cada 10 minutos); o permanente nunca vence.
 - As janelas de cadastro usadas por atalho abrem na segunda camada (`modal2`), que é esvaziada ao fechar. As funções do cadastro de fornecedor procuram elementos só dentro da janela aberta.
 
+## Discord (avisos)
+
+- Pedido do dono (v4.33): os avisos do site vão para o Discord por **webhook** (sem bot). Migração `20261007000000_discord_avisos.sql`, função `supabase/functions/discord-avisos/` (publicada com `verify_jwt` desligado: a ação "sincronizar" não recebe dados, só faz o que está anotado no banco; "teste" exige login de Sócio ou Diretor).
+- Dois canais (`discord_canais`): **avisos** (todo aviso manual; quando some do site, apagado com 🗑️ ou vencido pelo pg_cron, a mensagem some do Discord) e **ouro** (o aviso automático do vendedor ouro; fica no Discord para sempre, como histórico; pedido do dono).
+- Fluxo: trigger `trg_discord_aviso_novo` anota em `discord_mensagens` e acorda a função pelo `pg_net` (`discord_acordar`); a função posta com `?wait=true`, guarda `msg_id` e, quando o aviso sai (`trg_discord_avisos_sairam`, por comando), apaga por `DELETE {webhook}/messages/{id}`. O pg_cron `discord-sincronizar` (5 min) acorda a função só se houver pendência (erro tenta até 5 vezes). A função "pega" cada linha com update condicional, então duas chamadas juntas não mandam em dobro.
+- Segredo: o endereço do webhook fica em `discord_segredos` (RLS sem política; o site grava por `discord_salvar_webhook` e nunca lê). `discord_canais.webhook_definido` só muda pela rpc (trigger). O endereço da função fica em `discord_interno` (`funcao_url`), gravado à parte em cada banco.
+- Cargos: em Configurações › **Discord** (só Sócio ou Diretor), nome + ID (15–22 dígitos) + "padrão". No 📢, caixas com os cargos (os padrão já marcados); o aviso grava `avisos.discord_cargos` (ids; vazio = não marca ninguém). O banco só marca cargos cadastrados no canal (`allowed_mentions` só com eles; nunca @everyone). O vendedor ouro marca todos os cargos do canal ouro.
+- A aba mostra "Últimos envios" (`discord_mensagens`, só Sócio ou Diretor leem) com a situação e o erro; "Enviar teste" chama a função com o login.
+- Na publicação em produção: aplicar a migração, publicar a função `discord-avisos` e gravar `funcao_url` (`https://zwnawcnurwbowtdkholm.supabase.co/functions/v1/discord-avisos`) em `discord_interno`. O dono cola os webhooks na aba (não por conversa).
+
 ## Explicações na tela
 
 - O "?" tem a cor da loja (verde): círculo de 21 px com fundo verde suave, borda e "?" verdes; ao passar o mouse ou tocar, o fundo fica mais forte com um anel leve (pedido do dono, v4.28.1: mais visível sem roubar a atenção).

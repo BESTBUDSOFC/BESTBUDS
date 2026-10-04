@@ -338,6 +338,15 @@ tr.sublinha.ultima td{border-bottom:1px solid var(--border)}
 .aviso-img-prev .iconbtn{position:absolute;top:6px;right:6px;background:var(--surface)}
 .aviso-lista{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto}
 .aviso-item{border:1px solid var(--border);border-radius:10px;padding:12px}
+.dc-ajuda{padding:10px 14px;margin:0 0 12px;font-size:13px}.dc-ajuda summary{cursor:pointer;font-weight:600}.dc-ajuda ol{margin:8px 0 0;padding-left:20px;line-height:1.55}
+.dc-cargos-tit{font-weight:600;font-size:13px;margin:12px 0 6px}.dc-cargos-tit small{font-weight:500;color:var(--muted)}
+.dc-cargos{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.dc-cargo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto auto;gap:6px;align-items:center}.dc-cargo .img-chk{font-size:12px;white-space:nowrap}
+.dc-cargo input:not([type=checkbox]){min-width:0}
+.dc-erro{font-size:11px;color:var(--warning-light);margin-top:2px;max-width:340px;white-space:normal}
+.dc-log td{vertical-align:top}.dc-st{white-space:nowrap}.dc-erro+*{white-space:normal}
+.aviso-discord-cargos{display:flex;flex-wrap:wrap;gap:6px 14px}
+@media(max-width:520px){.dc-cargo{grid-template-columns:minmax(0,1fr) auto}.dc-cargo .dc-nome{grid-area:1/1}.dc-cargo .iconbtn{grid-area:1/2}.dc-cargo .dc-id{grid-area:2/1}.dc-cargo .img-chk{grid-area:2/2}}
 .rk-grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
 .rk-bloco h4{margin:0 0 10px;font-size:14px}.rk-bloco h4 .muted{font-weight:500;font-size:12px}
 .rk-linha{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.rk-linha label{font-size:13px;color:var(--text);text-transform:none;letter-spacing:0;margin:0}
@@ -666,7 +675,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.32.2';
+const VERSAO='v4.33.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -780,6 +789,7 @@ async function carregarTudo(){
     sb.from('avisos_vistos').select('aviso_id,usuario_id')
   ]).catch(e=>[{data:[],error:e},{data:[],error:e}]);
   const catRecP=sb.from('categorias_receitas').select('*').order('ordem').then(r=>r,e=>({data:[],error:e}));
+  const discordP=sb.from('discord_canais').select('*').then(r=>r,e=>({data:[],error:e}));
   const depositosP=sb.from('depositos_caixa').select('*').order('data',{ascending:false}).then(r=>r,e=>({data:[],error:e}));
   const[perfis,produtos,itens,receitas,receitaInsumos,fornecedores,parcerias,parceriaFaixas,
     taxas,vendas,vendaItens,compras,compraItens,bau,config,ajustesCaixa,fornItens,categorias,pedidosSenha]=await Promise.all([
@@ -827,7 +837,8 @@ async function carregarTudo(){
   const cfg=config.data||{};
   const[avisosR,vistosR]=await avisosP;
   if(avisosR.error)console.warn('[Best Buds] avisos indisponíveis',avisosR.error);
-  const depositosR=await depositosP,catRecR=await catRecP;
+  const depositosR=await depositosP,catRecR=await catRecP,discordR=await discordP;
+  if(discordR.error)console.warn('[Best Buds] Discord indisponível',discordR.error);
   if(catRecR.error)console.warn('[Best Buds] categorias de receitas indisponíveis',catRecR.error);
   if(depositosR.error)console.warn('[Best Buds] lotes de depósito indisponíveis',depositosR.error);
   db={
@@ -854,6 +865,7 @@ async function carregarTudo(){
     depositos:depositosR.error?[]:(depositosR.data||[]).map(d=>({...d,total_vendas:Number(d.total_vendas),repasse:Number(d.repasse),valor_caixa:Number(d.valor_caixa)})),
     aliquota_global:Number(cfg.aliquota_global||50),
     ranking:{...RANKING_PADRAO,...(cfg.ranking||{})},
+    discord:discordDeLinhas(discordR.error?[]:(discordR.data||[])),
     aliquota_taxa_deslocamento:Number(cfg.aliquota_taxa_deslocamento||100),
     identidade_visual:{logotipo:cfg.logotipo_url||null,nome_loja:cfg.nome_loja||'BEST BUDS',cores:cfg.cores||{},...fundoLoginDeCfg(cfg)}
   };
@@ -2859,7 +2871,8 @@ async function salvarEdicaoCompraFin(id){
 
 /* ================= CONFIGURAÇÕES ================= */
 function renderConfig(c){
-  const tabs=[['usuarios','Usuários'],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['ranking','Ranking'],['logo','Identidade Visual']];
+  const tabs=[['usuarios','Usuários'],['produtos','Catálogo PDV'],['itens','Cadastro Central de Itens'],['receitas','Receitas'],['fornecedores','Fornecedores'],['descontos','Descontos'],['deslocamento','Deslocamento'],['ranking','Ranking'],...(isSocioOuDiretor()?[['discord','Discord']]:[]),['logo','Identidade Visual']];
+  if(cfgTabAtual==='discord'&&!isSocioOuDiretor())cfgTabAtual='usuarios';
   c.innerHTML=`<h2 class="page-title">Configurações</h2>
   <div class="cfg-tabs">${tabs.map(t=>`<button class="cfg-tab ${cfgTabAtual===t[0]?'active':''}" onclick="cfgTabAtual='${t[0]}';render()">${t[1]}</button>`).join('')}</div>
   <div id="cfg-body"></div>`;
@@ -2872,11 +2885,134 @@ function renderConfig(c){
   else if(cfgTabAtual==='descontos')cfgDescontos(b);
   else if(cfgTabAtual==='deslocamento')cfgDeslocamento(b);
   else if(cfgTabAtual==='ranking')cfgRanking(b);
+  else if(cfgTabAtual==='discord')cfgDiscord(b);
   else if(cfgTabAtual==='logo')cfgLogo(b);
 }
 /* ---- Ranking (pedido do dono, v4.32): regras do ranking de vendedores e do aviso automático do vendedor ouro ----
    Ficam em configuracoes.ranking. O Painel e a função do banco que publica o aviso leem daqui: mudou aqui, muda em tudo.
    O banco também confere as regras (ranking_regras_validas): soma dos pesos 100, faixas de cada campo. */
+/* ---- Discord (pedido do dono, v4.33): avisos do site no Discord, marcando cargos ----
+   Canal "avisos": todo aviso do site; some do Discord quando some do site (🗑️ ou vencido).
+   Canal "ouro": o aviso automático do vendedor ouro; fica no Discord para sempre (histórico).
+   Quem envia e apaga é o banco (função discord-avisos); o site só configura. O endereço do webhook é segredo:
+   o site grava (discord_salvar_webhook) mas nunca lê de volta. Só Sócio ou Diretor veem a aba. */
+const DISCORD_CANAIS=[
+  ['avisos','📢 Canal de avisos','Todo aviso publicado no site vai para este canal. Quando o aviso some do site (apagado no 🗑️ ou vencido), a mensagem some daqui também.'],
+  ['ouro','🏆 Canal do vendedor ouro','O aviso automático do vendedor ouro da semana vai para este canal e fica lá para sempre, como histórico dos melhores.']];
+const DISCORD_ID_RE=/^[0-9]{15,22}$/,DISCORD_HOOK_RE=/^https:\/\/(ptb\.|canary\.)?(discord|discordapp)\.com\/api(\/v[0-9]+)?\/webhooks\/[0-9]+\/[A-Za-z0-9_-]+$/;
+const DISCORD_URL=SUPABASE_URL+'/functions/v1/discord-avisos';
+function discordDeLinhas(rows){const d={};DISCORD_CANAIS.forEach(([c])=>{const r=rows.find(x=>x.canal===c)||{};d[c]={canal:c,ativo:!!r.ativo,webhook_definido:!!r.webhook_definido,cargos:Array.isArray(r.cargos)?r.cargos:[],atualizado_em:r.atualizado_em||null,atualizado_por_nome:r.atualizado_por_nome||null}});return d}
+const discordLigado=c=>{const d=db&&db.discord&&db.discord[c];return!!(d&&d.ativo&&d.webhook_definido)};
+let _dcCargos={},_dcLog=null;
+function cfgDiscord(b){
+  if(!isSocioOuDiretor()){b.innerHTML='<p class="muted">Apenas Sócio ou Diretor configuram o Discord.</p>';return}
+  DISCORD_CANAIS.forEach(([c])=>{_dcCargos[c]=db.discord[c].cargos.map(x=>({...x}))});
+  b.innerHTML=`<div class="section-title" style="margin:0 0 4px">💬 Avisos no Discord</div>
+  <p class="muted" style="font-size:13px;margin:0 0 14px">O site manda os avisos para o Discord sozinho, marcando os cargos escolhidos. Não precisa de bot: cada canal usa um webhook.</p>
+  <details class="card dc-ajuda"><summary>Como pegar o webhook e o ID dos cargos</summary><ol>
+    <li><b>Webhook:</b> no Discord, ⚙️ do canal › <b>Integrações</b> › <b>Webhooks</b> › <b>Novo webhook</b>. Dê nome e foto (ex.: o logo da loja) e clique em <b>Copiar URL do webhook</b>. Cole aqui. O endereço é uma senha: não mande em conversa.</li>
+    <li><b>ID do cargo:</b> ligue o <b>Modo desenvolvedor</b> (Configurações de usuário › Avançado). Depois, Configurações do servidor › <b>Cargos</b> › botão direito no cargo › <b>Copiar ID do cargo</b>.</li>
+    <li>Se a marcação não fizer o celular tocar, ative no cargo <b>"Permitir que qualquer pessoa @mencione este cargo"</b>.</li></ol></details>
+  <div class="rk-grade dc-grade">${DISCORD_CANAIS.map(([c,t,txt])=>{const d=db.discord[c];return`<div class="card rk-bloco dc-canal" id="dc-${c}">
+    <h4>${t} ${d.webhook_definido?`<span class="tag g">webhook salvo</span>`:`<span class="tag y">sem webhook</span>`}</h4>
+    <p class="muted" style="font-size:12px;margin:0 0 10px">${txt}</p>
+    <label class="img-chk"><input type="checkbox" id="dc-ativo-${c}" ${d.ativo?'checked':''}> Ligado</label>
+    <div class="field" style="margin:10px 0 6px"><label>Endereço do webhook</label>
+      <input id="dc-hook-${c}" type="password" autocomplete="off" spellcheck="false" placeholder="${d.webhook_definido?'Salvo ✓ (cole outro só para trocar)':'https://discord.com/api/webhooks/…'}"></div>
+    ${d.webhook_definido?`<button type="button" class="btn btn-ghost btn-sm" onclick="tirarWebhookDiscord('${c}')">Tirar webhook</button>`:''}
+    <div class="dc-cargos-tit">${c==='avisos'?'Cargos que podem ser marcados <small>(✓ padrão = já vem marcado no 📢)</small>':'Cargos marcados no aviso do vendedor ouro'}</div>
+    <div id="dc-cargos-${c}">${dcCargosHTML(c)}</div>
+    <div class="modal-actions" style="justify-content:flex-start;margin-top:12px">
+      <button class="btn btn-primary" id="dc-salvar-${c}" onclick="salvarDiscord('${c}')">Salvar</button>
+      <button class="btn btn-ghost" id="dc-teste-${c}" onclick="testarDiscord('${c}')" ${d.webhook_definido?'':'disabled title="Salve o webhook antes"'}>Enviar teste</button>
+    </div>
+    ${d.atualizado_por_nome?`<p class="muted" style="font-size:11px;margin:8px 0 0">Alterado por ${esc(d.atualizado_por_nome)} · ${dataHoraBR(d.atualizado_em)}</p>`:''}
+  </div>`}).join('')}</div>
+  <div class="section-title" style="margin:18px 0 6px">Últimos envios <button class="btn btn-ghost btn-sm" onclick="carregarLogDiscord()">🔄 Atualizar</button></div>
+  <div id="dc-log">${dcLogHTML()}</div>`;
+  carregarLogDiscord();
+}
+function dcCargosHTML(c){
+  const l=_dcCargos[c]||[];
+  return `${l.length?`<div class="dc-cargos">${l.map((x,i)=>`<div class="dc-cargo">
+      <input class="dc-nome" placeholder="Nome (ex.: Vendedores)" maxlength="60" value="${esc(x.nome||'')}" oninput="_dcCargos['${c}'][${i}].nome=this.value">
+      <input class="dc-id" placeholder="ID do cargo" inputmode="numeric" maxlength="22" value="${esc(x.id||'')}" oninput="_dcCargos['${c}'][${i}].id=this.value.replace(/\\D/g,'');this.value=_dcCargos['${c}'][${i}].id">
+      ${c==='avisos'?`<label class="img-chk" title="Já vem marcado ao publicar"><input type="checkbox" ${x.padrao?'checked':''} onchange="_dcCargos['${c}'][${i}].padrao=this.checked"> padrão</label>`:''}
+      <button type="button" class="iconbtn" title="Tirar" onclick="_dcCargos['${c}'].splice(${i},1);document.getElementById('dc-cargos-${c}').innerHTML=dcCargosHTML('${c}')">✕</button></div>`).join('')}</div>`
+    :`<p class="muted" style="font-size:12px;margin:4px 0">Nenhum cargo: a mensagem vai sem marcar ninguém.</p>`}
+  ${l.length<25?`<button type="button" class="btn btn-ghost btn-sm" onclick="_dcCargos['${c}'].push({id:'',nome:'',padrao:true});document.getElementById('dc-cargos-${c}').innerHTML=dcCargosHTML('${c}')">+ Adicionar cargo</button>`:''}`;
+}
+function errosCargosDiscord(l){
+  const e=[],vistos=new Set();
+  l.forEach((x,i)=>{const n=i+1;
+    if(!String(x.nome||'').trim())e.push(`Cargo ${n}: falta o nome.`);
+    if(!DISCORD_ID_RE.test(String(x.id||'')))e.push(`Cargo ${n}${x.nome?' ('+x.nome+')':''}: o ID tem só números (de 15 a 22). Copie em Cargos › Copiar ID do cargo.`);
+    else if(vistos.has(x.id))e.push(`Cargo ${n}: ID repetido.`);
+    vistos.add(x.id)});
+  return e;
+}
+async function salvarDiscord(c){
+  if(!isSocioOuDiretor())return toast('⚠️ Apenas Sócio ou Diretor configuram o Discord.');
+  const hook=(document.getElementById('dc-hook-'+c).value||'').trim(),ativo=document.getElementById('dc-ativo-'+c).checked;
+  const cargos=(_dcCargos[c]||[]).map(x=>({id:String(x.id||''),nome:String(x.nome||'').trim().slice(0,60),padrao:c==='ouro'?true:!!x.padrao}));
+  const erros=errosCargosDiscord(cargos);
+  if(hook&&!DISCORD_HOOK_RE.test(hook))erros.unshift('Endereço do webhook inválido. No Discord: Integrações › Webhooks › Copiar URL do webhook.');
+  if(ativo&&!hook&&!db.discord[c].webhook_definido)erros.unshift('Para ligar, cole o endereço do webhook.');
+  if(erros.length)return toast('⚠️ '+erros[0]);
+  const btn=document.getElementById('dc-salvar-'+c);btn.disabled=true;btn.textContent='Salvando…';
+  try{
+    if(hook){const{error}=await sb.rpc('discord_salvar_webhook',{p_canal:c,p_url:hook});if(error)throw error}
+    const{data,error}=await sb.from('discord_canais').update({ativo,cargos}).eq('canal',c).select().single();
+    if(error)throw error;
+    db.discord[c]=discordDeLinhas([data])[c];
+  }catch(err){btn.disabled=false;btn.textContent='Salvar';return toast('⚠️ Não foi possível salvar: '+(err.message||err))}
+  reg('Discord configurado',`${c==='ouro'?'Canal do vendedor ouro':'Canal de avisos'}: ${ativo?'ligado':'desligado'}, ${cargos.length} cargo(s)${hook?', webhook novo':''}`);
+  toast(ativo?'✅ Salvo. Use "Enviar teste" para conferir no Discord.':'✅ Salvo (desligado: nada vai para o Discord).');render();
+}
+function tirarWebhookDiscord(c){
+  if(!isSocioOuDiretor())return;
+  confirmar('Tirar webhook','O site para de mandar mensagens para este canal. As mensagens que já estão no Discord ficam lá e não serão mais apagadas pelo site. Confirmar?',async()=>{
+    const{error}=await sb.rpc('discord_salvar_webhook',{p_canal:c,p_url:''});
+    if(error)return toast('⚠️ '+error.message);
+    const{data,error:e2}=await sb.from('discord_canais').update({ativo:false}).eq('canal',c).select().single();
+    if(!e2&&data)db.discord[c]=discordDeLinhas([data])[c];else{db.discord[c].webhook_definido=false;db.discord[c].ativo=false}
+    reg('Discord configurado',(c==='ouro'?'Canal do vendedor ouro':'Canal de avisos')+': webhook tirado');toast('✅ Webhook tirado.');render();
+  });
+}
+async function testarDiscord(c){
+  const btn=document.getElementById('dc-teste-'+c);if(btn){btn.disabled=true;btn.textContent='Enviando…'}
+  try{
+    const{data:{session:sa}}=await sb.auth.getSession();
+    const r=await fetch(DISCORD_URL,{method:'POST',headers:{'Content-Type':'application/json',...(sa?.access_token?{Authorization:'Bearer '+sa.access_token}:{})},body:JSON.stringify({acao:'teste',canal:c})});
+    const j=await r.json().catch(()=>({error:'Resposta inválida do servidor.'}));
+    if(!r.ok)throw new Error(j.error||'Erro desconhecido.');
+    toast('✅ Teste enviado. Confira no Discord.');
+  }catch(err){toast('⚠️ Teste não chegou: '+(err.message||err))}
+  if(btn){btn.disabled=false;btn.textContent='Enviar teste'}
+  carregarLogDiscord();
+}
+const DC_STATUS={pendente:['⏳','enviando'],enviando:['⏳','enviando'],enviado:['✅','no Discord'],erro:['⚠️','falhou'],apagar:['⏳','apagando'],apagando:['⏳','apagando'],apagado:['🗑️','apagado do Discord'],cancelado:['—','não enviado (saiu do site antes)']};
+async function carregarLogDiscord(){
+  const{data,error}=await sb.from('discord_mensagens').select('*').order('criado_em',{ascending:false}).limit(30);
+  _dcLog=error?{erro:error.message}:(data||[]);
+  const el=document.getElementById('dc-log');if(el)el.innerHTML=dcLogHTML();
+}
+function dcLogHTML(){
+  if(_dcLog===null)return '<p class="muted" style="font-size:13px">Carregando…</p>';
+  if(_dcLog.erro)return `<p class="muted" style="font-size:13px">Não foi possível ler os envios: ${esc(_dcLog.erro)}</p>`;
+  if(!_dcLog.length)return '<p class="muted" style="font-size:13px">Nada enviado ainda.</p>';
+  return `<div class="table-wrap"><table class="dc-log"><tr><th>Quando</th><th>Canal</th><th>Aviso</th><th>Cargos</th><th>Situação</th></tr>
+    ${_dcLog.map(m=>{const[ic,tx]=DC_STATUS[m.status]||['',m.status];return`<tr><td>${dataHoraBR(m.criado_em)}</td><td>${m.canal==='ouro'?'🏆 Vendedor ouro':'📢 Avisos'}${m.teste?' <span class="tag">teste</span>':''}</td><td>${esc(m.titulo||'—')}</td><td>${(m.cargos||[]).length}</td>
+      <td class="dc-st dc-${esc(m.status)}">${ic} ${tx}${m.erro&&m.status!=='enviado'?`<div class="dc-erro">${esc(m.erro)}</div>`:''}</td></tr>`}).join('')}</table></div>`;
+}
+// janela do 📢: cargos do canal de avisos (os padrão já vêm marcados)
+function avisoDiscordHTML(){
+  if(!discordLigado('avisos'))return '';
+  const cs=db.discord.avisos.cargos;
+  return `<div class="field aviso-discord"><label>💬 Discord</label>${cs.length?`<div class="aviso-discord-cargos">${cs.map(x=>`<label class="img-chk"><input type="checkbox" class="av-dc" value="${esc(x.id)}" ${x.padrao?'checked':''}> @${esc(x.nome)}</label>`).join('')}</div>
+    <p class="muted" style="font-size:12px;margin:4px 0 0">Vai também para o canal de avisos do Discord, marcando os cargos escolhidos.</p>`
+    :`<p class="muted" style="font-size:12px;margin:0">Vai também para o canal de avisos do Discord (sem marcar cargos).</p>`}</div>`;
+}
 function cfgRanking(b){
   const r=regrasRanking(),num=(id,v,min,max,suf)=>`<span class="rk-num"><input id="${id}" type="number" min="${min}" max="${max}" step="1" value="${v}" inputmode="numeric" oninput="cfgRankingPrevia()">${suf?`<span>${suf}</span>`:''}</span>`;
   const sel=(id,ops,v)=>`<select id="${id}" onchange="cfgRankingPrevia()">${ops.map(([k,t])=>`<option value="${k}" ${String(k)===String(v)?'selected':''}>${t}</option>`).join('')}</select>`;
@@ -5118,6 +5254,7 @@ function modalAvisos(){
       <input id="av-horas" type="number" min="1" max="${AVISO_HORAS_MAX}" step="1" value="24" inputmode="numeric"><span>horas</span>
       ${[[24,'24 h'],[72,'3 dias'],[168,'1 semana']].map(([h,r])=>`<button type="button" class="btn btn-ghost btn-sm" onclick="avisoHoras(${h})">${r}</button>`).join('')}
       <label class="img-chk"><input type="checkbox" id="av-perm" onchange="avisoPermChk(this.checked)"> Permanente (não some)</label></div></div>
+    ${avisoDiscordHTML()}
     <p class="muted" style="font-size:12px;margin:-4px 0 10px">Aparece como pop-up na tela de todos. Some sozinho depois das horas escolhidas; o permanente fica até alguém apagar (🗑️).</p>
     <button class="btn btn-primary" id="btn-publicar-aviso" onclick="publicarAviso()">Publicar para todos</button>
   </div>`:''}
@@ -5151,7 +5288,9 @@ async function publicarAviso(){
     try{imagem_url=await uploadImagem(await reduzirImagem(_avisoImg,AVISO_IMG_LADO),'avisos')}
     catch(err){btn.disabled=false;btn.textContent='Publicar para todos';return toast('⚠️ Erro ao enviar a imagem: '+(err.message||err))}
   }
-  const{data,error}=await sb.from('avisos').insert({titulo:titulo.slice(0,AVISO_TITULO_MAX),mensagem:mensagem.slice(0,AVISO_MSG_MAX),...(imagem_url?{imagem_url}:{}),duracao_horas:perm?null:horas,criado_por:session.usuario_id,criado_por_nome:sessionUser().nome}).select().single();
+  // Discord: só manda a escolha quando o canal está ligado (sem escolha, o banco usa os cargos padrão)
+  const dc=document.querySelector('.aviso-discord')?[...document.querySelectorAll('.av-dc:checked')].map(x=>x.value):null;
+  const{data,error}=await sb.from('avisos').insert({titulo:titulo.slice(0,AVISO_TITULO_MAX),mensagem:mensagem.slice(0,AVISO_MSG_MAX),...(imagem_url?{imagem_url}:{}),...(dc?{discord_cargos:dc}:{}),duracao_horas:perm?null:horas,criado_por:session.usuario_id,criado_por_nome:sessionUser().nome}).select().single();
   btn.disabled=false;btn.textContent='Publicar para todos';
   if(error){
     if(imagem_url)sb.storage.from('midia').remove(['avisos/'+imagem_url.split('/').pop()]).then(()=>{});
@@ -5160,7 +5299,7 @@ async function publicarAviso(){
   _avisoImg=null;limparImagensAvisos();
   db.avisos.unshift(data);db.avisos_vistos.add(data.id);
   sb.from('avisos_vistos').insert({aviso_id:data.id,usuario_id:session.usuario_id}).then(()=>{});
-  reg('Aviso publicado',titulo+(perm?' (permanente)':' ('+horas+' h)'));toast('✅ Aviso publicado para todos.');modalAvisos();
+  reg('Aviso publicado',titulo+(perm?' (permanente)':' ('+horas+' h)')+(dc?' · Discord: '+(dc.length?dc.length+' cargo(s)':'sem cargos'):''));toast(dc?'✅ Aviso publicado para todos e enviado ao Discord.':'✅ Aviso publicado para todos.');modalAvisos();
 }
 function apagarAviso(id){
   if(!isGerente())return;

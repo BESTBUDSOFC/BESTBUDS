@@ -72,10 +72,11 @@ const t=(p,js)=>p.evaluate(js);
   // as regras mudam o Painel na hora
   ok(await t(p,`(()=>{const w=pnSemanaTrabalho(0),[a,m,d]=w.seg.split('-').map(Number);return new Date(Date.UTC(a,m-1,d,12)).getUTCDay()===0&&w.ini.toISOString()===instanteBR(w.seg,'05:00').toISOString()})()`),'semana começa no domingo às 05:00');
   ok(await t(p,`pnDiaTrabalho(instanteBR('2026-10-06','04:59'))==='2026-10-05'&&pnDiaTrabalho(instanteBR('2026-10-06','05:00'))==='2026-10-06'`),'dia de trabalho vira às 05:00');
-  await t(p,`go('painel')`);await p.waitForTimeout(200);
+  await t(p,`painelFiltro.vendedores={p:'30d',s:0};go('painel')`);   // 30 dias: a semana atual pode estar vazia (ex.: domingo de manhã)
+  await p.waitForTimeout(200);
   const exp=await p.$eval('#main-content',e=>e.innerText);
   ok(/100% resultado/.test(exp)&&/0% volume/.test(exp)&&exp.includes('Medalha só com 3+ vendas'),'explicação do Painel usa as regras salvas');
-  ok((await p.$eval('.pn-filtro[data-bloco="vendedores"]',e=>e.innerText)).includes('domingo 05:00 até domingo 04:59'),'filtro "Esta semana" usa o novo corte');
+  ok((await p.$eval('.pn-filtro[data-bloco="receita"]',e=>e.innerText)).includes('domingo 05:00 até domingo 04:59'),'filtro "Esta semana" usa o novo corte');
   // mínimo, teto, pendentes e pesos na conta
   const conta=await t(p,`(()=>{const bk=db.vendas,bkr=db.ranking;const w=pnSemanaTrabalho(0),I=w.ini.getTime(),H=h=>new Date(I+h*36e5).toISOString();let n=0;
     const V=(nome,h,loja,st)=>({id:'c'+(n++),data:H(h),status:st||'ativa',usuario_id:nome,usuario_nome:nome,total:loja,subtotal:loja,desconto:0,cota_funcionario:0,receita_loja:loja,itens:[],auxiliares:[]});
