@@ -75,6 +75,7 @@
     };
     function run(){
       const T=DB[table]=DB[table]||[];
+      if(table==='profiles')T.forEach(u=>{u.perfil_acesso=u.perfil_acesso||(window.__perfilDe&&window.__perfilDe[u.id])||u.perfil});
       window.__LOG.push({table,op:st.op,filters:st.filters,payload:st.payload});
       let data;
       if(st.op==='select'){
@@ -123,6 +124,13 @@
     return b;
   }
   DB.avatares=DB.avatares||[];
+  // v4.39: perfis configuráveis (mesmos padrões da migração 20261012000000); window.__perfisExtra acrescenta perfis
+  const TODAS=['painel','vendas_equipe','caixa_ajustes','bau_gerir','excluir_lancamentos','avisos','catalogo','itens','receitas','fornecedores','descontos','excluir_cadastros','usuarios','usuarios_excluir','perfis','ranking','identidade','discord'];
+  DB.perfis_acesso=DB.perfis_acesso||[
+    {id:'socio',nome:'Sócio',cor:'ouro',ordem:1,permissoes:TODAS},
+    {id:'diretor',nome:'Diretor',cor:'azul',ordem:2,permissoes:TODAS.filter(x=>x!=='perfis')},
+    {id:'gerente',nome:'Gerente',cor:'roxo',ordem:3,permissoes:['painel','vendas_equipe','caixa_ajustes','bau_gerir','avisos','catalogo','itens','receitas','fornecedores','descontos','usuarios','ranking','identidade']},
+    {id:'vendedor',nome:'Vendedor',cor:'verde',ordem:4,permissoes:[]},...(window.__perfisExtra||[])];
   window.supabase={createClient(u,k,opts){window.__sbOpts=opts;return{
     from:builder,
     rpc:async(nome,args)=>{window.__LOG.push({rpc:nome,args});

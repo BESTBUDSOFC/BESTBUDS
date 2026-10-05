@@ -23,9 +23,10 @@ fs.mkdirSync(SP+'/saida',{recursive:true});
   // ---- quem vê a aba ----
   for(const [uid,nome,ve] of [[GERENTE,'Gerente',false],[VEND,'Vendedor',false],[DIRETOR,'Diretor',true]]){
     const q=await abrir(b,uid);await limpa(q);
-    if(nome==='Vendedor'){ok(!(await t(q,`typeof cfgDiscord==='function'&&isSocioOuDiretor()`)),'vendedor não configura o Discord');await q.close();continue}
-    await t(q,`go('config')`);await q.waitForTimeout(200);
-    const tem=await t(q,`[...document.querySelectorAll('.cfg-tab')].some(x=>x.textContent==='Discord')`);
+    if(nome==='Vendedor'){ok(!(await t(q,`typeof cfgDiscord==='function'&&pode('discord')`)),'vendedor não configura o Discord');await q.close();continue}
+    // v4.39.2: Discord é uma chave dentro de "Avisos e ranking"
+    await t(q,`cfgTabAtual='ranking';go('config')`);await q.waitForTimeout(200);
+    const tem=await t(q,`[...document.querySelectorAll('.cfg-sub-bt')].some(x=>x.textContent.includes('Discord'))`);
     ok(tem===ve,`${nome} ${ve?'vê':'não vê'} a aba Discord`);
     if(!ve){await t(q,`cfgTabAtual='discord';render()`);ok(await t(q,`cfgTabAtual==='usuarios'`),'gerente forçando a aba cai em Usuários')}
     await q.close();
