@@ -1,4 +1,4 @@
-// v4.39: perfis configuráveis (Configurações › Perfis): cada perfil é uma lista de permissões
+// v4.39: perfis configuráveis (Configurações › Usuários › Perfis; v4.39.1: Perfis virou chave dentro de Usuários): cada perfil é uma lista de permissões
 const {chromium}=require('playwright');const fs=require('fs');const path=require('path');const SP=__dirname;const SRC=path.join(__dirname,'..','src');
 const SNAP=fs.readFileSync(SP+'/dados-producao.json','utf8');
 let falhas=0;const ok=(c,m)=>{console.log((c?'✅ ':'❌ ')+m);if(!c)falhas++};
@@ -34,9 +34,14 @@ const EXTRA={perfis:[{id:'caixa',nome:'Caixa',cor:'laranja',ordem:5,permissoes:[
   ok(await t(s,`db.perfis.length===5&&pode('perfis')&&pode('discord')`),'perfis carregados do banco; Sócio tem tudo');
   await t(s,`cfgTabAtual='perfis';go('config')`);await s.waitForTimeout(200);
   const abas=await t(s,`[...document.querySelectorAll('.cfg-tab')].map(e=>e.textContent)`);
-  ok(abas.includes('Perfis'),'Sócio vê a aba Perfis: '+abas.join(','));
+  ok(!abas.includes('Perfis')&&abas[0]==='Usuários','Perfis não é mais aba própria: '+abas.join(','));
+  const sub=await t(s,`[...document.querySelectorAll('.cfg-sub-bt')].map(e=>e.textContent+(e.classList.contains('active')?'*':''))`);
+  ok(sub.join()==='👥 Pessoas,🛡️ Perfis*','link antigo para Perfis abre Usuários na chave Perfis: '+sub.join());
   const linhas=await t(s,`[...document.querySelectorAll('#cfg-body table tr')].slice(1).map(r=>r.textContent.replace(/\\s+/g,' '))`);
   ok(linhas.length===5&&/Sócio/.test(linhas[0])&&/Acesso total/.test(linhas[0])&&/Caixa/.test(linhas[4]),'lista os perfis na ordem, Sócio com acesso total: '+JSON.stringify(linhas));
+  await s.click('.cfg-sub-bt:first-child');await s.waitForTimeout(150);
+  ok(await t(s,`cfgUsuSub==='pessoas'&&!!document.querySelector('[onclick="modalUsuario()"]')`),'chave Pessoas volta à lista de usuários');
+  await s.click('.cfg-sub-bt:last-child');await s.waitForTimeout(150);
   ok(await t(s,`!document.querySelector('#cfg-body button[onclick="modalPerfil(\\'socio\\')"]').title.includes('Editar')`),'Sócio não é editável (só "Ver")');
   ok(!(await t(s,`!!document.querySelector('[onclick="excluirPerfil(\\'vendedor\\')"]')`)),'Vendedor não tem 🗑️ (é o perfil de quem entra)');
   ok(!(await t(s,`!!document.querySelector('[onclick="excluirPerfil(\\'caixa\\')"]')`)),'perfil em uso não tem 🗑️');
@@ -93,6 +98,7 @@ const EXTRA={perfis:[{id:'caixa',nome:'Caixa',cor:'laranja',ordem:5,permissoes:[
   await t(g,`cfgTabAtual='perfis';go('config')`);await g.waitForTimeout(200);
   const abasG=await t(g,`[...document.querySelectorAll('.cfg-tab')].map(e=>e.textContent)`);
   ok(!abasG.includes('Perfis')&&!abasG.includes('Discord')&&abasG.includes('Ranking'),'Gerente: sem Perfis e sem Discord: '+abasG.join(','));
+  ok(!(await t(g,`!!document.querySelector('.cfg-sub')`))&&(await t(g,`!!document.querySelector('[onclick="modalUsuario()"]')`)),'Gerente: Usuários sem a chave Pessoas | Perfis');
   ok(await t(g,`cfgTabAtual==='usuarios'`),'Gerente pedindo Perfis cai em Usuários');
   await t(g,`modalUsuario()`);await g.waitForTimeout(100);
   const opsG=await t(g,`[...document.querySelectorAll('#u-perfil option')].map(o=>o.value)`);
@@ -112,7 +118,8 @@ const EXTRA={perfis:[{id:'caixa',nome:'Caixa',cor:'laranja',ordem:5,permissoes:[
   // ---- celular: aba Perfis sem rolagem lateral ----
   const m=await abrir(b,SOCIO,{width:390,height:800},EXTRA);
   await t(m,`cfgTabAtual='perfis';go('config')`);await m.waitForTimeout(200);
-  ok(await t(m,`document.documentElement.scrollWidth<=window.innerWidth+1`),'celular: aba Perfis sem rolagem lateral');
+  ok(await t(m,`document.documentElement.scrollWidth<=window.innerWidth+1`),'celular: Usuários › Perfis sem rolagem lateral');
+  await m.screenshot({path:SP+'/saida/v439-usuarios-perfis-celular.png'});
   await t(m,`modalPerfil('gerente')`);await m.waitForTimeout(150);
   ok(await t(m,`document.documentElement.scrollWidth<=window.innerWidth+1`),'celular: janela do perfil sem rolagem lateral');
   await m.screenshot({path:SP+'/saida/v439-perfil-celular.png'});

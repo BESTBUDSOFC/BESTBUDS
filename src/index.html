@@ -219,7 +219,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .perm-op small{color:var(--muted);font-size:11px;font-weight:500}
 .perm-op.bloq{opacity:.55;cursor:not-allowed}
 .perfil-perms .tag{margin:1px 0}
-/* v4.39: cor de cada perfil (Configurações › Perfis) */
+/* v4.39: cor de cada perfil (Configurações › Usuários › Perfis) */
 .pc-ouro{--pc:var(--warning)}.pc-azul{--pc:var(--info)}.pc-roxo{--pc:var(--purple)}.pc-verde{--pc:var(--green)}
 .pc-laranja{--pc:#f97316}.pc-rosa{--pc:#ec4899}.pc-vermelho{--pc:var(--danger)}.pc-cinza{--pc:var(--muted)}
 .badge.pc{background:color-mix(in srgb,var(--pc) 15%,transparent);color:var(--pc);border:1px solid var(--pc)}
@@ -290,6 +290,9 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 /* ===== CONFIG TABS ===== */
 .cfg-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.cfg-sub{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface);border:1px solid var(--border);margin:0 0 14px}
+.cfg-sub-bt{background:transparent;border:0;padding:7px 14px;border-radius:9px;color:var(--muted);font-weight:700;font-size:13px}
+.cfg-sub-bt.active{background:rgba(var(--purple-rgb),.18);color:var(--purple-light)}
 .cfg-tab{padding:8px 16px;border-radius:20px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-weight:600;font-size:13px}
 .cfg-tab.active{background:rgba(var(--purple-rgb),.15);border-color:var(--purple);color:var(--purple)}
 .tag{font-size:11px;padding:2px 8px;border-radius:6px;background:rgba(var(--purple-rgb),.12);color:var(--purple-light)}
@@ -710,7 +713,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.39.0';
+const VERSAO='v4.39.1';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -2975,16 +2978,18 @@ async function salvarEdicaoCompraFin(id){
 }
 
 /* ================= CONFIGURAÇÕES ================= */
-const CFG_ABAS=[['usuarios','Usuários',null],['perfis','Perfis','perfis'],['produtos','Catálogo PDV','catalogo'],['itens','Cadastro Central de Itens','itens'],['receitas','Receitas','receitas'],['fornecedores','Fornecedores','fornecedores'],['descontos','Descontos','descontos'],['deslocamento','Deslocamento','descontos'],['ranking','Ranking','ranking'],['discord','Discord','discord'],['logo','Identidade Visual','identidade']];
+const CFG_ABAS=[['usuarios','Usuários',null],['produtos','Catálogo PDV','catalogo'],['itens','Cadastro Central de Itens','itens'],['receitas','Receitas','receitas'],['fornecedores','Fornecedores','fornecedores'],['descontos','Descontos','descontos'],['deslocamento','Deslocamento','descontos'],['ranking','Ranking','ranking'],['discord','Discord','discord'],['logo','Identidade Visual','identidade']];
 function renderConfig(c){
   // v4.39: cada aba aparece para quem tem a permissão dela; Usuários sempre (sem "usuarios", vira "Meu perfil")
   const tabs=CFG_ABAS.filter(t=>!t[2]||pode(t[2]));
+  // v4.39.1 (pedido do dono, menos abas): Perfis fica dentro de Usuários
+  if(cfgTabAtual==='perfis'){cfgTabAtual='usuarios';cfgUsuSub='perfis'}
   if(!tabs.some(t=>t[0]===cfgTabAtual))cfgTabAtual='usuarios';
   c.innerHTML=`<h2 class="page-title">Configurações</h2>
   <div class="cfg-tabs">${tabs.map(t=>`<button class="cfg-tab ${cfgTabAtual===t[0]?'active':''}" onclick="cfgTabAtual='${t[0]}';render()">${t[1]}</button>`).join('')}</div>
   <div id="cfg-body"></div>`;
   const b=document.getElementById('cfg-body');
-  if(cfgTabAtual==='usuarios')cfgUsuarios(b);
+  if(cfgTabAtual==='usuarios')cfgUsuariosAba(b);
   else if(cfgTabAtual==='produtos')cfgProdutos(b);
   else if(cfgTabAtual==='itens')cfgItens(b);
   else if(cfgTabAtual==='receitas')cfgReceitas(b);
@@ -2994,7 +2999,15 @@ function renderConfig(c){
   else if(cfgTabAtual==='ranking')cfgRanking(b);
   else if(cfgTabAtual==='discord')cfgDiscord(b);
   else if(cfgTabAtual==='logo')cfgLogo(b);
-  else if(cfgTabAtual==='perfis')cfgPerfis(b);
+}
+/* aba Usuários: com a permissão "perfis", ganha a chave Pessoas | Perfis (v4.39.1: Perfis deixou de ser aba própria) */
+let cfgUsuSub='pessoas';
+function cfgUsuariosAba(b){
+  if(!pode('perfis')){cfgUsuSub='pessoas';return cfgUsuarios(b)}
+  const op=[['pessoas',pode('usuarios')?'👥 Pessoas':'👤 Meu perfil'],['perfis','🛡️ Perfis']];
+  b.innerHTML=`<div class="cfg-sub" role="tablist">${op.map(o=>`<button class="cfg-sub-bt ${cfgUsuSub===o[0]?'active':''}" role="tab" aria-selected="${cfgUsuSub===o[0]}" onclick="cfgUsuSub='${o[0]}';render()">${o[1]}</button>`).join('')}</div><div id="cfg-usu-body"></div>`;
+  const c=document.getElementById('cfg-usu-body');
+  if(cfgUsuSub==='perfis')cfgPerfis(c);else cfgUsuarios(c);
 }
 /* ---- Ranking (pedido do dono, v4.32): regras do ranking de vendedores e do aviso automático do vendedor ouro ----
    Ficam em configuracoes.ranking. O Painel e a função do banco que publica o aviso leem daqui: mudou aqui, muda em tudo.
@@ -3270,7 +3283,7 @@ async function salvarRegrasRanking(){
   toast('✅ Regras salvas. Painel e aviso automático já usam as novas regras.');render();
 }
 /* ---- Usuários ---- */
-/* Na ordem dos perfis (Configurações › Perfis; Sócio primeiro), depois nome A→Z */
+/* Na ordem dos perfis (Usuários › Perfis; Sócio primeiro), depois nome A→Z */
 function ehSocio(u){return perfilIdDe(u)==='socio'}
 function sociosAtivosAlem(id){return db.usuarios.filter(x=>ehSocio(x)&&x.status==='ativo'&&x.id!==id).length}
 function usuariosOrdenados(){return [...db.usuarios].sort((a,b)=>ordemPerfil(a)-ordemPerfil(b)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}))}
@@ -3278,7 +3291,7 @@ function cfgUsuarios(b){
   if(!pode('usuarios'))return cfgMeuPerfil(b);
   const T='cfg_usuarios',F=tabelaFiltravel(T,usuariosOrdenados,{nome:u=>u.nome,usuario:u=>u.usuario||'—',perfil:u=>nomePerfil(perfilIdDe(u)),status:u=>u.status,primeiro_acesso:u=>primeiroAcessoFeito(u)?'Feito':'Pendente',data:u=>u.criado_em});
   b.innerHTML=`${avisoPedidosSenha()}<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div class="section-title" style="margin:0">👥 Usuários${ajuda('Quem acessa o sistema e com qual perfil. O que cada perfil pode fazer fica em Configurações › Perfis. Você gerencia quem tem um perfil com permissões iguais ou menores que as suas; só o Sócio gerencia Sócios. Ninguém altera o próprio perfil e sempre existe ao menos um Sócio ativo. Pedido de nova senha aparece destacado aqui.',['cfg_usuarios'])}</div>
+    <div class="section-title" style="margin:0">👥 Usuários${ajuda('Quem acessa o sistema e com qual perfil. O que cada perfil pode fazer fica em Usuários › Perfis (para quem gerencia perfis). Você gerencia quem tem um perfil com permissões iguais ou menores que as suas; só o Sócio gerencia Sócios. Ninguém altera o próprio perfil e sempre existe ao menos um Sócio ativo. Pedido de nova senha aparece destacado aqui.',['cfg_usuarios'])}</div>
     <button class="btn btn-purple btn-sm" onclick="modalUsuario()">+ Novo usuário</button></div>
   ${F.barra}<div class="table-wrap"><table>
   <tr>${thCol(T,'nome','Nome')}${thCol(T,'usuario','Usuário')}${thCol(T,'perfil','Perfil')}${thCol(T,'status','Status')}${thCol(T,'primeiro_acesso','Primeiro acesso')}${thCol(T,'data','Criado em')}<th>Ações</th></tr>
@@ -5396,7 +5409,7 @@ function renderEquipe(){
   const on=todos.filter(estaOn),off=todos.filter(u=>!estaOn(u));
   // v4.38 (pedido do dono): foto do personagem (ou iniciais) na frente do nome e a lista dividida por perfil, sem o selo
   const item=(u,ok)=>`<div class="eq-item ${ok?'':'off'}">${fotoUsuarioHTML(u,26)}<span class="nm" title="${esc(u.nome)}">${esc(u.nome)}${u.id===eu?' <span class="muted" style="font-size:11px;font-weight:400">(você)</span>':''}</span></div>`;
-  // v4.39: grupos na ordem dos perfis (Configurações › Perfis), com o nome e a cor de cada um
+  // v4.39: grupos na ordem dos perfis (Configurações › Usuários › Perfis), com o nome e a cor de cada um
   const porPerfil=(lista,ok)=>{const ordem=[...perfisOrdenados().map(p=>p.id)];lista.forEach(u=>{if(!ordem.includes(perfilIdDe(u)))ordem.push(perfilIdDe(u))});
     return ordem.map(pf=>{const l=lista.filter(u=>perfilIdDe(u)===pf);
     return l.length?`<div class="eq-sub pc pc-${corPerfil(pf)}">${esc(EQ_PERFIL_PLURAL[pf]||nomePerfil(pf))}<span>${l.length}</span></div>${l.map(u=>item(u,ok)).join('')}`:''}).join('')};

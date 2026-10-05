@@ -37,7 +37,8 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - `perfis_acesso_guarda`: só com "perfis"; só dá permissões que tem; não mexe em perfil com permissão que não tem; perfil em uso não sai (FK).
   - `admin-users` e `discord-avisos` (prévia = ranking, teste = discord) usam `tem_permissao_de`/`pode_gerir_perfil_de` (só service_role).
 - Site: `pode(perm)`, `podeGerirPerfil(id)`, `perfilIdDe(u)`, `seloPerfil(u)` (nome e cor do perfil, `.badge.pc.pc-<cor>`). Não use mais cargo fixo (`isGerente` etc. foram removidos). Abas de Configurações em `CFG_ABAS` (cada uma com a sua permissão; Usuários sempre, sem "usuarios" vira Meu perfil); Painel no menu só com "painel" (`modulosVisiveis`). Edição/reversão no Histórico por tipo (`FIN_PERM`); reordenar por tabela (`PERM_ORDEM`).
-- Configurações › **Perfis** (`cfgPerfis`, `modalPerfil`, `salvarPerfil`, `excluirPerfil`, `moverPerfil`): nome, cor e caixas de permissão (as que a pessoa não tem ficam travadas); ninguém tira permissão do próprio perfil (trancaria a si mesmo). A lista On-line/Off-line e Usuários seguem a ordem dos perfis.
+- **Perfis fica dentro da aba Usuários** (v4.39.1, pedido do dono: menos abas): quem tem "perfis" vê a chave **👥 Pessoas | 🛡️ Perfis** no topo da aba (`cfgUsuariosAba`, estado `cfgUsuSub`; sem "usuarios", a 1ª chave é "👤 Meu perfil"); quem não tem não vê chave nenhuma. `cfgTabAtual='perfis'` antigo cai em Usuários › Perfis.
+- Usuários › **Perfis** (`cfgPerfis`, `modalPerfil`, `salvarPerfil`, `excluirPerfil`, `moverPerfil`): nome, cor e caixas de permissão (as que a pessoa não tem ficam travadas); ninguém tira permissão do próprio perfil (trancaria a si mesmo). A lista On-line/Off-line e Usuários seguem a ordem dos perfis.
 - Mudou o que um botão exige: ajuste a permissão no site **e** na regra do banco.
 
 ## Senhas

@@ -20,7 +20,7 @@ let fails=0;const ok=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m);if(!c)fails++};
 
   // 1. ordenação de usuários
   await t(`go('config');cfgTabAtual='usuarios';render()`);
-  let nomes=await p.$$eval('#cfg-body > .table-wrap table tr td:first-child b',x=>x.map(e=>e.textContent));
+  let nomes=await p.$$eval('#cfg-body .table-wrap table tr td:first-child b',x=>x.map(e=>e.textContent));
   ok(JSON.stringify(nomes)===JSON.stringify(['Abel','walter','Carla','Ana','Bruno','Zeca']),'usuários ordenados: '+nomes.join(','));
 
   // 1b. pedidos de nova senha: sem senha padrão; destaque na linha e senha definida editando o usuário
