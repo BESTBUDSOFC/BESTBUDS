@@ -6,7 +6,7 @@
 -- Os 4 perfis de antes viram perfis prontos com as mesmas permissões que tinham na prática.
 -- profiles.perfil (enum antigo) continua existindo e é mantido pelo banco: perfil de sistema = ele mesmo; perfil
 -- criado = 'vendedor'. As regras de acesso (RLS) passam todas a usar tem_permissao().
--- Aplicada no teste (btsnlkktyfnrtphgpjbe) em 2026-10-04; produção só depois do "aprovado".
+-- Aplicada no teste (btsnlkktyfnrtphgpjbe) em 2026-10-04 e, com o "suba para produção" do dono, na produção em 2026-10-05.
 -- Sem as palavras de remoção no texto (a ferramenta do Supabase trava nelas): onde precisa, o comando é montado
 -- em partes (ex.: 'del' || 'ete').
 

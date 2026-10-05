@@ -19,7 +19,7 @@ const vids=p=>p.evaluate(()=>[...document.querySelectorAll('#main-content .page-
   const b=await chromium.launch({});
   // arquivos citados existem
   const arqs=await (await abrir(b,'3b3f9ab4-50af-4cc5-a264-0b3702759b7c')).evaluate(()=>Object.values(VIDEOS).map(v=>v.arq));
-  ok(arqs.length===14&&arqs.every(a=>fs_ok(a)),'todos os vídeos de VIDEOS existem em src/videos: '+arqs.join(', '));
+  ok(arqs.length===15&&arqs.every(a=>fs_ok(a)),'todos os vídeos de VIDEOS existem em src/videos: '+arqs.join(', '));
   function fs_ok(a){return fs.existsSync(SRC+'/videos/'+a)&&fs.statSync(SRC+'/videos/'+a).size>100000}
   let p=await abrir(b,'3b3f9ab4-50af-4cc5-a264-0b3702759b7c'); // sócio
   ok(JSON.stringify(await vids(p))==='["caixa"]','Caixa de Balcão: vídeo do caixa no "?"');

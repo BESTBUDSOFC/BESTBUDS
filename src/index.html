@@ -290,7 +290,7 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 /* ===== CONFIG TABS ===== */
 .cfg-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
-.cfg-sub{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface);border:1px solid var(--border);margin:0 0 14px}
+.cfg-sub{display:inline-flex;flex-wrap:wrap;max-width:100%;gap:4px;padding:4px;border-radius:12px;background:var(--surface);border:1px solid var(--border);margin:0 0 14px}
 .cfg-sub-bt{background:transparent;border:0;padding:7px 14px;border-radius:9px;color:var(--muted);font-weight:700;font-size:13px}
 .cfg-sub-bt.active{background:rgba(var(--purple-rgb),.18);color:var(--purple-light)}
 .cfg-tab{padding:8px 16px;border-radius:20px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-weight:600;font-size:13px}
@@ -713,7 +713,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.39.1';
+const VERSAO='v4.39.2';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -741,23 +741,24 @@ function fmt(n){return '$'+Number(n||0).toLocaleString('pt-BR',{minimumFractionD
 /* "?" ao lado de um título: a explicação aparece ao passar o mouse (ou ao tocar, no celular) */
 /* Vídeos "Como fazer" (src/videos/, gravados com dados reais). Só baixam quando a pessoa toca em "▶ Ver como fazer". */
 const VIDEOS={
-  caixa:{arq:'caixa-vender-e-guardar.mp4',titulo:'Vender e guardar no caixa',dur:'1:13'},
-  compra:{arq:'compra.mp4',titulo:'Registrar uma compra',dur:'1:23'},
-  producao:{arq:'producao.mp4',titulo:'Produzir',dur:'0:43'},
+  caixa:{arq:'caixa-vender-e-guardar.mp4',titulo:'Vender e guardar no caixa',dur:'1:10'},
+  compra:{arq:'compra.mp4',titulo:'Registrar uma compra',dur:'1:20'},
+  producao:{arq:'producao.mp4',titulo:'Produzir',dur:'0:42'},
   cascata:{arq:'producao-cascata.mp4',titulo:'Produção em cascata',dur:'0:38'},
-  falta:{arq:'producao-comprar-falta.mp4',titulo:'Faltou insumo? Compre e produza',dur:'0:45'},
-  historico:{arq:'historico-financeiro.mp4',titulo:'Histórico: resumo, filtros e colunas',dur:'1:08'},
+  falta:{arq:'producao-comprar-falta.mp4',titulo:'Faltou insumo? Compre e produza',dur:'0:44'},
+  historico:{arq:'historico-financeiro.mp4',titulo:'Histórico: resumo, filtros e colunas',dur:'1:07'},
   cfg_usuarios:{arq:'cfg-usuarios.mp4',titulo:'Usuários',dur:'0:54',ger:true},
-  cfg_catalogo:{arq:'cfg-catalogo.mp4',titulo:'Catálogo PDV',dur:'0:46',ger:true},
+  cfg_perfis:{arq:'cfg-perfis.mp4',titulo:'Perfis: o que cada um pode fazer',dur:'0:53',ger:true},
+  cfg_catalogo:{arq:'cfg-catalogo.mp4',titulo:'Catálogo PDV',dur:'0:45',ger:true},
   cfg_itens:{arq:'cfg-itens.mp4',titulo:'Cadastro Central de Itens',dur:'0:55',ger:true},
-  cfg_receitas:{arq:'cfg-receitas.mp4',titulo:'Receitas',dur:'0:44',ger:true},
-  cfg_fornecedores:{arq:'cfg-fornecedores.mp4',titulo:'Fornecedores',dur:'0:32',ger:true},
-  cfg_descontos:{arq:'cfg-descontos.mp4',titulo:'Descontos',dur:'0:45',ger:true},
-  cfg_deslocamento:{arq:'cfg-deslocamento.mp4',titulo:'Deslocamento',dur:'0:33',ger:true},
-  cfg_identidade:{arq:'cfg-identidade.mp4',titulo:'Identidade Visual',dur:'0:25',ger:true}
+  cfg_receitas:{arq:'cfg-receitas.mp4',titulo:'Receitas',dur:'0:45',ger:true},
+  cfg_fornecedores:{arq:'cfg-fornecedores.mp4',titulo:'Fornecedores',dur:'0:33',ger:true},
+  cfg_descontos:{arq:'cfg-descontos.mp4',titulo:'Descontos',dur:'0:48',ger:true},
+  cfg_deslocamento:{arq:'cfg-deslocamento.mp4',titulo:'Deslocamento',dur:'0:35',ger:true},
+  cfg_identidade:{arq:'cfg-identidade.mp4',titulo:'Identidade Visual',dur:'0:24',ger:true}
 };
 function ajuda(txt,videos){
-  const vs=(videos||[]).filter(k=>VIDEOS[k]&&(!VIDEOS[k].ger||pode('painel')));
+  const vs=(videos||[]).filter(k=>VIDEOS[k]);   // v4.39.2: o "?" de Configurações só aparece em tela que a pessoa já pode abrir
   if(!vs.length)return '';   // só há "?" onde há vídeo (pedido do dono, v4.27)
   const lista=vs.length?`<span class="ajuda-videos">${vs.map(k=>`<button type="button" class="ajuda-video" onclick="event.stopPropagation();verVideo('${k}')"><span class="pl">▶</span>Ver como fazer: ${esc(VIDEOS[k].titulo)}<small>${VIDEOS[k].dur}</small></button>`).join('')}</span>`:'';
   return `<span class="ajuda" tabindex="0" role="button" aria-label="Ajuda: ${esc(txt)}">?<span class="ajuda-txt" role="tooltip">${esc(txt)}${lista}</span></span>`;
@@ -2978,36 +2979,32 @@ async function salvarEdicaoCompraFin(id){
 }
 
 /* ================= CONFIGURAÇÕES ================= */
-const CFG_ABAS=[['usuarios','Usuários',null],['produtos','Catálogo PDV','catalogo'],['itens','Cadastro Central de Itens','itens'],['receitas','Receitas','receitas'],['fornecedores','Fornecedores','fornecedores'],['descontos','Descontos','descontos'],['deslocamento','Deslocamento','descontos'],['ranking','Ranking','ranking'],['discord','Discord','discord'],['logo','Identidade Visual','identidade']];
+/* Configurações (v4.39.2, pedido do dono: menos abas): 6 abas; as que juntam telas têm uma chave no topo.
+   cfgTabAtual guarda a TELA (sub-aba), então links antigos (cfgTabAtual='ranking';go('config')) continuam valendo.
+   Cada tela tem a sua permissão; a aba aparece se alguma tela dela aparece; com uma tela só, não há chave. */
+const CFG_GRUPOS=[
+  {id:'usuarios',nome:'Usuários',telas:[['usuarios',()=>pode('usuarios')?'👥 Pessoas':'👤 Meu perfil',null,b=>cfgUsuarios(b)],['perfis','🛡️ Perfis','perfis',b=>cfgPerfis(b)]]},
+  {id:'produtos',nome:'Catálogo PDV',telas:[['produtos','🏷️ Catálogo','catalogo',b=>cfgProdutos(b)]]},
+  {id:'producao',nome:'Produção e compras',telas:[['itens','📋 Itens','itens',b=>cfgItens(b)],['receitas','🧪 Receitas','receitas',b=>cfgReceitas(b)],['fornecedores','🚚 Fornecedores','fornecedores',b=>cfgFornecedores(b)]]},
+  {id:'descontos',nome:'Descontos e taxas',telas:[['descontos','🤝 Descontos','descontos',b=>cfgDescontos(b)],['deslocamento','🛵 Deslocamento','descontos',b=>cfgDeslocamento(b)]]},
+  {id:'avisos',nome:'Avisos e ranking',telas:[['ranking','🏆 Ranking','ranking',b=>cfgRanking(b)],['discord','💬 Discord','discord',b=>cfgDiscord(b)]]},
+  {id:'logo',nome:'Identidade Visual',telas:[['logo','🎨 Identidade','identidade',b=>cfgLogo(b)]]}
+];
+/* compatível com quem lê a lista de abas (tutorial): [tela, nome, permissão] */
+const CFG_ABAS=CFG_GRUPOS.flatMap(g=>g.telas.map(t=>[t[0],g.nome,t[2]]));
+function cfgTelasVisiveis(g){return g.telas.filter(t=>!t[2]||pode(t[2]))}
+const _cfgUltimaTela={};
 function renderConfig(c){
-  // v4.39: cada aba aparece para quem tem a permissão dela; Usuários sempre (sem "usuarios", vira "Meu perfil")
-  const tabs=CFG_ABAS.filter(t=>!t[2]||pode(t[2]));
-  // v4.39.1 (pedido do dono, menos abas): Perfis fica dentro de Usuários
-  if(cfgTabAtual==='perfis'){cfgTabAtual='usuarios';cfgUsuSub='perfis'}
-  if(!tabs.some(t=>t[0]===cfgTabAtual))cfgTabAtual='usuarios';
+  const grupos=CFG_GRUPOS.map(g=>({...g,vis:cfgTelasVisiveis(g)})).filter(g=>g.vis.length);
+  let g=grupos.find(x=>x.vis.some(t=>t[0]===cfgTabAtual));
+  if(!g){g=grupos[0];cfgTabAtual=g.vis[0][0]}
+  _cfgUltimaTela[g.id]=cfgTabAtual;
+  const abrir=x=>_cfgUltimaTela[x.id]&&x.vis.some(t=>t[0]===_cfgUltimaTela[x.id])?_cfgUltimaTela[x.id]:x.vis[0][0];
   c.innerHTML=`<h2 class="page-title">Configurações</h2>
-  <div class="cfg-tabs">${tabs.map(t=>`<button class="cfg-tab ${cfgTabAtual===t[0]?'active':''}" onclick="cfgTabAtual='${t[0]}';render()">${t[1]}</button>`).join('')}</div>
+  <div class="cfg-tabs">${grupos.map(x=>`<button class="cfg-tab ${x.id===g.id?'active':''}" onclick="cfgTabAtual='${abrir(x)}';render()">${x.nome}</button>`).join('')}</div>
+  ${g.vis.length>1?`<div class="cfg-sub" role="tablist">${g.vis.map(t=>`<button class="cfg-sub-bt ${t[0]===cfgTabAtual?'active':''}" role="tab" aria-selected="${t[0]===cfgTabAtual}" onclick="cfgTabAtual='${t[0]}';render()">${typeof t[1]==='function'?t[1]():t[1]}</button>`).join('')}</div>`:''}
   <div id="cfg-body"></div>`;
-  const b=document.getElementById('cfg-body');
-  if(cfgTabAtual==='usuarios')cfgUsuariosAba(b);
-  else if(cfgTabAtual==='produtos')cfgProdutos(b);
-  else if(cfgTabAtual==='itens')cfgItens(b);
-  else if(cfgTabAtual==='receitas')cfgReceitas(b);
-  else if(cfgTabAtual==='fornecedores')cfgFornecedores(b);
-  else if(cfgTabAtual==='descontos')cfgDescontos(b);
-  else if(cfgTabAtual==='deslocamento')cfgDeslocamento(b);
-  else if(cfgTabAtual==='ranking')cfgRanking(b);
-  else if(cfgTabAtual==='discord')cfgDiscord(b);
-  else if(cfgTabAtual==='logo')cfgLogo(b);
-}
-/* aba Usuários: com a permissão "perfis", ganha a chave Pessoas | Perfis (v4.39.1: Perfis deixou de ser aba própria) */
-let cfgUsuSub='pessoas';
-function cfgUsuariosAba(b){
-  if(!pode('perfis')){cfgUsuSub='pessoas';return cfgUsuarios(b)}
-  const op=[['pessoas',pode('usuarios')?'👥 Pessoas':'👤 Meu perfil'],['perfis','🛡️ Perfis']];
-  b.innerHTML=`<div class="cfg-sub" role="tablist">${op.map(o=>`<button class="cfg-sub-bt ${cfgUsuSub===o[0]?'active':''}" role="tab" aria-selected="${cfgUsuSub===o[0]}" onclick="cfgUsuSub='${o[0]}';render()">${o[1]}</button>`).join('')}</div><div id="cfg-usu-body"></div>`;
-  const c=document.getElementById('cfg-usu-body');
-  if(cfgUsuSub==='perfis')cfgPerfis(c);else cfgUsuarios(c);
+  g.vis.find(t=>t[0]===cfgTabAtual)[3](document.getElementById('cfg-body'));
 }
 /* ---- Ranking (pedido do dono, v4.32): regras do ranking de vendedores e do aviso automático do vendedor ouro ----
    Ficam em configuracoes.ranking. O Painel e a função do banco que publica o aviso leem daqui: mudou aqui, muda em tudo.
@@ -4524,7 +4521,7 @@ function cfgPerfis(b){
   const lista=perfisOrdenados(),meu=perfilIdDe(sessionUser());
   const outros=lista.filter(p=>p.id!=='socio');
   b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap">
-    <div class="section-title" style="margin:0">🛡️ Perfis de acesso</div>
+    <div class="section-title" style="margin:0">🛡️ Perfis de acesso${ajuda('Cada perfil é uma lista do que quem o tem pode fazer. O Sócio tem tudo. Você só dá permissões que tem, e só gerencia pessoas com perfil de permissões iguais ou menores que as suas.',['cfg_perfis'])}</div>
     <button class="btn btn-purple btn-sm" onclick="modalPerfil()">+ Novo perfil</button></div>
   <p class="muted" style="font-size:13px;margin:0 0 12px">Cada perfil diz o que quem o tem pode fazer. Todos vendem no Caixa, usam o Baú (compra e produção) e veem o Histórico; o resto depende das permissões. O <b>Sócio</b> tem sempre tudo. Você só dá permissões que você mesmo tem.</p>
   <div class="table-wrap"><table>

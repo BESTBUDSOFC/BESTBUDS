@@ -28,7 +28,7 @@ Nunca grave nada na produção para isso.
 cd testes
 node video-narrado.js          # Caixa de Balcão (vender e guardar no caixa)
 node videos.js compra          # também: producao, cascata, falta, historico
-node videos-cfg.js usuarios    # também: catalogo, itens, receitas, fornecedores, descontos, deslocamento, identidade
+node videos-cfg.js usuarios    # também: perfis, catalogo, itens, receitas, fornecedores, descontos, deslocamento, identidade
 ```
 
 - Saem em `testes/saida/video/` em Full HD (H.264, `+faststart`). Confira os quadros, copie para `src/videos/` e

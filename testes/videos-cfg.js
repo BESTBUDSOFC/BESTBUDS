@@ -3,23 +3,40 @@ const {chromium}=require('playwright');const fs=require('fs');const SP=__dirname
 const {abrir,passo,capa,limpar,gravar,tocar,digitar}=require('./video-narrado.js');
 const SOCIO='3b3f9ab4-50af-4cc5-a264-0b3702759b7c';
 const aba=nome=>`.cfg-tab:has-text("${nome}")`;
+const sub=nome=>`.cfg-sub-bt:has-text("${nome}")`;   // v4.39.2: chave dentro da aba (ex.: Produção e compras › Receitas)
 const salvar='#modal-box .modal-actions button:has-text("Salvar")';
 const fim=async(p,txt)=>{await limpar(p);await p.waitForTimeout(500);await capa(p,'Pronto!',txt,2200)};
 const R={
 async usuarios(p){const T=8;
   await capa(p,'Usuários','Configurações · '+T+' passos',2000);
-  await passo(p,aba('Usuários'),1,T,'Em <b>Configurações</b>, abra a aba <b>Usuários</b>.',null,{clicar:true});
-  await passo(p,'#cfg-body .table-wrap',2,T,'Aqui está a equipe: <b>perfil</b>, <b>status</b> e se a pessoa já fez o <b>primeiro acesso</b>.','O perfil define o que cada um vê e pode fazer.');
+  await passo(p,aba('Usuários'),1,T,'Em <b>Configurações</b>, abra a aba <b>Usuários</b> (chave <b>👥 Pessoas</b>).',null,{clicar:true});
+  await passo(p,'#cfg-body .table-wrap',2,T,'Aqui está a equipe: <b>perfil</b>, <b>status</b> e se a pessoa já fez o <b>primeiro acesso</b>.','O perfil define o que cada um vê e pode fazer (chave <b>🛡️ Perfis</b>).');
   await passo(p,'button:has-text("+ Novo usuário")',3,T,'Para cadastrar alguém, toque em <b>+ Novo usuário</b>.',null,{clicar:true});
   await digitar(p,'#u-nome','Lucas Prado');await digitar(p,'#u-usuario','lucas');
   await passo(p,['#u-nome','#u-usuario'],4,T,'Informe o <b>nome</b> e o <b>login</b> (sem espaços).','É com o login que a pessoa entra no sistema.');
-  await passo(p,'#u-perfil + .ssel-btn',5,T,'Escolha o <b>perfil</b>.','Gerente cadastra vendedores. Sócio e Diretor cadastram todos os perfis.');
+  await passo(p,'#u-perfil + .ssel-btn',5,T,'Escolha o <b>perfil</b>.','Só aparecem os perfis com permissões iguais ou menores que as suas.');
   await digitar(p,'#u-senha','bb2026');
   await passo(p,'#u-senha',6,T,'Defina uma <b>senha inicial</b> e passe para a pessoa.','No primeiro acesso ela é obrigada a criar a dela.');
   await passo(p,salvar,7,T,'Toque em <b>Salvar</b>.',null,{clicar:true});
   await p.waitForTimeout(500);
   await passo(p,'#cfg-body tr:has-text("Lucas Prado")',8,T,'Pronto: a pessoa aparece com o primeiro acesso <b>⏳ Pendente</b>.','✏️ edita e define senha nova quando alguém pede. ⏸️ inativa a conta.');
   await fim(p,'Usuário cadastrado.');
+},
+async perfis(p){const T=8;
+  await capa(p,'Perfis','Configurações · '+T+' passos',2000);
+  await passo(p,aba('Usuários'),1,T,'Em <b>Configurações</b>, abra a aba <b>Usuários</b>.',null,{clicar:true});
+  await passo(p,sub('Perfis'),2,T,'Toque na chave <b>🛡️ Perfis</b>.',null,{clicar:true});
+  await passo(p,'#cfg-body .table-wrap',3,T,'Cada <b>perfil</b>, quantas pessoas o têm e o que ele <b>pode fazer</b>.','O <b>Sócio</b> tem sempre tudo. ↑↓ mudam a ordem no menu On-line/Off-line.');
+  await passo(p,'button:has-text("+ Novo perfil")',4,T,'Para criar um perfil, toque em <b>+ Novo perfil</b>.',null,{clicar:true});
+  await digitar(p,'#pf-nome','Caixa');
+  await tocar(p,'#pf-cor + .ssel-btn');await tocar(p,'.ssel-pop .ssel-op:has-text("Laranja")');
+  await passo(p,['#pf-nome','#pf-cor + .ssel-btn'],5,T,'Dê um <b>nome</b> e escolha a <b>cor do selo</b>.');
+  await tocar(p,'#modal-box .perm-op:has([data-perm="vendas_equipe"])');await tocar(p,'#modal-box .perm-op:has([data-perm="caixa_ajustes"])');
+  await passo(p,'#modal-box .perm-grupo >> nth=0',6,T,'Marque o que o perfil <b>pode fazer</b>. Aqui: <b>Vendas da equipe</b> e <b>Ajustes de caixa</b>.','Todo perfil já vende, registra compras e produções e vê o Histórico. Você só dá permissões que você tem.');
+  await passo(p,'#btn-salvar-perfil',7,T,'Toque em <b>Salvar</b>.',null,{clicar:true});
+  await p.waitForTimeout(500);
+  await passo(p,'#cfg-body tr:has-text("Caixa") >> nth=-1',8,T,'Pronto: o perfil <b>Caixa</b> está na lista.','Em <b>👥 Pessoas</b>, edite alguém (✏️) e escolha o perfil novo. Vale na hora.');
+  await fim(p,'Perfil criado.');
 },
 async catalogo(p){const T=8;
   await capa(p,'Catálogo PDV','Configurações · '+T+' passos',2000);
@@ -35,7 +52,8 @@ async catalogo(p){const T=8;
 },
 async itens(p){const T=8;
   await capa(p,'Cadastro Central de Itens','Configurações · '+T+' passos',2000);
-  await passo(p,aba('Cadastro Central de Itens'),1,T,'Abra a aba <b>Cadastro Central de Itens</b>.',null,{clicar:true});
+  await tocar(p,aba('Produção e compras'));
+  await passo(p,sub('Itens'),1,T,'Abra <b>Produção e compras</b> e toque na chave <b>📋 Itens</b>.',null,{clicar:true});
   await passo(p,'#cfg-body .table-wrap >> nth=0',2,T,'Os itens do <b>Baú</b>, das <b>compras</b> e das <b>receitas</b>: categoria, unidade, mínimo e saldo.');
   await passo(p,'#cfg-body tr:has(.tag:has-text("Catálogo")) >> nth=0',3,T,'<b>🔗 Catálogo</b>: item criado pelo produto do Catálogo.','Aqui só a unidade e o mínimo mudam; nome e status vêm do produto.');
   await passo(p,'button:has-text("+ Novo item")',4,T,'Para cadastrar, toque em <b>+ Novo item</b>.',null,{clicar:true});
@@ -44,14 +62,15 @@ async itens(p){const T=8;
   await passo(p,['#i-nome','#i-cat + .ssel-btn'],5,T,'Informe o <b>nome</b> e a <b>categoria</b>.','A categoria decide se o item entra no Baú e se pode ser comprado.');
   await digitar(p,'#i-min','10');
   await passo(p,['#i-un','#i-min'],6,T,'<b>Unidade</b> e <b>quantidade mínima</b>.','No mínimo, o item fica com borda vermelha no Baú e vira alerta no Painel.');
-  await passo(p,salvar,7,T,'Toque em <b>Salvar</b>.','O preço não fica aqui: é de cada fornecedor (aba Fornecedores).',{clicar:true});
+  await passo(p,salvar,7,T,'Toque em <b>Salvar</b>.','O preço não fica aqui: é de cada fornecedor (chave 🚚 Fornecedores).',{clicar:true});
   await p.waitForTimeout(400);
   await passo(p,'#cfg-body .table-wrap >> nth=1',8,T,'<b>Categorias de itens</b>: <b>Controle de estoque</b> (entra no Baú) e <b>Pode ser comprada</b> (aparece na compra).');
   await fim(p,'O item já aparece na compra e nas receitas.');
 },
 async receitas(p){const T=8;
   await capa(p,'Receitas','Configurações · '+T+' passos',2000);
-  await passo(p,aba('Receitas'),1,T,'Abra a aba <b>Receitas</b>.',null,{clicar:true});
+  await tocar(p,aba('Produção e compras'));
+  await passo(p,sub('Receitas'),1,T,'Abra <b>Produção e compras</b> e toque na chave <b>🧪 Receitas</b>.',null,{clicar:true});
   await passo(p,'#cfg-body .table-wrap >> nth=0',2,T,'Cada receita: o que <b>consome</b>, o que <b>produz</b> e a <b>categoria</b>.','↑↓ mudam a ordem das linhas na tela Produzir.');
   await passo(p,'#cfg-body tr:has-text("Baseado de Blue Dream") button[onclick^="modalReceita"]',3,T,'Toque em ✏️ para ver uma receita.',null,{clicar:true});
   await passo(p,'#modal-box label:has(#r-final)',4,T,'<b>🏁 Produto final</b>: marque na última etapa do processo.','Ela produz o item do Catálogo que é vendido no Caixa e monta a linha na tela Produzir.');
@@ -64,7 +83,8 @@ async receitas(p){const T=8;
 },
 async fornecedores(p){const T=6;
   await capa(p,'Fornecedores','Configurações · '+T+' passos',2000);
-  await passo(p,aba('Fornecedores'),1,T,'Abra a aba <b>Fornecedores</b>.',null,{clicar:true});
+  await tocar(p,aba('Produção e compras'));
+  await passo(p,sub('Fornecedores'),1,T,'Abra <b>Produção e compras</b> e toque na chave <b>🚚 Fornecedores</b>.',null,{clicar:true});
   await passo(p,'#cfg-body .table-wrap',2,T,'Cada fornecedor com os <b>itens que vende</b> e o <b>valor</b> de cada um.');
   await passo(p,'#cfg-body tr:has-text("Mega mall") button[onclick^="modalFornecedor"]',3,T,'Toque em ✏️ para editar.',null,{clicar:true});
   await passo(p,'#modal-box .fvinc',4,T,'Os itens vinculados e o <b>valor unitário</b> neste fornecedor.','Na compra, esse valor entra travado. O "Comprar o que falta" escolhe o mais barato.');
@@ -74,7 +94,8 @@ async fornecedores(p){const T=6;
 },
 async descontos(p){const T=8;
   await capa(p,'Descontos','Configurações · '+T+' passos',2000);
-  await passo(p,aba('Descontos'),1,T,'Abra a aba <b>Descontos</b>.',null,{clicar:true});
+  await tocar(p,aba('Descontos e taxas'));
+  await passo(p,sub('Descontos'),1,T,'Abra <b>Descontos e taxas</b> e toque na chave <b>🤝 Descontos</b>.',null,{clicar:true});
   await passo(p,'#cfg-body .table-wrap',2,T,'Os <b>descontos de parceria</b> que aparecem no Caixa de Balcão.','↑↓ mudam a ordem na lista do Caixa.');
   await passo(p,'#cfg-body tr:has-text("Escalonada") button[onclick^="modalDescontos"]',3,T,'Toque em ✏️ para editar.',null,{clicar:true});
   await passo(p,'#pc-tipo + .ssel-btn',4,T,'<b>Tipo</b>: <b>Fixa</b> (sempre o mesmo %) ou <b>Escalonada</b> (o % muda com a quantidade de itens).');
@@ -82,13 +103,14 @@ async descontos(p){const T=8;
   await passo(p,salvar,6,T,'Toque em <b>Salvar</b>.',null,{clicar:true});
   await passo(p,'#cfg-body tr:has-text("Escalonada") button[onclick^="modalImagemDesconto"]',7,T,'<b>🖼️</b> gera uma <b>imagem da parceria</b> para divulgar.',null,{clicar:true});
   await p.waitForFunction(()=>document.querySelector('#img-desc-prev img'),null,{timeout:10000});await p.waitForTimeout(300);
-  await passo(p,'#btn-baixar-img',8,T,'Confira e toque em <b>Baixar PNG</b> para mandar ao parceiro.','O card usa o logo da loja, o nome do parceiro e o desconto de cada faixa.');
+  await passo(p,'#btn-baixar-img',8,T,'Confira e toque em <b>⬇ Baixar imagem</b> para mandar ao parceiro.','O card usa o logo da loja, o nome do parceiro e o desconto de cada faixa.');
   await limpar(p);await tocar(p,'#modal-box button:has-text("Fechar")');
   await fim(p,'O Caixa já usa o desconto novo.');
 },
 async deslocamento(p){const T=6;
   await capa(p,'Deslocamento','Configurações · '+T+' passos',2000);
-  await passo(p,aba('Deslocamento'),1,T,'Abra a aba <b>Deslocamento</b>.',null,{clicar:true});
+  await tocar(p,aba('Descontos e taxas'));
+  await passo(p,sub('Deslocamento'),1,T,'Abra <b>Descontos e taxas</b> e toque na chave <b>🛵 Deslocamento</b>.',null,{clicar:true});
   await passo(p,'#cfg-body .card:has(#al-taxa)',2,T,'<b>Alíquota</b>: quanto da taxa de deslocamento vai para o repasse de quem vendeu.');
   await passo(p,'#cfg-body .table-wrap',3,T,'As <b>localidades</b> e o valor cobrado de cada uma.');
   await passo(p,'button:has-text("+ Nova taxa")',4,T,'Para cadastrar, toque em <b>+ Nova taxa</b>.',null,{clicar:true});
@@ -106,7 +128,7 @@ async identidade(p){const T=5;
   await passo(p,'#cfg-body .card:has(.section-title:has-text("Paleta de Cores"))',5,T,'<b>Cores do sistema</b>: cada cor tem a sua função.','Mudar um código de cor muda o site inteiro na hora.');
   await fim(p,'A loja com a cara dela.');
 }};
-const TAB={usuarios:'usuarios',catalogo:'usuarios',itens:'usuarios',receitas:'usuarios',fornecedores:'usuarios',descontos:'usuarios',deslocamento:'usuarios',identidade:'usuarios'};
+const TAB={perfis:'usuarios',usuarios:'usuarios',catalogo:'usuarios',itens:'usuarios',receitas:'usuarios',fornecedores:'usuarios',descontos:'usuarios',deslocamento:'usuarios',identidade:'usuarios'};
 (async()=>{
   const qual=process.argv[2];const b=await chromium.launch({args:['--lang=pt-BR'],env:{...process.env,LANG:'pt_BR.UTF-8',LANGUAGE:'pt_BR:pt',LC_ALL:'pt_BR.UTF-8'}});
   const {ctx,p}=await abrir(b,SOCIO);const errs=[];p.on('pageerror',e=>errs.push(e.message));

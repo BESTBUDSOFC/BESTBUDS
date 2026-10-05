@@ -37,7 +37,14 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
   - `perfis_acesso_guarda`: só com "perfis"; só dá permissões que tem; não mexe em perfil com permissão que não tem; perfil em uso não sai (FK).
   - `admin-users` e `discord-avisos` (prévia = ranking, teste = discord) usam `tem_permissao_de`/`pode_gerir_perfil_de` (só service_role).
 - Site: `pode(perm)`, `podeGerirPerfil(id)`, `perfilIdDe(u)`, `seloPerfil(u)` (nome e cor do perfil, `.badge.pc.pc-<cor>`). Não use mais cargo fixo (`isGerente` etc. foram removidos). Abas de Configurações em `CFG_ABAS` (cada uma com a sua permissão; Usuários sempre, sem "usuarios" vira Meu perfil); Painel no menu só com "painel" (`modulosVisiveis`). Edição/reversão no Histórico por tipo (`FIN_PERM`); reordenar por tabela (`PERM_ORDEM`).
-- **Perfis fica dentro da aba Usuários** (v4.39.1, pedido do dono: menos abas): quem tem "perfis" vê a chave **👥 Pessoas | 🛡️ Perfis** no topo da aba (`cfgUsuariosAba`, estado `cfgUsuSub`; sem "usuarios", a 1ª chave é "👤 Meu perfil"); quem não tem não vê chave nenhuma. `cfgTabAtual='perfis'` antigo cai em Usuários › Perfis.
+- **Configurações com 6 abas** (v4.39.1–v4.39.2, pedido do dono: menos abas), em `CFG_GRUPOS`; as que juntam telas têm uma **chave** no topo (`.cfg-sub`):
+  - **Usuários**: 👥 Pessoas (sem "usuarios": 👤 Meu perfil) | 🛡️ Perfis.
+  - **Catálogo PDV**.
+  - **Produção e compras**: 📋 Itens | 🧪 Receitas | 🚚 Fornecedores.
+  - **Descontos e taxas**: 🤝 Descontos | 🛵 Deslocamento.
+  - **Avisos e ranking**: 🏆 Ranking | 💬 Discord.
+  - **Identidade Visual**.
+  - Cada tela tem a sua permissão; a aba aparece se alguma tela dela aparece, e com uma tela só não há chave. `cfgTabAtual` guarda a **tela** (ex.: `'ranking'`, `'perfis'`), então os links `cfgTabAtual='x';go('config')` continuam valendo. Voltar a uma aba abre a última chave usada (`_cfgUltimaTela`). `CFG_ABAS` (lista plana [tela, aba, permissão]) sai de `CFG_GRUPOS`.
 - Usuários › **Perfis** (`cfgPerfis`, `modalPerfil`, `salvarPerfil`, `excluirPerfil`, `moverPerfil`): nome, cor e caixas de permissão (as que a pessoa não tem ficam travadas); ninguém tira permissão do próprio perfil (trancaria a si mesmo). A lista On-line/Off-line e Usuários seguem a ordem dos perfis.
 - Mudou o que um botão exige: ajuste a permissão no site **e** na regra do banco.
 
@@ -237,7 +244,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 - MP4 em `src/videos/` (servidos pela Vercel; o dono preferiu ao YouTube: sem anúncio, sem sugestões no fim, só quem entra no sistema vê e a troca é automática na publicação). Lista em `VIDEOS` (`src/index.html`): arquivo, título, duração e, opcional, `ger` (só Gerente ou acima vê; nenhum usa hoje).
 - `ajuda(texto,[ids])` põe, no balão do "?", um botão "▶ Ver como fazer: título · duração" por vídeo. `verVideo(id)` abre o player na 2ª camada (`modal2`, classe `modal-video`); fechar esvazia a janela e o vídeo para. O vídeo só baixa quando a pessoa toca no botão.
-- Onde aparecem: Caixa de Balcão (caixa), Baú (compra, produção, cascata, falta), Nova compra (compra), Produzir (produção, cascata, falta), Histórico Financeiro (histórico) e um por aba de Configurações (`cfg_usuarios`, `cfg_catalogo`, `cfg_itens`, `cfg_receitas`, `cfg_fornecedores`, `cfg_descontos`, `cfg_deslocamento`, `cfg_identidade`, com `ger`). O vendedor vê todos os da operação (desde a v4.26 ele também faz cascata).
+- Onde aparecem: Caixa de Balcão (caixa), Baú (compra, produção, cascata, falta), Nova compra (compra), Produzir (produção, cascata, falta), Histórico Financeiro (histórico) e um por tela de Configurações (`cfg_usuarios`, `cfg_perfis`, `cfg_catalogo`, `cfg_itens`, `cfg_receitas`, `cfg_fornecedores`, `cfg_descontos`, `cfg_deslocamento`, `cfg_identidade`; Ranking e Discord ainda sem vídeo). Desde a v4.39.2 o `ger` não filtra mais: o "?" de Configurações só aparece em tela que a pessoa já pode abrir. Os roteiros de Configurações abrem a aba e depois a chave (`sub()` em `videos-cfg.js`). O vendedor vê todos os da operação (desde a v4.26 ele também faz cascata).
 - Ferramentas de gravação e testes: pasta `testes/` (ver `testes/README.md`). `node testes/videos.js <vídeo>`, `node testes/videos-cfg.js <aba>` e `node testes/video-narrado.js` (caixa) gravam em `testes/saida/video/`.
 - Gravação: dados reais (cadastros e histórico lidos da produção só para consulta), quadros PNG sem perda pelo screencast do Chrome, H.264 1920×1080 com `+faststart`, narração na tela (destaque, balão "Passo N de T", cursor). Navegador em português (`LANG=pt_BR.UTF-8`), senão o campo de data sai no formato americano.
 - **Regravar na publicação** os vídeos das telas que mudaram e atualizar a duração em `VIDEOS`.

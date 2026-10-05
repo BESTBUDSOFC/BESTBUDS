@@ -40,7 +40,19 @@ const EXTRA={perfis:[{id:'caixa',nome:'Caixa',cor:'laranja',ordem:5,permissoes:[
   const linhas=await t(s,`[...document.querySelectorAll('#cfg-body table tr')].slice(1).map(r=>r.textContent.replace(/\\s+/g,' '))`);
   ok(linhas.length===5&&/Sócio/.test(linhas[0])&&/Acesso total/.test(linhas[0])&&/Caixa/.test(linhas[4]),'lista os perfis na ordem, Sócio com acesso total: '+JSON.stringify(linhas));
   await s.click('.cfg-sub-bt:first-child');await s.waitForTimeout(150);
-  ok(await t(s,`cfgUsuSub==='pessoas'&&!!document.querySelector('[onclick="modalUsuario()"]')`),'chave Pessoas volta à lista de usuários');
+  ok(await t(s,`cfgTabAtual==='usuarios'&&!!document.querySelector('[onclick="modalUsuario()"]')`),'chave Pessoas volta à lista de usuários');
+  // v4.39.2: 6 abas; as que juntam telas têm chave; ao voltar para a aba, abre a última tela usada
+  ok((await t(s,`[...document.querySelectorAll('.cfg-tab')].map(e=>e.textContent).join()`))==='Usuários,Catálogo PDV,Produção e compras,Descontos e taxas,Avisos e ranking,Identidade Visual','Sócio: 6 abas');
+  for(const [tela,chaves] of [['receitas','📋 Itens,🧪 Receitas*,🚚 Fornecedores'],['deslocamento','🤝 Descontos,🛵 Deslocamento*'],['discord','🏆 Ranking,💬 Discord*'],['produtos','']]){
+    await t(s,`cfgTabAtual='${tela}';render()`);await s.waitForTimeout(120);
+    const ch=await t(s,`[...document.querySelectorAll('.cfg-sub-bt')].map(e=>e.textContent+(e.classList.contains('active')?'*':'')).join()`);
+    await s.screenshot({path:SP+'/saida/v439-cfg-'+tela+'.png'});
+    ok(ch===chaves&&(await t(s,`!!document.querySelector('#cfg-body').children.length`)),`tela ${tela}: chave "${ch}" e conteúdo`);
+  }
+  await t(s,`cfgTabAtual='discord';render()`);await t(s,`[...document.querySelectorAll('.cfg-tab')].find(e=>e.textContent==='Usuários').click()`);await s.waitForTimeout(100);
+  await t(s,`[...document.querySelectorAll('.cfg-tab')].find(e=>e.textContent==='Avisos e ranking').click()`);await s.waitForTimeout(100);
+  ok(await t(s,`cfgTabAtual==='discord'`),'voltar à aba abre a última chave usada (Discord)');
+  await t(s,`cfgTabAtual='perfis';render()`);await s.waitForTimeout(100);
   await s.click('.cfg-sub-bt:last-child');await s.waitForTimeout(150);
   ok(await t(s,`!document.querySelector('#cfg-body button[onclick="modalPerfil(\\'socio\\')"]').title.includes('Editar')`),'Sócio não é editável (só "Ver")');
   ok(!(await t(s,`!!document.querySelector('[onclick="excluirPerfil(\\'vendedor\\')"]')`)),'Vendedor não tem 🗑️ (é o perfil de quem entra)');
@@ -96,8 +108,8 @@ const EXTRA={perfis:[{id:'caixa',nome:'Caixa',cor:'laranja',ordem:5,permissoes:[
   // ---- Gerente: dá só perfis com permissões iguais ou menores; não vê Perfis ----
   const g=await abrir(b,GERENTE,null,EXTRA);
   await t(g,`cfgTabAtual='perfis';go('config')`);await g.waitForTimeout(200);
-  const abasG=await t(g,`[...document.querySelectorAll('.cfg-tab')].map(e=>e.textContent)`);
-  ok(!abasG.includes('Perfis')&&!abasG.includes('Discord')&&abasG.includes('Ranking'),'Gerente: sem Perfis e sem Discord: '+abasG.join(','));
+  const abasG=await t(g,`CFG_GRUPOS.flatMap(x=>cfgTelasVisiveis(x).map(t=>t[0]))`);
+  ok(!abasG.includes('perfis')&&!abasG.includes('discord')&&abasG.includes('ranking'),'Gerente: sem Perfis e sem Discord: '+abasG.join(','));
   ok(!(await t(g,`!!document.querySelector('.cfg-sub')`))&&(await t(g,`!!document.querySelector('[onclick="modalUsuario()"]')`)),'Gerente: Usuários sem a chave Pessoas | Perfis');
   ok(await t(g,`cfgTabAtual==='usuarios'`),'Gerente pedindo Perfis cai em Usuários');
   await t(g,`modalUsuario()`);await g.waitForTimeout(100);
@@ -110,8 +122,8 @@ const EXTRA={perfis:[{id:'caixa',nome:'Caixa',cor:'laranja',ordem:5,permissoes:[
   // ---- Diretor: sem "perfis" (padrão), vê Discord ----
   const d=await abrir(b,DIRETOR,null,EXTRA);
   await t(d,`go('config')`);await d.waitForTimeout(200);
-  const abasD=await t(d,`[...document.querySelectorAll('.cfg-tab')].map(e=>e.textContent)`);
-  ok(!abasD.includes('Perfis')&&abasD.includes('Discord'),'Diretor: Discord sim, Perfis não: '+abasD.join(','));
+  const abasD=await t(d,`CFG_GRUPOS.flatMap(x=>cfgTelasVisiveis(x).map(t=>t[0]))`);
+  ok(!abasD.includes('perfis')&&abasD.includes('discord'),'Diretor: Discord sim, Perfis não: '+abasD.join(','));
   await t(d,`modalUsuario()`);await d.waitForTimeout(100);
   ok(!(await t(d,`[...document.querySelectorAll('#u-perfil option')].some(o=>o.value==='socio')`)),'Diretor: não dá o perfil Sócio');
   ok(d._errs.length===0,'sem erros JS (Diretor) '+d._errs.join(' | '));
