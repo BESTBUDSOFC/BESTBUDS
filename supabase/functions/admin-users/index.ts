@@ -38,14 +38,14 @@ Deno.serve(async (req) => {
   // regras que valem no site: gerenciar só quem tem perfil com permissões iguais ou menores; Sócio só outro Sócio.
   let callerPerfil: string | null = null;
   let callerId: string | null = null;
-  const podeGerir = async (alvo: string) => {
-    const { data } = await admin.rpc('pode_gerir_perfil_de', { p_ator: callerId, p_alvo: alvo });
+  // v4.39.3: falha ao conferir (ex.: o banco recusou a consulta) não vira "sem permissão": vai como erro de verdade
+  const conferir = async (fn: string, args: Record<string, unknown>) => {
+    const { data, error } = await admin.rpc(fn, args);
+    if (error) throw new Error(`Não foi possível conferir a permissão (${error.message}). Tente de novo.`);
     return data === true;
   };
-  const temPermissao = async (p: string) => {
-    const { data } = await admin.rpc('tem_permissao_de', { p_ator: callerId, p: p });
-    return data === true;
-  };
+  const podeGerir = (alvo: string) => conferir('pode_gerir_perfil_de', { p_ator: callerId, p_alvo: alvo });
+  const temPermissao = (p: string) => conferir('tem_permissao_de', { p_ator: callerId, p: p });
   const authHeader = req.headers.get('Authorization');
   if (authHeader) {
     const jwt = authHeader.replace('Bearer ', '');
@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
   const { count } = await admin.from('profiles').select('*', { count: 'exact', head: true });
   const isBootstrap = (count ?? 0) === 0;
 
+  try {
   if (action === 'create') {
     const { nome, usuario, perfil, senha } = body;
     if (!nome || !usuario || !perfil || !senha) return json({ error: 'Campos obrigatórios: nome, usuario, perfil, senha.' }, 400);
@@ -126,4 +127,7 @@ Deno.serve(async (req) => {
   }
 
   return json({ error: 'Ação inválida.' }, 400);
+  } catch (e) {
+    return json({ error: String((e as Error).message || e) }, 500);
+  }
 });

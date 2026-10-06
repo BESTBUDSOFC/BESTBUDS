@@ -76,6 +76,8 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 - `public.checar_limite_requisicoes()` roda antes de cada requisição da API de dados (`pgrst.db_pre_request`).
 - Escritas (POST, PATCH, PUT, DELETE e rpc) têm limite por minuto: 120 por usuário logado e 10 por IP sem login. Leituras não contam.
 - Passou do limite, a resposta é HTTP 429 com a mensagem "Muitas ações em pouco tempo".
+- Não conta (v4.39.3): **transação somente leitura** (rpc de função `stable`, como `tem_permissao`) e chamadas do **servidor** (`service_role`: `admin-users`, `discord-avisos`). Até a v4.39.2 o contador era gravado também nelas: a gravação falhava em modo somente leitura, a API devolvia 405 e a `admin-users` recusava criar usuário até para o Sócio (migração `20261013000000_limite_ignora_leitura_e_servidor.sql`). Função nova que grava algo antes de checar o modo: cuidado com o mesmo erro.
+- As funções do servidor tratam erro ao conferir permissão como erro (500 com a mensagem), nunca como "sem permissão".
 - Não crie laços que façam uma requisição por linha. Agrupe numa chamada só (ex.: `.in('id', ids)` ou uma função rpc, como `recalcular_saldos_bau`).
 
 ## Datas e horas
