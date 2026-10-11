@@ -219,6 +219,9 @@ body:not(.logado) #sidebar-nav,body:not(.logado) #bottom-nav{display:none!import
 .perm-op small{color:var(--muted);font-size:11px;font-weight:500}
 .perm-op.bloq{opacity:.55;cursor:not-allowed}
 .perfil-perms .tag{margin:1px 0}
+.img-link{margin-top:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.img-link label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}
+.img-link input{flex:1;min-width:0;font-size:13px}
 /* v4.39: cor de cada perfil (Configurações › Usuários › Perfis) */
 .pc-ouro{--pc:var(--warning)}.pc-azul{--pc:var(--info)}.pc-roxo{--pc:var(--purple)}.pc-verde{--pc:var(--green)}
 .pc-laranja{--pc:#f97316}.pc-rosa{--pc:#ec4899}.pc-vermelho{--pc:var(--danger)}.pc-cinza{--pc:var(--muted)}
@@ -713,7 +716,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.40.0';
+const VERSAO='v4.41.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -3233,8 +3236,10 @@ async function rkImagemOuro(){
     <div id="img-desc-prev" class="muted" style="text-align:center;padding:30px">Desenhando a imagem…</div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
     <button class="btn btn-ghost" id="btn-copiar-img" onclick="copiarImagemDesconto()" style="display:none">📋 Copiar</button>
+    <button class="btn btn-ghost" id="btn-link-img" onclick="copiarLinkImagem()" disabled title="Sobe a imagem e copia um link que abre só a imagem">🔗 Copiar link</button>
     <button class="btn btn-ghost" id="btn-baixar-img" onclick="baixarImagemDesconto()" disabled>⬇ Baixar imagem</button>
-    <button class="btn btn-primary" id="rk-img-pub" onclick="rkPublicarImagem()" disabled>📢 Publicar como aviso</button></div>`);
+    <button class="btn btn-primary" id="rk-img-pub" onclick="rkPublicarImagem()" disabled>📢 Publicar como aviso</button></div>
+    <div id="img-link" class="img-link" style="display:none"></div>`);
   const btn=document.getElementById('rk-img-btn');if(btn)btn.disabled=true;
   try{
     const{data:{session:sa}}=await sb.auth.getSession();
@@ -3246,11 +3251,11 @@ async function rkImagemOuro(){
     const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;c.getContext('2d').drawImage(im,0,0);URL.revokeObjectURL(src);
     const j=await imgComprimir(c),url=j&&await blobParaDataURL(j.blob);if(!url)throw new Error('não deu para gerar o JPG');
     const prev=document.getElementById('img-desc-prev');if(!prev)return;
-    _imgDesconto={canvas:c,url,bytes:j.blob.size,arquivo:`vendedor-ouro-${rk.seg}${parcial?'-parcial':''}.jpg`};
+    _imgDesconto={canvas:c,url,blob:j.blob,bytes:j.blob.size,arquivo:`vendedor-ouro-${rk.seg}${parcial?'-parcial':''}.jpg`};
     _rkImg={parcial,titulo:r.aviso_titulo,nome:podio[0].nome,semana,blob:j.blob};
     prev.innerHTML=`<img src="${url}" alt="Imagem do vendedor ouro" style="width:100%;max-width:min(300px,42vh);border-radius:12px;border:1px solid var(--border)">
       <div class="muted" style="font-size:12px;margin-top:6px">JPG · ${j.w}×${j.h} · ${Math.round(j.blob.size/1024)} KB (máx. 512 KB)</div>`;prev.style.padding='0';
-    document.getElementById('btn-baixar-img').disabled=false;document.getElementById('rk-img-pub').disabled=false;
+    document.getElementById('btn-baixar-img').disabled=false;document.getElementById('rk-img-pub').disabled=false;imgLinkPronto();
     if(navigator.clipboard&&window.ClipboardItem)document.getElementById('btn-copiar-img').style.display='';
     reg('Imagem do vendedor ouro gerada',`semana ${semana}${parcial?' (parcial)':''} · 1º ${podio[0].nome}`);
   }catch(e){
@@ -4029,7 +4034,7 @@ async function toggleFornecedor(id){
   f.status=novo;render();
 }
 /* ---- Descontos ---- */
-/* ---- Imagem da parceria (🖼️ em Configurações › Descontos): card 1080×1350 para divulgar o desconto ---- */
+/* ---- Imagem da parceria (🖼️ em Configurações › Descontos): card 1080×1080 para divulgar o desconto ---- */
 // nome sem o "(5,10,15)" que às vezes vai no cadastro para diferenciar
 function nomeParceiroLimpo(nome){return String(nome||'').replace(/\s*\(\s*[\d.,%\s]+\)\s*$/,'').trim()||String(nome||'')}
 function imagemDescontoTextos(p){
@@ -4052,8 +4057,8 @@ function carregarFontesImagem(){
   return _fontesImg;
 }
 const IMG_AN=px=>`${px}px "BB Anton", Impact, "Arial Narrow", sans-serif`,IMG_MO=(w,px)=>`${w} ${px}px "BB Montserrat", Arial, sans-serif`;
-// altura: 1350 (vertical) por padrão; o cardápio sai quadrado, 1080×1080 (pedido do dono, v4.40)
-function imgCtx(h=1350){const c=document.createElement('canvas');c.width=1080;c.height=h;const g=c.getContext('2d');
+// todas as artes saem quadradas, 1080×1080 (pedido do dono, v4.40)
+function imgCtx(h=1080){const c=document.createElement('canvas');c.width=1080;c.height=h;const g=c.getContext('2d');
   const css=getComputedStyle(document.documentElement);return{c,g,W:1080,H:h,verde:(css.getPropertyValue('--green')||'').trim()||'#00CC52',escuro:'#07070A'}}
 function imgRgba(c,a){if(c[0]==='#'){const n=parseInt(c.slice(1,7),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`}return c.replace('rgb(','rgba(').replace(')',`,${a})`)}
 function imgEspaco(g,v){if('letterSpacing' in g)g.letterSpacing=v+'px'}
@@ -4077,7 +4082,7 @@ function imgEtiqueta(g,txt,cx,cy,px,bg,fg,rot){g.save();g.translate(cx,cy);g.rot
   g.fillStyle=fg;g.textAlign='center';g.textBaseline='middle';g.fillText(txt,0,px*.04);g.restore()}
 // fundo, nome da loja vazado ao fundo e logo
 async function imgFundo(x,logo,op){
-  const lt=(op&&op.logo)||160,ly=(op&&op.logoY)||46;
+  const lt=(op&&op.logo)||112,ly=(op&&op.logoY)||30;   // quadrado: logo menor e mais alto
   const{g,W,H,verde,escuro}=x;g.fillStyle=escuro;g.fillRect(0,0,W,H);imgBrilho(g,W/2,40,820,verde,.32);
   const marca=(nomeLojaAtual()||'').toUpperCase().trim();
   if(marca){g.save();g.translate(W/2,H/2);g.rotate(-.21);g.font=IMG_AN(190);g.strokeStyle='rgba(255,255,255,.075)';g.lineWidth=2.5;g.textAlign='center';
@@ -4108,21 +4113,21 @@ async function desenharImagemDesconto(p,tx){
   const x=imgCtx(),{c,g,W,H,verde,escuro}=x;await carregarFontesImagem();
   await imgFundo(x,await carregarImagemCors(db.identidade_visual&&db.identidade_visual.logotipo));
   const t=imagemDescontoTextos(p),v={...textosPadraoDesconto(p),...(tx||{})},of=!t.nome;g.textAlign='center';
-  if(imgTxt(v.selo))imgPilula(x,imgTxt(v.selo),238);
+  if(imgTxt(v.selo))imgPilula(x,imgTxt(v.selo),150);
   // nome do parceiro em branco; na oferta, a mensagem com a última linha em verde
-  let y=imgTitulo(x,imgTxt(v.titulo),300,of?118:130,of);if(imgTxt(v.titulo))y+=20;
+  let y=imgTitulo(x,imgTxt(v.titulo),imgTxt(v.selo)?208:160,of?92:104,of);if(imgTxt(v.titulo))y+=14;
   if(t.tipo==='fixa'){
     // o bloco do % encolhe para caber entre o título e o rodapé
-    const k=Math.min(1,(H-190-y)/680);y+=Math.max(0,(H-170-y-680*k)/2);
+    const k=Math.min(1,(H-190-y)/680);y+=Math.max(0,(H-170-y-680*k-(imgTxt(v.sub)?60:0))/2);
     let px=Math.round(460*k);g.font=IMG_AN(px);while(g.measureText(t.destaque).width>W-260&&px>160){px-=10;g.font=IMG_AN(px)}
     const larg=g.measureText(t.destaque).width;
     g.save();g.fillStyle=verde;g.shadowColor=verde;g.shadowBlur=70;g.fillText(t.destaque,W/2-40,y+560*k);g.restore();
     imgEtiqueta(g,'OFF',Math.min(W-130,W/2-40+larg/2+20),y+190*k,Math.round(110*Math.max(k,.75)),'#fff',escuro,.12);
-    if(imgTxt(v.sub)){g.fillStyle='#fff';imgEspaco(g,8);let f=40;g.font=IMG_MO(800,f);while(g.measureText(imgTxt(v.sub)).width>W-140&&f>22){f-=2;g.font=IMG_MO(800,f)}g.fillText(imgTxt(v.sub),W/2,y+560*k+100);imgEspaco(g,0)}
+    if(imgTxt(v.sub)){g.fillStyle='#fff';imgEspaco(g,8);let f=40;g.font=IMG_MO(800,f);while(g.measureText(imgTxt(v.sub)).width>W-140&&f>22){f-=2;g.font=IMG_MO(800,f)}g.fillText(imgTxt(v.sub),W/2,y+560*k+80);imgEspaco(g,0)}
   }else{
     // escada: quanto maior a faixa, maior a barra
     if(imgTxt(v.sub)){g.fillStyle=verde;imgEspaco(g,5);let f=34;g.font=IMG_MO(800,f);while(g.measureText(imgTxt(v.sub)).width>W-140&&f>20){f-=2;g.font=IMG_MO(800,f)}g.fillText(imgTxt(v.sub),W/2,y+50);imgEspaco(g,0)}
-    const n=Math.max(1,t.linhas.length),gap=n>4?20:40,bw=Math.min(230,(W-140-(n-1)*gap)/n),x0=W/2-(n*bw+(n-1)*gap)/2,chao=H-250,hmax=Math.max(160,chao-(y+260));
+    const n=Math.max(1,t.linhas.length),gap=n>4?20:40,bw=Math.min(230,(W-140-(n-1)*gap)/n),x0=W/2-(n*bw+(n-1)*gap)/2,chao=H-220,hmax=Math.max(150,chao-(y+235));
     const pf=Math.round(Math.min(120,bw*.5)),ff=Math.round(Math.min(28,bw*.13));
     t.linhas.forEach((l,k)=>{const h=hmax*(0.45+0.55*k/(n-1||1)),bx=x0+k*(bw+gap),gr=g.createLinearGradient(0,chao-h,0,chao);
       gr.addColorStop(0,imgRgba(verde,.95));gr.addColorStop(1,imgRgba(verde,.15));g.save();g.shadowColor=verde;g.shadowBlur=k===n-1?50:20;g.fillStyle=gr;imgRet(g,bx,chao-h,bw,h,[22,22,0,0]);g.fill();g.restore();
@@ -4150,7 +4155,9 @@ function abrirModalImagem(m){
     <div id="img-desc-prev" class="muted" style="text-align:center;padding:30px">Gerando…</div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
     <button class="btn btn-ghost" id="btn-copiar-img" onclick="copiarImagemDesconto()" style="display:none">📋 Copiar</button>
-    <button class="btn btn-primary" id="btn-baixar-img" onclick="baixarImagemDesconto()" disabled>⬇ Baixar imagem</button></div>`);
+    <button class="btn btn-ghost" id="btn-link-img" onclick="copiarLinkImagem()" disabled title="Sobe a imagem e copia um link que abre só a imagem">🔗 Copiar link</button>
+    <button class="btn btn-primary" id="btn-baixar-img" onclick="baixarImagemDesconto()" disabled>⬇ Baixar imagem</button></div>
+    <div id="img-link" class="img-link" style="display:none"></div>`);
   return imgGerar().then(()=>{if(_imgDesconto&&_imgM===m&&m.registro)reg(...m.registro(m.v))});
 }
 function imgCampo(id,valor){
@@ -4179,12 +4186,42 @@ async function imgGerar(){
   const r=await imgComprimir(c),url=r&&await blobParaDataURL(r.blob);if(_imgM!==m)return;
   const prev=document.getElementById('img-desc-prev');if(!prev)return;
   if(!url){prev.textContent='Não foi possível gerar a imagem.';return}
-  _imgDesconto={canvas:c,url,bytes:r.blob.size,arquivo:m.arquivo(m.v)};
+  _imgDesconto={canvas:c,url,blob:r.blob,bytes:r.blob.size,arquivo:m.arquivo(m.v)};
   prev.innerHTML=`<img src="${url}" alt="${esc(m.titulo)}" style="width:100%;max-width:min(300px,42vh);border-radius:12px;border:1px solid var(--border)">
     <div class="muted" id="img-tam" style="font-size:12px;margin-top:6px">JPG · ${r.w}×${r.h} · ${Math.round(r.blob.size/1024)} KB (máx. 512 KB)</div>`;prev.style.padding='0';
-  document.getElementById('btn-baixar-img').disabled=false;
+  document.getElementById('btn-baixar-img').disabled=false;imgLinkPronto();
   if(navigator.clipboard&&window.ClipboardItem)document.getElementById('btn-copiar-img').style.display='';
 }
+/* 🔗 Copiar link (pedido do dono, v4.41): a imagem (o mesmo JPG do Baixar) sobe para o Storage em midia/links/ e o
+   link público abre SÓ a imagem (endereço do Supabase, não o site). O nome do arquivo é o resumo (SHA-256) do conteúdo:
+   a mesma imagem gera sempre o mesmo link e não duplica arquivo. Imagem mudou (texto, produto), link novo.
+   Os links não vencem: nada apaga a pasta links/ (as limpezas do site só mexem em avisos/). */
+function imgLinkPronto(){const b=document.getElementById('btn-link-img');if(b)b.disabled=false;const l=document.getElementById('img-link');if(l){l.style.display='none';l.innerHTML=''}}
+async function imgResumo(blob){
+  try{const h=await crypto.subtle.digest('SHA-256',await blob.arrayBuffer());return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,32)}
+  catch(e){return [...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('')}   // sem SHA-256 (http): nome aleatório no mesmo formato
+}
+async function copiarLinkImagem(){
+  const im=_imgDesconto;if(!im||!im.blob)return;
+  const bt=document.getElementById('btn-link-img');if(bt){bt.disabled=true;bt.textContent='Gerando link…'}
+  try{
+    const caminho='links/'+(await imgResumo(im.blob))+'.jpg';
+    const{error}=await sb.storage.from('midia').upload(caminho,im.blob,{contentType:'image/jpeg',cacheControl:'31536000',upsert:false});
+    // já existe = a mesma imagem já tem link: usa o mesmo
+    if(error&&!/exist|duplicate|409/i.test(String(error.message||error.statusCode||error)))throw error;
+    const link=sb.storage.from('midia').getPublicUrl(caminho).data.publicUrl;
+    const caixa=document.getElementById('img-link');
+    if(caixa){caixa.style.display='';caixa.innerHTML=`<label>🔗 Link da imagem <span class="muted" style="font-weight:500">(abre só a imagem)</span></label>
+      <div style="display:flex;gap:8px"><input id="img-link-url" readonly value="${esc(link)}" onfocus="this.select()">
+      <button class="btn btn-ghost btn-sm" onclick="copiarTextoLink()">Copiar</button><a class="btn btn-ghost btn-sm" href="${esc(link)}" target="_blank" rel="noopener">Abrir</a></div>`}
+    let copiou=false;try{await navigator.clipboard.writeText(link);copiou=true}catch(e){}
+    toast(copiou?'✅ Link copiado. É só colar onde quiser.':'🔗 Link pronto: toque em Copiar ao lado do link.');
+    if(!im.linkRegistrado){im.linkRegistrado=true;reg('Link de imagem criado',im.arquivo)}
+  }catch(e){toast('⚠️ Não foi possível criar o link: '+(e.message||e))}
+  finally{if(bt){bt.disabled=false;bt.textContent='🔗 Copiar link'}}
+}
+function copiarTextoLink(){const i=document.getElementById('img-link-url');if(!i)return;i.select();
+  (navigator.clipboard?navigator.clipboard.writeText(i.value):Promise.reject()).then(()=>toast('✅ Link copiado.'),()=>{try{document.execCommand('copy');toast('✅ Link copiado.')}catch(e){toast('Selecione o link e copie.')}})}
 function baixarImagemDesconto(){if(!_imgDesconto)return;const a=document.createElement('a');a.href=_imgDesconto.url;a.download=_imgDesconto.arquivo;document.body.appendChild(a);a.click();a.remove()}
 /* Copiar (pedido do dono, v4.30.3): a área de transferência só aceita PNG. Para respeitar os 512 KB, copia em tamanho
    cheio se couber; senão reduz a imagem aos poucos até o PNG caber. */
@@ -4226,11 +4263,11 @@ function destaqueCardapio(prods){return prods.reduce((a,p,i)=>Number(p.preco)>Nu
 async function desenharImagemCardapio(o){
   if(typeof o!=='object'||!o)o={frase:o};
   // quadrado 1080×1080: topo mais compacto (logo menor, frase menor) para sobrar espaço aos produtos
-  const x=imgCtx(1080),{c,g,W,H,verde,escuro}=x;await carregarFontesImagem();
+  const x=imgCtx(),{c,g,W,H,verde,escuro}=x;await carregarFontesImagem();
   const prods=o.prods?prodAtivos().filter(p=>o.prods.includes(p.id)):prodAtivos();
   const seloDest=o.selo_destaque===undefined?'★ DESTAQUE DA CASA ★':imgTxt(o.selo_destaque);
   const [logo,...fotos]=await Promise.all([carregarImagemCors(db.identidade_visual&&db.identidade_visual.logotipo),...prods.map(p=>carregarImagemCors(imgSrc(p.imagem)))]);
-  await imgFundo(x,logo,{logo:112,logoY:30});g.textAlign='center';
+  await imgFundo(x,logo);g.textAlign='center';
   let y=150;const fr=imgTxt(o.frase);
   if(fr){const{px,ln}=imgCaber(g,fr,IMG_AN,W-120,2,prods.length>5?66:74,46);
     ln.forEach((l,i)=>{y+=px*.98;g.save();g.font=IMG_AN(px);if(i===ln.length-1){g.fillStyle=verde;g.shadowColor=verde;g.shadowBlur=30}else g.fillStyle='#fff';g.fillText(l,W/2,y);g.restore()})}
@@ -4318,14 +4355,14 @@ async function desenharImagemPreco(o){
   const p=db.produtos.find(z=>z.id===o.pid)||{nome:'?',preco:0},novo=Number(p.preco),antigo=o.antigo===''||o.antigo==null?NaN:Number(o.antigo),tem=antigo>=0&&antigo!==novo;
   const [logo,foto]=await Promise.all([carregarImagemCors(db.identidade_visual&&db.identidade_visual.logotipo),carregarImagemCors(imgSrc(p.imagem))]);
   await imgFundo(x,logo);g.textAlign='center';
-  if(imgTxt(o.selo))imgPilula(x,imgTxt(o.selo),238);
-  let y=imgTitulo(x,imgTxt(o.titulo),300,104,true);
-  const cor=foto?imgCorFoto(foto,verde):verde,base=H-170,l=Math.max(220,Math.min(480,base-y-40-280)),top=y+40+Math.max(0,(base-y-40-(l+280))/2),cx=W/2;
+  if(imgTxt(o.selo))imgPilula(x,imgTxt(o.selo),150);
+  let y=imgTitulo(x,imgTxt(o.titulo),imgTxt(o.selo)?208:160,84,true);
+  const cor=foto?imgCorFoto(foto,verde):verde,base=H-160,l=Math.max(200,Math.min(420,base-y-30-250)),top=y+30+Math.max(0,(base-y-30-(l+250))/2),cx=W/2;
   imgBrilho(g,cx,top+l/2,l*.8,cor,.6);imgFoto(g,foto,cx-l/2,top,l);
   if(tem&&novo<antigo)imgEtiqueta(g,'-'+Math.round((1-novo/antigo)*100)+'%',cx+l/2+10,top+50,70,'#fff',escuro,.1);
   const nm=String(p.nome).toUpperCase();let f=64;g.font=IMG_AN(f);while(g.measureText(nm).width>W-160&&f>30){f-=2;g.font=IMG_AN(f)}
-  g.fillStyle='#fff';g.textAlign='center';g.fillText(nm,cx,top+l+70);
-  const yp=top+l+190;
+  g.fillStyle='#fff';g.textAlign='center';g.fillText(nm,cx,top+l+66);
+  const yp=top+l+170;
   if(tem){
     // de (riscado) → por
     const de=precoCurto(antigo);g.font=IMG_AN(78);const wd=g.measureText(de).width;const xd=cx-190;
@@ -4333,7 +4370,7 @@ async function desenharImagemPreco(o){
     g.font=IMG_AN(78);g.fillStyle='#9CA3AF';g.fillText(de,xd,yp+6);g.strokeStyle='#E5484D';g.lineWidth=7;g.beginPath();g.moveTo(xd-wd/2-8,yp-12);g.lineTo(xd+wd/2+8,yp-34);g.stroke();
     g.strokeStyle='#fff';g.lineWidth=6;g.beginPath();g.moveTo(cx-70,yp-20);g.lineTo(cx-10,yp-20);g.stroke();g.fillStyle='#fff';g.beginPath();g.moveTo(cx-2,yp-20);g.lineTo(cx-26,yp-38);g.lineTo(cx-26,yp-2);g.fill();
     imgEtiqueta(g,precoCurto(novo),cx+170,yp-20,104,cor,escuro,-.06);
-  }else{g.fillStyle='#9CA3AF';g.font=IMG_MO(800,22);imgEspaco(g,6);g.fillText('AGORA',cx,yp-86);imgEspaco(g,0);imgEtiqueta(g,precoCurto(novo),cx,yp-20,110,cor,escuro,-.06)}
+  }else{g.fillStyle='#9CA3AF';g.font=IMG_MO(800,22);imgEspaco(g,6);g.fillText('AGORA',cx,yp-60);imgEspaco(g,0);imgEtiqueta(g,precoCurto(novo),cx,yp+6,104,cor,escuro,-.06)}
   imgRodape(x,imgTxt(o.rodape));
   return c;
 }

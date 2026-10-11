@@ -171,7 +171,8 @@
       return{data:'OP-'+(seq++),error:null}},
     auth:{getSession:async()=>({data:{session:window.__semSessao?null:{access_token:'token-falso',user:{id:window.__uid||U(2)}}}}),signOut:async()=>({}),signInWithPassword:async()=>({data:{user:{id:window.__uid||U(2)}},error:null})},
     storage:{from(){const ST=window.__ST=window.__ST||{files:[],removidos:[]};return{
-      upload:async(c,f)=>{ST.files.push({name:c,size:f.size,type:f.type,f,created_at:new Date().toISOString()});return{}},
+      upload:async(c,f,o)=>{if(!(o&&o.upsert)&&ST.files.some(x=>x.name===c))return{data:null,error:{message:'The resource already exists',statusCode:'409'}};   // como o Storage: nome repetido sem upsert dá erro
+        ST.files.push({name:c,size:f.size,type:f.type,f,created_at:new Date().toISOString()});return{}},
       getPublicUrl:c=>({data:{publicUrl:'https://zwnawcnurwbowtdkholm.supabase.co/storage/v1/object/public/midia/'+c}}),
       list:async(pasta,o)=>({data:ST.files.filter(x=>x.name.startsWith(pasta+'/')).map(x=>({name:x.name.slice(pasta.length+1),created_at:x.created_at})),error:null}),
       remove:async(cs)=>{ST.removidos.push(...cs);ST.files=ST.files.filter(x=>!cs.includes(x.name));return{data:cs,error:null}}}}},

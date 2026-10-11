@@ -1,4 +1,4 @@
-// Imagem do vendedor ouro, em SVG 1080×1350; o servidor converte em PNG (resvg). Opção B escolhida pelo dono (v4.36):
+// Imagem do vendedor ouro, em SVG 1080×1080 (quadrada desde a v4.41, pedido do dono; antes 1080×1350); o servidor converte em PNG (resvg). Opção B escolhida pelo dono (v4.36):
 // cartão dourado do campeão (foto ou iniciais, coroa, nome grande e quadradinhos com pontos, vendas, dias e a receita
 // da loja) e, embaixo, 2º e 3º lugares lado a lado. Visual "neon de rua" das outras artes: fundo escuro com brilho
 // verde, nome da loja vazado ao fundo, logo e faixa verde inclinada no rodapé.
@@ -16,7 +16,7 @@ export type DadosPodio = {
 };
 export type Medir = (txt: string, fonte: 'anton' | 'mont', px: number, esp?: number) => number;
 
-const W = 1080, H = 1350;
+const W = 1080, H = 1080;
 const OURO = '#FFD24A', PRATA = '#C9D1D9', BRONZE = '#CD7F32', VERDE = '#00CC52', ESCURO = '#07070A';
 const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const ANTON = `font-family="Anton"`, MONT = (w: number) => `font-family="Montserrat" font-weight="${w}"`;
@@ -75,21 +75,21 @@ export function svgPodio(d: DadosPodio, medir: Medir): string {
   // fundo, nome da loja vazado e logo
   out.push(`<rect width="${W}" height="${H}" fill="${ESCURO}"/><rect width="${W}" height="${H}" fill="url(#gTopo)"/>`);
   const marca = esc(`${d.loja.toUpperCase()} · `.repeat(5));
-  out.push(`<g transform="translate(540 675) rotate(-12)" fill="none" stroke="#fff" stroke-opacity=".075" stroke-width="2.5" ${ANTON} font-size="190" text-anchor="middle">`);
+  out.push(`<g transform="translate(540 540) rotate(-12)" fill="none" stroke="#fff" stroke-opacity=".075" stroke-width="2.5" ${ANTON} font-size="190" text-anchor="middle">`);
   for (let i = -5; i <= 5; i++) out.push(`<text x="${i % 2 ? 120 : -60}" y="${i * 200}">${marca}</text>`);
   out.push(`</g>`);
   if (d.logo) {
-    out.push(`<circle cx="540" cy="115" r="130" fill="url(#gLogo)"/>`);
-    out.push(`<image x="465" y="40" width="150" height="150" href="${d.logo}" xlink:href="${d.logo}" preserveAspectRatio="xMidYMid meet"/>`);
+    out.push(`<circle cx="540" cy="80" r="100" fill="url(#gLogo)"/>`);
+    out.push(`<image x="486" y="26" width="108" height="108" href="${d.logo}" xlink:href="${d.logo}" preserveAspectRatio="xMidYMid meet"/>`);
   }
   // pílula da semana
   const sem = `SEMANA ${d.semana.toUpperCase()}`;
   const wS = medir(sem, 'mont', 26, 7) + 60;
-  out.push(`<rect x="${540 - wS / 2}" y="212" width="${wS}" height="52" rx="26" fill="${VERDE}"/>`);
-  out.push(`<text x="543" y="247" text-anchor="middle" ${MONT(800)} font-size="26" letter-spacing="7" fill="${ESCURO}">${esc(sem)}</text>`);
+  out.push(`<rect x="${540 - wS / 2}" y="146" width="${wS}" height="48" rx="24" fill="${VERDE}"/>`);
+  out.push(`<text x="543" y="179" text-anchor="middle" ${MONT(800)} font-size="26" letter-spacing="7" fill="${ESCURO}">${esc(sem)}</text>`);
 
   // cartão do campeão
-  const cx0 = 90, cy0 = 300, cw = 900, chh = 640;
+  const cx0 = 90, cy0 = 218, cw = 900, chh = 548;
   out.push(`<rect x="${cx0 - 60}" y="${cy0 - 60}" width="${cw + 120}" height="${chh + 120}" rx="90" fill="url(#gHalo)"/>`);
   out.push(`<rect x="${cx0}" y="${cy0}" width="${cw}" height="${chh}" rx="36" fill="url(#gCard)"/>`);
   out.push(`<rect x="${cx0}" y="${cy0}" width="${cw}" height="${chh}" rx="36" fill="none" stroke="${OURO}" stroke-width="14" stroke-opacity=".10"/>`);
@@ -98,19 +98,19 @@ export function svgPodio(d: DadosPodio, medir: Medir): string {
   // (v4.36: letra do título maior, pedido do dono)
   const pxSelo = caber(medir, titulo, 'mont', cw - 150, 34, 18, 7);
   const wSelo = medir(titulo, 'mont', pxSelo, 7);
-  out.push(`<text x="543" y="${cy0 + 70}" text-anchor="middle" ${MONT(800)} font-size="${pxSelo}" letter-spacing="7" fill="${OURO}">${esc(titulo)}</text>`);
+  out.push(`<text x="543" y="${cy0 + 56}" text-anchor="middle" ${MONT(800)} font-size="${pxSelo}" letter-spacing="7" fill="${OURO}">${esc(titulo)}</text>`);
   const estrela = (x: number, y: number, r: number) => `<polygon fill="${OURO}" points="${Array.from({ length: 10 }, (_, k) => { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * .45 : r; return `${(x + rr * Math.cos(a)).toFixed(1)},${(y + rr * Math.sin(a)).toFixed(1)}`; }).join(' ')}"/>`;
-  out.push(estrela(540 - wSelo / 2 - 32, cy0 + 58, 16) + estrela(540 + wSelo / 2 + 38, cy0 + 58, 16));
+  out.push(estrela(540 - wSelo / 2 - 32, cy0 + 44, 16) + estrela(540 + wSelo / 2 + 38, cy0 + 44, 16));
   if (c1) {
-    const fy = cy0 + 232, r = 100;
-    out.push(`<circle cx="540" cy="${fy}" r="${r + 80}" fill="url(#gFoto)"/>`);
+    const fy = cy0 + 178, r = 82;
+    out.push(`<circle cx="540" cy="${fy}" r="${r + 66}" fill="url(#gFoto)"/>`);
     avatar(out, 'cf0', 540, fy, r, OURO, 'gIniOuro', c1);
     // coroa inclinada no canto da foto
     out.push(`<g transform="translate(${540 + r * .5} ${fy - r - 34}) rotate(18) scale(.85)"><path d="M5 65 L12 18 L32 40 L50 5 L68 40 L88 18 L95 65 Z" fill="${OURO}" stroke="#FFF2B0" stroke-width="3" stroke-linejoin="round"/><circle cx="12" cy="16" r="6" fill="#FFF2B0"/><circle cx="50" cy="5" r="6" fill="#FFF2B0"/><circle cx="88" cy="16" r="6" fill="#FFF2B0"/></g>`);
     // nome (até 2 linhas) com brilho
-    const nm = linhasNome(medir, c1.nome, cw - 100, 130, 54);
-    const espacoNome = 150;   // altura reservada ao nome
-    let y = fy + r + 28 + (nm.ln.length === 1 ? (espacoNome - nm.px * .9) / 2 + nm.px * .9 : (espacoNome - nm.px * 1.88) / 2 + nm.px * .9);
+    const nm = linhasNome(medir, c1.nome, cw - 100, 104, 48);
+    const espacoNome = 124;   // altura reservada ao nome
+    let y = fy + r + 18 + (nm.ln.length === 1 ? (espacoNome - nm.px * .9) / 2 + nm.px * .9 : (espacoNome - nm.px * 1.88) / 2 + nm.px * .9);
     for (const t of nm.ln) {
       out.push(`<text x="540" y="${y}" text-anchor="middle" ${ANTON} font-size="${nm.px}" fill="none" stroke="${OURO}" stroke-width="18" stroke-opacity=".12" stroke-linejoin="round">${esc(t)}</text>`);
       out.push(`<text x="540" y="${y}" text-anchor="middle" ${ANTON} font-size="${nm.px}" fill="${OURO}">${esc(t)}</text>`);
@@ -125,7 +125,7 @@ export function svgPodio(d: DadosPodio, medir: Medir): string {
     while (larg().reduce((a, b) => a + b, 0) + gap * (qs.length - 1) > maxTot && pxV > 26) { pxV -= 2; pxR = Math.max(15, pxR - 1); }
     const ws = larg(), tot = ws.reduce((a, b) => a + b, 0) + gap * (qs.length - 1);
     let x = 540 - tot / 2;
-    const qy = cy0 + chh - 104, qh = 66;
+    const qy = cy0 + chh - 90, qh = 62;
     qs.forEach(([v, rot], i) => {
       out.push(`<rect x="${x}" y="${qy}" width="${ws[i]}" height="${qh}" rx="16" fill="${ESCURO}" fill-opacity=".6" stroke="${OURO}" stroke-opacity=".5" stroke-width="2"/>`);
       out.push(`<text x="${x + 22}" y="${qy + qh / 2 + pxV * .36}" ${ANTON} font-size="${pxV}" fill="${OURO}">${esc(v)}</text>`);
@@ -136,18 +136,18 @@ export function svgPodio(d: DadosPodio, medir: Medir): string {
 
   // 2º e 3º lugares lado a lado
   const mini: [number, string, string, string][] = [[1, PRATA, 'gIniPrata', '2º LUGAR'], [2, BRONZE, 'gIniBronze', '3º LUGAR']];
-  const my = 985, mh = 170, mw = 438;
+  const my = 788, mh = 132, mw = 438;   // 2º/3º acima da faixa do rodapé
   mini.filter(([i]) => p[i]).forEach(([i, cor, grad, pos], k, arr) => {
     const l = p[i]!, mx = arr.length === 1 ? 540 - mw / 2 : 90 + k * (mw + 24);
     out.push(`<rect x="${mx}" y="${my}" width="${mw}" height="${mh}" rx="26" fill="#ffffff" fill-opacity=".04" stroke="${cor}" stroke-width="2.5"/>`);
-    avatar(out, 'cf' + i, mx + 78, my + mh / 2, 50, cor, grad, l);
-    const tx = mx + 150, tw = mw - 172;
-    out.push(`<text x="${tx}" y="${my + 48}" ${ANTON} font-size="30" fill="${cor}">${esc(pos)}</text>`);
+    avatar(out, 'cf' + i, mx + 70, my + mh / 2, 42, cor, grad, l);
+    const tx = mx + 130, tw = mw - 152;
+    out.push(`<text x="${tx}" y="${my + 38}" ${ANTON} font-size="26" fill="${cor}">${esc(pos)}</text>`);
     // nome numa linha só (encolhe até caber); números sempre na mesma altura nos dois cartões
-    const pxN = caber(medir, l.nome.toUpperCase(), 'anton', tw, 42, 20);
-    out.push(`<text x="${tx}" y="${my + 98}" ${ANTON} font-size="${pxN}" fill="#ffffff">${esc(l.nome.toUpperCase())}</text>`);
+    const pxN = caber(medir, l.nome.toUpperCase(), 'anton', tw, 36, 18);
+    out.push(`<text x="${tx}" y="${my + 80}" ${ANTON} font-size="${pxN}" fill="#ffffff">${esc(l.nome.toUpperCase())}</text>`);
     const lin = `${pts(l.pont)} PTS · ${num(l.n)} VENDAS`;
-    out.push(`<text x="${tx}" y="${my + mh - 30}" ${MONT(800)} font-size="${caber(medir, lin, 'mont', tw, 20, 13, 2)}" letter-spacing="2" fill="#aaaaaa">${esc(lin)}</text>`);
+    out.push(`<text x="${tx}" y="${my + mh - 22}" ${MONT(800)} font-size="${caber(medir, lin, 'mont', tw, 18, 12, 2)}" letter-spacing="2" fill="#aaaaaa">${esc(lin)}</text>`);
   });
 
   // rodapé: faixa verde inclinada

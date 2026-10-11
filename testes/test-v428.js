@@ -27,7 +27,7 @@ const t=(p,js)=>p.evaluate(js);
   await p.click('#cfg-body tr:has-text("Escalonada") button[onclick^="modalImagemDesconto"]');
   await p.waitForFunction(()=>document.querySelector('#img-desc-prev img'),null,{timeout:10000});
   const img=await t(p,`(()=>{const i=document.querySelector('#img-desc-prev img');return {w:i.naturalWidth,h:i.naturalHeight,jpg:i.src.startsWith('data:image/jpeg'),bytes:_imgDesconto.bytes,btn:!document.getElementById('btn-baixar-img').disabled}})()`);
-  ok(img.w===1080&&img.h===1350&&img.jpg&&img.bytes>50000&&img.bytes<=512000&&img.btn,'gera JPG 1080×1350 até 512 KB e libera o Baixar: '+JSON.stringify(img));
+  ok(img.w===1080&&img.h===1080&&img.jpg&&img.bytes>50000&&img.bytes<=512000&&img.btn,'gera JPG 1080×1080 até 512 KB e libera o Baixar: '+JSON.stringify(img));
   const [dl]=await Promise.all([p.waitForEvent('download'),p.click('#btn-baixar-img')]);
   ok(dl.suggestedFilename()==='parceria-escalonada.jpg','baixa o arquivo "'+dl.suggestedFilename()+'"');
   const salvo=path.join(SP,'saida','parceria-teste.jpg');await dl.saveAs(salvo);
