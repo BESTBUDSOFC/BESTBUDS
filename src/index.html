@@ -713,7 +713,7 @@ body.ambiente-teste::after{content:'';position:fixed;inset:0;border:3px solid #F
 <script src="env.js"></script>
 <script>
 /* ================= ESTADO E PERSISTÊNCIA (SUPABASE) ================= */
-const VERSAO='v4.39.3';
+const VERSAO='v4.40.0';
 /* Dois bancos: produção e teste. O env.js é gerado no deploy da Vercel (scripts/gerar-env.js):
    deploy de produção grava 'producao'; preview grava 'teste'. Sem env.js, o site usa o banco de teste,
    menos no endereço de produção, que usa sempre o banco de produção. */
@@ -4052,8 +4052,9 @@ function carregarFontesImagem(){
   return _fontesImg;
 }
 const IMG_AN=px=>`${px}px "BB Anton", Impact, "Arial Narrow", sans-serif`,IMG_MO=(w,px)=>`${w} ${px}px "BB Montserrat", Arial, sans-serif`;
-function imgCtx(){const c=document.createElement('canvas');c.width=1080;c.height=1350;const g=c.getContext('2d');
-  const css=getComputedStyle(document.documentElement);return{c,g,W:1080,H:1350,verde:(css.getPropertyValue('--green')||'').trim()||'#00CC52',escuro:'#07070A'}}
+// altura: 1350 (vertical) por padrão; o cardápio sai quadrado, 1080×1080 (pedido do dono, v4.40)
+function imgCtx(h=1350){const c=document.createElement('canvas');c.width=1080;c.height=h;const g=c.getContext('2d');
+  const css=getComputedStyle(document.documentElement);return{c,g,W:1080,H:h,verde:(css.getPropertyValue('--green')||'').trim()||'#00CC52',escuro:'#07070A'}}
 function imgRgba(c,a){if(c[0]==='#'){const n=parseInt(c.slice(1,7),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`}return c.replace('rgb(','rgba(').replace(')',`,${a})`)}
 function imgEspaco(g,v){if('letterSpacing' in g)g.letterSpacing=v+'px'}
 function imgRet(g,x,y,w,h,r){g.beginPath();if(g.roundRect)g.roundRect(x,y,w,h,r);else g.rect(x,y,w,h)}
@@ -4075,13 +4076,14 @@ function imgEtiqueta(g,txt,cx,cy,px,bg,fg,rot){g.save();g.translate(cx,cy);g.rot
   g.shadowColor='rgba(0,0,0,.5)';g.shadowBlur=18;g.shadowOffsetY=6;g.fillStyle=bg;imgRet(g,-w/2,-h/2,w,h,h*.22);g.fill();g.shadowColor='transparent';
   g.fillStyle=fg;g.textAlign='center';g.textBaseline='middle';g.fillText(txt,0,px*.04);g.restore()}
 // fundo, nome da loja vazado ao fundo e logo
-async function imgFundo(x,logo){
+async function imgFundo(x,logo,op){
+  const lt=(op&&op.logo)||160,ly=(op&&op.logoY)||46;
   const{g,W,H,verde,escuro}=x;g.fillStyle=escuro;g.fillRect(0,0,W,H);imgBrilho(g,W/2,40,820,verde,.32);
   const marca=(nomeLojaAtual()||'').toUpperCase().trim();
   if(marca){g.save();g.translate(W/2,H/2);g.rotate(-.21);g.font=IMG_AN(190);g.strokeStyle='rgba(255,255,255,.075)';g.lineWidth=2.5;g.textAlign='center';
     for(let i=-5;i<=5;i++)g.strokeText((marca+' · ').repeat(4),i%2?120:-60,i*200);g.restore()}
-  if(logo){const t=160,r=Math.min(t/logo.width,t/logo.height);g.save();g.shadowColor=verde;g.shadowBlur=50;g.drawImage(logo,W/2-logo.width*r/2,46,logo.width*r,logo.height*r);g.restore()}
-  else{g.font=IMG_AN(120);g.textAlign='center';g.fillStyle='#fff';g.fillText('🌿',W/2,180)}
+  if(logo){const t=lt,r=Math.min(t/logo.width,t/logo.height);g.save();g.shadowColor=verde;g.shadowBlur=50;g.drawImage(logo,W/2-logo.width*r/2,ly,logo.width*r,logo.height*r);g.restore()}
+  else{g.font=IMG_AN(lt*.75);g.textAlign='center';g.fillStyle='#fff';g.fillText('🌿',W/2,ly+lt*.84)}
 }
 function imgRodape(x,txt){const{g,W,H,verde,escuro}=x;g.fillStyle=verde;g.beginPath();g.moveTo(0,H-118);g.lineTo(W,H-150);g.lineTo(W,H);g.lineTo(0,H);g.fill();
   g.save();g.translate(W/2,H-62);g.rotate(-.03);g.fillStyle=escuro;g.textAlign='center';imgEspaco(g,2);let px=50;g.font=IMG_AN(px);while(g.measureText(txt).width>W-90&&px>28){px-=2;g.font=IMG_AN(px)}g.fillText(txt,0,0);imgEspaco(g,0);g.restore()}
@@ -4223,16 +4225,17 @@ const precoCurto=v=>'$'+Number(v||0).toLocaleString('pt-BR',{maximumFractionDigi
 function destaqueCardapio(prods){return prods.reduce((a,p,i)=>Number(p.preco)>Number(prods[a].preco)?i:a,0)}
 async function desenharImagemCardapio(o){
   if(typeof o!=='object'||!o)o={frase:o};
-  const x=imgCtx(),{c,g,W,H,verde,escuro}=x;await carregarFontesImagem();
+  // quadrado 1080×1080: topo mais compacto (logo menor, frase menor) para sobrar espaço aos produtos
+  const x=imgCtx(1080),{c,g,W,H,verde,escuro}=x;await carregarFontesImagem();
   const prods=o.prods?prodAtivos().filter(p=>o.prods.includes(p.id)):prodAtivos();
   const seloDest=o.selo_destaque===undefined?'★ DESTAQUE DA CASA ★':imgTxt(o.selo_destaque);
   const [logo,...fotos]=await Promise.all([carregarImagemCors(db.identidade_visual&&db.identidade_visual.logotipo),...prods.map(p=>carregarImagemCors(imgSrc(p.imagem)))]);
-  await imgFundo(x,logo);g.textAlign='center';
-  let y=222;const fr=imgTxt(o.frase);
-  if(fr){const{px,ln}=imgCaber(g,fr,IMG_AN,W-140,2,prods.length>5?92:110,56);
+  await imgFundo(x,logo,{logo:112,logoY:30});g.textAlign='center';
+  let y=150;const fr=imgTxt(o.frase);
+  if(fr){const{px,ln}=imgCaber(g,fr,IMG_AN,W-120,2,prods.length>5?66:74,46);
     ln.forEach((l,i)=>{y+=px*.98;g.save();g.font=IMG_AN(px);if(i===ln.length-1){g.fillStyle=verde;g.shadowColor=verde;g.shadowBlur=30}else g.fillStyle='#fff';g.fillText(l,W/2,y);g.restore()})}
-  const selo=o.selo===undefined?'CARDÁPIO':imgTxt(o.selo);if(selo)imgPilula(x,selo,y+26);
-  const topo=y+110,base=H-170,n=prods.length,cores=fotos.map(f=>f?imgCorFoto(f,verde):verde);
+  const selo=o.selo===undefined?'CARDÁPIO':imgTxt(o.selo);if(selo)imgPilula(x,selo,y+18);
+  const topo=y+(selo?112:40),base=H-160,n=prods.length,cores=fotos.map(f=>f?imgCorFoto(f,verde):verde);
   const nomeCabe=(txt,px0,max)=>{let f=px0;g.font=IMG_AN(f);while(g.measureText(txt).width>max&&f>20){f-=2;g.font=IMG_AN(f)}return f};
   const seloD=(cx,yy)=>{if(!seloDest)return;g.fillStyle=verde;g.font=IMG_MO(800,22);imgEspaco(g,6);g.textAlign='center';g.fillText(seloDest,cx,yy);imgEspaco(g,0)};
   // cartão comum: foto com brilho, nome e etiqueta de preço

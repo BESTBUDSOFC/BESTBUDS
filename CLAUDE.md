@@ -201,6 +201,7 @@ App inteira em `src/index.html` (SPA em JS puro). Deploy na Vercel (`main` = pro
 
 ### Imagem do cardápio (Catálogo PDV)
 
+- **Cardápio é quadrado, 1080×1080** (pedido do dono, v4.40; as outras artes continuam 1080×1350): `imgCtx(1080)`, topo compacto (logo de 112 px a 30 px do topo via `imgFundo(x,logo,{logo,logoY})`, frase até 74 px para caber numa linha, selo logo abaixo) e os produtos no espaço que sobra.
 - Em Configurações › Catálogo PDV, o botão "🖼️ Imagem do cardápio" gera o card com **todos os produtos ativos** (foto, nome e preço sem centavos, `precoCurto`), a frase de efeito (2 linhas, a última em verde), a pílula "CARDÁPIO" e o rodapé "PEÇA JÁ NO BALCÃO DA <LOJA>". Arquivo `cardapio-<loja>.jpg`.
 - **Destaque da casa** (pedido do dono, v4.29.1): o produto ativo de **maior preço** (empate: o primeiro na ordem do Catálogo; `destaqueCardapio`) sai grande, com "★ DESTAQUE DA CASA ★". Até 5 produtos: destaque à esquerda e os outros numa coluna à direita; 6 ou mais: mosaico (destaque em 2×2, os outros em 3 ou 4 colunas).
 - Campos: frase de efeito (🎲 `FRASES_CARDAPIO`), selo, texto do destaque e rodapé. **Produtos na imagem:** caixas de marcar com os ativos (todos marcados ao abrir). **Destaque da casa:** automático (o mais caro), um produto escolhido ou "Sem destaque" (grade com todos iguais). Sem produto ativo, o card sai com o aviso "Nenhum produto ativo no momento."

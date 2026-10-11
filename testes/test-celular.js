@@ -17,6 +17,8 @@ const t=(p,js)=>p.evaluate(js);
 const GER='3b3f9ab4-50af-4cc5-a264-0b3702759b7c';
 const semRolagem=p=>t(p,`document.documentElement.scrollWidth<=window.innerWidth+1`);
 fs.mkdirSync(SP+'/saida',{recursive:true});
+// os dados do teste são de uma data fixa: traz as vendas para perto de agora, para "Esta semana" ter vendas em qualquer dia
+const TRAZ_VENDAS=`(()=>{const mx=Math.max(...db.vendas.map(v=>+new Date(v.data)));const d=Date.now()-3600e3-mx;db.vendas.forEach(v=>{v.data=new Date(+new Date(v.data)+d).toISOString();if(v.guardada_em)v.guardada_em=new Date(+new Date(v.guardada_em)+d).toISOString()})})()`;
 (async()=>{
   const b=await chromium.launch();
   // ---- celular ----
@@ -31,6 +33,7 @@ fs.mkdirSync(SP+'/saida',{recursive:true});
   ok(conta.includes('Sair')&&conta.includes('Versão')&&(await p.isVisible('#btn-sair-conta')),'tocar no selo do perfil abre a conta com nome, versão e "Sair"');
   ok(await t(p,`!!document.querySelector('#modal-box .badge')`),'conta mostra o selo do perfil');
   await t(p,`closeModal()`);
+  await t(p,TRAZ_VENDAS);
   await t(p,`go('painel')`);await p.waitForTimeout(400);
   const bl=await t(p,`[...document.querySelectorAll('.pn-card[data-bloco-id]')].map(c=>({id:c.dataset.blocoId,fech:c.classList.contains('pn-fechado'),res:(c.querySelector('.pn-resumo')||{}).textContent||'',corpo:!!c.querySelector('.pn-corpo')}))`);
   ok(bl.length===5&&bl.every(x=>x.fech&&!x.corpo),'Painel no celular: 5 blocos, todos recolhidos: '+bl.map(x=>x.id).join(','));
@@ -58,6 +61,7 @@ fs.mkdirSync(SP+'/saida',{recursive:true});
   ok(await t(p,`[...document.querySelectorAll('.pn-card[data-bloco-id]')].every(c=>!c.classList.contains('pn-fechado'))`),'ao alargar a tela, os blocos abrem (layout do computador)');
   // ---- computador: nada muda ----
   const d=await abrir(b,GER);
+  await t(d,TRAZ_VENDAS);
   await t(d,`closeModal();document.getElementById('aviso-bg').classList.remove('open');go('painel')`);await d.waitForTimeout(400);
   const dk=await t(d,`(()=>{const cs=[...document.querySelectorAll('.pn-card[data-bloco-id]')];return{abertos:cs.every(c=>!c.classList.contains('pn-fechado')&&c.querySelector('.pn-corpo')),resumo:[...document.querySelectorAll('.pn-resumo')].every(e=>getComputedStyle(e).display==='none'),cart:[...document.querySelectorAll('.pn-cartoes')].every(e=>getComputedStyle(e).display==='none'),tab:[...document.querySelectorAll('.pn-so-desk')].some(e=>getComputedStyle(e).display!=='none')}})()`);
   ok(dk.abertos&&dk.resumo&&dk.cart&&dk.tab,'computador: blocos abertos, sem resumo, tabelas no lugar dos cartões '+JSON.stringify(dk));

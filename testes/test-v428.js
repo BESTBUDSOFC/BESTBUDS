@@ -39,7 +39,7 @@ const t=(p,js)=>p.evaluate(js);
   await p.click('#cfg-body button:has-text("Imagem do cardápio")');
   await p.waitForFunction(()=>document.querySelector('#img-desc-prev img'),null,{timeout:10000});
   const ci=await t(p,`(()=>{const i=document.querySelector('#img-desc-prev img');return {w:i.naturalWidth,h:i.naturalHeight,frase:document.getElementById('imgc-frase').value}})()`);
-  ok(ci.w===1080&&ci.h===1350&&ci.frase===await t(p,`FRASES_CARDAPIO[0]`),'cardápio: PNG 1080×1350 com a frase padrão: '+JSON.stringify(ci));
+  ok(ci.w===1080&&ci.h===1080&&ci.frase===await t(p,`FRASES_CARDAPIO[0]`),'cardápio: 1080×1080 (quadrado, v4.40) com a frase padrão: '+JSON.stringify(ci));
   ok(await t(p,`precoCurto(100)==='$100'&&precoCurto(2.5)==='$2,5'`),'preço sem centavos ($100)');
   const src1=await t(p,`document.querySelector('#img-desc-prev img').src`);
   await p.click('#modal-box button[title="Sortear outra frase"]');await p.waitForTimeout(800);
